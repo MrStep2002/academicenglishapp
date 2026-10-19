@@ -14,6 +14,7 @@ A standalone vocabulary and grammar practice app for the Representation unit. It
 | `js/engine.js` | Saved progress, spaced review, sessions |
 | `js/app.js` | All screens and games |
 | `css/app.css` | Styling (light and dark) |
+| `css/fonts.css`, `fonts/` | The two fonts, stored in the app so nothing loads from Google (works in mainland China) |
 | `tools/bundle.py` | Makes a single-file version in `dist/` |
 
 ## Adding Set 2 and Set 3

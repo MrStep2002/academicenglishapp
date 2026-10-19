@@ -3,6 +3,8 @@
   const { Store, Memory, Bank, Session, ITEMS, shuffle, LEVELS, LIVE_LEVELS, P } = window.AE;
   const app = document.getElementById("app");
   const S = () => Store.state.settings;
+  // Typing answers is switched off for now: multiple choice only.
+  Store.state.settings.typed = false;
 
   // ---------------------------------------------------------------- helpers
   const esc = s => String(s == null ? "" : s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -93,15 +95,15 @@
       <nav class="tiles">
         ${tile("new", "New words", "Learn 4 at a time, then test them", fresh ? fresh + " to learn" : "")}
         ${tile("review", "Review", "Words that are due again", due ? due + " due" : "")}
-        ${tile("words", "Word bank", "Every word, grouped, with how well you know it", Bank.words().length + "")}
+        ${tile("words", "Word bank", "Every word, grouped, with how well you know it", Bank.words().length + " words")}
       </nav>
 
       <h3 class="section-label">Using the words</h3>
       <nav class="tiles">
         ${tile("usage", "Fill the gap", "Choose the word that fits the sentence", "")}
-        ${Bank.items(P.GRAMMAR).length ? tile("grammar", "Grammar gaps", S().typed ? "Type the missing word" : "Choose the right form", Bank.items(P.GRAMMAR).length + "") : ""}
-        ${Bank.items(P.BUILD).length ? tile("build", "Build the sentence", "Put the colour-coded parts of an analysis sentence in order", Bank.items(P.BUILD).length + "") : ""}
-        ${Bank.items(P.ERRORS).length ? tile("errors", "Spot the error", "Find the mistakes in a student's analysis", Bank.items(P.ERRORS).length + "") : ""}
+        ${Bank.items(P.GRAMMAR).length ? tile("grammar", "Grammar gaps", S().typed ? "Type the missing word" : "Choose the right form", Bank.items(P.GRAMMAR).length + " questions") : ""}
+        ${Bank.items(P.BUILD).length ? tile("build", "Build the sentence", "Put the colour-coded parts of an analysis sentence in order", Bank.items(P.BUILD).length + " sentences") : ""}
+        ${Bank.items(P.ERRORS).length ? tile("errors", "Spot the error", "Find the mistakes in a student's analysis", Bank.items(P.ERRORS).length + " texts") : ""}
       </nav>
 
       <h3 class="section-label">Games</h3>
@@ -170,7 +172,6 @@
     return bar("Settings") + `<main class="page">
       <section class="card">
         ${sw("zh", "Chinese support", "Show Chinese meanings. Switch off to hide Chinese everywhere in the app.")}
-        ${sw("typed", "Challenge mode", "Type grammar answers instead of choosing, and find errors without being told how many.")}
       </section>
       <section class="card">
         <h3>Word sets</h3>

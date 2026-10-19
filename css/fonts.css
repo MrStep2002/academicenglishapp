@@ -1,0 +1,7 @@
+/* Fonts are stored in the app (fonts/), so nothing loads from Google: works in mainland China. */
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/atkinson-hyperlegible-latin-400-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: "Atkinson Hyperlegible"; src: url("../fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("../fonts/bricolage-grotesque-latin-600-normal.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("../fonts/bricolage-grotesque-latin-700-normal.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Bricolage Grotesque"; src: url("../fonts/bricolage-grotesque-latin-800-normal.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
