@@ -56,6 +56,7 @@
   }
 
   const inGroup = (w, gid) => w.g === gid || (w.also || []).includes(gid);
+  const inFocus = w => { const f = Store.state.settings.focus || []; return !f.length || f.some(g => inGroup(w, g)); };
   // Where the word sits in its own model sentence (for Fill the gap).
   function findGap(w) {
     const base = w.w.replace(/\s*\(.*\)$/, "");
@@ -69,7 +70,10 @@
   const Bank = {
     all: E.WORDS, BY_ID, GROUP, GROUPS: E.GROUPS, SETS, inGroup, findGap,
     words: () => ORDER.filter(w => levelOn(w.lv)),
-    items: (list) => list.filter(it => levelOn(it.lv)),
+    // The words in the student's current focus (My words). Empty focus = every word.
+    pool: () => ORDER.filter(w => levelOn(w.lv) && inFocus(w)),
+    // Practice items can use different sets from the words (e.g. the English version uses Set 1 sentences with Set 2 words).
+    items: (list) => list.filter(it => (Store.state.settings.itemLevels || Store.state.settings.levels).includes(it.lv)),
     clash
   };
 
@@ -124,8 +128,8 @@
     return m ? "m" : (c ? "c" : null);
   }
   function strength(id) { const r = rec(id); if (!r || !r.intro) return -1; return r.m.b + r.c.b - (r.m.w + r.c.w) * 0.1; }
-  const dueWords = () => Bank.words().filter(w => dueSkill(w.id)).sort((a, b) => strength(a.id) - strength(b.id));
-  const newWords = () => Bank.words().filter(w => !isIntro(w.id));
+  const dueWords = () => Bank.pool().filter(w => dueSkill(w.id)).sort((a, b) => strength(a.id) - strength(b.id));
+  const newWords = () => Bank.pool().filter(w => !isIntro(w.id));
   function counts(words) {
     const out = { new: 0, learning: 0, familiar: 0, known: 0 };
     (words || Bank.words()).forEach(w => out[stage(w.id)]++);
@@ -172,7 +176,7 @@
   const itemSteps = (list, type, n, avoid) => pickItems(list, n, avoid).map(it => ({ type, id: it.id }));
   // Something useful when a vocab session runs out: practise words already met, or learn new ones.
   function fallback() {
-    const met = Bank.words().filter(w => isIntro(w.id));
+    const met = Bank.pool().filter(w => isIntro(w.id));
     if (met.length) return shuffle(met).slice(0, 8).map(w => practiceStep(w));
     return newBatch();
   }
@@ -189,7 +193,119 @@
     return shuffle([{ t: gap.word, ok: true }].concat(wrong.map(t => ({ t, ok: false }))));
   }
 
+
+  // ---------------------------------------------------------------- Keep going: one endless mixed feed
+  // Weaker words more often: mostly from the weakest half of the words met so far.
+  function weakWord(avoid, filter) {
+    let pool = Bank.pool().filter(w => isIntro(w.id) && (!filter || filter(w)));
+    if (pool.length < 4) pool = Bank.pool().filter(w => !filter || filter(w));
+    if (!pool.length) return null;
+    const fresh = pool.filter(w => !avoid || !avoid.has(w.id));
+    if (fresh.length >= 3) pool = fresh;
+    const sorted = pool.slice().sort((a, b) => strength(a.id) - strength(b.id));
+    const weak = sorted.slice(0, Math.max(4, Math.ceil(sorted.length / 2)));
+    const list = Math.random() < .7 ? weak : sorted;
+    return list[Math.floor(Math.random() * list.length)];
+  }
+  // Up to n words that can share a Quick Match board (no look-alikes together).
+  function matchSet(ordered, n) {
+    const out = [];
+    for (const w of ordered) { if (out.length >= n) break; if (!out.some(o => clash(o, w) || (o.zh && o.zh === w.zh))) out.push(w); }
+    return out;
+  }
+  function qmatchStep(n, mode, firstIds, avoid) {
+    const first = (firstIds || []).map(id => BY_ID[id]);
+    let met = shuffle(Bank.pool().filter(w => isIntro(w.id) && !(firstIds || []).includes(w.id)));
+    if (avoid) met = met.filter(w => !avoid.has(w.id)).concat(met.filter(w => avoid.has(w.id)));
+    const rest = shuffle(Bank.pool().filter(w => !isIntro(w.id)));
+    // Only words already met (plus the new ones being learned), so no word skips its introduction.
+    let words = matchSet(first.concat(met), n);
+    if (words.length < 3) words = matchSet(first.concat(met, rest), n);
+    return words.length >= 3 ? { type: "qmatch", id: "qm:" + words.map(w => w.id).join(","), ids: words.map(w => w.id), mode } : null;
+  }
+  // Odd one out: three words of one kind and one of another. Only groups that are a single word class
+  // (creative choices = nouns, describing people = adjectives, analytical verbs = verbs), so there's one fair answer.
+  const ODD_GROUPS = ["creative", "describe", "verbs"];
+  function oddStep() {
+    const clean = g => Bank.words().filter(w => w.g === g && !(w.also || []).length && !/\//.test(w.pos));
+    const metFirst = list => { const m = list.filter(w => isIntro(w.id)); return shuffle(m.length >= 3 ? m : list); };
+    const focusG = ODD_GROUPS.filter(g => Bank.pool().some(w => w.g === g));
+    const main = (focusG.length ? focusG : ODD_GROUPS)[Math.floor(Math.random() * (focusG.length || ODD_GROUPS.length))];
+    const three = matchSet(metFirst(clean(main)), 3);
+    const others = ODD_GROUPS.filter(g => g !== main);
+    const from = others[Math.floor(Math.random() * others.length)];
+    const odd = metFirst(clean(from))[0];
+    if (three.length < 3 || !odd) return null;
+    return { type: "odd", id: "odd:" + odd.id, words: shuffle(three.concat(odd)).map(w => w.id), odd: odd.id, main, from };
+  }
+  function tfStep(avoid) {
+    const statements = Bank.items(P.BLITZ || []);
+    if (statements.length && Math.random() < .4) {
+      const s = pickItems(P.BLITZ, 1, avoid)[0];
+      if (s) return { type: "tfs", id: s.id };
+    }
+    const w = weakWord(avoid);
+    if (!w) return null;
+    const truth = Math.random() < .5;
+    const other = truth ? null : Session.choices(w, Bank.words()).find(o => o.id !== w.id);
+    return { type: "tf", id: w.id, truth: truth || !other, shown: (truth || !other) ? w.id : other.id };
+  }
+  const ROTATION = ["usage", "recall", "tf", "odd", "qmatch", "grammar", "usage", "read", "meaning", "tf",
+                    "build", "recall", "odd", "grammar", "qmatch", "usage", "read", "error"];
+  let feedPtr = 0;
+  function feedCard(type, avoid) {
+    if (type === "usage" || type === "recall" || type === "meaning") {
+      const w = weakWord(avoid, type === "usage" ? findGap : null);
+      return w ? { type, id: w.id } : null;
+    }
+    if (type === "tf") return tfStep(avoid);
+    if (type === "odd") return oddStep();
+    if (type === "qmatch") return qmatchStep(5, "def", null, avoid);
+    const list = { grammar: P.GRAMMAR, build: P.BUILD, read: P.READS, error: P.ERRORS }[type];
+    const it = list && pickItems(list, 1, avoid)[0];
+    return it ? { type, id: it.id } : null;
+  }
+  function feed(arg, avoid) {
+    const steps = [];
+    const due = dueWords().slice(0, 3);
+    due.forEach(w => steps.push(practiceStep(w, dueSkill(w.id))));
+    const fresh = newWords().slice(0, BATCH);
+    if (due.length < 3 && fresh.length) {
+      // New words: meet each one, match them up (with Chinese, if it's on), then check the meaning in English.
+      fresh.forEach(w => steps.push({ type: "intro", id: w.id }));
+      const qm = qmatchStep(Math.min(6, fresh.length + 2), "new", fresh.map(w => w.id), avoid);
+      if (qm) steps.push(qm);
+      shuffle(fresh).forEach(w => steps.push({ type: "meaning", id: w.id }));
+    }
+    for (let k = 0, tries = 0; k < 6 && tries < 20; tries++) {
+      const card = feedCard(ROTATION[feedPtr++ % ROTATION.length], avoid);
+      if (card) { steps.push(card); k++; }
+    }
+    return { title: "Keep going", steps };
+  }
+
   const Session = {
+    feed,
+    // Mini-List: study a few words from the focus, then match them to their definitions.
+    mini(n, avoid) {
+      n = +n || 6;
+      const pool = Bank.pool();
+      let order = shuffle(pool.filter(w => !isIntro(w.id))).slice(0, Math.ceil(n / 2)).concat(shuffle(pool.filter(w => isIntro(w.id))));
+      if (avoid) order = order.filter(w => !avoid.has(w.id)).concat(order.filter(w => avoid.has(w.id)));
+      order = order.concat(shuffle(pool));
+      const words = matchSet(order, n);
+      if (words.length < 3) return { title: "Mini-List", steps: [] };
+      const ids = words.map(w => w.id);
+      return { title: "Mini-List", steps: [{ type: "study", id: "study:" + ids.join(","), ids }, { type: "qmatch", id: "qm:" + ids.join(","), ids, mode: "def" }] };
+    },
+    // Practise a given list of words again (from the results screen).
+    again(ids) {
+      const words = (ids || []).map(id => BY_ID[id]).filter(Boolean);
+      const steps = [];
+      if (words.length >= 3) steps.push({ type: "qmatch", id: "qm:" + ids.join(","), ids: matchSet(words, 6).map(w => w.id), mode: "def" });
+      shuffle(words).forEach(w => steps.push({ type: findGap(w) ? "usage" : "meaning", id: w.id }));
+      return { title: "Practise these again", steps };
+    },
     smart() {
       const due = dueWords().slice(0, 8);
       const steps = shuffle(due).map(w => practiceStep(w, dueSkill(w.id)));
@@ -237,6 +353,7 @@
     },
     // The next batch for an endless session of the same kind.
     more(kind, arg, avoid) {
+      if (kind === "again") kind = "feed";      // after the missed words, carry on with the normal mix
       const def = Session[kind] && Session[kind](arg, avoid);
       return def && def.steps.length ? def.steps : fallback();
     },
@@ -250,13 +367,13 @@
       shuffle(same).forEach(add); shuffle(others).forEach(add);
       return shuffle([word, ...picks]);
     },
-    gapOptions,
+    gapOptions, weakWord, matchSet,
     BATCH
   };
 
   // Item lookups
   const ITEMS = {};
-  ["GRAMMAR", "BUILD", "QUESTIONS", "ERRORS", "BLITZ"].forEach(k => (P[k] || []).forEach(it => { ITEMS[it.id] = it; }));
+  ["GRAMMAR", "BUILD", "QUESTIONS", "ERRORS", "BLITZ", "READS"].forEach(k => (P[k] || []).forEach(it => { ITEMS[it.id] = it; }));
 
   window.AE = { Store, Memory, Bank, Session, ITEMS, shuffle, LEVELS, LIVE_LEVELS, levelOn, P };
 }());

@@ -14,7 +14,12 @@
     <h1>Website Portfolio</h1>
     <p class="sub">The games for this unit are on their way.</p>
   </header>
-  <nav class="units"><a class="unit unit-web" href="../index.html"><span class="unit-text"><span class="unit-name">Back to all units</span></span></a></nav>
+  <nav class="units"><a class="unit unit-web" id="back" href="../index.html"><span class="unit-text"><span class="unit-name">Back to topics</span></span></a></nav>
+<script>
+  // Go back to the topics page of the version you came from.
+  var t = location.hash.replace("#", "");
+  if (t === "en" || t === "zh") document.getElementById("back").href = "../" + t + "/index.html";
+</script>
 </main>
 </body>
 </html>

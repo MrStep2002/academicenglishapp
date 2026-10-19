@@ -9,36 +9,46 @@
 </head>
 <body>
 <main class="home">
-  <!-- Header image: save your picture as images/header.jpg (wide, about 1600 × 600 px works well). -->
+  <!-- Header image: images/header.jpg (1600 × 600). -->
   <figure class="banner">
-    <img src="images/header.jpg" alt="" onerror="this.parentNode.classList.add('missing')">
+    <img src="images/header.jpg" alt="Students learning academic words such as explain, compare, evidence and create" onerror="this.parentNode.classList.add('missing')">
     <figcaption>Header image goes here: images/header.jpg</figcaption>
   </figure>
 
   <header class="intro">
     <p class="eyebrow">Year 9 Media Studies</p>
-    <h1>Choose your unit</h1>
-    <p class="sub">Vocabulary and grammar practice. Your progress is saved on this device.</p>
+    <h1>Choose your version</h1>
+    <p class="sub">Pick the one that matches your English. You can switch later.</p>
   </header>
 
-  <nav class="units" aria-label="Units">
-    <a class="unit unit-rep" href="representation/index.html">
-      <span class="unit-num">1</span>
+  <nav class="units" aria-label="Versions">
+    <a class="unit unit-rep" href="zh/index.html" data-track="zh">
+      <span class="unit-num" lang="zh">中</span>
       <span class="unit-text">
-        <span class="unit-name">Representation</span>
-        <span class="unit-sub">Adverts, posters and magazine covers</span>
+        <span class="unit-name">Chinese version <span lang="zh">中文版</span></span>
+        <span class="unit-sub">Learn the words with Chinese support and build up to B1. <span lang="zh">借助中文学习单词，逐步达到 B1 水平。</span></span>
+        <span class="last-used" hidden>Last used</span>
       </span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
-    <a class="unit unit-web" href="website-portfolio/index.html">
-      <span class="unit-num">2</span>
+    <a class="unit unit-web" href="en/index.html" data-track="en">
+      <span class="unit-num">En</span>
       <span class="unit-text">
-        <span class="unit-name">Website Portfolio</span>
-        <span class="unit-sub">Planning, designing and evaluating a website</span>
+        <span class="unit-name">English version</span>
+        <span class="unit-sub">Academic English for analysis, from B1/B2: precise vocabulary, sentences and accurate writing.</span>
+        <span class="last-used" hidden>Last used</span>
       </span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
   </nav>
 </main>
+<script>
+  // Mark the version this device used last.
+  try {
+    var t = (JSON.parse(localStorage.getItem("mediaVocabY9V1")) || {}).settings.track;
+    var a = t && document.querySelector('[data-track="' + t + '"] .last-used');
+    if (a) a.hidden = false;
+  } catch (e) {}
+</script>
 </body>
 </html>

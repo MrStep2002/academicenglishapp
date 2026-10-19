@@ -5,7 +5,8 @@ root = pathlib.Path(__file__).resolve().parent.parent
 unit = root / "representation"
 read = lambda p: p.read_text(encoding="utf-8")
 fonts = re.sub(r'url\("\.\./fonts/([^"]+)"\)', lambda m: 'url("data:font/woff2;base64,' + base64.b64encode((root / "fonts" / m.group(1)).read_bytes()).decode() + '")', read(root / "css/fonts.css"))
-scripts = "".join(f"<script>\n{read(unit / p)}\n</script>\n" for p in ["data/words.js", "data/practice.js", "data/zh.js", "js/engine.js", "js/app.js"])
+# Same order as representation/index.html. The preview opens the Chinese version unless the address says #en.
+scripts = "<script>window.PREVIEW_TRACK = \"zh\";</script>\n" + "".join(f"<script>\n{read(unit / p)}\n</script>\n" for p in ["data/words.js", "data/practice.js", "data/reads.js", "data/zh.js", "js/engine.js", "js/app.js"])
 page = f"""<title>Media Studies Vocab</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>

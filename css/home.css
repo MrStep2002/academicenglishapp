@@ -1,7 +1,7 @@
 /* Homepage: header image, then two large unit buttons. Same palette and fonts as the games. */
 :root {
   --bg: #f3f4f8; --card: #ffffff; --ink: #151935; --muted: #5b6182; --line: #dde0eb; --hi: #ffe14d;
-  --rep: #b4286a; --rep-soft: #fbe3ee; --web: #1f6fd1; --web-soft: #e1ecfb;
+  --rep: #b4286a; --zh: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif; --rep-soft: #fbe3ee; --web: #1f6fd1; --web-soft: #e1ecfb;
   --display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
   --body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
 }
@@ -45,3 +45,13 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 .unit-web:hover { border-color: var(--web); } .unit-web .unit-num { background: var(--web-soft); color: var(--web); } .unit-web svg { color: var(--web); }
 
 @media (prefers-reduced-motion: reduce) { .unit { transition: none; } .unit:hover { transform: none; } }
+
+[lang="zh"] { font-family: var(--zh); }
+.unit-name [lang="zh"] { white-space: nowrap; font-weight: 400; font-size: .8em; color: var(--muted); margin-left: 4px; }
+.unit-sub [lang="zh"] { display: block; }
+.h1-zh { display: block; font-size: .5em; font-weight: 400; letter-spacing: 0; color: var(--muted); margin-top: 4px; }
+.unit-num[lang="zh"] { font-size: 1.4rem; }
+.last-used { align-self: flex-start; margin-top: 6px; font-size: .75rem; font-weight: 700; padding: 1px 8px; border-radius: 99px; background: var(--hi); color: #151935; }
+.last-used[hidden] { display: none; }
+.backlink { color: var(--muted); text-decoration: none; font-weight: 700; font-size: .92rem; }
+.backlink:hover { color: var(--ink); }
