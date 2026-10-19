@@ -5,13 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Media Studies Vocab</title>
 <link rel="stylesheet" href="css/fonts.css">
-<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/home.css">
 </head>
 <body>
-<div id="app"></div>
-<script src="data/words.js"></script>
-<script src="data/practice.js"></script>
-<script src="js/engine.js"></script>
-<script src="js/app.js"></script>
+<main class="home">
+  <!-- Header image: save your picture as images/header.jpg (wide, about 1600 × 600 px works well). -->
+  <figure class="banner">
+    <img src="images/header.jpg" alt="" onerror="this.parentNode.classList.add('missing')">
+    <figcaption>Header image goes here: images/header.jpg</figcaption>
+  </figure>
+
+  <header class="intro">
+    <p class="eyebrow">Year 9 Media Studies</p>
+    <h1>Choose your unit</h1>
+    <p class="sub">Vocabulary and grammar practice. Your progress is saved on this device.</p>
+  </header>
+
+  <nav class="units" aria-label="Units">
+    <a class="unit unit-rep" href="representation/index.html">
+      <span class="unit-num">1</span>
+      <span class="unit-text">
+        <span class="unit-name">Representation</span>
+        <span class="unit-sub">Adverts, posters and magazine covers</span>
+      </span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+    <a class="unit unit-web" href="website-portfolio/index.html">
+      <span class="unit-num">2</span>
+      <span class="unit-text">
+        <span class="unit-name">Website Portfolio</span>
+        <span class="unit-sub">Planning, designing and evaluating a website</span>
+      </span>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </nav>
+</main>
 </body>
 </html>
