@@ -1,0 +1,5 @@
+/* Display and label fonts for the word games, stored in ../fonts so nothing loads from Google (works in mainland China).
+   Atkinson Hyperlegible comes from ../css/fonts.css, shared with the rest of the site. */
+@font-face { font-family: "Gloock"; src: url("../fonts/gloock-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("../fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "IBM Plex Mono"; src: url("../fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }

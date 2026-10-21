@@ -171,3 +171,21 @@ mark,.hl{background:linear-gradient(transparent 12%, var(--mark) 12%, var(--mark
 @media (prefers-reduced-motion:reduce){.tile.fresh{animation:none}}
 .toast{font-size:15px;color:var(--good);font-weight:700;min-height:22px;margin-top:10px}
 .toast.no{color:var(--bad)}
+
+/* spot the error */
+.errtext{font-size:clamp(18px,2.8vw,21px);line-height:2.05;margin:0 0 6px;word-spacing:-.04em}
+.tok{display:inline;background:none;border:0;padding:2px 3px;margin:0 -3px;border-radius:5px;font:inherit;line-height:1.4;color:inherit;cursor:pointer;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.tok:not(:disabled):hover{background:var(--blue-soft)}
+.tok:disabled{cursor:default}
+.tok.t-marked{background:var(--mark);color:var(--mark-ink)}
+.tok.t-found{background:var(--good-soft);color:var(--good);font-weight:700}
+.tok.t-missed{background:var(--bad-soft);color:var(--bad);font-weight:700;outline:1.5px dashed var(--bad)}
+.tok.t-false{background:var(--bad-soft);color:var(--bad);text-decoration:line-through}
+.tok s{opacity:.65}
+.tok ins{text-decoration:none}
+.errlist{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:8px}
+.errlist li{display:grid;gap:2px;font-size:15px}
+.errlist li .why{color:var(--ink-2)}
+.errlist li.miss b{color:var(--bad)}
+.errlist li.got b{color:var(--good)}
+.check-row{margin-top:14px}

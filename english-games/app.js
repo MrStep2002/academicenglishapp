@@ -2,7 +2,7 @@
 // Data comes from data/words.js, data/gaps.js and data/extracts.js.
 (function(){
 const WORDS = window.WORDS_RAW.map(r=>({id:r[0],w:r[1],pos:r[2],def:r[3],ex:r[4],zh:r[5],syn:r[6],fam:r[7],set:Math.ceil(r[0]/20)}));
-const SETS = window.SETS, GAPS = window.GAPS, EXTRACTS = window.EXTRACTS;
+const SETS = window.SETS, GAPS = window.GAPS, EXTRACTS = window.EXTRACTS, ERRORS = window.ERRORS || [];
 const byId = Object.fromEntries(WORDS.map(w=>[w.id,w]));
 const $app = document.getElementById('app');
 const AUTO_MS = 1500;
@@ -55,6 +55,8 @@ const GAMES = [
    sample:'<b>serene</b> &nbsp;⟷&nbsp; tranquil · calm · still', run:()=>playMatch('syn')},
   {key:'own', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context? Uses the Describing sets.',
    sample:'The <u>oppressive</u> heat <u>lingered</u> long after sunset…', run:()=>playOwn(), needsDesc:true},
+  {key:'err', name:'Spot the error', blurb:'Read a paragraph and tap every word with a grammar mistake. Academic sets give analysis paragraphs; Describing sets give description.',
+   sample:'The wind was <u>harshly</u> and cold. The sky <u>become</u> darker…', run:()=>playErr()},
   {key:'zh', name:'中文 → English', blurb:'See the Chinese meaning and choose the English word. The only translation game.',
    sample:'<span class="zh">不祥的</span> → ominous?', run:()=>playZh()}
 ];
@@ -72,7 +74,7 @@ function home(){
   $app.innerHTML = topbar() + `
   <section class="hero">
     <h1>Use the words, don't just translate them.</h1>
-    <p>Five games built on the Golden 100, for students working from upper B1 towards C1. Pick the word sets, choose a game and keep going for as long as you like.</p>
+    <p>Six games built on the Golden 100, for students working from upper B1 towards C1. Pick the word sets, choose a game and keep going for as long as you like.</p>
     <div class="sets" role="group" aria-label="Word sets">
       ${SETS.map(s=>`<button class="chip" data-set="${s.n}" aria-pressed="${chosen.includes(s.n)}">${s.name} <small>${s.lvl}</small></button>`).join('')}
     </div>
@@ -87,7 +89,7 @@ function home(){
       ${off?'<span class="lock">Select at least one Describing set to play.</span>':`<span class="best">${b?'Best streak: '+b:'Not played yet'}</span>`}</button>`}).join('')}
   </div>
   <div class="wl-link"><p>Need to look a word up first? The word list has every definition, example and synonym group.</p><button class="btn alt" id="wl2">Open word list</button></div>
-  <p class="footer">${GAPS.length} gap-fill sentences · ${EXTRACTS.length} extracts · 100 words. Streaks are saved in this browser only.</p>`;
+  <p class="footer">${GAPS.length} gap-fill sentences · ${EXTRACTS.length} extracts · ${ERRORS.length} error paragraphs · 100 words. Streaks are saved in this browser only.</p>`;
   wireTop();
   document.getElementById('wl2').onclick=wordList;
   $app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
@@ -308,6 +310,81 @@ function playOwn(){
       btns.forEach(b=>b.onclick=()=>sub._choose(b));
     });
     keyHandler = e=>{ const n=parseInt(e.key,10); if(active>=0 && n>=1 && n<=4){ const b=subs[active].querySelectorAll('.opt')[n-1]; if(b) subs[active]._choose(b); } };
+  };
+  step();
+}
+
+// ---------- GAME: SPOT THE ERROR ----------
+// Paragraphs use [wrong|right|why]. Students tap the wrong words, then check.
+function parseErrors(text){
+  const out=[], re=/\[([^\]|]+)\|([^\]|]+)\|([^\]]+)\]|([^\s\[]+)/g; let m;
+  while((m=re.exec(text))){
+    if(m[1]) { out.push({text:m[1], err:{right:m[2], why:m[3]}}); continue; }
+    const w=m[4], lead=w.match(/^[^\w'’]+/), trail=w.match(/[^\w'’]+$/);
+    const core=w.replace(/^[^\w'’]+/,'').replace(/[^\w'’]+$/,'');
+    if(!core){ out.push({text:w, punct:true}); continue; }
+    if(lead) out.push({text:lead[0], punct:true, glue:'after'});
+    out.push({text:core});
+    if(trail) out.push({text:trail[0], punct:true});
+  }
+  return out;
+}
+function playErr(){
+  const items = ERRORS.filter(e=>chosen.includes(e.s));
+  const deck = Deck(items), st = Stats('err');
+  let showCount = store.get('errCount', true);
+  shell('Spot the error', `${items.length} paragraphs in your selected sets. Tap each wrong word, then press Check.`);
+  st.draw();
+  const bar=document.querySelector('.bar');
+  const lab=document.createElement('label'); lab.className='toggle';
+  lab.innerHTML=`<input type="checkbox" id="errCount" ${showCount?'checked':''}> Tell me how many`;
+  bar.appendChild(lab);
+  let current=null;
+  lab.querySelector('input').onchange=e=>{ showCount=e.target.checked; store.set('errCount',showCount); if(current) current.updateCount(); };
+  const step = () => {
+    const it=deck.next(), toks=parseErrors(it.text), marked=new Set();
+    const nErr=toks.filter(t=>t.err).length;
+    const html = toks.map((t,i)=>{
+      const prev=toks[i-1];
+      const sp = i===0 || t.punct&&!t.glue || (prev&&prev.glue) ? '' : ' ';
+      return sp + (t.punct ? `<span class="punct">${esc(t.text)}</span>` : `<button class="tok" data-i="${i}">${esc(t.text)}</button>`);
+    }).join('');
+    const card = showCard(`<p class="instr">${esc(it.title)} · <span id="errHint"></span></p>
+      <div class="errtext">${html}</div>
+      <div class="next-row check-row"><button class="btn" id="check">Check</button></div>
+      <div class="fb"></div>`);
+    const hint=card.querySelector('#errHint'), checkBtn=card.querySelector('#check');
+    let checked=false;
+    const updateCount=()=>{ if(checked) return;
+      hint.textContent = showCount ? `There ${nErr===1?'is 1 error':'are '+nErr+' errors'}. Tap each one.` : 'Tap every word that is wrong.';
+      checkBtn.textContent = `Check (${marked.size} marked)`; };
+    current={updateCount}; updateCount();
+    card.querySelectorAll('.tok').forEach(b=>b.onclick=()=>{
+      if(checked) return; const i=+b.dataset.i;
+      if(marked.has(i)){ marked.delete(i); b.classList.remove('t-marked'); } else { marked.add(i); b.classList.add('t-marked'); }
+      updateCount();
+    });
+    const check=()=>{
+      if(checked) return; checked=true;
+      const errIdx=toks.map((t,i)=>t.err?i:-1).filter(i=>i>=0);
+      const found=errIdx.filter(i=>marked.has(i)).length;
+      const falseMarks=[...marked].filter(i=>!toks[i].err).length;
+      const ok = found===errIdx.length && falseMarks===0;
+      card.querySelectorAll('.tok').forEach(b=>{
+        const i=+b.dataset.i, t=toks[i]; b.disabled=true;
+        b.classList.remove('t-marked');
+        if(t.err){ b.classList.add(marked.has(i)?'t-found':'t-missed'); b.innerHTML=`<s>${esc(t.text)}</s> <ins>${esc(t.err.right)}</ins>`; }
+        else if(marked.has(i)) b.classList.add('t-false');
+      });
+      card.querySelector('.check-row').remove();
+      const list=errIdx.map(i=>{ const t=toks[i]; return `<li class="${marked.has(i)?'got':'miss'}"><span><s>${esc(t.text)}</s> → <b>${esc(t.err.right)}</b></span><span class="why">${esc(t.err.why)}</span></li>`; }).join('');
+      const summary=`You found ${found} of ${errIdx.length}${falseMarks?` and marked ${falseMarks} correct word${falseMarks>1?'s':''} as wrong`:''}.`;
+      card.querySelector('.fb').innerHTML=`<div class="feedback ${ok?'ok':'no'}"><span class="verdict">${ok?'All found.':summary}</span><ul class="errlist">${list}</ul></div>`;
+      if(ok){ st.hit(); autoNext(card, step); }
+      else { st.miss(); deck.retry(it); manualNext(card, step); }
+    };
+    checkBtn.onclick=check;
+    keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); check(); } };
   };
   step();
 }
