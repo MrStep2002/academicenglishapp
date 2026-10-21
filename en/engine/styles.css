@@ -406,3 +406,10 @@ a.btn{text-decoration:none;display:inline-block}
 
 .pts-goal{margin:12px 0 6px;font-size:14px;color:var(--ink-2)}
 .pts-goal b{color:var(--good)}
+
+/* Home link: the logo's mouse */
+.navline{display:inline-flex;align-items:center;gap:12px;min-width:0}
+.home-mark{display:inline-flex;width:30px;color:var(--ink);flex:none;border-radius:6px}
+.home-mark svg{width:100%;height:auto;display:block}
+.home-mark:hover{opacity:.75}
+.home-mark:focus-visible{outline:2px solid var(--blue);outline-offset:3px}

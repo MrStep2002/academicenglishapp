@@ -84,7 +84,8 @@
       '@keyframes ptsPop{0%{opacity:0;transform:translateY(8px)}20%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-12px)}}' +
       '@media (prefers-reduced-motion:reduce){.pts-pop{animation:none}}' +
       '@media (max-width:420px){.pts{gap:9px}.pts-k{display:none}}' +
-      '.pts-line{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 16px}';
+      '.pts-line{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 16px}' +
+      '.navline{display:inline-flex;align-items:center;gap:12px;min-width:0}.home-mark{display:inline-flex;width:30px;flex:none;color:var(--ink);border-radius:6px}.home-mark svg{width:100%;height:auto;display:block}.home-mark:hover{opacity:.75}';
     document.head.appendChild(st);
   }
   style();
@@ -96,7 +97,8 @@
     var mount = function(){
       var back = document.querySelector('.backlink'), bar = document.createElement('div');
       bar.className = 'pts'; bar.setAttribute('data-points-bar', side);
-      if (back) { var line = document.createElement('div'); line.className = 'pts-line'; back.parentNode.insertBefore(line, back); line.appendChild(back); line.appendChild(bar); }
+      var left = back && (back.closest('.navline') || back);   // the back link, with the home mouse if there is one
+      if (left) { var line = document.createElement('div'); line.className = 'pts-line'; left.parentNode.insertBefore(line, left); line.appendChild(left); line.appendChild(bar); }
       else { var main = document.querySelector('main') || document.body; main.insertBefore(bar, main.firstChild); }
       render(side, 0);
     };
