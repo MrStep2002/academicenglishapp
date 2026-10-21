@@ -1,10 +1,10 @@
 /* Representation: Year 9 Media Studies (Chinese version). Same format as en/data, plus SUBJECT_ZH (Chinese meanings: drafts, please have them checked).
    sets = word groups shown as buttons; "head" puts them under a level heading. Built from the existing word bank, so ids match it. */
-window.SUBJECT = {"key":"zh-rep","sets":[{"id":"academic","name":"Academic words 学术词汇"},
-{"id":"rep","name":"Representation 再现"},
-{"id":"verbs","name":"Analytical verbs 分析动词"},
-{"id":"creative","name":"Creative choices 创作手法"},
-{"id":"describe","name":"Describing people 描述人物"}],"words":[{"id":"y9:acad:analyse","w":"analyse","pos":"verb","def":"Look closely at the parts of a media text and explain how they create meaning.","ex":"We will analyse the front cover of the magazine.","set":"academic"},
+window.SUBJECT = {"key":"zh-rep","sets":[{"id":"academic","name":"Academic words 学术词汇","level":"B1"},
+{"id":"rep","name":"Representation 再现","level":"B1"},
+{"id":"verbs","name":"Analytical verbs 分析动词","level":"B1"},
+{"id":"creative","name":"Creative choices 创作手法","level":"B1"},
+{"id":"describe","name":"Describing people 描述人物","level":"A2+"}],"words":[{"id":"y9:acad:analyse","w":"analyse","pos":"verb","def":"Look closely at the parts of a media text and explain how they create meaning.","ex":"We will analyse the front cover of the magazine.","set":"academic"},
 {"id":"y9:acad:analysis","w":"analysis","pos":"noun","def":"A close, detailed study of how something creates meaning.","ex":"Her analysis of the poster focuses on colour and lighting.","set":"academic"},
 {"id":"y9:acad:answer","w":"answer","pos":"noun / verb","def":"What you say or write in reply to a question.","ex":"Use evidence from the image in your answer.","set":"academic"},
 {"id":"y9:acad:compare","w":"compare","pos":"verb","def":"Look at how two or more things are similar and different.","ex":"Compare the two adverts and their target audiences.","set":"academic"},

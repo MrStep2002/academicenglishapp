@@ -1,50 +1,48 @@
-# Reading passages: Read and answer
+# Reading passages
 
-Two games take their passages and questions from **`reading.csv`** in this folder (both computers only):
+The reading games load their passages from CSV files in this folder: **one file per subject and topic**.
+Fill them in with any spreadsheet program (save as CSV, UTF-8) or have them written to the brief
+"Reading Passages: Brief for the Writing AI". Add rows, save, commit and push: no code changes needed.
 
-- **Close reading** (English → English Language → Reading Comprehension): use `topic` = `close-reading`. Passages of about 250 words.
-- **Read and answer** (Reading on each topic page): use the topic's name, e.g. `web-design`.
-You can fill it in with any spreadsheet (Excel, Numbers, Google Sheets), then save or export it as **CSV (UTF-8)** with the same name.
-Nobody needs to touch the code: add rows, save, commit and push, and the new passages appear in the game.
+| File | Game |
+|---|---|
+| `english-language/close-reading.csv` | English Language → Reading Comprehension → Close reading |
+| `english-language/descriptive.csv` | Descriptive language → Reading → Read and answer |
+| `media/web-design.csv` | Web design → Reading → Read and answer |
+| `media/representation.csv` | Representation → Reading → Read and answer |
+| `essentials/essentials.csv` | Academic English Essentials → Reading → Read and answer |
 
-`reading-template.csv` has the column headings and three example rows to copy (one is a 250-word close reading passage).
+A new subject gets its own folder (e.g. `history/`). Its page points at its file with `data-reading` (see any topic page).
 
-## Columns (keep these headings, in this order)
+## Columns
 
-| Column | What to put in it | Example |
-|---|---|---|
-| `id` | A unique code for the row. Never change it once students have played. | `web-001` |
-| `topic` | Which game or page it appears in. One of: `close-reading`, `essentials`, `web-design`, `representation`, `descriptive` | `close-reading` |
-| `level` | CEFR level, shown above the passage | `B1` |
-| `title` | Short title for the passage | `A photographer's homepage` |
-| `passage` | The reading text. Leave an empty line between paragraphs (in a spreadsheet: Alt+Enter twice in the cell), or type `||` between paragraphs. | |
-| `question` | One question about the passage | `Why did Lena put very little text on her homepage?` |
-| `correct` | The right answer | |
-| `wrong1`, `wrong2`, `wrong3` | Three wrong answers | |
-| `explanation` | Optional. Shown after answering: why the right answer is right, ideally pointing to the line in the passage. | |
-| `source` | Optional. Where the passage came from (not shown to students). | |
+`id,level,title,passage,question,correct,wrong1,wrong2,wrong3,explanation,source`
 
-The game shuffles the four answers, so it doesn't matter that the right one is always in the `correct` column.
+A passage can have more questions. A second question uses six more columns after `source`:
 
-## Writing good questions
+`question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanation2`
 
-- **Exactly one answer can be right.** A careful reader should be able to point to the words in the passage that prove it.
-- **Keep all four answers about the same length and style.** If the right answer is always the longest or most detailed, students learn to pick the longest.
-- **Make the wrong answers tempting.** Use words from the passage in the wrong way, the opposite idea, or something true in general but not stated in the passage.
-- **Avoid** "all of the above", "none of the above", and answers that repeat each other.
-- **Length:** Close reading passages should be about 250 words. For Read and answer, 80–200 words works well for B1/B2; up to 300 for C1.
-- **Commas and quotation marks are fine.** Spreadsheet programs handle them when they save as CSV.
+A third would add `question3,correct3,wrong1_3,wrong2_3,wrong3_3,explanation3`, and so on. The questions are asked
+in order, with the passage still on screen. Leave the extra columns empty for a passage with one question.
+Every file here already has the columns for a second question.
 
-## Checking a file before you push (optional)
+- `id`: unique, never reused (e.g. `close-001`).
+- `level`: `A1`, `A2`, `B1`, `B2` or `C1`. Shown to students as Foundation, Foundation+, Intermediate,
+  Intermediate+ and Advanced (the names are in `LEVEL_NAMES` in `en/engine/app.js`). The site gives students the
+  passages nearest their level first, and their answers update their level.
+- `passage`: paragraphs separated by a blank line inside the cell, or by ` || `.
+- `correct` + `wrong1`–`wrong3`: shuffled on screen. Keep all four about the same length.
+- `explanation` (optional) is shown after answering; `source` (optional) is never shown.
 
-From the repository folder, run:
+`reading-template.csv` has the headings and one complete example with two questions.
+
+## Checking before you push (optional)
 
 ```
-python3 tools/check_reading.py
+python3 tools/check_reading.py            # checks every CSV in en/reading
+python3 tools/check_reading.py en/reading/media/web-design.csv
 ```
 
-It lists rows with missing columns, unknown topics, repeated ids, and answer sets where the right answer stands out by length.
+It lists empty cells, unknown levels, repeated ids and passage lengths, and how often the right answer is the longest.
 
-## Viewing it
-
-The passages load when the site is online (GitHub Pages). Opening the HTML file directly from your computer won't load them, because browsers block that.
+Passages load when the site is online (GitHub Pages), not from an HTML file opened directly on your computer.

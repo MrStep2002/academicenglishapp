@@ -1,11 +1,11 @@
-/* Web design: Year 8 Website Words (six levels; topics used by Odd one out) (Chinese version). Same format as en/data, plus SUBJECT_ZH (Chinese meanings: drafts, please have them checked).
+/* Web design: Year 8 Website Words (six steps; topics used by Odd one out) (Chinese version). Same format as en/data, plus SUBJECT_ZH (Chinese meanings: drafts, please have them checked).
    sets = word groups shown as buttons; "head" puts them under a level heading. Built from the existing word bank, so ids match it. */
-window.SUBJECT = {"key":"zh-web","sets":[{"id":"t1","name":"Level 1 · Website basics 第1级 网站基础"},
-{"id":"t2","name":"Level 2 · Using and arranging 第2级 使用与排列"},
-{"id":"t3","name":"Level 3 · Describing a page 第3级 描述页面"},
-{"id":"t4","name":"Level 4 · Design and audience 第4级 设计与受众"},
-{"id":"t5","name":"Level 5 · Impressions and planning 第5级 印象与规划"},
-{"id":"t6","name":"Level 6 · Analysing and evaluating 第6级 分析与评价"}],"topics":[{"id":"parts","name":"Parts of a website 网站的组成"},
+window.SUBJECT = {"key":"zh-web","sets":[{"id":"t1","name":"Step 1 · Website basics 第1步 网站基础","level":"A1+"},
+{"id":"t2","name":"Step 2 · Using and arranging 第2步 使用与排列","level":"A2"},
+{"id":"t3","name":"Step 3 · Describing a page 第3步 描述页面","level":"A2+"},
+{"id":"t4","name":"Step 4 · Design and audience 第4步 设计与受众","level":"B1"},
+{"id":"t5","name":"Step 5 · Impressions and planning 第5步 印象与规划","level":"B1+"},
+{"id":"t6","name":"Step 6 · Analysing and evaluating 第6步 分析与评价","level":"B2"}],"topics":[{"id":"parts","name":"Parts of a website 网站的组成"},
 {"id":"using","name":"Using a website 使用网站"},
 {"id":"layout","name":"Layout and position 布局与位置"},
 {"id":"style","name":"Colour, fonts and style 色彩、字体与风格"},

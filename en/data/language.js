@@ -12,11 +12,11 @@
      questions  Answer the question (desktop only): {set, cmd, q, opts, a, why}
      extracts   In your own words (desktop only): {set, t with [word], ids, qs: [[right, [wrong x3]]]}
    Never change a word id once students have played: streaks and progress use it. */
-window.SUBJECT = {"key":"language","sets":[{"id":"s1","name":"Academic toolkit"},
-{"id":"s2","name":"Describing: foundations"},
-{"id":"s3","name":"Describing: developing"},
-{"id":"s4","name":"Describing: advanced"},
-{"id":"s5","name":"Describing: ambitious"}],"words":[{"id":"g1","w":"analyse","pos":"verb","def":"Examine details and explain how they work together.","ex":"Analyse how the writer creates tension.","syn":["break down","dissect","interpret"],"set":"s1"},
+window.SUBJECT = {"key":"language","sets":[{"id":"s1","name":"Academic toolkit","level":"B1+"},
+{"id":"s2","name":"Describing 1","level":"B1+"},
+{"id":"s3","name":"Describing 2","level":"B2"},
+{"id":"s4","name":"Describing 3","level":"B2+"},
+{"id":"s5","name":"Describing 4","level":"C1"}],"words":[{"id":"g1","w":"analyse","pos":"verb","def":"Examine details and explain how they work together.","ex":"Analyse how the writer creates tension.","syn":["break down","dissect","interpret"],"set":"s1"},
 {"id":"g2","w":"explain","pos":"verb","def":"Make something clear by giving reasons or details.","ex":"Explain why the character refuses to leave.","syn":["clarify","make clear","account for"],"set":"s1"},
 {"id":"g3","w":"infer","pos":"verb","def":"Reach a conclusion using evidence and reasoning.","ex":"We can infer from his trembling hands that he is afraid.","syn":["deduce","work out","conclude"],"set":"s1"},
 {"id":"g4","w":"imply","pos":"verb","def":"Communicate something without stating it directly.","ex":"Her refusal to answer implies that she has something to hide.","syn":["hint at","indicate indirectly","get at"],"set":"s1"},

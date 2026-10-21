@@ -4,6 +4,8 @@
 (function(){
 'use strict';
 const S = window.SUBJECT;
+// The site's top folder, worked out from where this file lives (en/engine/app.js), so links work on any host and from a local copy
+const ROOT = ((document.currentScript && document.currentScript.src) || '/en/engine/app.js').replace(/en\/engine\/app\.js([?#].*)?$/, '');
 const $app = document.getElementById('app');
 const CFG = $app.dataset;               // data-name, data-blurb, data-back, data-back-label, data-only, data-sets, data-store
 // data-sets: this page uses only some of the data's sets. Drop everything else, so the page only lists games it has content for.
@@ -23,8 +25,91 @@ const byId = Object.fromEntries(S.words.map(w=>[w.id,w]));
 const alikeOf = {}; (S.alike||[]).forEach((g,i)=>g.forEach(id=>{ (alikeOf[id]=alikeOf[id]||new Set()).add(i); }));
 const areAlike = (a,b) => { const A=alikeOf[a], B=alikeOf[b]; if(!A||!B) return false; for(const x of A) if(B.has(x)) return true; return false; };
 
-// First visit: the sets the data says to start with (S.start), otherwise all of them.
-const startSets = () => (S.start && S.start.length ? S.start : S.sets.map(s=>s.id));
+// ---------- LEVELS AND PROGRESS (saved in this browser) ----------
+// One scale for the whole site: A1=1, A2=2, B1=3, B2=4, C1=5 ("+" adds half a level).
+// Every answer moves the student's level for this topic towards the level of the work they get right
+// (a rating that starts at B1 on the English side and A2 on the Chinese side, or at their overall level
+// once they have one). Every word they meet moves through stages: new → learning → familiar → known,
+// and can only move up again after a wait (10 minutes, 1 day, 3 days), so "known" means remembered over days.
+// Games then deal work close to the student's level first, plus words that are due for review.
+const LEVEL_CODES = ['', 'A1', 'A2', 'B1', 'B2', 'C1'];
+const LEVEL_NAMES = {A1:'Foundation', A2:'Foundation+', B1:'Intermediate', B2:'Intermediate+', C1:'Advanced'};   // names students see (codes stay hidden)
+const LEVEL_ZH = {A1:'基础', A2:'基础+', B1:'中级', B2:'中级+', C1:'高级'};   // beside the names on the Chinese side
+const levelNum = code => { if(code==null || code==='') return null; if(typeof code==='number') return code;
+  const m=String(code).trim().toUpperCase().match(/^([ABC])([12])(\+)?/); if(!m) return null;
+  return ({A:0,B:2,C:4})[m[1]] + (+m[2]) + (m[3]?0.5:0); };
+// The name students see for a level code. B1+ (the upper half of B1) has B1's name.
+const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
+const setLevel = {}; S.sets.forEach(s=>{ setLevel[s.id]=levelNum(s.level); });
+// For the big serif headings: the serif font's + is tiny, so it is set in the body font
+const nameHtml = n => esc(n).replace(/\+$/, '<span class="plus">+</span>');
+const wordOf = it => !it ? null : (byId[it.id]===it ? it : (it.wid && byId[it.wid]) || null);
+const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(own!=null) return own;
+  const w=wordOf(it); if(w && w!==it){ const wl=levelNum(w.level); if(wl!=null) return wl; }
+  return it.set!=null && setLevel[it.set]!=null ? setLevel[it.set] : null; };
+const P = (function(){
+  const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
+  const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, zhtf:.5, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
+  // Always re-read before using, so two open tabs never overwrite each other's progress
+  const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
+    d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
+  let data=load();
+  const save=()=>{ try{ localStorage.setItem(STORE, JSON.stringify(data)); }catch(e){} };
+  const dayKey=x=>x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
+  const zhSide = CFG.only==='zh' || /^zh/.test(KEY);
+  const overall = () => { let sum=0, n=0; Object.values(data.topics).forEach(t=>{ if(t.n>=CAL){ sum+=t.r*t.n; n+=t.n; } }); return n ? sum/n : null; };
+  const topic = () => { data=load(); return data.topics[KEY]; };
+  // A new topic starts from the student's level elsewhere, if there is one. That start is only a guess,
+  // but it is better than nothing, so it counts as a few answers (h) and the first answers move it less.
+  const ensure = () => { if(data.topics[KEY]) return data.topics[KEY]; const o=overall();
+    return (data.topics[KEY]={name:CFG.name||KEY, side:zhSide?'zh':'en', href:location.pathname, r:o ?? (zhSide?2:3), h:o==null?0:3, n:0, right:0}); };
+  const label = r => { const b=Math.max(1, Math.min(5, Math.floor(r))), code=LEVEL_CODES[b];
+    return {code, name:LEVEL_NAMES[code]||'', zh:LEVEL_ZH[code]||'', pct: b>=5 ? 100 : Math.round((r-b)*100), next: LEVEL_NAMES[LEVEL_CODES[b+1]]||''}; };
+  const record = (game, item, ok) => {
+    try{
+      data=load();
+      const t=ensure(), before=t.n, now=Date.now(), d=itemLevel(item);
+      t.n++; if(ok) t.right++; t.last=now; t.href=location.pathname; if(CFG.name) t.name=CFG.name;
+      const dk=dayKey(new Date()); data.days[dk]=(data.days[dk]||0)+1;
+      let msg='';
+      if(d!=null){
+        const g=GUESS[game] ?? .25, p=g+(1-g)/(1+Math.exp(-2.5*(t.r-d)));
+        const k=Math.max(.12, .8/Math.sqrt(before+(t.h||0)+1)), oldBand=Math.floor(t.r);
+        t.r=Math.max(1, Math.min(5.99, t.r + k*((ok?1:0)-p)));
+        const L=label(t.r);
+        if(t.n===CAL) msg=`We've found your level: ${L.name}`+(zhSide?` · 你的水平：${L.zh}`:'');
+        else if(t.n>CAL && Math.floor(t.r)>oldBand) msg=`Level up! You've reached ${L.name}`+(zhSide?` · 升级到${L.zh}！`:'');
+      }
+      const words = item && item.ids ? item.ids.map(id=>byId[id]).filter(Boolean) : [wordOf(item)].filter(Boolean);
+      words.forEach(w=>{ const rec=data.words[w.id] || (data.words[w.id]={s:0, due:0});
+        if(ok){ if(now>=rec.due && rec.s<4){ rec.s++; rec.due=now+WAIT[rec.s]; } }
+        else { rec.s=Math.max(rec.s?1:0, rec.s-1); rec.due=now; } });
+      let known=0, fam=0, learn=0;
+      S.words.forEach(w=>{ const s=(data.words[w.id]||{}).s||0; if(s>=4) known++; else if(s>=2) fam++; else if(s>=1) learn++; });
+      t.words={total:S.words.length, known, fam, learn};
+      save(); if(msg) toastLevel(msg);
+    }catch(e){ console.warn('Progress not saved:', e); }
+  };
+  // Sets whose level is close to the student's (from this topic once found, otherwise their overall level)
+  const recommended = () => { const t=topic(); const r = t && t.n>=CAL ? t.r : overall(); if(r==null) return [];
+    return S.sets.filter(s=>{ const l=setLevel[s.id]; return l!=null && l>=r-0.75 && l<=r+1; }).map(s=>s.id); };
+  const rating = () => { const t=topic(); return t ? t.r : (overall() ?? (zhSide?2:3)); };
+  return {record, topic, label, recommended, overall, rating, CAL, refresh:()=>(data=load()), wordRec:id=>data.words[id], dayKey};
+})();
+// Order a round so that work near the student's level comes first, then words due for review;
+// words already known come last. Items with no level are simply shuffled.
+function rankForLevel(items){
+  const target=P.rating()+0.25, now=Date.now();
+  return items.map(it=>{ let sc=Math.random()*0.6; const d=itemLevel(it); if(d!=null) sc+=Math.abs(d-target);
+      const w=wordOf(it), rec=w && P.wordRec(w.id);
+      if(rec){ if(rec.s>=1 && rec.s<4 && rec.due<=now) sc-=0.6; else if(rec.s>=4 && rec.due>now) sc+=0.8; }
+      return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+}
+function toastLevel(msg){ const t=document.createElement('div'); t.className='lvl-toast'; t.setAttribute('role','status'); t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(), 3800); }
+
+// First visit: the sets that suit the student's level (once it is known), otherwise the sets the data says to start with (S.start), otherwise all of them.
+const startSets = () => { const rec=P.recommended(); if(rec.length) return rec; return S.start && S.start.length ? S.start : S.sets.map(s=>s.id); };
 let chosen = store.get('sets', startSets());
 chosen = chosen.filter(id=>S.sets.some(s=>s.id===id)); if(!chosen.length) chosen=startSets();
 const inSets = x => chosen.includes(x.set);
@@ -47,7 +132,7 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
 // Endless deck: shuffled, refilled when empty; missed items come back a few cards later.
 function Deck(items){
   let queue=[], last=null; const retried=new Set();
-  const refill=()=>{ queue=shuffle(items); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
+  const refill=()=>{ queue=rankForLevel(items); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
   return {
     next(){ if(!queue.length) refill(); last=queue.shift(); return last; },
     // A missed item comes back once, a few cards later. Missed again, it waits for the next round,
@@ -58,8 +143,8 @@ function Deck(items){
 }
 function Stats(game){
   const s={answered:0,correct:0,streak:0,best:store.get('streak:'+game,0)};
-  s.hit=()=>{ s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); };
-  s.miss=()=>{ s.answered++; s.streak=0; s.draw(); };
+  s.hit=(item)=>{ s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); };
+  s.miss=(item)=>{ s.answered++; s.streak=0; s.draw(); P.record(game,item,false); };
   s.draw=()=>{ const el=document.getElementById('stats'); if(!el) return;
     el.innerHTML=`<span>Correct <b>${s.correct}</b>/${s.answered}</span><span class="streak">Streak <b>${s.streak}</b></span><span>Best <b>${s.best}</b></span>`; };
   return s;
@@ -79,7 +164,7 @@ const GAMES = [
   {key:'build',    cat:'grammar', name:'Build the sentence',blurb:'Put the coloured pieces in order. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'error',    cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   {key:'tf',       cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
-  {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the correct answer from four options.', items:()=>S.passages||[], min:1, run:()=>playPassage()},
+  {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>S.passages||[], min:1, run:()=>playPassage()},
   {key:'own',      cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     cat:'reading', name:'Read it',           blurb:'Read a short text about a media product and answer a question.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   {key:'question', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
@@ -104,9 +189,11 @@ function menu(){
     <h1>${esc(CFG.name||'')}</h1>
     <p>${esc(CFG.blurb||'')}</p>
     ${S.sets.length>1?`<div class="sets" role="group" aria-label="Topics and levels">
-      ${S.sets.map(s=>`<button class="chip" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}">${esc(s.name)}${s.lv?` <small>${esc(s.lv)}</small>`:''}</button>`).join('')}
+      ${S.sets.map(s=>{ const tag=s.level?levelName(s.level):s.lv;
+        return `<button class="chip${P.recommended().includes(s.id)?' chip-good':''}" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}">${esc(s.name)}${tag&&tag!==s.name?` <small>${esc(tag)}</small>`:''}</button>`; }).join('')}
     </div>`:''}
     <p class="setnote">${n} words selected.</p>
+    ${levelCard()}
   </section>
   <div class="cats">
     ${Object.entries(CATS).map(([k,c])=>{
@@ -124,6 +211,7 @@ function menu(){
     if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); } else chosen=S.sets.map(x=>x.id).filter(x=>x===s||chosen.includes(x));
     store.set('sets',chosen); menu();
   });
+  wirePickLevel(menu);
 }
 
 // ---------- CATEGORY: list of games ----------
@@ -195,7 +283,7 @@ const fbOk = (fb, html) => fb.innerHTML=`<div class="feedback ok"><span class="v
 const fbNo = (fb, answer, html) => fb.innerHTML=`<div class="feedback no"><span class="verdict">Not quite.${answer?` The answer is ${esc(answer)}.`:''}</span>${html||''}</div>`;
 // After an answer: right → move on by itself; wrong → explain, wait, and bring the item back later.
 function settle(ok, card, st, deck, item, next){
-  if(ok){ st.hit(); autoNext(card, next); } else { st.miss(); deck.retry(item); manualNext(card, next); }
+  if(ok){ st.hit(item); autoNext(card, next); } else { st.miss(item); deck.retry(item); manualNext(card, next); }
 }
 
 // ---------- VOCABULARY: Match the meaning / Synonym groups ----------
@@ -239,7 +327,7 @@ function playMatch(mode, withZh){
     const left=a.dataset.side==='L'?a:b, right_=a.dataset.side==='R'?a:b, id=left.dataset.id;
     if(a.dataset.id===b.dataset.id){
       [a,b].forEach(x=>{x.classList.add('done'); x.disabled=true;});
-      if(wrongOn.has(id)){ wrongOn.delete(id); st.miss(); } else st.hit();
+      if(wrongOn.has(id)){ wrongOn.delete(id); st.miss(byId[id]); } else st.hit(byId[id]);
       toast('Correct: '+byId[id].w);
       later(()=>{ spentL.add(+left.dataset.slot); spentR.add(+right_.dataset.slot);
         if(spentL.size>=REFILL_AT) refill(); else paint(); }, 450);
@@ -422,7 +510,7 @@ function playOwn(){
       sub._choose=b=>{ if(sub.dataset.done) return; sub.dataset.done='1';
         const ok=b.dataset.v===q[0], w=byId[o.ids[j]];
         btns.forEach(x=>{ x.disabled=true; if(x.dataset.v===q[0]) x.classList.add('ok'); else if(x===b) x.classList.add('no'); else x.classList.add('dim'); });
-        if(ok) st.hit(); else { st.miss(); allRight=false; }
+        if(ok) st.hit(w||o); else { st.miss(w||o); allRight=false; }
         sub.querySelector('.why').innerHTML=(ok?'Correct. ':`In this extract it means “${esc(q[0])}”. `)+(w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:'');
         const n=subs.findIndex(s=>!s.dataset.done); if(n>=0){ active=n; hl(); return; }
         active=-1; hl();
@@ -464,7 +552,11 @@ function playQuestion(){
 
 // ---------- READING: Read and answer (questions come from a spreadsheet file, see en/reading/README.md) ----------
 // The page says where the file is (data-reading) and which topic it is (data-topic).
-// Columns: id, topic, level, title, passage, question, correct, wrong1, wrong2, wrong3, explanation
+// One CSV file per subject and topic (see en/reading/README.md).
+// Columns: id, level, title, passage, question, correct, wrong1, wrong2, wrong3, explanation, source
+// More questions on the same passage (optional): question2, correct2, wrong1_2, wrong2_2, wrong3_2, explanation2,
+// then question3, correct3, wrong1_3 … and so on. They are asked in order, with the passage still on screen.
+// Level codes are shown to students by name: see LEVEL_NAMES near the top of this file.
 function parseCSV(text){
   const rows=[]; let row=[], cell='', q=false;
   text=text.replace(/^﻿/,'');
@@ -478,27 +570,40 @@ function parseCSV(text){
   const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
   return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
 }
+// Question 1 uses the plain column names; question n uses questionN, correctN, wrong1_N, wrong2_N, wrong3_N, explanationN.
+function questionsOf(r){ const qs=[];
+  for(let n=1;n<=9;n++){ const a=n===1?'':String(n), b=n===1?'':'_'+n;
+    const q={q:r['question'+a], opts:[r['correct'+a], r['wrong1'+b], r['wrong2'+b], r['wrong3'+b]], why:r['explanation'+a]||''};
+    if(!q.q) continue;
+    if(q.opts.every(Boolean)) qs.push(q); else console.warn('Reading row '+r.id+': question '+n+' skipped (an answer is missing)'); }
+  return qs; }
 let readingState = CFG.reading ? 'loading' : 'none';
 if(CFG.reading){
   fetch(CFG.reading, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(t=>{
-    const need=['id','topic','title','passage','question','correct','wrong1','wrong2','wrong3'];
+    const need=['id','title','passage','question','correct','wrong1','wrong2','wrong3'];
     S.passages = parseCSV(t).filter(r=>{
-      if(r.topic!==CFG.topic) return false;
+      if(CFG.topic && r.topic && r.topic!==CFG.topic) return false;   // one file per topic; a topic column is optional
       const miss=need.filter(k=>!r[k]); if(miss.length){ console.warn('Reading row '+(r.id||'?')+' skipped: missing '+miss.join(', ')); return false; }
-      return true; }).map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, q:r.question, opts:[r.correct,r.wrong1,r.wrong2,r.wrong3], a:0, why:r.explanation||''}));
+      return true; }).map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, qs:questionsOf(r)}));
     readingState='ok';
   }).catch(e=>{ console.warn('Reading file not loaded:', e); readingState='failed'; })
     .finally(()=>{ const h=location.hash.replace(/^#/,''); if(CFG.only==='passage'||!h||CATS[h]) route(); });
 }
 function playPassage(){
   const game=GAMES.find(g=>g.key==='passage'), items=game.items(), deck=Deck(items), st=Stats('passage');
-  shell(game, `${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the best answer.`); st.draw();
+  const nq=items.reduce((n,r)=>n+r.qs.length,0);
+  shell(game, `${items.length} passage${items.length===1?'':'s'}${nq>items.length?`, ${nq} questions`:''}. Read carefully, then choose the best answer.`); st.draw();
   const step=()=>{
-    const r=deck.next();
+    const r=deck.next(), many=r.qs.length>1; let missed=false;
     const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
-    mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(r.level)}`:''}`, promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(r.q)}</p>`,
-      options:r.opts, answer:r.opts[0], optClass:'long',
-      onResult:(ok,card,fb)=>{ ok?fbOk(fb, r.why?`<span>${esc(r.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(r.opts[0])}</b></span>${r.why?`<span>${esc(r.why)}</span>`:''}`); settle(ok,card,st,deck,r,step); }});
+    // One card per question; the passage stays on every card. A miss brings the whole passage back later (once).
+    const ask=i=>{ const q=r.qs[i], next=i+1<r.qs.length ? ()=>ask(i+1) : step, item={id:r.id+(i?'#'+(i+1):''), level:r.level};
+      mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}${many?` · Question ${i+1} of ${r.qs.length}`:''}`,
+        promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:'long',
+        onResult:(ok,card,fb)=>{ ok?fbOk(fb, q.why?`<span>${esc(q.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(q.opts[0])}</b></span>${q.why?`<span>${esc(q.why)}</span>`:''}`);
+          if(ok){ st.hit(item); autoNext(card,next); } else { st.miss(item); if(!missed){ missed=true; deck.retry(r); } manualNext(card,next); } }});
+    };
+    ask(0);
   };
   step();
 }
@@ -522,7 +627,7 @@ function chipHtml(s){
   // Keep the Chinese part of a group name together on its own span so it never splits mid-phrase
   const m=s.name.match(/^(.*?)\s+([第\u4e00-\u9fff].*)$/);
   const label=m?`<span class="chip-en">${esc(m[1])}</span> <span class="chip-zh" lang="zh-CN">${esc(m[2])}</span>`:esc(s.name);
-  return `<button class="chip" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}"><span class="chip-label">${label}</span> <span class="chip-n">${countIn(s.id)}</span></button>`; }
+  return `<button class="chip${P.recommended().includes(s.id)?' chip-good':''}" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}"><span class="chip-label">${label}</span> <span class="chip-n">${countIn(s.id)}</span></button>`; }
 function chipsHtml(){
   if(S.sets.length<2) return '';
   const heads=[...new Set(S.sets.map(s=>s.head||''))];
@@ -543,6 +648,7 @@ function zhMenu(){
     ${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}
     ${chipsHtml()}
     <p class="setnote">${n} words selected. 已选 ${n} 个单词。</p>
+    ${levelCard()}
   </section>
   <p class="instr group-label">Practice 练习</p>
   <div class="games">${ZH_GAMES.filter(g=>g.type==='practice').map(card).join('')}</div>
@@ -554,6 +660,7 @@ function zhMenu(){
     else { const s=c.dataset.set;
       if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); } else chosen=S.sets.map(x=>x.id).filter(x=>x===s||chosen.includes(x)); }
     const y=window.scrollY; store.set('sets',chosen); zhMenu(); window.scrollTo(0,y); });
+  wirePickLevel(zhMenu);
 }
 function zhShell(title, note){
   frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
@@ -665,7 +772,7 @@ function playOdd(){
         ? `<span><b>${esc(odd.w)}</b> is ${/^[aeiou]/i.test(oddK)?'an':'a'} ${esc(oddK)}. The others are ${esc(main)}s.</span>`
         : `<span><b>${esc(odd.w)}</b> belongs to <i>${esc(oddLabel(oddK))}</i>. The others belong to <i>${esc(oddLabel(main))}</i>.</span>`;
       const fb=card.querySelector('.fb'); ok?fbOk(fb,why):fbNo(fb,odd.w,why);
-      if(ok){ st.hit(); autoNext(card,step); } else { st.miss(); manualNext(card,step); } };
+      if(ok){ st.hit(odd); autoNext(card,step); } else { st.miss(odd); manualNext(card,step); } };
     btns.forEach(b=>b.onclick=()=>choose(b));
     keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) choose(btns[n-1]); };
   };
@@ -697,7 +804,7 @@ function playSpeed(){
     const w=deck.next(), ds=distractors(w,p.length>=8?p:S.words,3);
     mcCard({instr:'Choose the English word 选出英文单词', promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>`,
       options:[w.w,...ds.map(x=>x.w)], answer:w.w,
-      onResult:(ok)=>{ if(ok){ score++; document.getElementById('sc').textContent=score; later(step,250); } else { missed.push(w); later(step,900); } }});
+      onResult:(ok)=>{ P.record('zhspeed',w,ok); if(ok){ score++; document.getElementById('sc').textContent=score; later(step,250); } else { missed.push(w); later(step,900); } }});
   };
   tick(); step();
 }
@@ -712,19 +819,58 @@ function playSurvival(){
     const w=deck.next(), ds=distractors(w,p.length>=8?p:S.words,3), start=Date.now(), my=limit; let answered=false;
     mcCard({instr:'Choose the meaning 选出释义', promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
       options:[w.def,...ds.map(x=>x.def)], answer:w.def, optClass:'long',
-      onResult:(ok,card,fb)=>{ answered=true;
+      onResult:(ok,card,fb)=>{ answered=true; P.record('zhsurvive',w,ok);
         if(ok){ score++; limit=Math.max(4000,limit-300); draw(); later(step,300); }
         else { fb.innerHTML=`<div class="feedback no"><span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span></div>`; if(lose(w)) later(step,1400); } }});
     const card=document.querySelector('#feed .card');
     const tick=()=>{ if(answered||over) return; const left=Math.max(0,my-(Date.now()-start));
       const f=document.getElementById('timeFill'); if(f) f.style.width=(100*left/my)+'%';
-      if(left<=0){ answered=true; card.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===w.def) b.classList.add('ok'); else b.classList.add('dim'); });
+      if(left<=0){ answered=true; P.record('zhsurvive',w,false); card.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===w.def) b.classList.add('ok'); else b.classList.add('dim'); });
         card.querySelector('.fb').innerHTML=`<div class="feedback no"><span class="verdict">Time's up! 时间到！</span><span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span></div>`;
         keyHandler=null; if(lose(w)) later(step,1400); }
       else later(tick,100); };
     tick();
   };
   step();
+}
+
+// ---------- LEVEL CARD (topic menus) and MY PROGRESS page ----------
+function levelCard(){
+  const zh=CFG.only==='zh', t=P.topic(), n=t?t.n:0, left=P.CAL-n;
+  const head=`<p class="lvl-k">Your level${zh?' 你的水平':''}</p>`;
+  if(n<P.CAL) return `<div class="lvl-card">${head}<p class="lvl-v">Finding your level…${zh?' 正在评估':''}</p><span class="lvl-bar"><i style="width:${n*100/P.CAL}%"></i></span>
+    <p class="lvl-s">Answer ${left} more question${left===1?'':'s'} in any game below and your level will appear here.${zh?` 再答 ${left} 题即可看到你的水平。`:''}</p></div>`;
+  const L=P.label(t.r), w=t.words, rec=P.recommended(), same=rec.length===chosen.length && rec.every(x=>chosen.includes(x));
+  return `<div class="lvl-card">${head}<p class="lvl-v"><b>${nameHtml(L.name)}</b>${zh&&L.zh?`<span lang="zh-CN">${L.zh}</span>`:''}</p><span class="lvl-bar"><i style="width:${L.pct}%"></i></span>
+    <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''} · <a href="${ROOT}progress/index.html">All my progress${zh?' 我的进步':''}</a></p>
+    ${rec.length && !same && S.sets.length>1 ? `<p class="lvl-s"><span class="dot-good"></span> marks the sets that suit your level.${zh?' 绿点表示适合你水平的词组。':''} <button class="btn alt small" id="pickLevel">Choose these for me${zh?' 帮我选择':''}</button></p>`:''}</div>`;
+}
+function wirePickLevel(again){ const b=document.getElementById('pickLevel'); if(b) b.onclick=()=>{ const rec=P.recommended(); if(rec.length){ chosen=rec; store.set('sets',chosen); again(); } }; }
+function progressPage(){
+  const d=P.refresh(), list=Object.values(d.topics).sort((a,b)=>(b.last||0)-(a.last||0));
+  const answers=list.reduce((s,t)=>s+t.n,0), right=list.reduce((s,t)=>s+t.right,0);
+  const ws=Object.values(d.words), known=ws.filter(w=>w.s>=4).length, learning=ws.filter(w=>w.s>=1&&w.s<4).length;
+  let streak=0; const dt=new Date(); if(!d.days[P.dayKey(dt)]) dt.setDate(dt.getDate()-1); while(d.days[P.dayKey(dt)]){ streak++; dt.setDate(dt.getDate()-1); }
+  const last=[]; for(let i=13;i>=0;i--){ const x=new Date(); x.setDate(x.getDate()-i); last.push([x, d.days[P.dayKey(x)]||0]); }
+  const max=Math.max(1,...last.map(x=>x[1])), ov=P.overall(), L=ov!=null?P.label(ov):null;
+  const row=t=>{ const found=t.n>=P.CAL, l=found?P.label(t.r):null, w=t.words;
+    return `<a class="prog-row" href="${esc(t.href||'#')}"><span class="prog-name">${esc(t.name)}<small>${t.side==='zh'?'中文版':'English'}</small></span>
+      <span class="prog-lvl">${found?`<b>${nameHtml(l.name)}</b>${t.side==='zh'&&l.zh?` <span lang="zh-CN">${l.zh}</span>`:''}`:`Finding level · ${t.n} of ${P.CAL}`}</span>
+      <span class="lvl-bar"><i style="width:${found?l.pct:t.n*100/P.CAL}%"></i></span>
+      <span class="prog-meta">${w&&w.total?`${w.known} of ${w.total} words known · `:''}${t.n} answers · ${t.n?Math.round(100*t.right/t.n):0}% right</span></a>`; };
+  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Back'}, `
+  <section class="hero"><p class="eyebrow">My progress 我的进步</p>
+    <h1>${L?`${nameHtml(L.name)} <span class="h-sub" lang="zh-CN">${L.zh}</span>`:'Let’s find your level'}</h1>
+    <p>${L?`Your overall level, from everything you have played.${L.next?` You are ${L.pct}% of the way to ${esc(L.next)}.`:''}`:`Play any game. After ${P.CAL} answers in a topic, your level appears here. 在任一主题答 ${P.CAL} 题后，这里会显示你的水平。`}</p>
+    ${L?`<span class="lvl-bar lvl-big"><i style="width:${L.pct}%"></i></span>`:''}
+  </section>
+  <div class="stat-tiles"><div class="stat"><b>${answers}</b><span>answers</span></div><div class="stat"><b>${answers?Math.round(100*right/answers):0}%</b><span>right</span></div>
+    <div class="stat"><b>${streak}</b><span>day${streak===1?'':'s'} in a row</span></div><div class="stat"><b>${known}</b><span>words known · ${learning} learning</span></div></div>
+  <p class="instr">Answers, last 14 days</p>
+  <div class="days" role="img" aria-label="Answers per day over the last 14 days">${last.map(([x,n])=>`<i class="${n?'':'zero'}" style="height:${n?Math.max(6,Math.round(100*n/max)):3}%" title="${x.toDateString()}: ${n} answers"></i>`).join('')}</div>
+  <p class="instr">Topics</p>
+  <div class="prog-list">${list.length?list.map(row).join(''):'<p class="notice">No games played yet on this device. 这台设备上还没有游戏记录。</p>'}</div>
+  <p class="hint" style="margin-top:22px">Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again.</p>`);
 }
 
 // ---------- WORD LIST ----------
@@ -745,6 +891,7 @@ function wordList(){
 // ---------- router ----------
 function route(){
   const h=location.hash.replace(/^#/,'');
+  if(CFG.only==='progress') return progressPage();
   if(CFG.only==='passage'){   // a page that is just one reading game (e.g. Close reading)
     const back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
     const msg = PHONE ? 'Reading games are only available on desktop devices. Open this page on a computer to play.'

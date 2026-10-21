@@ -12,10 +12,10 @@
      questions  Answer the question (desktop only): {set, cmd, q, opts, a, why}
      extracts   In your own words (desktop only): {set, t with [word], ids, qs: [[right, [wrong x3]]]}
    Never change a word id once students have played: streaks and progress use it. */
-window.SUBJECT = {"key":"media","sets":[{"id":"y9","name":"Year 9 Representation","lv":"Y9"},
-{"id":"y8-1","name":"Foundation","lv":"Level 1"},
-{"id":"y8-2","name":"Core","lv":"Level 2"},
-{"id":"y8-3","name":"Stretch","lv":"Level 3"}],"words":[{"id":"y9:acad:analyse","w":"analyse","pos":"verb","def":"Look closely at the parts of a media text and explain how they create meaning.","ex":"We will analyse the front cover of the magazine.","set":"y9","note":"analyse = verb, analysis = noun. British spelling: analyse."},
+window.SUBJECT = {"key":"media","sets":[{"id":"y9","name":"Year 9 Representation","level":"B1"},
+{"id":"y8-1","name":"Web design 1","level":"A2"},
+{"id":"y8-2","name":"Web design 2","level":"B1"},
+{"id":"y8-3","name":"Web design 3","level":"B2"}],"words":[{"id":"y9:acad:analyse","w":"analyse","pos":"verb","def":"Look closely at the parts of a media text and explain how they create meaning.","ex":"We will analyse the front cover of the magazine.","set":"y9","note":"analyse = verb, analysis = noun. British spelling: analyse."},
 {"id":"y9:acad:analysis","w":"analysis","pos":"noun","def":"A close, detailed study of how something creates meaning.","ex":"Her analysis of the poster focuses on colour and lighting.","set":"y9","note":"We write 'an analysis of' something."},
 {"id":"y9:acad:answer","w":"answer","pos":"noun / verb","def":"What you say or write in reply to a question.","ex":"Use evidence from the image in your answer.","set":"y9"},
 {"id":"y9:acad:compare","w":"compare","pos":"verb","def":"Look at how two or more things are similar and different.","ex":"Compare the two adverts and their target audiences.","set":"y9","note":"compare A with B. Write about both things."},
