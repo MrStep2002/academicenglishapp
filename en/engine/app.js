@@ -12,6 +12,7 @@ const CFG = $app.dataset;               // data-name, data-blurb, data-back, dat
 if(CFG.sets){ const keep=CFG.sets.split(','); S.sets=S.sets.filter(x=>keep.includes(x.id));
   for(const k of ['words','gaps','builds','errors','tf','reads','questions','extracts']) if(Array.isArray(S[k])) S[k]=S[k].filter(x=>keep.includes(x.set)); }
 const KEY = CFG.store || S.key;
+const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';   // English and Chinese points are kept apart
 const AUTO_MS = 700;   // how long the green bar runs after a right answer before the next card
 
 // ---------- helpers ----------
@@ -35,6 +36,22 @@ const areAlike = (a,b) => { const A=alikeOf[a], B=alikeOf[b]; if(!A||!B) return 
 const LEVEL_CODES = ['', 'A1', 'A2', 'B1', 'B2', 'C1'];
 const LEVEL_NAMES = {A1:'Foundation', A2:'Foundation+', B1:'Intermediate', B2:'Intermediate+', C1:'Advanced'};   // names students see (codes stay hidden)
 const LEVEL_ZH = {A1:'基础', A2:'基础+', B1:'中级', B2:'中级+', C1:'高级'};   // beside the names on the Chinese side
+// POINTS for one right answer, by kind of task and level: [Foundation, Foundation+, Intermediate, Intermediate+, Advanced].
+// Change the numbers here; the "How to earn points" table on My progress is built from this.
+// A reading passage's points are shared between its questions (two questions at Intermediate: 8 + 8).
+const POINTS = {
+  word:    [1, 1, 2, 2, 3],      // recognising a word
+  type:    [2, 2, 3, 3, 4],      // spelling a word
+  grammar: [1, 2, 2, 3, 4],      // one quick grammar choice
+  build:   [2, 3, 4, 5, 6],      // building a sentence, finding errors, a word in context
+  short:   [3, 4, 5, 6, 8],      // a short text and its question
+  passage: [8, 10, 15, 18, 22]   // a whole reading passage
+};
+const POINT_KIND = {match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word',
+  zhtype:'type', gap:'grammar', tf:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
+const POINT_KINDS = [['word','Word games: Match the meaning, Synonym groups, Word or meaning, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
+  ['type','Type it'], ['grammar','Fill the gap, True or false'], ['build','Build the sentence, Spot the error, In your own words'],
+  ['short','Read it, Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
 const levelNum = code => { if(code==null || code==='') return null; if(typeof code==='number') return code;
   const m=String(code).trim().toUpperCase().match(/^([ABC])([12])(\+)?/); if(!m) return null;
   return ({A:0,B:2,C:4})[m[1]] + (+m[2]) + (m[3]?0.5:0); };
@@ -87,7 +104,12 @@ const P = (function(){
       let known=0, fam=0, learn=0;
       S.words.forEach(w=>{ const s=(data.words[w.id]||{}).s||0; if(s>=4) known++; else if(s>=2) fam++; else if(s>=1) learn++; });
       t.words={total:S.words.length, known, fam, learn};
+      // Points: only right answers earn them (level of the item, or the side's starting level if it has none)
+      let pts=0;
+      if(ok){ const band=d==null ? (zhSide?2:3) : Math.max(1, Math.min(5, Math.floor(d))), row=POINTS[POINT_KIND[game]||'word'];
+        pts=row[band-1]; if(item && item.qs>1) pts=Math.ceil(pts/item.qs); t.pts=(t.pts||0)+pts; }
       save(); if(msg) toastLevel(msg);
+      if(window.AEA_POINTS) earned(AEA_POINTS.record(SIDE, pts, ok));
     }catch(e){ console.warn('Progress not saved:', e); }
   };
   // Sets whose level is close to the student's (from this topic once found, otherwise their overall level)
@@ -104,6 +126,14 @@ function rankForLevel(items){
       const w=wordOf(it), rec=w && P.wordRec(w.id);
       if(rec){ if(rec.s>=1 && rec.s<4 && rec.due<=now) sc-=0.6; else if(rec.s>=4 && rec.due>now) sc+=0.8; }
       return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+}
+// Show the points just earned (or the point taken off) in the answer's feedback, when there is one
+function earned(change){
+  if(!change) return; const v=document.querySelector('#feed .card .feedback .verdict'); if(!v) return;
+  if(change>0){ let b=v.querySelector('.pts-earn.up'); const n=(b?+b.dataset.n:0)+change;
+    if(!b){ b=document.createElement('span'); b.className='pts-earn up'; v.appendChild(b); }
+    b.dataset.n=n; b.textContent=`+${n} point${n===1?'':'s'}`; }
+  else { const b=document.createElement('span'); b.className='pts-earn down'; b.textContent=`−1 point: ${window.AEA_POINTS?AEA_POINTS.DOCK_EVERY:5} wrong answers`; v.appendChild(b); }
 }
 function toastLevel(msg){ const t=document.createElement('div'); t.className='lvl-toast'; t.setAttribute('role','status'); t.textContent=msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 3800); }
@@ -175,7 +205,9 @@ const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'w
 // ---------- page frame ----------
 function frame(back, inner){
   clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide');
-  $app.innerHTML = `${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:''}${inner}`;
+  const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
+  $app.innerHTML = `<div class="topline">${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:'<span></span>'}${bar}</div>${inner}`;
+  if(bar) AEA_POINTS.render(SIDE, 0);
   window.scrollTo(0,0);
 }
 function go(hash){ if(location.hash===hash || (!hash && !location.hash)) route(); else location.hash=hash; }
@@ -606,13 +638,13 @@ if(CFG.reading){
 }
 function playPassage(){
   const game=GAMES.find(g=>g.key==='passage'), st=Stats('passage');
-  shell(game, ''); const items=readingTop(), deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
+  shell(game, ''); const items=readingTop(); if(!items) return; const deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
   document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}${nq>items.length?`, ${nq} questions`:''}. Read carefully, then choose the best answer.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), many=r.qs.length>1; let missed=false, got=0;
     const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
     // One card per question; the passage stays on every card. A miss brings the whole passage back later (once).
-    const ask=i=>{ const q=r.qs[i], next=i+1<r.qs.length ? ()=>ask(i+1) : step, item={id:r.id+(i?'#'+(i+1):''), level:r.level};
+    const ask=i=>{ const q=r.qs[i], next=i+1<r.qs.length ? ()=>ask(i+1) : step, item={id:r.id+(i?'#'+(i+1):''), level:r.level, qs:r.qs.length};
       mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}${many?` · Question ${i+1} of ${r.qs.length}`:''}`,
         promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:'long', cardClass:'reading',
         onResult:(ok,card,fb)=>{ ok?fbOk(fb, q.why?`<span>${esc(q.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(q.opts[0])}</b></span>${q.why?`<span>${esc(q.why)}</span>`:''}`);
@@ -626,24 +658,28 @@ function playPassage(){
   step();
 }
 
-// Reading levels are chosen on the Reading Comprehension menu page (saved as aea:reading-levels).
-// The games only read that choice. Nothing saved yet: the student's level and the one above, otherwise every level.
-const READ_LV='aea:reading-levels';
+// The reading level is chosen on the Reading Comprehension menu page (saved as aea:reading-levels): ONE level, or All levels.
+// The games only read it. Nothing saved yet: the student's own level once it is known, otherwise All levels.
+// If there are no passages at that level, the game says so (it never swaps in other levels).
+const READ_LV='aea:reading-levels', ALL_LEVELS='All levels';
+function readingChoice(){
+  let saved=null; try{ saved=JSON.parse(localStorage.getItem(READ_LV)); }catch(e){}
+  const names=Object.values(LEVEL_NAMES), r=P.overall(), mine=r==null ? null : levelName(Math.max(1,Math.min(5,Math.floor(r))));
+  const pick=Array.isArray(saved) && saved.length===1 ? saved[0] : null;
+  return pick===ALL_LEVELS || names.includes(pick) ? pick : (mine || ALL_LEVELS);
+}
+// Returns the passages to use, or null after showing a "none at this level" message
 function readingTop(){
   document.body.classList.add('reading-wide');
   const all=S.passages||[];
   if(CFG.only!=='passage') return all;
-  const num=n=>({Foundation:1,'Foundation+':2,Intermediate:3,'Intermediate+':4,Advanced:5})[n]||0;
-  let chosen=null; try{ chosen=JSON.parse(localStorage.getItem(READ_LV)); }catch(e){}
-  if(!Array.isArray(chosen) || !chosen.length){ const r=P.overall();
-    chosen = r==null ? null : Object.keys(LEVEL_NAMES).map(c=>LEVEL_NAMES[c]).filter(n=>num(n)>=Math.ceil(r-1) && num(n)<=Math.floor(r+0.75)); }
-  let items = chosen ? all.filter(x=>!x.level || chosen.includes(levelName(x.level))) : all, note='';
-  if(chosen && !items.length){ items=all; note=' There are no passages at your chosen levels yet, so here are all of them.'; }
-  if(chosen) document.getElementById('feed').insertAdjacentHTML('beforebegin', `<p class="hint read-lv">Levels: ${chosen.slice().sort((a,b)=>num(a)-num(b)).map(esc).join(', ')}.${note} <a href="${esc(CFG.back||'../index.html')}">Change levels</a></p>`);
+  const choice=readingChoice(), change=`<a href="${esc(CFG.back||'../index.html')}">Change level</a>`;
+  const items = choice===ALL_LEVELS ? all : all.filter(x=>x.level && levelName(x.level)===choice);
+  document.getElementById('feed').insertAdjacentHTML('beforebegin', `<p class="hint read-lv">${choice===ALL_LEVELS?'All levels':`Level: ${esc(choice)}`}. ${change}</p>`);
+  if(!items.length){ document.getElementById('feed').innerHTML=`<p class="notice">There are no ${esc(choice)} passages in ${esc(CFG.name||'this activity')} yet. ${change} to choose another.</p>`; return null; }
   return items;
 }
 
-// Note taking: read the passage, then choose the notes that belong under the heading. Check marks them all at once.
 // End of a passage: always a clear finish and a Next button, so a good result is noticed
 function passageDone(fb, got, of, msg){
   const all=got===of;
@@ -651,7 +687,7 @@ function passageDone(fb, got, of, msg){
 }
 function playNotes(){
   const st=Stats('notes'), game={key:'notes', name:CFG.name||'Note taking', cat:'reading'};
-  shell(game, ''); const items=readingTop(), deck=Deck(items);
+  shell(game, ''); const items=readingTop(); if(!items) return; const deck=Deck(items);
   document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), order=shuffle(r.opts.map((o,i)=>i)), picked=new Set();
@@ -915,7 +951,7 @@ function levelCard(){
     <p class="lvl-s">Answer ${left} more question${left===1?'':'s'} in any game below and your level will appear here.${zh?` 再答 ${left} 题即可看到你的水平。`:''}</p></div>`;
   const L=P.label(t.r), w=t.words, rec=P.recommended(), same=rec.length===chosen.length && rec.every(x=>chosen.includes(x));
   return `<div class="lvl-card">${head}<p class="lvl-v"><b>${nameHtml(L.name)}</b>${zh&&L.zh?`<span lang="zh-CN">${L.zh}</span>`:''}</p><span class="lvl-bar"><i style="width:${L.pct}%"></i></span>
-    <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''} · <a href="${ROOT}progress/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">All my progress${zh?' 我的进步':''}</a></p>
+    <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''}${t.pts?` · ${Number(t.pts).toLocaleString('en-GB')} points here`:''} · <a href="${ROOT}progress/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">All my progress${zh?' 我的进步':''}</a></p>
     ${rec.length && !same && S.sets.length>1 ? `<p class="lvl-s"><span class="dot-good"></span> marks the sets that suit your level.${zh?' 绿点表示适合你水平的词组。':''} <button class="btn alt small" id="pickLevel">Choose these for me${zh?' 帮我选择':''}</button></p>`:''}</div>`;
 }
 function wirePickLevel(again){ const b=document.getElementById('pickLevel'); if(b) b.onclick=()=>{ const rec=P.recommended(); if(rec.length){ chosen=rec; store.set('sets',chosen); again(); } }; }
@@ -924,13 +960,27 @@ function progressPage(){
   const answers=list.reduce((s,t)=>s+t.n,0), right=list.reduce((s,t)=>s+t.right,0);
   const ws=Object.values(d.words), known=ws.filter(w=>w.s>=4).length, learning=ws.filter(w=>w.s>=1&&w.s<4).length;
   let streak=0; const dt=new Date(); if(!d.days[P.dayKey(dt)]) dt.setDate(dt.getDate()-1); while(d.days[P.dayKey(dt)]){ streak++; dt.setDate(dt.getDate()-1); }
-  const last=[]; for(let i=13;i>=0;i--){ const x=new Date(); x.setDate(x.getDate()-i); last.push([x, d.days[P.dayKey(x)]||0]); }
-  const max=Math.max(1,...last.map(x=>x[1])), ov=P.overall(), L=ov!=null?P.label(ov):null;
+  const ov=P.overall(), L=ov!=null?P.label(ov):null, PT=window.AEA_POINTS, fmt=n=>Number(n||0).toLocaleString('en-GB');
+  // Points: English and Chinese apart
+  const ptsCard=(side,label)=>{ const t=PT?PT.totals(side):{};
+    return `<div class="pts-card"><p class="pts-card-k">${label}</p><div class="pts-nums">${[['s','this session'],['d','today'],['w','this week'],['m','this month'],['t','total']]
+      .map(([k,l])=>`<div${k==='t'?' class="pts-total"':''}><b>${fmt(t[k])}</b><span>${l}</span></div>`).join('')}</div></div>`; };
+  const days=PT?PT.lastDays(14):[], pmax=Math.max(1,...days.map(x=>x.en+x.zh));
+  const chart=`<div class="days pts-days" role="img" aria-label="Points per day over the last 14 days">${days.map(x=>{ const tot=x.en+x.zh;
+      return `<span class="pcol${tot?'':' zero'}" title="${x.date.toDateString()}: ${x.en} English, ${x.zh} Chinese version"><i class="zh" style="height:${100*x.zh/pmax}%"></i><i class="en" style="height:${100*x.en/pmax}%"></i></span>`; }).join('')}</div>
+    <p class="legend"><span class="sw en"></span>English <span class="sw zh"></span>Chinese version 中文版</p>`;
+  const how=`<details class="pts-how"><summary>How to earn points 如何获得积分</summary>
+    <ul><li>Only right answers earn points. Harder levels and longer tasks earn more.</li>
+      <li>Every ${PT?PT.DOCK_EVERY:5} wrong answers take 1 point off (never below 0 for the day).</li>
+      <li>A reading passage's points are shared between its questions.</li>
+      <li>English and Chinese version points are counted separately. The week starts on Monday.</li></ul>
+    <div class="pts-table-wrap"><table class="pts-table"><thead><tr><th>Task</th>${Object.keys(LEVEL_NAMES).map(c=>`<th>${esc(LEVEL_NAMES[c])}</th>`).join('')}</tr></thead>
+      <tbody>${POINT_KINDS.map(([k,label])=>`<tr><td>${esc(label)}</td>${POINTS[k].map(n=>`<td>${n}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;
   const row=t=>{ const found=t.n>=P.CAL, l=found?P.label(t.r):null, w=t.words;
     return `<a class="prog-row" href="${esc(t.href||'#')}"><span class="prog-name">${esc(t.name)}<small>${t.side==='zh'?'中文版':'English'}</small></span>
       <span class="prog-lvl">${found?`<b>${nameHtml(l.name)}</b>${t.side==='zh'&&l.zh?` <span lang="zh-CN">${l.zh}</span>`:''}`:`Finding level · ${t.n} of ${P.CAL}`}</span>
       <span class="lvl-bar"><i style="width:${found?l.pct:t.n*100/P.CAL}%"></i></span>
-      <span class="prog-meta">${w&&w.total?`${w.known} of ${w.total} words known · `:''}${t.n} answers · ${t.n?Math.round(100*t.right/t.n):0}% right</span></a>`; };
+      <span class="prog-meta">${w&&w.total?`${w.known} of ${w.total} words known · `:''}${t.n} answer${t.n===1?'':'s'} · ${t.n?Math.round(100*t.right/t.n):0}% right${t.pts?` · ${fmt(t.pts)} points`:''}</span></a>`; };
   let back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
   const from=new URLSearchParams(location.search).get('from')||'';
   try{ const ref=document.referrer && new URL(document.referrer);
@@ -946,12 +996,15 @@ function progressPage(){
     <p>${L?`Your overall level, from everything you have played.${L.next?` You are ${L.pct}% of the way to ${esc(L.next)}.`:''}`:`Play any game. After ${P.CAL} answers in a topic, your level appears here. 在任一主题答 ${P.CAL} 题后，这里会显示你的水平。`}</p>
     ${L?`<span class="lvl-bar lvl-big"><i style="width:${L.pct}%"></i></span>`:''}
   </section>
+  <p class="instr">Points 积分</p>
+  <div class="pts-cards">${ptsCard('en','English')}${ptsCard('zh','Chinese version 中文版')}</div>
+  <p class="instr">Points, last 14 days</p>
+  ${chart}
   <div class="stat-tiles"><div class="stat"><b>${answers}</b><span>answers</span></div><div class="stat"><b>${answers?Math.round(100*right/answers):0}%</b><span>right</span></div>
     <div class="stat"><b>${streak}</b><span>day${streak===1?'':'s'} in a row</span></div><div class="stat"><b>${known}</b><span>words known · ${learning} learning</span></div></div>
-  <p class="instr">Answers, last 14 days</p>
-  <div class="days" role="img" aria-label="Answers per day over the last 14 days">${last.map(([x,n])=>`<i class="${n?'':'zero'}" style="height:${n?Math.max(6,Math.round(100*n/max)):3}%" title="${x.toDateString()}: ${n} answers"></i>`).join('')}</div>
   <p class="instr">Topics</p>
   <div class="prog-list">${list.length?list.map(row).join(''):'<p class="notice">No games played yet on this device. 这台设备上还没有游戏记录。</p>'}</div>
+  ${how}
   <p class="hint" style="margin-top:22px">Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again.</p>`);
 }
 
@@ -1001,7 +1054,7 @@ function route(){
   menu();
 }
 window.addEventListener('hashchange', route);
-window.addEventListener('resize', ()=>{ const p=isPhone(); if(p!==PHONE){ PHONE=p; document.documentElement.classList.toggle('phone',PHONE);
+window.addEventListener('resize', ()=>{ const p=isPhone(); if(p!==PHONE && CFG.only!=='progress'){ PHONE=p; document.documentElement.classList.toggle('phone',PHONE);
   // re-draw menus for the new screen size, but never wipe a game in progress on a computer
   const h=location.hash.replace(/^#/,''); if((!h||CATS[h]) && !(document.getElementById('feed') && !PHONE)) route(); } });
 route();

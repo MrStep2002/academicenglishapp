@@ -54,6 +54,28 @@ After changing `en/engine/app.js` or `styles.css`, change the `?v=` number after
 
 Never change a word `id` once students have played: streaks and progress are stored against it.
 
+## Points
+
+Every right answer earns points; English and Chinese version points are kept apart. The bar at the top of each page shows
+**S** (this session), **D** (today), **W** (this week, from Monday) and **T** (total); My progress also shows this month,
+a 14-day chart and a "How to earn points" table.
+
+- Points depend on the task and the level of the item (`POINTS` near the top of `en/engine/app.js`):
+
+  | Task | Foundation | Foundation+ | Intermediate | Intermediate+ | Advanced |
+  |---|---|---|---|---|---|
+  | Word games (match, meaning, Speed round, Survival, Odd one out…) | 1 | 1 | 2 | 2 | 3 |
+  | Type it | 2 | 2 | 3 | 3 | 4 |
+  | Fill the gap, True or false | 1 | 2 | 2 | 3 | 4 |
+  | Build the sentence, Spot the error, In your own words | 2 | 3 | 4 | 5 | 6 |
+  | Read it, Answer the question | 3 | 4 | 5 | 6 | 8 |
+  | A reading passage (Close reading, Big idea, Note taking, Read and answer) | 8 | 10 | 15 | 18 | 22 |
+
+  A passage's points are shared between its questions; Note taking scores only when all the notes are right.
+- Only right answers earn points. Every 5 wrong answers take 1 point off (never below 0 for the day or session).
+- Saved in the browser: `localStorage` `aea:points:v1` (points, right and wrong answers per day for each side); the session total is in
+  `sessionStorage`. `en/engine/points.js` keeps them and draws the bar; pages without the games load it with `data-side="en"` or `"zh"`.
+
 ## Levels and progress
 
 Every answer in every game is saved in the student's own browser (`localStorage`, key `aea:progress:v1`). Nothing is sent anywhere and there are no accounts yet, so progress stays on one browser on one device.
