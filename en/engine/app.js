@@ -12,7 +12,7 @@ const CFG = $app.dataset;               // data-name, data-blurb, data-back, dat
 if(CFG.sets){ const keep=CFG.sets.split(','); S.sets=S.sets.filter(x=>keep.includes(x.id));
   for(const k of ['words','gaps','builds','errors','tf','reads','questions','extracts']) if(Array.isArray(S[k])) S[k]=S[k].filter(x=>keep.includes(x.set)); }
 const KEY = CFG.store || S.key;
-const AUTO_MS = 1500;
+const AUTO_MS = 700;   // how long the green bar runs after a right answer before the next card
 
 // ---------- helpers ----------
 const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -606,53 +606,52 @@ if(CFG.reading){
 }
 function playPassage(){
   const game=GAMES.find(g=>g.key==='passage'), st=Stats('passage');
-  shell(game, ''); const items=readingTop(playPassage), deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
+  shell(game, ''); const items=readingTop(), deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
   document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}${nq>items.length?`, ${nq} questions`:''}. Read carefully, then choose the best answer.</p>`); st.draw();
   const step=()=>{
-    const r=deck.next(), many=r.qs.length>1; let missed=false;
+    const r=deck.next(), many=r.qs.length>1; let missed=false, got=0;
     const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
     // One card per question; the passage stays on every card. A miss brings the whole passage back later (once).
     const ask=i=>{ const q=r.qs[i], next=i+1<r.qs.length ? ()=>ask(i+1) : step, item={id:r.id+(i?'#'+(i+1):''), level:r.level};
       mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}${many?` · Question ${i+1} of ${r.qs.length}`:''}`,
         promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:'long', cardClass:'reading',
         onResult:(ok,card,fb)=>{ ok?fbOk(fb, q.why?`<span>${esc(q.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(q.opts[0])}</b></span>${q.why?`<span>${esc(q.why)}</span>`:''}`);
-          if(ok){ st.hit(item); autoNext(card,next); } else { st.miss(item); if(!missed){ missed=true; deck.retry(r); } manualNext(card,next); } }});
+          if(ok){ got++; st.hit(item); } else { st.miss(item); if(!missed){ missed=true; deck.retry(r); } }
+          const last=i+1>=r.qs.length;
+          if(last) passageDone(fb, got, r.qs.length);
+          if(ok && !last) autoNext(card,next); else manualNext(card,next, last?'Next passage →':'Next question →'); }});
     };
     ask(0);
   };
   step();
 }
 
-// Level buttons for the Reading Comprehension pages. The choice is shared by all three pages.
-// First time: the student's level and the one above it (once known), otherwise every level.
+// Reading levels are chosen on the Reading Comprehension menu page (saved as aea:reading-levels).
+// The games only read that choice. Nothing saved yet: the student's level and the one above, otherwise every level.
 const READ_LV='aea:reading-levels';
-function readingLevels(all){
-  const num=n=>({Foundation:1,'Foundation+':2,Intermediate:3,'Intermediate+':4,Advanced:5})[n]||0;
-  const present=[...new Set(all.map(r=>r.level?levelName(r.level):'').filter(Boolean))].sort((a,b)=>num(a)-num(b));
-  const t=P.topic(), r=t&&t.n>=P.CAL ? t.r : P.overall();
-  const rec=r==null ? [] : present.filter(n=>num(n)>=Math.ceil(r-1) && num(n)<=Math.floor(r+0.75));
-  let saved=null; try{ saved=JSON.parse(localStorage.getItem(READ_LV)); }catch(e){}
-  let chosen=(Array.isArray(saved)?saved:[]).filter(n=>present.includes(n));
-  if(!chosen.length) chosen = rec.length ? rec : present.slice();
-  const items=all.filter(x=>!x.level || chosen.includes(levelName(x.level)));
-  const html = present.length<2 ? '' : `<div class="sets read-levels" role="group" aria-label="Levels">${present.map(n=>
-    `<button class="chip${rec.includes(n)?' chip-good':''}" data-lv="${esc(n)}" aria-pressed="${chosen.includes(n)}">${esc(n)} <small>${all.filter(x=>levelName(x.level)===n).length}</small></button>`).join('')}</div>`;
-  const wire=again=>document.querySelectorAll('.read-levels .chip').forEach(c=>c.onclick=()=>{ const n=c.dataset.lv;
-    let next = chosen.includes(n) ? chosen.filter(x=>x!==n) : [...chosen, n]; if(!next.length) return;
-    try{ localStorage.setItem(READ_LV, JSON.stringify(next)); }catch(e){} again(); });
-  return {items, html, wire};
-}
-function readingTop(again){   // the level buttons go between the hint and the game; the page goes wide
+function readingTop(){
   document.body.classList.add('reading-wide');
-  if(CFG.only!=='passage') return S.passages||[];
-  const L=readingLevels(S.passages||[]); if(L.html){ document.getElementById('feed').insertAdjacentHTML('beforebegin', L.html); L.wire(again); }
-  return L.items;
+  const all=S.passages||[];
+  if(CFG.only!=='passage') return all;
+  const num=n=>({Foundation:1,'Foundation+':2,Intermediate:3,'Intermediate+':4,Advanced:5})[n]||0;
+  let chosen=null; try{ chosen=JSON.parse(localStorage.getItem(READ_LV)); }catch(e){}
+  if(!Array.isArray(chosen) || !chosen.length){ const r=P.overall();
+    chosen = r==null ? null : Object.keys(LEVEL_NAMES).map(c=>LEVEL_NAMES[c]).filter(n=>num(n)>=Math.ceil(r-1) && num(n)<=Math.floor(r+0.75)); }
+  let items = chosen ? all.filter(x=>!x.level || chosen.includes(levelName(x.level))) : all, note='';
+  if(chosen && !items.length){ items=all; note=' There are no passages at your chosen levels yet, so here are all of them.'; }
+  if(chosen) document.getElementById('feed').insertAdjacentHTML('beforebegin', `<p class="hint read-lv">Levels: ${chosen.slice().sort((a,b)=>num(a)-num(b)).map(esc).join(', ')}.${note} <a href="${esc(CFG.back||'../index.html')}">Change levels</a></p>`);
+  return items;
 }
 
 // Note taking: read the passage, then choose the notes that belong under the heading. Check marks them all at once.
+// End of a passage: always a clear finish and a Next button, so a good result is noticed
+function passageDone(fb, got, of, msg){
+  const all=got===of;
+  fb.insertAdjacentHTML('beforeend', `<div class="done-msg${all?' all':''}">${all ? `<b>Well done!</b> ${msg || (of===2?'You got both questions right.':of>2?`You got all ${of} questions right.`:'You got it right.')}` : of>1 ? `You got ${got} of ${of} right. This passage will come back later.` : 'This passage will come back later.'}</div>`);
+}
 function playNotes(){
   const st=Stats('notes'), game={key:'notes', name:CFG.name||'Note taking', cat:'reading'};
-  shell(game, ''); const items=readingTop(playNotes), deck=Deck(items);
+  shell(game, ''); const items=readingTop(), deck=Deck(items);
   document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), order=shuffle(r.opts.map((o,i)=>i)), picked=new Set();
@@ -674,7 +673,8 @@ function playNotes(){
       const why=r.why ? `<div class="why">${r.why.split(/\n\s*\n/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}</div>` : '';
       const fb=card.querySelector('.fb'); ok ? fbOk(fb, why) : fbNo(fb, '', `<span>You found ${got} of ${r.count}. The notes with a dashed green border were missed.</span>${why}`);
       const item={id:r.id, level:r.level};
-      if(ok){ st.hit(item); autoNext(card,step); } else { st.miss(item); deck.retry(r); manualNext(card,step); } };
+      if(ok){ st.hit(item); } else { st.miss(item); deck.retry(r); }
+      passageDone(fb, ok?1:0, 1, ok?'You found all three notes.':''); manualNext(card,step,'Next passage →'); };
     btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
     keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) toggle(btns[n-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
   };
@@ -915,7 +915,7 @@ function levelCard(){
     <p class="lvl-s">Answer ${left} more question${left===1?'':'s'} in any game below and your level will appear here.${zh?` 再答 ${left} 题即可看到你的水平。`:''}</p></div>`;
   const L=P.label(t.r), w=t.words, rec=P.recommended(), same=rec.length===chosen.length && rec.every(x=>chosen.includes(x));
   return `<div class="lvl-card">${head}<p class="lvl-v"><b>${nameHtml(L.name)}</b>${zh&&L.zh?`<span lang="zh-CN">${L.zh}</span>`:''}</p><span class="lvl-bar"><i style="width:${L.pct}%"></i></span>
-    <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''} · <a href="${ROOT}progress/index.html">All my progress${zh?' 我的进步':''}</a></p>
+    <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''} · <a href="${ROOT}progress/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">All my progress${zh?' 我的进步':''}</a></p>
     ${rec.length && !same && S.sets.length>1 ? `<p class="lvl-s"><span class="dot-good"></span> marks the sets that suit your level.${zh?' 绿点表示适合你水平的词组。':''} <button class="btn alt small" id="pickLevel">Choose these for me${zh?' 帮我选择':''}</button></p>`:''}</div>`;
 }
 function wirePickLevel(again){ const b=document.getElementById('pickLevel'); if(b) b.onclick=()=>{ const rec=P.recommended(); if(rec.length){ chosen=rec; store.set('sets',chosen); again(); } }; }
@@ -932,7 +932,11 @@ function progressPage(){
       <span class="lvl-bar"><i style="width:${found?l.pct:t.n*100/P.CAL}%"></i></span>
       <span class="prog-meta">${w&&w.total?`${w.known} of ${w.total} words known · `:''}${t.n} answers · ${t.n?Math.round(100*t.right/t.n):0}% right</span></a>`; };
   let back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
+  const from=new URLSearchParams(location.search).get('from')||'';
   try{ const ref=document.referrer && new URL(document.referrer);
+    if(from==='en' || from==='zh') back={href:ROOT+from+'/index.html', label:from==='zh'?'中文版 Chinese version':'English topics'};
+    else if(/^\/(?!\/)/.test(from)) back={href:from, label:'Back'};
+    else
     if(ref && ref.origin===location.origin && ref.pathname!==location.pathname) back={href:ref.href, label:'Back'};
     else { const side=(list[0]||{}).side; if(side) back={href:ROOT+(side==='zh'?'zh':'en')+'/index.html', label:side==='zh'?'中文版 Chinese version':'English topics'}; }
   }catch(e){}

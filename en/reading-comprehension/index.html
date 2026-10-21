@@ -11,6 +11,16 @@
 <title>Reading Comprehension · English</title>
 <link rel="stylesheet" href="../../css/fonts.css">
 <link rel="stylesheet" href="../../css/home.css">
+<style>
+  /* Reading levels: chosen here, used by Close reading, Big idea and Note taking */
+  .lv { display: flex; flex-direction: column; gap: 8px; }
+  .lv h2 { margin: 6px 0 0; font-family: var(--display); font-weight: 800; font-size: 1.05rem; color: var(--muted); }
+  .lv p { margin: 0; color: var(--muted); font-size: .95rem; }
+  .lv-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lv-chip { font: inherit; font-size: .95rem; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .lv-chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .lv-chip.good::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #2e9d63; }
+</style>
 </head>
 <body>
 <main class="home">
@@ -20,6 +30,12 @@
     <h1>Reading Comprehension</h1>
     <p class="sub">Longer reading and response. These activities work on computers only.</p>
   </header>
+
+  <section class="lv" aria-labelledby="t-lv">
+    <h2 id="t-lv">Reading level</h2>
+    <p>Choose the levels of passage you want to read. A green dot marks the levels that suit you.</p>
+    <div class="lv-chips" id="lvChips" role="group" aria-label="Reading levels"></div>
+  </section>
 
   <section class="topic-group" aria-label="Activities">
     <div class="topics">
@@ -39,6 +55,28 @@
   </section>
 </main>
 <script>
+  // Reading levels. The games read this choice (localStorage aea:reading-levels).
+  (function(){
+    var NAMES = ['Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced'], KEY = 'aea:reading-levels';
+    var r = null;   // the student's overall level (1-5.99) from the games they have played
+    try { var d = JSON.parse(localStorage.getItem('aea:progress:v1')) || {}, sum = 0, n = 0;
+      Object.keys(d.topics || {}).forEach(function(k){ var t = d.topics[k]; if (t.n >= 10) { sum += t.r * t.n; n += t.n; } });
+      if (n) r = sum / n; } catch (e) {}
+    var good = NAMES.filter(function(name, i){ var b = i + 1; return r != null && b >= Math.ceil(r - 1) && b <= Math.floor(r + 0.75); });
+    var chosen = null; try { chosen = JSON.parse(localStorage.getItem(KEY)); } catch (e) {}
+    if (!Array.isArray(chosen) || !chosen.length) chosen = good.length ? good : NAMES.slice();
+    var box = document.getElementById('lvChips');
+    function draw(){
+      box.innerHTML = NAMES.map(function(name){ return '<button class="lv-chip' + (good.indexOf(name) > -1 ? ' good' : '') + '" aria-pressed="' + (chosen.indexOf(name) > -1) + '">' + name + '</button>'; }).join('');
+      Array.prototype.forEach.call(box.children, function(b, i){ b.onclick = function(){
+        var name = NAMES[i], next = chosen.indexOf(name) > -1 ? chosen.filter(function(x){ return x !== name; }) : chosen.concat([name]);
+        if (!next.length) return;
+        chosen = NAMES.filter(function(x){ return next.indexOf(x) > -1; });
+        try { localStorage.setItem(KEY, JSON.stringify(chosen)); } catch (e) {}
+        draw(); }; });
+    }
+    draw();
+  })();
   // Reading is for computers. On a phone, grey out the activities.
   (function(){
     var coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;

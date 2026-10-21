@@ -157,7 +157,7 @@ mark,.hl{background:linear-gradient(transparent 12%, var(--mark) 12%, var(--mark
 .stats .streak b{color:var(--blue)}
 .bar{flex-wrap:wrap}
 .bar .spacer{flex:1}
-.auto{height:3px;width:120px;margin-left:auto;background:var(--rule);border-radius:2px;overflow:hidden;margin-top:12px}   /* short: it only shows the card is about to move on */
+.auto{height:3px;background:var(--rule);border-radius:2px;overflow:hidden;margin-top:12px}
 .auto i{display:block;height:100%;width:0;background:var(--good)}
 .auto.run i{width:100%;transition:width var(--dur,1.4s) linear}
 .hint{font-size:13px;color:var(--ink-2);margin-top:8px}
@@ -359,3 +359,7 @@ a.btn{text-decoration:none;display:inline-block}
   .card.reading .question{font-size:17px;margin-bottom:10px}
   .card.reading .check-row{margin-top:10px}
 }
+
+.done-msg{margin-top:4px;padding-top:8px;border-top:1px solid rgba(0,0,0,.08);font-size:16px}
+.done-msg.all b{color:var(--good);font-size:18px;margin-right:4px}
+.read-lv a{color:var(--blue)}
