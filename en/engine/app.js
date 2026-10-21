@@ -6,7 +6,9 @@
 const S = window.SUBJECT;
 const $app = document.getElementById('app');
 const CFG = $app.dataset;               // data-name, data-blurb, data-back, data-back-label, data-only, data-sets, data-store
-if(CFG.sets){ const keep=CFG.sets.split(','); S.sets=S.sets.filter(x=>keep.includes(x.id)); }
+// data-sets: this page uses only some of the data's sets. Drop everything else, so the page only lists games it has content for.
+if(CFG.sets){ const keep=CFG.sets.split(','); S.sets=S.sets.filter(x=>keep.includes(x.id));
+  for(const k of ['words','gaps','builds','errors','tf','reads','questions','extracts']) if(Array.isArray(S[k])) S[k]=S[k].filter(x=>keep.includes(x.set)); }
 const KEY = CFG.store || S.key;
 const AUTO_MS = 1500;
 
@@ -21,8 +23,10 @@ const byId = Object.fromEntries(S.words.map(w=>[w.id,w]));
 const alikeOf = {}; (S.alike||[]).forEach((g,i)=>g.forEach(id=>{ (alikeOf[id]=alikeOf[id]||new Set()).add(i); }));
 const areAlike = (a,b) => { const A=alikeOf[a], B=alikeOf[b]; if(!A||!B) return false; for(const x of A) if(B.has(x)) return true; return false; };
 
-let chosen = store.get('sets', S.sets.map(s=>s.id));
-chosen = chosen.filter(id=>S.sets.some(s=>s.id===id)); if(!chosen.length) chosen=S.sets.map(s=>s.id);
+// First visit: the sets the data says to start with (S.start), otherwise all of them.
+const startSets = () => (S.start && S.start.length ? S.start : S.sets.map(s=>s.id));
+let chosen = store.get('sets', startSets());
+chosen = chosen.filter(id=>S.sets.some(s=>s.id===id)); if(!chosen.length) chosen=startSets();
 const inSets = x => chosen.includes(x.set);
 const pick = list => (list||[]).filter(inSets);
 
@@ -42,11 +46,14 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
 
 // Endless deck: shuffled, refilled when empty; missed items come back a few cards later.
 function Deck(items){
-  let queue=[], last=null;
+  let queue=[], last=null; const retried=new Set();
   const refill=()=>{ queue=shuffle(items); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
   return {
     next(){ if(!queue.length) refill(); last=queue.shift(); return last; },
-    retry(item){ const pos=Math.min(queue.length, 3+Math.floor(Math.random()*3)); queue.splice(pos,0,item); }
+    // A missed item comes back once, a few cards later. Missed again, it waits for the next round,
+    // so a student who is struggling still meets new items instead of the same few on a loop.
+    retry(item){ if(retried.has(item)){ retried.delete(item); return; } retried.add(item);
+      const pos=Math.min(queue.length, 3+Math.floor(Math.random()*3)); queue.splice(pos,0,item); }
   };
 }
 function Stats(game){
@@ -72,12 +79,13 @@ const GAMES = [
   {key:'build',    cat:'grammar', name:'Build the sentence',blurb:'Put the coloured pieces in order. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'error',    cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   {key:'tf',       cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
+  {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the correct answer from four options.', items:()=>S.passages||[], min:1, run:()=>playPassage()},
   {key:'own',      cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     cat:'reading', name:'Read it',           blurb:'Read a short text about a media product and answer a question.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   {key:'question', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
 // Only games this subject has content for
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',own:'extracts',read:'reads',question:'questions'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
 // ---------- page frame ----------
 function frame(back, inner){
@@ -126,8 +134,9 @@ function category(cat){
       <p class="notice">Reading games are only available on desktop devices. Open this page on a computer to play them.</p></section>`);
     return;
   }
+  const note = cat==='reading' && readingState==='loading' ? '<p class="notice">Loading reading passages…</p>' : cat==='reading' && readingState==='failed' ? '<p class="notice">The reading passages could not be loaded. They load when the site is online.</p>' : '';
   frame({href:'#', label:CFG.name||'Back'}, `
-  <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}</p><h1>${c.name}</h1><p>${c.blurb}</p></section>
+  <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}</p><h1>${c.name}</h1><p>${c.blurb}</p>${note}</section>
   <div class="games">${gamesIn(cat).map(g=>{
     const n=g.items().length, off=n<g.min, best=store.get('streak:'+g.key,0);
     return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
@@ -139,7 +148,7 @@ function category(cat){
 // ---------- game shell ----------
 function shell(game, note){
   const c=CATS[game.cat];
-  frame({href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+  frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
 }
 function showCard(html){
@@ -194,8 +203,8 @@ function playMatch(mode, withZh){
   const game=withZh ? {key:'zhmatch', name:'Match the meaning', items:zhWords} : GAMES.find(g=>g.key===(mode==='def'?'match':'syn'));
   const PER=5, REFILL_AT=3;
   const p=game.items(), deck=Deck(p), st=Stats(game.key);
-  if(withZh) zhShell(game.name,'Tap a word, then its English meaning. 点击单词，再点击它的英文释义。');
-  else shell(game, mode==='def'?'Tap a word, then its meaning. New pairs appear as you clear them.':'Tap a word, then the group that means something similar.');
+  if(withZh) zhShell(game.name,'Tap a word, then its English meaning. Matched pairs turn grey; after three, new pairs appear. 点击单词，再点击它的英文释义。');
+  else shell(game, mode==='def'?'Tap a word, then its meaning. Matched pairs turn grey; after three, new pairs take their place.':'Tap a word, then the group that means something similar. Matched pairs turn grey; after three, new pairs take their place.');
   st.draw();
   const clash=(w,on)=>on.some(o=>o.id===w.id || areAlike(o.id,w.id) || o.w===w.w || (mode==='syn' && o.syn.some(s=>w.syn.includes(s))));
   const draw=(n,on)=>{ const out=[],skip=[]; let guard=0;
@@ -210,27 +219,30 @@ function playMatch(mode, withZh){
     <div class="col right">${R.map((_,i)=>`<button class="tile ${mode}" data-side="R" data-slot="${i}"></button>`).join('')}</div></div>
     <p class="toast" id="toast" aria-live="polite"></p>`);
   const tiles=side=>[...card.querySelectorAll(`.tile[data-side="${side}"]`)];
+  // Matched pairs stay on the board, greyed out. Once three pairs are greyed, those three are replaced together.
+  const spentL=new Set(), spentR=new Set();
   const paint=fresh=>{
-    tiles('L').forEach((t,i)=>{ const w=L[i]; t.className='tile word'+(w?'':' gone')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?esc(w.w)+(withZh&&ZH[w.id]?`<small class="tile-zh" lang="zh-CN">${esc(ZH[w.id])}</small>`:''):''; t.dataset.id=w?w.id:''; t.disabled=!w; });
-    tiles('R').forEach((t,i)=>{ const w=R[i]; t.className='tile '+mode+(w?'':' gone')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?right(w):''; t.dataset.id=w?w.id:''; t.disabled=!w; });
+    tiles('L').forEach((t,i)=>{ const w=L[i], sp=spentL.has(i); t.className='tile word'+(w?'':' gone')+(sp?' spent':'')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?esc(w.w)+(withZh&&ZH[w.id]?`<small class="tile-zh" lang="zh-CN">${esc(ZH[w.id])}</small>`:''):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
+    tiles('R').forEach((t,i)=>{ const w=R[i], sp=spentR.has(i); t.className='tile '+mode+(w?'':' gone')+(sp?' spent':'')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?right(w):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
   };
   paint(first);
   let sel=null; const wrongOn=new Set();
   const toast=(m,bad)=>{ const t=card.querySelector('#toast'); t.textContent=m; t.className='toast'+(bad?' no':''); };
-  const refill=()=>{ const eL=[],eR=[]; L.forEach((w,i)=>{if(!w)eL.push(i);}); R.forEach((w,i)=>{if(!w)eR.push(i);});
+  const refill=()=>{
+    const eL=[...spentL], eR=[...spentR]; eL.forEach(i=>L[i]=null); eR.forEach(i=>R[i]=null); spentL.clear(); spentR.clear();
     const fresh=draw(eL.length, L.filter(Boolean)); const sl=shuffle(eL), sr=shuffle(eR);
     fresh.forEach((w,i)=>{ L[sl[i]]=w; R[sr[i]]=w; }); paint(fresh); };
   card.addEventListener('click', e=>{
-    const t=e.target.closest('.tile'); if(!t||t.disabled||t.classList.contains('done')) return;
+    const t=e.target.closest('.tile'); if(!t||t.disabled||t.classList.contains('done')||t.classList.contains('spent')) return;
     if(!sel||sel.dataset.side===t.dataset.side){ if(sel) sel.classList.remove('sel'); sel=t; t.classList.add('sel'); return; }
     const a=sel,b=t; a.classList.remove('sel'); sel=null;
-    const left=a.dataset.side==='L'?a:b, id=left.dataset.id;
+    const left=a.dataset.side==='L'?a:b, right_=a.dataset.side==='R'?a:b, id=left.dataset.id;
     if(a.dataset.id===b.dataset.id){
       [a,b].forEach(x=>{x.classList.add('done'); x.disabled=true;});
       if(wrongOn.has(id)){ wrongOn.delete(id); st.miss(); } else st.hit();
       toast('Correct: '+byId[id].w);
-      later(()=>{ L[+(a.dataset.side==='L'?a:b).dataset.slot]=null; R[+(a.dataset.side==='R'?a:b).dataset.slot]=null;
-        if(L.filter(x=>!x).length>=REFILL_AT) refill(); else paint(); }, 450);
+      later(()=>{ spentL.add(+left.dataset.slot); spentR.add(+right_.dataset.slot);
+        if(spentL.size>=REFILL_AT) refill(); else paint(); }, 450);
     } else {
       if(!wrongOn.has(id)){ wrongOn.add(id); deck.retry(byId[id]); }
       toast('Not a match. Try again.', true);
@@ -450,6 +462,47 @@ function playQuestion(){
   step();
 }
 
+// ---------- READING: Read and answer (questions come from a spreadsheet file, see en/reading/README.md) ----------
+// The page says where the file is (data-reading) and which topic it is (data-topic).
+// Columns: id, topic, level, title, passage, question, correct, wrong1, wrong2, wrong3, explanation
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false;
+  text=text.replace(/^﻿/,'');
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c; }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
+  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+}
+let readingState = CFG.reading ? 'loading' : 'none';
+if(CFG.reading){
+  fetch(CFG.reading, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(t=>{
+    const need=['id','topic','title','passage','question','correct','wrong1','wrong2','wrong3'];
+    S.passages = parseCSV(t).filter(r=>{
+      if(r.topic!==CFG.topic) return false;
+      const miss=need.filter(k=>!r[k]); if(miss.length){ console.warn('Reading row '+(r.id||'?')+' skipped: missing '+miss.join(', ')); return false; }
+      return true; }).map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, q:r.question, opts:[r.correct,r.wrong1,r.wrong2,r.wrong3], a:0, why:r.explanation||''}));
+    readingState='ok';
+  }).catch(e=>{ console.warn('Reading file not loaded:', e); readingState='failed'; })
+    .finally(()=>{ const h=location.hash.replace(/^#/,''); if(CFG.only==='passage'||!h||CATS[h]) route(); });
+}
+function playPassage(){
+  const game=GAMES.find(g=>g.key==='passage'), items=game.items(), deck=Deck(items), st=Stats('passage');
+  shell(game, `${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the best answer.`); st.draw();
+  const step=()=>{
+    const r=deck.next();
+    const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+    mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(r.level)}`:''}`, promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(r.q)}</p>`,
+      options:r.opts, answer:r.opts[0], optClass:'long',
+      onResult:(ok,card,fb)=>{ ok?fbOk(fb, r.why?`<span>${esc(r.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(r.opts[0])}</b></span>${r.why?`<span>${esc(r.why)}</span>`:''}`); settle(ok,card,st,deck,r,step); }});
+  };
+  step();
+}
+
 // ---------- CHINESE SIDE (data-only="zh"): vocabulary games with Chinese support ----------
 // Chinese appears next to the key word only. Answer options are always English.
 const ZH = Object.fromEntries((window.SUBJECT_ZH||[]).map(x=>[x.id,x.zh]));
@@ -459,13 +512,17 @@ const ZH_GAMES = [
   {key:'zhmatch',  type:'practice',  name:'Match the meaning',  zh:'单词配释义',     blurb:'Match each word to its English meaning. The Chinese is shown under the word.', run:()=>playMatch('def', true)},
   {key:'zhmean',   type:'practice',  name:'Choose the meaning', zh:'选出释义',       blurb:'See the word and its Chinese, then choose the English meaning.', run:()=>playZhMeaning()},
   {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', run:()=>playType()},
-  {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'Does the meaning match the word? Decide quickly.', run:()=>playZhTF()},
+  {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'See the word and its Chinese. Does the English meaning match? Decide quickly.', run:()=>playZhTF()},
   {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', run:()=>playOdd(), needs:()=>oddReady()},
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', run:()=>playSpeed()},
-  {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. Choose the meaning before time runs out. It gets faster.', run:()=>playSurvival()}
+  {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', run:()=>playSurvival()}
 ];
 const countIn = id => S.words.filter(w=>w.set===id && ZH[w.id]).length;
-function chipHtml(s){ return `<button class="chip" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}">${esc(s.name)} <span class="chip-n">${countIn(s.id)}</span></button>`; }
+function chipHtml(s){
+  // Keep the Chinese part of a group name together on its own span so it never splits mid-phrase
+  const m=s.name.match(/^(.*?)\s+([第\u4e00-\u9fff].*)$/);
+  const label=m?`<span class="chip-en">${esc(m[1])}</span> <span class="chip-zh" lang="zh-CN">${esc(m[2])}</span>`:esc(s.name);
+  return `<button class="chip" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}"><span class="chip-label">${label}</span> <span class="chip-n">${countIn(s.id)}</span></button>`; }
 function chipsHtml(){
   if(S.sets.length<2) return '';
   const heads=[...new Set(S.sets.map(s=>s.head||''))];
@@ -528,6 +585,9 @@ function playZhMeaning(){
 // ----- Chinese side: Type it -----
 const normAns = t => t.toLowerCase().replace(/\s*\(.*?\)\s*/g,' ').replace(/[’']/g,"'").replace(/\s+/g,' ').trim();
 const answersFor = w => { const base=normAns(w.w); return [base, ...base.split(/\s*\/\s*/)].filter(Boolean); };
+// Near-synonyms (data field "accept"): Type it takes any word in the same group as right.
+const acceptOf = {}; (S.accept||[]).forEach(g=>g.forEach(id=>{ (acceptOf[id]=acceptOf[id]||new Set()); g.forEach(o=>{ if(o!==id) acceptOf[id].add(o); }); }));
+const altsFor = w => [...(acceptOf[w.id]||[])].map(id=>byId[id]).filter(Boolean);
 function playType(){
   const p=zhWords(), deck=Deck(p), st=Stats('zhtype');
   zhShell('Type it','Read the meaning, then type the English word. 看释义，拼写英文单词。'); st.draw();
@@ -543,10 +603,14 @@ function playType(){
     card.querySelector('#hint').onclick=()=>{ hints=Math.min(hints+1,target.length);
       card.querySelector('#hintLine').textContent='Starts with 开头是: '+target.slice(0,hints)+'…'; input.focus(); };
     form.onsubmit=e=>{ e.preventDefault(); if(done) return; const v=normAns(input.value); if(!v) return; done=true;
-      const ok=answersFor(w).includes(v); input.disabled=true; form.querySelectorAll('button').forEach(b=>b.disabled=true);
+      const alt=altsFor(w).find(x=>answersFor(x).includes(v));
+      const ok=answersFor(w).includes(v) || !!alt; input.disabled=true; form.querySelectorAll('button').forEach(b=>b.disabled=true);
       input.classList.add(ok?'ok':'no');
-      const fb=card.querySelector('.fb');
-      ok?fbOk(fb, w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''):fbNo(fb,w.w, w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:'');
+      const fb=card.querySelector('.fb'), ex=w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:'';
+      const others=altsFor(w);
+      if(alt) fbOk(fb, `<span><b>${esc(alt.w)}</b> also fits this meaning. Another word for it is <b>${esc(w.w)}</b>. <span lang="zh-CN">${esc(alt.w)} 也对；另一个词是 ${esc(w.w)}。</span></span>${ex}`);
+      else if(ok) fbOk(fb, (others.length?`<span>Also correct 也对: ${others.map(x=>esc(x.w)).join(', ')}</span>`:'')+ex);
+      else fbNo(fb, w.w+(others.length?' (or '+others.map(x=>x.w).join(', ')+')':''), ex);
       settle(ok,card,st,deck,w,step); };
     keyHandler=null;
   };
@@ -560,7 +624,7 @@ function playZhTF(){
   const step=()=>{
     const w=deck.next(), truth=Math.random()<.5, other=truth?w:(distractors(w,p.length>=8?p:S.words,1)[0]||w), real=truth||other===w;
     const card=showCard(`<p class="instr">True or false? 对还是错？</p>
-      <p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p>
+      <p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>
       <p class="statement">means: ${esc(other.def)}</p>
       <div class="tf-btns"><button class="tfb yes" data-v="1">True 对</button><button class="tfb no" data-v="0">False 错</button></div><div class="fb"></div>`);
     let done=false;
@@ -576,8 +640,9 @@ function playZhTF(){
 }
 
 // ----- Chinese side: Odd one out (by word group, or by part of speech with data-odd="pos") -----
-const oddKey = w => CFG.odd==='pos' ? (w.pos||'') : w.set;
-const oddLabel = k => CFG.odd==='pos' ? k : ((S.sets.find(s=>s.id===k)||{}).name||k);
+// Odd one out groups by part of speech (data-odd="pos"), by topic when the data has topics, otherwise by set.
+const oddKey = w => CFG.odd==='pos' ? (w.pos||'') : (S.topics && w.topic ? w.topic : w.set);
+const oddLabel = k => CFG.odd==='pos' ? k : (((S.topics||[]).find(t=>t.id===k)||S.sets.find(s=>s.id===k)||{}).name||k);
 function oddGroups(){ const g={}; zhWords().forEach(w=>{ const k=oddKey(w); if(k) (g[k]=g[k]||[]).push(w); }); return g; }
 function oddReady(){ const g=oddGroups(), keys=Object.keys(g); return keys.length>=2 && keys.some(k=>g[k].length>=3); }
 function playOdd(){
@@ -645,7 +710,7 @@ function playSurvival(){
   const lose=(w)=>{ lives--; missed.push(w); draw(); if(lives<=0){ over=true; document.querySelector('.timer')?.remove(); later(()=>challengeEnd('zhsurvive','Survival',score,missed,playSurvival),1100); return false; } return true; };
   const step=()=>{ if(over) return;
     const w=deck.next(), ds=distractors(w,p.length>=8?p:S.words,3), start=Date.now(), my=limit; let answered=false;
-    mcCard({instr:'Choose the meaning 选出释义', promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p>`,
+    mcCard({instr:'Choose the meaning 选出释义', promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
       options:[w.def,...ds.map(x=>x.def)], answer:w.def, optClass:'long',
       onResult:(ok,card,fb)=>{ answered=true;
         if(ok){ score++; limit=Math.max(4000,limit-300); draw(); later(step,300); }
@@ -680,6 +745,16 @@ function wordList(){
 // ---------- router ----------
 function route(){
   const h=location.hash.replace(/^#/,'');
+  if(CFG.only==='passage'){   // a page that is just one reading game (e.g. Close reading)
+    const back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
+    const msg = PHONE ? 'Reading games are only available on desktop devices. Open this page on a computer to play.'
+      : readingState==='loading' ? 'Loading passages…'
+      : readingState==='failed' ? 'The passages could not be loaded. They load when the site is online.'
+      : !(S.passages||[]).length ? 'No passages yet. Check back soon.' : '';
+    if(msg) return frame(back, `<section class="hero"><p class="eyebrow">${esc(CFG.eyebrow||'Reading')}</p><h1>${esc(CFG.name||'')}</h1>${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}<p class="notice">${msg}</p></section>`);
+    GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
+    return playPassage();
+  }
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
     const g=ZH_GAMES.find(x=>'play-'+x.key===h);

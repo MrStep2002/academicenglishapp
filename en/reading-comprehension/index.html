@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#151935">
+<title>Reading Comprehension · English</title>
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="../../css/home.css">
+</head>
+<body>
+<main class="home">
+  <a class="backlink" href="../index.html">← All topics</a>
+  <header class="intro">
+    <p class="eyebrow">English Language</p>
+    <h1>Reading Comprehension</h1>
+    <p class="sub">Longer reading and response. These activities work on computers only.</p>
+  </header>
+
+  <section class="topic-group" aria-label="Activities">
+    <div class="topics">
+      <a class="topic needs-desktop" href="close-reading/index.html">
+        <span class="topic-text"><span class="topic-name">Close reading</span><span class="topic-sub">Read a passage of about 250 words carefully, then answer a question about it</span><span class="topic-phone">Only available on desktop devices</span></span>
+        <span class="topic-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 6v5a3 3 0 0 1-3 3H6m0 0 4-4m-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+      <div class="topic topic-off" aria-disabled="true">
+        <span class="topic-text"><span class="topic-name">Big idea</span><span class="topic-sub">Find the main idea of a text</span></span>
+        <span class="topic-soon">Coming soon</span>
+      </div>
+      <div class="topic topic-off" aria-disabled="true">
+        <span class="topic-text"><span class="topic-name">Note taking</span><span class="topic-sub">Pick out and organise the key points</span></span>
+        <span class="topic-soon">Coming soon</span>
+      </div>
+    </div>
+  </section>
+</main>
+<script>
+  // Reading is for computers. On a phone, grey out the activities.
+  (function(){
+    var coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
+    var small = Math.min(screen.width||9999, screen.height||9999) < 600;
+    if ((coarse && small) || window.innerWidth < 520) {
+      document.documentElement.classList.add('phone');
+      document.querySelectorAll('.needs-desktop').forEach(function(a){ a.removeAttribute('href'); a.setAttribute('aria-disabled','true'); a.classList.add('topic-off'); });
+    }
+  })();
+</script>
+</body>
+</html>

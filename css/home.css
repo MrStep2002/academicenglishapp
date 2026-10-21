@@ -83,3 +83,11 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 .more { margin: 4px 0 0; font-size: .9rem; color: var(--muted); }
 @media (prefers-reduced-motion: reduce) { .topic, .topic-go { transition: none; } }
 .topic-name [lang="zh"], .topic-sub [lang="zh"], .topic-group h2 [lang="zh"] { white-space: nowrap; display: inline-block; }
+
+/* Activities that are not available (coming soon, or reading on a phone) */
+.topic-off { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.topic-off:hover { border-color: var(--line); box-shadow: none; }
+.topic-soon { flex: none; font-size: .8rem; font-weight: 700; color: var(--muted); border: 1.5px dashed var(--line); border-radius: 99px; padding: 3px 10px; }
+.topic-phone { display: none; font-size: .85rem; font-weight: 700; color: #b8392a; }
+.phone .topic-off .topic-phone { display: block; }
+.phone .topic-off .topic-go { visibility: hidden; }

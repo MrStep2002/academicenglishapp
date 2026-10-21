@@ -3,6 +3,7 @@
      sets       the chips at the top of the subject page (set ids are used by every item below)
      words      {id, w, pos, def, ex, syn, set}
      alike      groups of word ids with close meanings: never offered as rival answers
+     accept     groups of near-synonyms: Type it accepts any word in the group
      gaps       Fill the gap (grammar): {set, s (with ___), ans, wrong: [...], why, pt}
      builds     Build the sentence: {set, goal, tiles: [[text, role]], decoys, alt, why}
      errors     Spot the error: {set, title, text with [wrong|right|why]}
@@ -130,6 +131,13 @@ window.SUBJECT = {"key":"language","sets":[{"id":"s1","name":"Academic toolkit"}
 ["g61","g89"],
 ["g62","g78"],
 ["g74","g93"],
+["g75","g76"],
+["g87","g88"]],"accept":[["g21","g41","g27"],
+["g59","g77"],
+["g4","g5"],
+["g67","g47"],
+["g36","g56"],
+["g42","g63"],
 ["g75","g76"],
 ["g87","g88"]],"gaps":[{"set":"s1","s":"In your essay, ___ how the writer uses the weather to reflect the character's mood.","ans":"analyse","wrong":["infer","imply","glance"],"why":"<b>Analyse</b> means examine the details and how they work together. You infer or imply <i>that</i> something is true, not <i>how</i> a writer works, and <i>glance</i> needs <i>at</i>.","wid":"g1"},
 {"set":"s1","s":"In the exam, you need to ___ the effect of the writer's word choices, not just list them.","ans":"analyse","wrong":["glance","imply","hesitate"],"why":"<b>Analyse the effect</b> = examine how it works. Listing features is not analysing them.","wid":"g1"},

@@ -7,7 +7,9 @@ Fonts are stored in the repo (`fonts/`, `css/fonts.css`), so nothing loads from 
 
 Homepage → **English** or **Chinese version 中文版**
 
-- **English** (`en/`): all in English, starting at B1/B2. Choose a subject → Vocabulary, Grammar or Reading → a game.
+- **English** (`en/`): all in English, starting at B1/B2. Topics listed by subject, like the Chinese page:
+  All subjects → Academic English Essentials; Media → Web design, Representation; English Language → Reading Comprehension, Descriptive language.
+  Each topic → Vocabulary, Grammar or Reading → a game.
   Reading is greyed out on phones ("Only available on desktop devices"); the split is automatic.
 - **Chinese version** (`zh/`): vocabulary games with Chinese support. Topics are listed by subject:
   All subjects → Academic English Keywords; Media → Web design, Representation; English Language → Descriptive language.
@@ -18,8 +20,11 @@ Homepage → **English** or **Chinese version 中文版**
 | Path | What it is |
 |---|---|
 | `index.html`, `css/home.css` | Homepage: choose English or Chinese |
-| `en/index.html` | English: choose a subject |
-| `en/essentials/`, `en/language/`, `en/media/` | The three English subjects (each page just loads its data and the engine) |
+| `en/index.html` | English: topics as a list, grouped by subject |
+| `en/essentials/`, `en/web-design/`, `en/representation/`, `en/descriptive/` | The English topics (each page loads its data and the engine; `data-sets` picks which sets of a data file it uses) |
+| `en/language/`, `en/media/` | Old addresses: forward to Descriptive language and the topic list |
+| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`, passages with `topic` = `close-reading` in the reading CSV); Big idea and Note taking coming soon. Computers only |
+| `en/reading/reading.csv` | Read and answer passages (fill in with a spreadsheet; see `en/reading/README.md`). `tools/check_reading.py` checks it |
 | `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css` |
 | `en/data/` | One content file per subject, all in the same format (see the comment at the top of each file) |
 | `zh/index.html` | Chinese version: topics as a list, grouped by subject |
@@ -28,7 +33,7 @@ Homepage → **English** or **Chinese version 中文版**
 | `zh/descriptive/` | Descriptive language: the Golden 100 Describing sets (uses `en/data/language.js` and `language-zh.js`) |
 | `representation/` | Year 9 Representation app (used by the Chinese version) |
 | `y8media/` | Year 8 Website Words app (used by the Chinese version) |
-| `english-games/` | Old address: now forwards to `en/language/` |
+| `english-games/` | Old address: now forwards to `en/descriptive/` |
 | `website-portfolio/` | Placeholder |
 
 ## English games by category
@@ -37,7 +42,7 @@ Homepage → **English** or **Chinese version 中文版**
 |---|---|
 | Vocabulary | Match the meaning, Synonym groups, Word or meaning |
 | Grammar | Fill the gap, Build the sentence, Spot the error, True or false |
-| Reading (desktop only) | In your own words, Read it, Answer the question |
+| Reading (desktop only) | Read and answer (from `en/reading/reading.csv`), In your own words, Read it, Answer the question |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/keywords/index.html` and add a bar to `zh/index.html`.
 

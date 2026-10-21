@@ -280,3 +280,19 @@ a.btn{text-decoration:none;display:inline-block}
 .timer i{display:block;height:100%;width:100%;background:var(--mark);transition:width .1s linear}
 .lives{color:var(--bad);letter-spacing:2px;font-size:15px}
 .lives .lost{color:var(--rule)}
+
+.chip-zh{white-space:nowrap}
+.chip-label{min-width:0}
+@media (max-width:520px){
+  .sets .chip{width:100%;justify-content:space-between;text-align:left}
+  .chip-label{display:flex;flex-direction:column;gap:1px}
+  .chip-zh{font-size:13px;opacity:.85}
+}
+
+/* matched pairs stay on the board, greyed, until three are replaced together */
+.tile.spent{background:var(--paper);border-color:var(--rule);color:var(--ink-2);opacity:.45;cursor:default;}
+.tile.spent .tile-zh{color:inherit}
+
+/* Read and answer */
+.passage{font-size:clamp(17px,2.2vw,19px);line-height:1.7;max-width:68ch;border-left:3px solid var(--ink);padding:2px 0 2px 20px;margin:0 0 18px;display:grid;gap:12px}
+.passage p{margin:0}
