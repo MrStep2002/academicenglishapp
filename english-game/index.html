@@ -1,0 +1,800 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Golden 100 Word Games</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an annotated exam text. Ink on cool paper, a highlighter for the words that matter, one column of play. */
+:root{
+  --paper:#f5f6f9; --sheet:#ffffff; --ink:#18203a; --ink-2:#4a5270; --rule:#dfe2ec;
+  --mark:#ffe766; --mark-ink:#18203a; --blue:#2f4fc4; --blue-soft:#e6ebfb;
+  --good:#1f7a4d; --good-soft:#e2f3ea; --bad:#b8392a; --bad-soft:#fbe7e3;
+  --f-display:"Gloock", Georgia, "Times New Roman", serif;
+  --f-body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --f-zh:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#11152a; --sheet:#1a1f38; --ink:#e8ebf6; --ink-2:#a9b0cc; --rule:#2c3354;
+  --mark:#d8c23e; --mark-ink:#141829; --blue:#8ea4ff; --blue-soft:#232b52;
+  --good:#5fd39a; --good-soft:#173a2b; --bad:#ff8a78; --bad-soft:#43201c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#11152a; --sheet:#1a1f38; --ink:#e8ebf6; --ink-2:#a9b0cc; --rule:#2c3354;
+  --mark:#d8c23e; --mark-ink:#141829; --blue:#8ea4ff; --blue-soft:#232b52;
+  --good:#5fd39a; --good-soft:#173a2b; --bad:#ff8a78; --bad-soft:#43201c; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:17px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:860px;margin:0 auto;padding-block:20px 64px;padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+mark,.hl{background:linear-gradient(transparent 12%, var(--mark) 12%, var(--mark) 88%, transparent 88%);color:var(--mark-ink);padding:0 .15em;border-radius:2px}
+
+/* top */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.brand{display:flex;align-items:baseline;gap:10px;background:none;border:0;padding:0}
+.brand b{font-family:var(--f-display);font-weight:400;font-size:26px;letter-spacing:-.01em}
+.brand span{font-family:var(--f-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.ghost{background:none;border:1px solid var(--rule);border-radius:8px;padding:6px 12px;font-size:14px;color:var(--ink-2)}
+.ghost:hover{border-color:var(--ink-2);color:var(--ink)}
+
+/* hero */
+.hero{padding-block:8px 24px;border-bottom:1px solid var(--rule);margin-bottom:24px}
+.hero h1{font-family:var(--f-display);font-weight:400;font-size:clamp(34px,6vw,52px);line-height:1.05;margin:0 0 12px;text-wrap:balance;letter-spacing:-.01em}
+.hero p{margin:0;max-width:60ch;color:var(--ink-2)}
+
+/* set chips */
+.sets{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 6px}
+.chip{border:1px solid var(--rule);background:var(--sheet);border-radius:999px;padding:7px 14px;font-size:14px;display:flex;gap:8px;align-items:center}
+.chip small{font-family:var(--f-mono);font-size:11px;color:var(--ink-2)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip[aria-pressed="true"] small{color:var(--paper);opacity:.75}
+.setnote{font-size:14px;color:var(--ink-2);margin:6px 0 0}
+
+/* game list */
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:22px}
+.game{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:18px 18px 16px;text-align:left;display:flex;flex-direction:column;gap:10px;transition:transform .12s, border-color .12s}
+.game:hover{border-color:var(--ink-2);transform:translateY(-2px)}
+.game h3{font-family:var(--f-display);font-weight:400;font-size:23px;margin:0;line-height:1.15}
+.game p{margin:0;font-size:15px;color:var(--ink-2)}
+.sample{font-size:15px;border-top:1px dashed var(--rule);padding-top:10px;margin-top:auto}
+.sample .zh{font-family:var(--f-zh);font-size:18px}
+.gap-blank{display:inline-block;min-width:4.2em;border-bottom:2px solid var(--ink);margin:0 .15em}
+.best{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);letter-spacing:.06em}
+.wl-link{margin-top:22px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--rule);padding-top:18px}
+.wl-link p{margin:0;color:var(--ink-2);font-size:15px}
+
+/* play screen */
+.bar{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.bar .title{font-family:var(--f-display);font-size:22px}
+.progress{flex:1;height:6px;background:var(--rule);border-radius:3px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--blue);width:0;transition:width .3s}
+.score{font-family:var(--f-mono);font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:14px;padding:clamp(18px,4vw,32px)}
+.instr{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:0 0 14px}
+.sentence{font-size:clamp(20px,3.4vw,26px);line-height:1.45;margin:0 0 22px;text-wrap:pretty}
+.sentence .slot{display:inline-block;min-width:5em;border-bottom:2.5px solid var(--ink);text-align:center;padding:0 .2em;transition:background .2s}
+.sentence .slot.ok{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.sentence .slot.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (max-width:520px){.opts{grid-template-columns:1fr}}
+.opt{display:flex;gap:10px;align-items:center;text-align:left;background:var(--paper);border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;font-size:17px;min-height:52px}
+.opt kbd{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);border:1px solid var(--rule);border-radius:4px;padding:1px 6px;background:var(--sheet)}
+.opt:hover:not(:disabled){border-color:var(--blue)}
+.opt:disabled{cursor:default}
+.opt.ok{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:700}
+.opt.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);text-decoration:line-through}
+.opt.dim{opacity:.5}
+.feedback{margin-top:18px;padding:14px 16px;border-radius:10px;font-size:16px;display:grid;gap:6px}
+.feedback.ok{background:var(--good-soft)}
+.feedback.no{background:var(--bad-soft)}
+.feedback .verdict{font-weight:700}
+.feedback.ok .verdict{color:var(--good)} .feedback.no .verdict{color:var(--bad)}
+.feedback .wd{font-size:15px;color:var(--ink-2)}
+.feedback .wd b{color:var(--ink)}
+.next-row{display:flex;justify-content:flex-end;margin-top:16px}
+.btn{background:var(--ink);color:var(--paper);border:0;border-radius:10px;padding:12px 22px;font-weight:700;font-size:16px}
+.btn:hover{opacity:.9}
+.btn.alt{background:none;color:var(--ink);border:1.5px solid var(--ink)}
+
+/* zh prompt */
+.zh-prompt{font-family:var(--f-zh);font-size:clamp(34px,7vw,52px);line-height:1.2;margin:4px 0 6px}
+.pos{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);letter-spacing:.06em;margin-bottom:22px}
+
+/* match */
+.match{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:12px}
+.col{display:grid;gap:10px;align-content:start}
+.tile{background:var(--paper);border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;text-align:left;font-size:16px;min-height:56px;transition:border-color .12s, background .12s}
+.tile.word{font-family:var(--f-display);font-size:20px}
+.tile.syn{font-size:15px}
+.tile.syn span+span::before{content:" · ";color:var(--ink-2)}
+.tile:hover:not(:disabled){border-color:var(--blue)}
+.tile.sel{border-color:var(--blue);background:var(--blue-soft)}
+.tile.done{background:var(--good-soft);border-color:var(--good);color:var(--good);cursor:default}
+.tile.shake{animation:shake .35s;border-color:var(--bad);background:var(--bad-soft)}
+@keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+@media (prefers-reduced-motion:reduce){.tile.shake{animation:none}.game:hover{transform:none}}
+@media (max-width:520px){.match{grid-template-columns:1fr}.col.left{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* own words */
+.extract{font-size:clamp(19px,3vw,23px);line-height:1.6;border-left:3px solid var(--ink);padding:4px 0 4px 18px;margin:0 0 24px;text-wrap:pretty}
+.extract u{text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:4px}
+.extract u.now{background:linear-gradient(transparent 12%, var(--mark) 12%, var(--mark) 88%, transparent 88%);color:var(--mark-ink)}
+.sub{border-top:1px solid var(--rule);padding-top:16px;margin-top:16px}
+.sub:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.sub h4{margin:0 0 10px;font-weight:400;font-size:17px}
+.sub h4 b{font-family:var(--f-display);font-weight:400;font-size:22px}
+.sub .why{font-size:15px;color:var(--ink-2);margin-top:8px}
+
+/* end */
+.end h2{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5vw,44px);margin:0 0 4px}
+.end .big{font-family:var(--f-display);font-size:64px;line-height:1;font-variant-numeric:tabular-nums}
+.review{margin:22px 0 0;padding:0;list-style:none;display:grid;gap:10px}
+.review li{border-top:1px solid var(--rule);padding-top:10px;font-size:15px}
+.review li b{font-family:var(--f-display);font-weight:400;font-size:18px}
+.end-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+
+/* word list */
+.search{width:100%;font:inherit;padding:12px 14px;border:1.5px solid var(--rule);border-radius:10px;background:var(--sheet);color:var(--ink);margin-bottom:12px}
+.wl{display:grid;gap:0;background:var(--sheet);border:1px solid var(--rule);border-radius:12px;overflow:hidden}
+.wl-row{display:grid;grid-template-columns:2.5em minmax(0,11em) minmax(0,1fr);gap:12px;padding:12px 16px;border-top:1px solid var(--rule)}
+.wl-row:first-child{border-top:0}
+.wl-row .n{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);padding-top:4px;font-variant-numeric:tabular-nums}
+.wl-row .w{font-family:var(--f-display);font-size:20px;line-height:1.2}
+.wl-row .w small{display:block;font-family:var(--f-mono);font-size:11px;color:var(--ink-2);letter-spacing:.05em}
+.wl-row .w .zh{font-family:var(--f-zh);font-size:14px;color:var(--ink-2)}
+.wl-row .d{font-size:15px;min-width:0}
+.wl-row .d i{color:var(--ink-2)}
+.wl-row .d .syns{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);margin-top:4px}
+@media (max-width:520px){.wl-row{grid-template-columns:2em minmax(0,1fr)}.wl-row .d{grid-column:2}}
+.toggle{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--ink-2)}
+.footer{margin-top:40px;font-size:13px;color:var(--ink-2);border-top:1px solid var(--rule);padding-top:14px}
+</style>
+<div class="wrap" id="app"></div>
+<script>
+// ===== WORD BANK =====
+// [id, word, pos, definition, example, chinese, synonym cluster, near-meaning family]
+const W = [
+[1,"analyse","verb","Examine details and explain how they work together.","Analyse how the writer creates tension.","分析",["break down","dissect","interpret"],""],
+[2,"explain","verb","Make something clear by giving reasons or details.","Explain why the character refuses to leave.","解释；说明",["clarify","make clear","account for"],""],
+[3,"infer","verb","Reach a conclusion using evidence and reasoning.","We can infer from his trembling hands that he is afraid.","推断；推论",["deduce","work out","conclude"],""],
+[4,"imply","verb","Communicate something without stating it directly.","Her refusal to answer implies that she has something to hide.","暗示；言下之意是",["hint at","indicate indirectly","get at"],"hint"],
+[5,"suggest","verb","Indicate a possible meaning or explanation.","The locked gate suggests that visitors are unwelcome.","表明；让人联想到",["indicate","point to","signal"],"hint"],
+[6,"convey","verb","Communicate an idea or feeling.","The short sentences convey a sense of urgency.","传达；表达",["communicate","express","get across"],""],
+[7,"portray","verb","Present someone or something in a particular way.","The writer portrays the father as caring but strict.","描绘；刻画",["depict","represent","present"],""],
+[8,"emphasise","verb","Give particular importance or attention to something.","The repetition emphasises her determination.","强调",["stress","highlight","underline"],""],
+[9,"compare","verb","Examine similarities and differences.","Compare the two characters' responses to the news.","比较",["liken","measure against","weigh one against another"],"compare"],
+[10,"contrast","verb","Draw attention to differences.","The writer contrasts the noisy street with the silent house.","对比；形成对照",["differentiate","distinguish","set apart"],"compare"],
+[11,"evaluate","verb","Make a judgement supported by reasons and evidence.","Evaluate whether the proposed changes would benefit students.","评价；评估",["assess","judge","appraise"],""],
+[12,"evidence","noun","Information or details that support a point.","His repeated interruptions provide evidence of his impatience.","证据",["proof","grounds","facts"],""],
+[13,"perspective","noun","A particular way of seeing or understanding something.","The story presents the conflict from a child's perspective.","视角；观点",["viewpoint","angle","standpoint"],""],
+[14,"tone","noun","The attitude expressed through language.","The phrase “another brilliant idea” creates a sarcastic tone.","语气；基调",["voice","mood","register"],"attitude"],
+[15,"attitude","noun","A person's feelings or opinions about something.","Her dismissive reply reveals a negative attitude towards the plan.","态度",["outlook","stance","feelings"],"attitude"],
+[16,"significant","adjective","Important enough to deserve attention.","His decision to return marks a significant change in his behaviour.","重要的；显著的",["important","notable","meaningful"],""],
+[17,"relevant","adjective","Directly connected to the question or subject.","Choose a quotation that is relevant to your argument.","相关的；切题的",["related","pertinent","to the point"],""],
+[18,"explicit","adjective","Stated clearly and directly.","The notice gives an explicit warning about the danger.","明确的；直截了当的",["direct","plainly stated","spelled out"],"clear"],
+[19,"implicit","adjective","Suggested without being stated directly.","There is an implicit threat in his promise to “remember this”.","含蓄的；暗含的",["unspoken","implied","hinted"],"hint"],
+[20,"justify","verb","Support a decision or argument with reasons.","Justify your interpretation using details from the passage.","证明……有道理；为……辩护",["defend","back up","give reasons for"],""],
+[21,"anxious","adjective","Worried about what might happen.","She waited outside the office, anxious about the result.","焦虑的",["worried","nervous","on edge"],"worry"],
+[22,"cautious","adjective","Careful to avoid danger or mistakes.","He took a cautious step onto the frozen pond.","谨慎的",["careful","wary","guarded"],"care"],
+[23,"confident","adjective","Sure of yourself or your ability.","Her confident voice reassured the younger children.","自信的",["self-assured","certain","poised"],""],
+[24,"curious","adjective","Wanting to discover or understand something.","A curious child peered through the gap in the fence.","好奇的",["inquisitive","interested","nosy"],""],
+[25,"frustrated","adjective","Annoyed because something prevents progress or success.","After three failed attempts, he felt increasingly frustrated.","沮丧的；受挫的",["annoyed","exasperated","fed up"],""],
+[26,"relieved","adjective","No longer worried or frightened.","She was relieved to hear his key turn in the lock.","松了一口气的",["reassured","at ease","comforted"],""],
+[27,"uneasy","adjective","Slightly worried or uncomfortable.","Something about his smile made her uneasy.","不自在的；心神不宁的",["troubled","uncomfortable","ill at ease"],"worry"],
+[28,"gentle","adjective","Soft, kind or careful.","A gentle breeze stirred the curtains.","温和的；轻柔的",["soft","mild","tender"],""],
+[29,"harsh","adjective","Unpleasantly rough, severe or strong.","The harsh light exposed every crack in the wall.","刺眼的；严厉的；恶劣的",["severe","rough","cruel"],""],
+[30,"gloomy","adjective","Dark and depressing, or unhappy.","The gloomy corridor smelled of damp clothes.","阴暗的；忧郁的",["dim","dreary","miserable"],"bleak"],
+[31,"hesitate","verb","Pause because you are uncertain.","She hesitated before opening the envelope.","犹豫",["pause","think twice","waver"],"hesit"],
+[32,"glance","verb","Look quickly or briefly.","He glanced at the clock and hurried away.","瞥一眼",["peek","glimpse","look briefly"],""],
+[33,"mutter","verb","Speak quietly and indistinctly, often in annoyance.","He muttered a complaint beneath his breath.","嘀咕；喃喃抱怨",["mumble","grumble","murmur"],""],
+[34,"wander","verb","Move without a fixed route or destination.","We wandered through the empty streets.","漫步；闲逛",["roam","drift","stroll"],""],
+[35,"tremble","verb","Shake slightly through fear, cold or strong emotion.","Her hands trembled as she unfolded the letter.","颤抖",["shake","quiver","shiver"],""],
+[36,"seize","verb","Take hold of something quickly and firmly.","He seized the rope before it slipped away.","抓住；夺取",["grab","snatch","take hold of"],"grip"],
+[37,"eagerly","adverb","With strong interest or enthusiasm.","The children eagerly gathered around the unopened box.","热切地；急切地",["keenly","enthusiastically","impatiently"],""],
+[38,"reluctantly","adverb","Unwillingly or with hesitation.","She reluctantly handed over her phone.","不情愿地",["unwillingly","grudgingly","against your wishes"],"hesit"],
+[39,"abruptly","adverb","Suddenly and unexpectedly, sometimes rudely.","He abruptly ended the conversation.","突然地；唐突地",["suddenly","sharply","without warning"],""],
+[40,"deliberately","adverb","Intentionally; on purpose.","She deliberately left his name off the invitation.","故意地",["on purpose","intentionally","knowingly"],""],
+[41,"apprehensive","adjective","Worried that something unpleasant may happen.","He felt apprehensive as the interview approached.","忧虑的；担心的",["fearful","uneasy about the future","dreading"],"worry"],
+[42,"resentful","adjective","Angry about something considered unfair.","She grew resentful when her brother received all the praise.","怨恨的；愤愤不平的",["bitter","aggrieved","sore"],"anger"],
+[43,"defiant","adjective","Openly refusing to obey or accept authority.","He met the headteacher's warning with a defiant stare.","违抗的；挑衅的",["rebellious","disobedient","unyielding"],"defy"],
+[44,"vulnerable","adjective","Easily hurt, harmed or attacked.","Alone in the unfamiliar city, she felt vulnerable.","脆弱的；易受伤害的",["exposed","defenceless","fragile"],""],
+[45,"detached","adjective","Emotionally uninvolved or distant.","He described the accident in a detached, almost clinical voice.","超然的；冷漠的",["aloof","distant","indifferent"],""],
+[46,"restless","adjective","Unable to relax or remain still.","The restless audience shifted in their seats.","坐立不安的",["fidgety","agitated","jumpy"],""],
+[47,"desolate","adjective","Empty and bleak, or extremely lonely and unhappy.","A desolate farmhouse stood among the abandoned fields.","荒无人烟的；孤寂的",["deserted","empty","forlorn"],"bleak"],
+[48,"oppressive","adjective","Making people feel burdened, restricted or uncomfortable.","The oppressive heat made every movement an effort.","压抑的；沉闷的",["stifling","suffocating","heavy"],"confine"],
+[49,"serene","adjective","Calm and peaceful.","The lake remained serene beneath the pale morning sky.","宁静的；安详的",["tranquil","calm","still"],""],
+[50,"hostile","adjective","Unfriendly or openly opposed.","The proposal received a hostile response from the crowd.","敌对的；不友好的",["unfriendly","aggressive","antagonistic"],""],
+[51,"linger","verb","Stay longer than expected or be slow to disappear.","The smell of smoke lingered in the room.","逗留；久久不散",["remain","hang around","stay on"],""],
+[52,"recoil","verb","Move back suddenly through fear, shock or disgust.","She recoiled when she saw the insect on her sleeve.","退缩；（吓得）往后缩",["flinch","shrink back","jump back"],""],
+[53,"conceal","verb","Hide something or prevent it from being known.","He smiled to conceal his disappointment.","隐藏；掩盖",["hide","cover up","disguise"],"hide"],
+[54,"falter","verb","Lose strength, confidence or steadiness.","Her voice faltered when she mentioned his name.","动摇；（声音）发颤",["stumble","weaken","lose nerve"],""],
+[55,"confront","verb","Face a difficult person or situation directly.","She finally confronted him about the missing money.","正视；当面质问",["face","challenge","tackle"],""],
+[56,"grasp","verb","Hold something firmly.","He grasped the railing as the boat lurched sideways.","紧握；抓牢",["grip","clutch","hold tight"],"grip"],
+[57,"bitterly","adverb","With strong anger, unhappiness or disappointment.","He complained bitterly about his exclusion from the team.","痛苦地；愤恨地",["angrily","resentfully","painfully"],"anger"],
+[58,"persistently","adverb","Repeatedly or continuously, despite difficulty or opposition.","She persistently questioned the official explanation.","坚持不懈地；一再地",["repeatedly","over and over","doggedly"],""],
+[59,"hesitantly","adverb","With uncertainty or a lack of confidence.","He hesitantly asked whether he could stay.","犹犹豫豫地",["uncertainly","haltingly","doubtfully"],"hesit"],
+[60,"steadily","adverb","At a regular rate or in a controlled way.","Water rose steadily against the door.","稳步地；平稳地",["gradually","evenly","at a regular pace"],""],
+[61,"ambivalent","adjective","Having conflicting feelings about something.","She felt ambivalent about leaving: excited by freedom but afraid of loneliness.","矛盾的；心情复杂的",["torn","conflicted","in two minds"],"mixed"],
+[62,"contemptuous","adjective","Showing that someone or something deserves no respect.","His contemptuous laugh dismissed their efforts as worthless.","轻蔑的；鄙视的",["scornful","disdainful","sneering"],"scorn"],
+[63,"indignant","adjective","Angry because something seems unfair or wrong.","She was indignant at the suggestion that she had cheated.","愤慨的；义愤填膺的",["outraged","offended","affronted"],"anger"],
+[64,"resigned","adjective","Accepting something unpleasant because change seems impossible.","With a resigned sigh, he returned to the back of the queue.","听天由命的；无奈接受的",["accepting","defeated","long-suffering"],""],
+[65,"remorseful","adjective","Deeply sorry for something wrong you have done.","The remorseful boy returned the stolen money.","懊悔的；深感内疚的",["regretful","apologetic","guilt-ridden"],""],
+[66,"ominous","adjective","Suggesting that something bad is going to happen.","An ominous rumble came from the mountain.","不祥的",["threatening","menacing","foreboding"],""],
+[67,"bleak","adjective","Bare and unwelcoming, or offering little hope.","The factory closure left the town facing a bleak future.","萧瑟的；暗淡无望的",["barren","cheerless","hopeless"],"bleak"],
+[68,"claustrophobic","adjective","Creating a feeling of uncomfortable confinement.","The low ceiling and windowless walls made the room claustrophobic.","幽闭的；令人透不过气的",["cramped","confined","enclosed"],"confine"],
+[69,"poignant","adjective","Causing a strong feeling of sadness or sympathy.","The unused place at the table was a poignant reminder of her absence.","令人心酸的；感人的",["moving","touching","heart-rending"],""],
+[70,"unsettling","adjective","Causing discomfort, worry or uncertainty.","There was something unsettling about the perfectly silent playground.","令人不安的",["disturbing","disquieting","eerie"],"worry"],
+[71,"scrutinise","verb","Examine very closely and carefully.","The guard scrutinised every photograph on the passport.","仔细审查；细看",["inspect","examine closely","peer at"],""],
+[72,"evade","verb","Avoid something, often deliberately or skilfully.","He evaded the question by changing the subject.","回避；逃避",["dodge","sidestep","avoid"],""],
+[73,"suppress","verb","Prevent a feeling, reaction or activity from being expressed.","She struggled to suppress a laugh.","压抑；抑制",["stifle","restrain","keep in"],"hide"],
+[74,"intensify","verb","Become stronger, or make something stronger.","The approaching footsteps intensified his fear.","增强；变得更强烈",["strengthen","heighten","increase"],"worsen"],
+[75,"erode","verb","Gradually wear away or weaken.","Years of broken promises eroded their trust.","侵蚀；逐渐削弱",["wear away","eat away","weaken gradually"],"weaken"],
+[76,"undermine","verb","Weaken someone's confidence, authority or position.","His repeated interruptions undermine her authority.","破坏；削弱（信心、权威）",["sabotage","subvert","chip away at"],"weaken"],
+[77,"tentatively","adverb","With uncertainty or caution.","She tentatively suggested a different solution.","试探性地",["cautiously","gingerly","warily"],"hesit"],
+[78,"dismissively","adverb","As though something deserves little attention or respect.","He waved dismissively at the warning.","不屑一顾地",["offhandedly","scornfully","casually"],"scorn"],
+[79,"subtly","adverb","In a delicate or indirect way that may be difficult to notice.","The lighting subtly changes as the character becomes more afraid.","微妙地；不易察觉地",["delicately","quietly","indirectly"],""],
+[80,"defiantly","adverb","In a way that openly challenges authority or opposition.","She defiantly refused to lower her eyes.","挑衅地；不服从地",["rebelliously","boldly","unyieldingly"],"defy"],
+[81,"luminous","adjective","Shining or appearing to glow.","Luminous clouds hovered above the dark sea.","发光的；明亮的",["glowing","radiant","shining"],""],
+[82,"austere","adjective","Plain, severe and without comfort or decoration.","The austere room contained only a bed and a wooden chair.","朴素的；简朴而严肃的",["plain","stark","spartan"],""],
+[83,"incongruous","adjective","Out of place or unsuitable in its surroundings.","His cheerful whistle sounded incongruous in the silent hospital ward.","不协调的；格格不入的",["out of place","mismatched","jarring"],""],
+[84,"transient","adjective","Lasting only a short time.","Their relief was transient; another warning soon arrived.","短暂的；转瞬即逝的",["brief","fleeting","short-lived"],""],
+[85,"insidious","adjective","Gradually causing harm in a way that is difficult to notice.","The rumours had an insidious effect on their friendship.","暗中为害的；潜移默化地有害的",["creeping","sly","stealthy"],""],
+[86,"inexorable","adjective","Continuing in a way that cannot be stopped.","The inexorable advance of the flood forced them upstairs.","不可阻挡的",["unstoppable","unavoidable","inevitable"],""],
+[87,"benevolent","adjective","Kind and wishing to help others.","The benevolent neighbour quietly paid for their repairs.","仁慈的；乐善好施的",["kind","charitable","generous"],"kind"],
+[88,"magnanimous","adjective","Generous or forgiving, especially towards a rival.","She was magnanimous in victory, praising her opponent's skill.","宽宏大量的",["big-hearted","forgiving","gracious"],"kind"],
+[89,"equivocal","adjective","Unclear or allowing more than one interpretation.","His equivocal answer left us unsure whether he supported the plan.","模棱两可的",["ambiguous","vague","unclear"],"mixed"],
+[90,"disillusioned","adjective","Disappointed after discovering something is worse than you believed.","She became disillusioned when the promised reforms never happened.","幻想破灭的；大失所望的",["disappointed","let down","cynical"],""],
+[91,"insinuate","verb","Suggest something unpleasant indirectly.","He insinuated that her success depended on favouritism.","含沙射影地说；暗讽",["hint darkly","allude to","drop hints"],"hint"],
+[92,"juxtapose","verb","Place things together to draw attention to their relationship or contrast.","The writer juxtaposes the luxurious hotel with the nearby slums.","并置；把……并列对比",["place side by side","set next to","pair up"],"compare"],
+[93,"exacerbate","verb","Make an existing problem worse.","His refusal to apologise exacerbated the argument.","使（问题）恶化",["worsen","aggravate","inflame"],"worsen"],
+[94,"reconcile","verb","Make conflicting ideas compatible, or restore a relationship.","She struggled to reconcile his kindness with his cruel decision.","调和；使和解",["harmonise","settle","bring together"],""],
+[95,"permeate","verb","Spread throughout something.","A smell of damp wood permeated the house.","弥漫；渗透",["spread through","fill","soak through"],""],
+[96,"relinquish","verb","Give up possession or control of something.","He refused to relinquish control of the business.","放弃；交出（控制权）",["give up","surrender","hand over"],""],
+[97,"ostensibly","adverb","According to appearances or the stated reason, which may hide another reason.","Ostensibly, he came to apologise, but he spent the visit asking questions.","表面上；名义上",["apparently","supposedly","seemingly"],""],
+[98,"inadvertently","adverb","Accidentally; without intending to.","She inadvertently revealed the surprise during lunch.","无意中；不经意地",["accidentally","unintentionally","by mistake"],""],
+[99,"perceptibly","adverb","Enough to be noticed.","His expression softened perceptibly when he saw the child.","明显地；可察觉地",["noticeably","visibly","observably"],""],
+[100,"unequivocally","adverb","Clearly and without any doubt or ambiguity.","She unequivocally rejected the accusation.","明确地；毫不含糊地",["definitely","absolutely","beyond doubt"],"clear"]
+];
+
+// ===== GAP FILL =====
+// [word id, sentence with ___, correct form, [distractors], why]
+const GAPS = [
+[1,"In your essay, ___ how the writer uses the weather to reflect the character's mood.","analyse",["infer","imply","glance"],"<b>Analyse</b> means examine the details and how they work together. You infer or imply <i>that</i> something is true, not <i>how</i> a writer works, and <i>glance</i> needs <i>at</i>."],
+[2,"Can you ___ to the class why the narrator refuses to leave the house?","explain",["evaluate","portray","infer"],"We <b>explain</b> something <i>to someone</i> by giving reasons. You can't evaluate, portray or infer <i>to</i> a person."],
+[3,"From the empty bottles on the table, we can ___ that the party went on late.","infer",["imply","convey","emphasise"],"The reader <b>infers</b> (works out) a conclusion from evidence. The speaker or evidence <i>implies</i>; readers don't. This mix-up is very common."],
+[4,"Are you trying to ___ that I took your phone?","imply",["infer","glance","evade"],"The speaker <b>implies</b> (hints) something. The listener <i>infers</i> it. <i>Evade</i> means avoid, which doesn't fit 'that I took…'."],
+[5,"The broken window ___ that someone forced their way in.","suggests",["infers","conceals","portrays"],"Evidence <b>suggests</b> a possible explanation. Objects can't <i>infer</i> (only people can), and <i>conceals</i> and <i>portrays</i> don't take 'that…'."],
+[6,"The short, sharp sentences ___ a sense of panic.","convey",["infer","compare","glance"],"Language <b>conveys</b> (communicates) a feeling. You can't <i>infer</i> or <i>compare</i> a single feeling here, and <i>glance</i> is a way of looking."],
+[7,"The novel ___ the headmaster as a cruel and distant figure.","portrays",["conveys","infers","glances"],"<b>Portray someone as…</b> is the pattern. We convey a feeling or idea, not 'convey someone as'."],
+[8,"The repetition of the word 'never' ___ how determined she is.","emphasises",["hesitates","glances","evades"],"Repetition <b>emphasises</b> (gives importance to) an idea. The other verbs describe what people do, and <i>hesitates</i> can't take an object."],
+[9,"___ the two poems' attitudes towards nature.","Compare",["Glance","Imply","Wander"],"<b>Compare</b> means look at similarities and differences between two things. <i>Glance</i> and <i>wander</i> need a preposition, and <i>imply</i> doesn't fit an instruction."],
+[10,"The writer ___ the cold, empty street with the warm, noisy kitchen.","contrasts",["infers","conveys","wanders"],"<b>Contrast X with Y</b> draws attention to differences. The opposites (cold/warm, empty/noisy) show the writer is pointing out difference."],
+[11,"___ how successful the new policy has been, giving reasons for your judgement.","Evaluate",["Infer","Glance","Convey"],"<b>Evaluate</b> means make a judgement supported by reasons. The phrase 'giving reasons for your judgement' is the clue."],
+[12,"There is no ___ that the old man ever left the village.","evidence",["perspective","attitude","tone"],"<b>There is no evidence that…</b> means no information proves it. The other nouns describe ways of seeing or speaking, not proof."],
+[13,"The story is told from the ___ of a ten-year-old girl.","perspective",["evidence","tone","attitude"],"A story is told <b>from someone's perspective</b> (their point of view). We don't say 'told from the tone/attitude of'."],
+[14,"The writer's sarcastic ___ shows that he does not take the plan seriously.","tone",["evidence","perspective","significant"],"<b>Tone</b> is the attitude you hear in the language, so a 'sarcastic tone' is natural. <i>Significant</i> is an adjective, so it can't follow 'sarcastic'."],
+[15,"Her ___ towards the new teacher changed completely after the school trip.","attitude",["evidence","relevant","conceal"],"An <b>attitude towards</b> someone is your feelings about them. <i>Relevant</i> is an adjective and <i>conceal</i> is a verb, so neither fits after 'Her'."],
+[16,"The death of his father is a ___ moment in the novel because it changes everything.","significant",["explicit","anxious","reluctantly"],"<b>Significant</b> means important enough to notice: 'it changes everything' proves it. <i>Reluctantly</i> is an adverb and can't describe a noun."],
+[17,"Only include quotations that are ___ to the question.","relevant",["explicit","gentle","curious"],"<b>Relevant to</b> means directly connected to. Quotations can be explicit, but not 'explicit <i>to</i>' a question."],
+[18,"The sign gave an ___ warning: 'Do not enter – danger of death.'","explicit",["implicit","gloomy","evidence"],"The warning is stated clearly and directly, so it is <b>explicit</b>. <i>Implicit</i> means hinted, the opposite. Check the article: 'an' needs a vowel sound, so <i>gloomy</i> is out."],
+[19,"Although he never said it, there was an ___ threat in his smile.","implicit",["explicit","anxious","evade"],"'He never said it' means the threat was suggested, not stated, so it is <b>implicit</b>. <i>Explicit</i> means stated directly."],
+[20,"You must ___ your answer with details from the passage.","justify",["infer","glance","reluctantly"],"<b>Justify</b> means support with reasons or evidence. 'Justify your answer with details' is a standard exam instruction."],
+[21,"She was ___ about the exam results and couldn't sleep.","anxious",["anxiously","relieved","serene"],"After <i>was</i> we need an adjective, not the adverb <i>anxiously</i>. 'Couldn't sleep' shows worry, so <b>anxious</b>, not relieved or serene."],
+[22,"Be ___ when you cross the frozen river – the ice may be thin.","cautious",["curious","reluctantly","confident"],"Thin ice is a danger, so you should be <b>cautious</b> (careful). <i>Reluctantly</i> is an adverb and can't follow 'Be'."],
+[23,"After months of practice, he felt ___ that he could win the race.","confident",["frustrated","eagerly","gloomy"],"<b>Confident that</b> means sure that something will happen. Months of practice lead to confidence, not frustration. <i>Eagerly</i> is an adverb."],
+[24,"The ___ child kept asking questions about the locked room.","curious",["reluctantly","harsh","relieved"],"Asking lots of questions shows the child is <b>curious</b> (wanting to find out). An adverb (<i>reluctantly</i>) can't go before a noun."],
+[25,"After failing to open the jar for the fifth time, he became ___.","frustrated",["relieved","serene","eagerly"],"Failing again and again makes you <b>frustrated</b> (annoyed because you can't succeed). <i>Became</i> needs an adjective, not an adverb."],
+[26,"We were ___ to hear that everyone had escaped the fire safely.","relieved",["hostile","reluctantly","gloomy"],"Good news after worry makes you <b>relieved</b>. Notice the pattern <i>relieved to hear</i>."],
+[27,"Something about the stranger's fixed stare made her feel ___.","uneasy",["relieved","steadily","eagerly"],"<i>Feel</i> needs an adjective, so the adverbs are out. A strange stare makes you <b>uneasy</b>, not relieved."],
+[28,"She gave the sleeping baby a ___ kiss on the forehead.","gentle",["harsh","abruptly","hostile"],"A kiss for a sleeping baby is soft and careful: <b>gentle</b>. <i>Abruptly</i> is an adverb and can't describe the noun 'kiss'."],
+[29,"The ___ winter killed many of the animals on the farm.","harsh",["gentle","reluctantly","curious"],"A winter that kills animals is severe: <b>harsh</b>. A winter can't be curious, and an adverb can't describe a noun."],
+[30,"The ___ old house had no lights and smelled of damp.","gloomy",["luminous","eagerly","confident"],"No lights and damp: dark and depressing, so <b>gloomy</b>. <i>Luminous</i> means glowing, the opposite."],
+[31,"Don't ___ to ask if you need any help.","hesitate",["glance","mutter","hesitantly"],"<b>Don't hesitate to…</b> is a fixed phrase meaning 'don't pause or worry about doing it'. After <i>don't</i> we need a verb, not the adverb <i>hesitantly</i>."],
+[32,"He ___ at his watch and realised he was late.","glanced",["scrutinised","wandered","seized"],"<b>Glance at</b> = look quickly. <i>Scrutinise</i> and <i>seize</i> take a direct object with no 'at', and a quick look fits the hurry."],
+[33,"'This is so unfair,' he ___ under his breath.","muttered",["glanced","seized","trembled"],"<b>Mutter under your breath</b> = speak quietly in annoyance. Only <i>muttered</i> is a way of speaking."],
+[34,"With no map, they ___ around the old town for hours.","wandered",["seized","glanced","grasped"],"With no map you move without a fixed route: <b>wander</b>. <i>Seize</i> and <i>grasp</i> need an object."],
+[35,"Her hands began to ___ as she opened the letter.","tremble",["seize","mutter","steadily"],"Hands <b>tremble</b> (shake) with fear or emotion. After 'began to' we need a verb, so <i>steadily</i> is out."],
+[36,"The thief ___ the bag and ran.","seized",["glanced","wandered","trembled"],"<b>Seize</b> = take hold quickly and firmly, with a direct object (the bag). The others can't take 'the bag' directly."],
+[37,"The children waited ___ for the gates of the theme park to open.","eagerly",["eager","abruptly","confident"],"<i>Waited</i> is a verb, so we need an adverb: <b>eagerly</b>, not the adjective <i>eager</i>. You can't 'wait abruptly'."],
+[38,"He ___ agreed to lend her his new bike, although he didn't really want to.","reluctantly",["reluctant","eagerly","luminous"],"'He didn't want to' = unwillingly: <b>reluctantly</b>. We need an adverb before the verb 'agreed', so not <i>reluctant</i>."],
+[39,"The music stopped ___, leaving the room in total silence.","abruptly",["abrupt","eagerly","reluctantly"],"<b>Abruptly</b> (suddenly) describes how the music stopped. The verb needs an adverb, not the adjective <i>abrupt</i>."],
+[40,"She didn't do it by accident – she broke the vase ___.","deliberately",["inadvertently","deliberate","eagerly"],"'Not by accident' = on purpose: <b>deliberately</b>. <i>Inadvertently</i> means accidentally, the opposite."],
+[41,"He felt ___ about the interview, worried that he would forget everything.","apprehensive",["relieved","contemptuous","defiantly"],"<b>Apprehensive</b> = worried that something bad may happen. 'Worried that he would forget' is the clue. <i>Felt</i> needs an adjective, not an adverb."],
+[42,"She felt ___ when her brother was given all the credit for her idea.","resentful",["relieved","benevolent","reluctantly"],"Being treated unfairly makes you <b>resentful</b> (angry about unfairness). <i>Benevolent</i> describes kindness to others, not a reaction."],
+[43,"When told to sit down, the boy gave a ___ shake of his head and stayed standing.","defiant",["defiantly","relieved","remorseful"],"He refuses to obey: <b>defiant</b>. Before a noun ('shake') we need an adjective, not the adverb <i>defiantly</i>."],
+[44,"Without their shells, young crabs are ___ to attack from birds.","vulnerable",["hostile","restless","detached"],"<b>Vulnerable to</b> = easily harmed by. Without a shell, a crab has no protection."],
+[45,"He spoke about his own accident in a cold, ___ voice, as if it had happened to someone else.","detached",["eagerly","anxious","luminous"],"'As if it had happened to someone else' = emotionally distant: <b>detached</b>. An anxious voice would show feeling."],
+[46,"The ___ students kept tapping their pens and looking at the clock.","restless",["serene","vulnerable","steadily"],"Tapping and clock-watching show they can't stay still: <b>restless</b>. <i>Serene</i> means calm, the opposite."],
+[47,"After the war, the village was ___: no people, no animals, only empty houses.","desolate",["luminous","benevolent","hostile"],"Empty and lonely: <b>desolate</b>. The colon tells you the next words explain the missing adjective."],
+[48,"The ___ heat made it hard to breathe, let alone work.","oppressive",["serene","luminous","gentle"],"Heat that makes it hard to breathe feels heavy and burdensome: <b>oppressive</b>. Gentle heat wouldn't stop you working."],
+[49,"The lake was ___, with not a single ripple on its surface.","serene",["hostile","restless","abruptly"],"No ripples = calm and peaceful: <b>serene</b>. After <i>was</i> we need an adjective, so not <i>abruptly</i>."],
+[50,"The visitors received a ___ welcome: the villagers shouted at them and threw stones.","hostile",["benevolent","serene","vulnerable"],"Shouting and throwing stones = unfriendly and aggressive: <b>hostile</b>. Note the irony of a 'hostile welcome'."],
+[51,"The smell of burnt toast ___ in the kitchen all morning.","lingered",["glanced","recoiled","concealed"],"A smell that stays for a long time <b>lingers</b>. <i>Concealed</i> needs an object, and a smell can't glance or recoil."],
+[52,"She ___ in horror when she saw the spider on her pillow.","recoiled",["lingered","confronted","grasped"],"<b>Recoil</b> = move back suddenly from fear or disgust. 'In horror' collocates strongly with <i>recoil</i>. <i>Confronted</i> and <i>grasped</i> need an object."],
+[53,"He tried to ___ his disappointment behind a wide smile.","conceal",["confront","linger","glance"],"<b>Conceal</b> = hide. A smile is used to hide the true feeling. <i>Linger</i> and <i>glance</i> can't take an object here."],
+[54,"Her voice began to ___ as she described the day she lost her dog.","falter",["seize","glance","confront"],"A voice <b>falters</b> when it loses strength because of emotion. The other verbs need an object."],
+[55,"Finally, she decided to ___ her brother about the missing money.","confront",["evade","glance","linger"],"<b>Confront someone about something</b> = face them directly. <i>Evade</i> means avoid, which contradicts 'finally decided'."],
+[56,"He ___ the railing tightly as the ship rolled in the storm.","grasped",["glanced","wandered","muttered"],"<b>Grasp</b> = hold firmly, with a direct object. 'Tightly' confirms a firm hold."],
+[57,"He complained ___ that he had been left out of the team.","bitterly",["bitter","steadily","eagerly"],"<b>Complain bitterly</b> is a strong collocation meaning with anger and disappointment. The verb needs an adverb, not <i>bitter</i>."],
+[58,"Even though they ignored her, she ___ asked for an explanation until they gave her one.","persistently",["persistent","abruptly","inadvertently"],"Asking again 'until they gave her one' despite being ignored = <b>persistently</b>. Before a verb we need the adverb, not <i>persistent</i>."],
+[59,"Unsure of the answer, the boy raised his hand ___.","hesitantly",["hesitant","eagerly","defiantly"],"'Unsure' = with uncertainty: <b>hesitantly</b>. We need an adverb to describe how he raised his hand."],
+[60,"The number of visitors has risen ___ over the past ten years.","steadily",["steady","reluctantly","abruptly"],"A rise over ten years is gradual and regular: <b>steadily</b>. <i>Abruptly</i> means suddenly, which contradicts 'over ten years'."],
+[61,"She felt ___ about moving abroad: excited about the adventure but sad to leave her friends.","ambivalent",["indignant","serene","remorseful"],"Excited <i>and</i> sad at the same time = conflicting feelings: <b>ambivalent</b>."],
+[62,"He gave a ___ laugh, as if all their hard work was worthless.","contemptuous",["contemptuously","benevolent","remorseful"],"Treating their work as worthless shows no respect: <b>contemptuous</b>. Before a noun ('laugh') we need the adjective."],
+[63,"She was ___ at the suggestion that she had cheated in the test.","indignant",["relieved","ambivalent","tentatively"],"Angry because an accusation is unfair: <b>indignant at</b>. <i>Ambivalent</i> takes 'about', not 'at', and the meaning is wrong."],
+[64,"With a ___ sigh, he accepted that the train had gone and he would have to walk.","resigned",["indignant","luminous","eagerly"],"Accepting something bad because you can't change it: <b>resigned</b>. 'He accepted' is the clue."],
+[65,"The ___ thief returned the money and apologised to the old woman.","remorseful",["defiant","contemptuous","ominous"],"Returning the money and apologising shows he is deeply sorry: <b>remorseful</b>. A defiant thief would refuse."],
+[66,"Dark clouds gathered and there was an ___ silence before the storm.","ominous",["serene","bleak","eagerly"],"Silence before a storm suggests something bad is coming: <b>ominous</b>. 'An' needs a vowel sound, which rules out <i>serene</i> and <i>bleak</i>."],
+[67,"With no jobs and no money, the family faced a ___ future.","bleak",["luminous","benevolent","bleakly"],"A future with little hope is <b>bleak</b>. Before a noun we need an adjective, not <i>bleakly</i>."],
+[68,"With no windows and a very low ceiling, the tiny room felt ___.","claustrophobic",["serene","luminous","transient"],"A small, enclosed space that makes you feel trapped is <b>claustrophobic</b>."],
+[69,"The empty chair at the dinner table was a ___ reminder of her grandfather's death.","poignant",["luminous","hostile","restless"],"Something that makes you feel sad and sympathetic is <b>poignant</b>. 'A poignant reminder' is a common collocation."],
+[70,"There was something ___ about the way the doll's eyes seemed to follow us.","unsettling",["serene","benevolent","unsettled"],"The doll <i>causes</i> the feeling, so we use the -ing adjective: <b>unsettling</b>. <i>Unsettled</i> describes how a person feels."],
+[71,"The detective ___ every page of the diary, looking for clues.","scrutinised",["glanced","wandered","lingered"],"Looking for clues on every page = examining closely: <b>scrutinised</b>. <i>Glanced</i> would need 'at' and means a quick look."],
+[72,"The politician ___ the question by talking about something else.","evaded",["confronted","scrutinised","lingered"],"Changing the subject to avoid answering = <b>evaded</b>. <i>Confronted</i> means face directly, the opposite."],
+[73,"She bit her lip to ___ a laugh during the serious speech.","suppress",["intensify","relinquish","linger"],"<b>Suppress a laugh</b> = stop it coming out. Biting your lip is a way of holding it back."],
+[74,"As the footsteps came closer, his fear began to ___.","intensify",["erode","suppress","evade"],"Closer footsteps make fear stronger: <b>intensify</b>. <i>Suppress</i> and <i>evade</i> need an object, and <i>erode</i> means weaken."],
+[75,"Years of broken promises slowly ___ her trust in him.","eroded",["intensified","reconciled","permeated"],"Trust that is gradually worn away is <b>eroded</b>. 'Slowly' and 'years' fit the gradual meaning."],
+[76,"Constantly interrupting the teacher ___ her authority in the classroom.","undermines",["reconciles","permeates","relinquishes"],"<b>Undermine</b> = weaken someone's authority or confidence. The subject ('interrupting') is singular, so the verb ends in -s."],
+[77,"Not sure whether it was safe, she ___ put one foot on the ice.","tentatively",["tentative","defiantly","dismissively"],"'Not sure' = with caution: <b>tentatively</b>. Before a verb we need the adverb, not <i>tentative</i>."],
+[78,"He waved his hand ___, as if her warning wasn't worth listening to.","dismissively",["dismissive","tentatively","inadvertently"],"Treating the warning as unimportant = <b>dismissively</b>. 'Waved' needs an adverb."],
+[79,"The lighting changes ___ during the film, so most viewers don't notice it.","subtly",["subtle","abruptly","perceptibly"],"Changes that are hard to notice happen <b>subtly</b>. <i>Abruptly</i> and <i>perceptibly</i> would be noticed, which contradicts the sentence."],
+[80,"She ___ refused to apologise, staring straight back at the headteacher.","defiantly",["defiant","tentatively","inadvertently"],"Staring back at authority shows open challenge: <b>defiantly</b>. We need an adverb before 'refused'."],
+[81,"The ___ hands of the clock glowed in the dark bedroom.","luminous",["austere","bleak","transient"],"Things that glow in the dark are <b>luminous</b>."],
+[82,"The monk's room was ___: a bed, a chair and nothing else.","austere",["luminous","benevolent","inexorable"],"Plain, simple and without comfort: <b>austere</b>. The list after the colon explains it."],
+[83,"His bright party hat looked ___ at the serious business meeting.","incongruous",["austere","benevolent","transient"],"Something that doesn't suit its surroundings is <b>incongruous</b> (out of place)."],
+[84,"Their happiness was ___; within a week, the problems had returned.","transient",["inexorable","luminous","magnanimous"],"Happiness that lasts only a week is <b>transient</b> (short-lived). <i>Inexorable</i> means impossible to stop, the opposite idea."],
+[85,"The rumours had an ___ effect, slowly destroying their friendship without anyone noticing.","insidious",["benevolent","luminous","austere"],"Harm that happens gradually and unnoticed is <b>insidious</b>. 'An' also rules out the consonant-sound words."],
+[86,"Nothing could stop the ___ rise of the flood water.","inexorable",["transient","benevolent","magnanimous"],"'Nothing could stop' = <b>inexorable</b>. <i>Transient</i> means short-lived."],
+[87,"A ___ neighbour quietly paid for the family's new roof.","benevolent",["hostile","contemptuous","austere"],"Kindly helping others = <b>benevolent</b>."],
+[88,"She was ___ in victory, shaking her rival's hand and praising his performance.","magnanimous",["contemptuous","resentful","indignant"],"Generous towards a rival = <b>magnanimous</b>. 'Magnanimous in victory' is a common phrase."],
+[89,"His ___ answer left us unsure whether he agreed or not.","equivocal",["unequivocal","explicit","benevolent"],"An unclear answer that leaves people unsure is <b>equivocal</b>. <i>Unequivocal</i> and <i>explicit</i> mean completely clear."],
+[90,"After years of broken promises, many voters became ___ with politics.","disillusioned",["magnanimous","luminous","benevolent"],"Disappointed after discovering the truth = <b>disillusioned with</b>."],
+[91,"Are you ___ that I cheated? If so, just say it directly!","insinuating",["inferring","evading","juxtaposing"],"<b>Insinuate</b> = suggest something unpleasant indirectly. The speaker hints; the listener infers, so <i>inferring</i> is the wrong direction."],
+[92,"The director ___ images of the luxury hotel with shots of the slums next door.","juxtaposes",["reconciles","relinquishes","permeates"],"<b>Juxtapose X with Y</b> = place them side by side to show contrast. <i>Reconcile</i> means make things fit together, which is a different idea."],
+[93,"His refusal to apologise only ___ the argument.","exacerbated",["relinquished","reconciled","permeated"],"Making a problem worse = <b>exacerbated</b>. 'Only' signals things got worse."],
+[94,"She struggled to ___ his kindness to her with his cruelty to others.","reconcile",["relinquish","permeate","exacerbate"],"<b>Reconcile X with Y</b> = make two conflicting ideas fit together. 'Struggled' shows it is difficult."],
+[95,"The smell of fresh bread ___ the whole house.","permeated",["relinquished","reconciled","juxtaposed"],"A smell that spreads everywhere <b>permeates</b> a place."],
+[96,"The old king refused to ___ power to his son.","relinquish",["permeate","exacerbate","reconcile"],"<b>Relinquish power</b> = give up control. A very common collocation."],
+[97,"___, he came to apologise, but really he wanted to find out what we knew.","Ostensibly",["Inadvertently","Unequivocally","Perceptibly"],"'But really' shows the stated reason was not the true reason: <b>ostensibly</b>."],
+[98,"She didn't mean to, but she ___ revealed the surprise party.","inadvertently",["deliberately","ostensibly","unequivocally"],"'Didn't mean to' = by accident: <b>inadvertently</b>. <i>Deliberately</i> means on purpose."],
+[99,"The temperature dropped ___ when the sun went down, and everyone reached for their coats.","perceptibly",["subtly","ostensibly","inadvertently"],"A drop everyone noticed = <b>perceptibly</b>. <i>Subtly</i> means hard to notice, which contradicts 'everyone reached for their coats'."],
+[100,"The minister ___ denied the accusation: 'That is completely false.'","unequivocally",["tentatively","ostensibly","subtly"],"'Completely false' is a clear, certain denial: <b>unequivocally</b>. <i>Tentatively</i> means uncertainly."]
+];
+
+// ===== IN YOUR OWN WORDS (0500 Paper 1 style) =====
+// text uses [word] for underlined words; qs in the same order
+const OWN = [
+{t:"The [oppressive] heat [lingered] long after sunset, and the villagers walked [steadily] towards the well.", ids:[48,51,60], qs:[
+ ["heavy and hard to bear",["bright and cheerful","slowly fading","sudden and surprising"]],
+ ["stayed longer than expected",["rose quickly","spread quietly","disappeared suddenly"]],
+ ["at a regular, controlled pace",["in great fear","quickly and suddenly","without wanting to"]]]},
+{t:"Mara [glanced] at the letter, then [hesitantly] reached for it, her fingers beginning to [tremble].", ids:[32,59,35], qs:[
+ ["looked briefly",["read carefully","stared angrily","pointed"]],
+ ["with uncertainty",["with great speed","with anger","on purpose"]],
+ ["shake slightly",["grip tightly","become still","turn pale"]]]},
+{t:"The [desolate] farmhouse stood alone, its dark windows [ominous] against the evening sky.", ids:[47,66], qs:[
+ ["empty and lonely",["brightly painted","crowded and noisy","newly built"]],
+ ["suggesting something bad will happen",["beautiful and peaceful","old-fashioned","shining brightly"]]]},
+{t:"He replied [dismissively], and his [contemptuous] smile [undermined] everything she had just said.", ids:[78,62,76], qs:[
+ ["as if it deserved little attention",["in a frightened way","very politely","very quietly"]],
+ ["showing no respect",["showing deep sadness","showing nervousness","showing kindness"]],
+ ["weakened",["repeated","supported","explained"]]]},
+{t:"The room was [austere]: whitewashed walls, a narrow bed, and a single bowl of [luminous] orange flowers that looked [incongruous] in such a plain space.", ids:[82,81,83], qs:[
+ ["plain and without comfort",["dirty and untidy","warm and welcoming","full of furniture"]],
+ ["glowing brightly",["dying","tiny","artificial"]],
+ ["out of place",["perfectly suited","hidden","expensive"]]]},
+{t:"[Ostensibly], Uncle Raj had come to return a book, but he [persistently] asked about the will, [scrutinising] our faces after every answer.", ids:[97,58,71], qs:[
+ ["according to the reason he gave",["without any doubt","by accident","for the first time"]],
+ ["again and again, not giving up",["only once","in a whisper","with no interest"]],
+ ["examining very closely",["ignoring","smiling at","turning away from"]]]},
+{t:"The [inexorable] advance of the sea had [eroded] the cliff, leaving the cottage [vulnerable].", ids:[86,75,44], qs:[
+ ["impossible to stop",["slow and gentle","unexpected","temporary"]],
+ ["gradually worn away",["suddenly destroyed","made stronger","covered up"]],
+ ["easily harmed",["abandoned","valuable","brand new"]]]},
+{t:"Sam felt [ambivalent] about the move: the new city was exciting, yet he was [apprehensive] about starting again.", ids:[61,41], qs:[
+ ["having mixed feelings",["extremely excited","completely uninterested","angry"]],
+ ["worried about what might happen",["excited","bored","certain"]]]},
+{t:"She [suppressed] a smile, determined to [conceal] how [relieved] she felt.", ids:[73,53,26], qs:[
+ ["held back",["gave","noticed","returned"]],
+ ["hide",["show","describe","forget"]],
+ ["no longer worried",["guilty","disappointed","surprised"]]]},
+{t:"The sergeant's [harsh] voice [permeated] the barracks, and the young recruits [recoiled] from his gaze.", ids:[29,95,52], qs:[
+ ["rough and severe",["quiet and gentle","high and thin","tired"]],
+ ["spread through every part of",["was blocked by","slowly left","was trapped in one corner of"]],
+ ["moved back in fear",["stared back boldly","smiled","moved closer"]]]},
+{t:"The memorial is a [poignant] reminder of the soldiers' [transient] lives.", ids:[69,84], qs:[
+ ["causing sadness and sympathy",["cheerful","boring","frightening"]],
+ ["lasting only a short time",["heroic","forgotten","long and full"]]]},
+{t:"Grandmother was [magnanimous] towards the neighbour who had wronged her, though her son remained [resentful].", ids:[88,42], qs:[
+ ["generous and forgiving",["cold and distant","suspicious","afraid"]],
+ ["still angry about being treated unfairly",["sorry","confused","grateful"]]]},
+{t:"His [equivocal] reply only [exacerbated] her anxiety.", ids:[89,93], qs:[
+ ["unclear, open to more than one meaning",["rude","very short","honest"]],
+ ["made worse",["calmed","explained","hid"]]]},
+{t:"The boy stood [defiantly] in the doorway, refusing to [relinquish] the key.", ids:[80,96], qs:[
+ ["openly refusing to obey",["shyly","sleepily","accidentally"]],
+ ["give up",["hide","lose","use"]]]},
+{t:"There was something [unsettling] about the [serene] smile on the stranger's face.", ids:[70,49], qs:[
+ ["causing worry or discomfort",["amusing","familiar","attractive"]],
+ ["calm and peaceful",["cruel","fake","wide"]]]},
+{t:"Leila [wandered] through the market, [eagerly] tasting everything the stallholders offered.", ids:[34,37], qs:[
+ ["walked without a fixed route",["ran quickly","walked angrily","hurried home"]],
+ ["with enthusiasm",["without wanting to","carefully","slowly"]]]},
+{t:"The [claustrophobic] tunnel seemed to press in on them, and Ben's courage began to [falter].", ids:[68,54], qs:[
+ ["uncomfortably enclosed",["dark and wet","long and winding","dangerous"]],
+ ["weaken or become unsteady",["grow","return","disappear completely"]]]},
+{t:"He did not mean to, but his comment [insinuated] that his sister had lied, and she was [indignant].", ids:[91,63], qs:[
+ ["suggested something unpleasant indirectly",["stated clearly","proved","denied"]],
+ ["angry at being treated unfairly",["ashamed","amused","frightened"]]]},
+{t:"Years in the city had left him [disillusioned]; the [bleak] streets offered nothing he had once hoped for.", ids:[90,67], qs:[
+ ["disappointed after discovering the truth",["excited","homesick","confused"]],
+ ["cheerless and without hope",["busy","modern","dangerous"]]]},
+{t:"The poet [juxtaposes] the [benevolent] mother with the [hostile] world outside.", ids:[92,87,50], qs:[
+ ["places side by side to show contrast",["replaces","describes in detail","confuses"]],
+ ["kind and caring",["strict","absent","tired"]],
+ ["unfriendly and threatening",["exciting","busy","colourful"]]]},
+{t:"The [restless] crowd [muttered] as the speaker [abruptly] left the stage.", ids:[46,33,39], qs:[
+ ["unable to stay still or calm",["very large","quiet","happy"]],
+ ["spoke quietly and with annoyance",["cheered","shouted","sang"]],
+ ["suddenly and without warning",["slowly","sadly","proudly"]]]},
+{t:"Doubt crept in [subtly], an [insidious] voice that grew stronger every night.", ids:[79,85], qs:[
+ ["in a way that was hard to notice",["loudly","quickly","only once"]],
+ ["harmful in a hidden, gradual way",["friendly","weak","sudden"]]]},
+{t:"She [tentatively] suggested that they [confront] the problem rather than [evade] it.", ids:[77,55,72], qs:[
+ ["cautiously, without confidence",["angrily","repeatedly","proudly"]],
+ ["face directly",["solve","ignore","report"]],
+ ["avoid",["study","fix","exaggerate"]]]},
+{t:"The guard remained [detached] while the [anxious] parents begged for news.", ids:[45,21], qs:[
+ ["emotionally distant",["fixed to a wall","exhausted","furious"]],
+ ["worried",["angry","patient","tired"]]]},
+{t:"The writer [portrays] the village as [gloomy], and the constant rain [emphasises] the mood.", ids:[7,30,8], qs:[
+ ["presents in a particular way",["visits","criticises","remembers"]],
+ ["dark and depressing",["busy","ancient","peaceful"]],
+ ["gives extra importance to",["hides","changes","explains"]]]},
+{t:"Her voice was [gentle], but she rejected the offer [unequivocally].", ids:[28,100], qs:[
+ ["soft and kind",["loud","shaking","cold"]],
+ ["clearly, with no doubt",["politely","slowly","partly"]]]},
+{t:"We can [infer] from his [cautious] steps that he does not trust the ice.", ids:[3,22], qs:[
+ ["work out from evidence",["hope","pretend","argue"]],
+ ["careful to avoid danger",["quick","heavy","confident"]]]},
+{t:"The [frustrated] goalkeeper [seized] the ball and kicked it [deliberately] into the crowd.", ids:[25,36,40], qs:[
+ ["annoyed because things were going wrong",["tired","delighted","nervous"]],
+ ["grabbed quickly and firmly",["dropped","caught gently","looked at"]],
+ ["on purpose",["by accident","weakly","angrily"]]]},
+{t:"Ana was [curious] about the stranger, but [uneasy] when he [lingered] by the gate.", ids:[24,27,51], qs:[
+ ["wanting to find out more",["frightened","bored","rude"]],
+ ["slightly worried",["delighted","sleepy","angry"]],
+ ["stayed longer than expected",["shouted","left quickly","fell asleep"]]]},
+{t:"The [resigned] prisoner [reluctantly] handed over his letters, his [remorseful] eyes fixed on the floor.", ids:[64,38,65], qs:[
+ ["accepting that nothing could change",["furious","hopeful","confused"]],
+ ["without wanting to",["happily","quickly","secretly"]],
+ ["deeply sorry for what he had done",["tired","proud","frightened"]]]}
+];
+
+const SETS = [
+ {n:1,name:"Academic toolkit",short:"Academic",lvl:"B1–B2",range:[1,20]},
+ {n:2,name:"Describing: foundations",short:"Describing 1",lvl:"B1+",range:[21,40]},
+ {n:3,name:"Describing: developing",short:"Describing 2",lvl:"B2",range:[41,60]},
+ {n:4,name:"Describing: advanced",short:"Describing 3",lvl:"B2+",range:[61,80]},
+ {n:5,name:"Describing: ambitious",short:"Describing 4",lvl:"C1",range:[81,100]}
+];
+
+// ===== helpers =====
+const WORDS = W.map(r=>({id:r[0],w:r[1],pos:r[2],def:r[3],ex:r[4],zh:r[5],syn:r[6],fam:r[7],set:Math.ceil(r[0]/20)}));
+const byId = Object.fromEntries(WORDS.map(w=>[w.id,w]));
+const $app = document.getElementById('app');
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const store = {
+  get(k,d){ try{ const v=localStorage.getItem('g100:'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
+  set(k,v){ try{ localStorage.setItem('g100:'+k, JSON.stringify(v)); }catch(e){} }
+};
+let chosen = store.get('sets',[1,2,3,4,5]);
+if(!Array.isArray(chosen)||!chosen.length) chosen=[1,2,3,4,5];
+let keyHandler = null;
+document.addEventListener('keydown', e => { if(keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey) keyHandler(e); });
+const inSets = id => chosen.includes(Math.ceil(id/20));
+const pool = () => WORDS.filter(w=>inSets(w.id));
+
+// choose n words with no two from the same near-meaning family and no shared synonym
+function pickDistinct(list, n){
+  const out=[], fams=new Set(), syns=new Set();
+  for(const w of shuffle(list)){
+    if(w.fam && fams.has(w.fam)) continue;
+    if(w.syn.some(s=>syns.has(s))) continue;
+    out.push(w); if(w.fam) fams.add(w.fam); w.syn.forEach(s=>syns.add(s));
+    if(out.length===n) break;
+  }
+  return out;
+}
+
+const GAMES = [
+  {key:'gap', name:'Fill the gap', blurb:'Choose the only word that fits the sentence. Check both meaning and grammar.',
+   sample:'She <span class="gap-blank"></span> before opening the envelope.', run:()=>playGap()},
+  {key:'def', name:'Match the meaning', blurb:'Pair each word with its definition. Five pairs per board, three boards.',
+   sample:'<b>linger</b> &nbsp;⟷&nbsp; stay longer than expected', run:()=>playMatch('def')},
+  {key:'syn', name:'Synonym groups', blurb:'Match each word to a group of words with a similar meaning.',
+   sample:'<b>serene</b> &nbsp;⟷&nbsp; tranquil · calm · still', run:()=>playMatch('syn')},
+  {key:'own', name:'In your own words', blurb:'Paper 1 style: explain what the writer means by each underlined word, in context.',
+   sample:'The <u>oppressive</u> heat <u>lingered</u> long after sunset…', run:()=>playOwn()},
+  {key:'zh', name:'中文 → English', blurb:'See the Chinese meaning and choose the English word. The only translation game.',
+   sample:'<span class="zh">不祥的</span> → ominous?', run:()=>playZh()}
+];
+
+function topbar(){
+  return `<div class="top"><button class="brand" id="home" aria-label="Back to all games"><b>Golden 100</b><span>Word games · 0500 / 0408</span></button>
+  <button class="ghost" id="wlBtn">Word list</button></div>`;
+}
+function wireTop(){ document.getElementById('home').onclick=home; document.getElementById('wlBtn').onclick=wordList; }
+
+// ===== HOME =====
+function home(){
+  keyHandler=null;
+  const n = pool().length;
+  $app.innerHTML = topbar() + `
+  <section class="hero">
+    <h1>Use the words, don't just translate them.</h1>
+    <p>Five games built on the Golden 100, for students working from upper B1 towards C1. Pick the word sets to practise, then choose a game.</p>
+    <div class="sets" role="group" aria-label="Word sets">
+      ${SETS.map(s=>`<button class="chip" data-set="${s.n}" aria-pressed="${chosen.includes(s.n)}">${s.name} <small>${s.lvl}</small></button>`).join('')}
+    </div>
+    <p class="setnote">${n} words selected (${chosen.length===5?'all sets':chosen.length+' of 5 sets'}).</p>
+  </section>
+  <div class="games">
+    ${GAMES.map(g=>{const b=store.get('best:'+g.key,null);return `<button class="game" data-g="${g.key}">
+      <span class="mono">Game</span>
+      <h3>${g.name}</h3><p>${g.blurb}</p>
+      <div class="sample">${g.sample}</div>
+      <span class="best">${b!=null?'Best: '+b+'%':'Not played yet'}</span></button>`}).join('')}
+  </div>
+  <div class="wl-link"><p>Need to look a word up first? The word list has every definition, example and synonym group.</p><button class="btn alt" id="wl2">Open word list</button></div>
+  <p class="footer">Scores are saved in this browser only.</p>`;
+  wireTop();
+  document.getElementById('wl2').onclick=wordList;
+  $app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    const s=+c.dataset.set;
+    if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); }
+    else chosen=[...chosen,s].sort();
+    store.set('sets',chosen); home();
+  });
+  $app.querySelectorAll('.game').forEach(b=>b.onclick=()=>GAMES.find(g=>g.key===b.dataset.g).run());
+}
+
+function shell(title, inner){
+  $app.innerHTML = topbar() + `<div class="bar"><span class="title">${title}</span><div class="progress"><i id="prog"></i></div><span class="score" id="score"></span></div><div id="stage">${inner||''}</div>`;
+  wireTop();
+}
+const stage = () => document.getElementById('stage');
+function setProgress(done,total,score,label){
+  document.getElementById('prog').style.width = (100*done/total)+'%';
+  document.getElementById('score').textContent = `${label||'Score'} ${score}/${total}`;
+}
+
+function endScreen(key, title, correct, total, reviewHtml, again){
+  const pct = Math.round(100*correct/Math.max(total,1));
+  const best = store.get('best:'+key,null);
+  if(best==null||pct>best) store.set('best:'+key,pct);
+  document.getElementById('prog').style.width='100%';
+  const msg = pct>=90?'Excellent. Try a harder set next.':pct>=70?'Good work. Look over the words you missed.':pct>=50?'Getting there. Review the words below and play again.':'Use the word list to revise these, then try again.';
+  stage().innerHTML = `<div class="card end"><p class="instr">Round complete</p>
+    <div class="big">${pct}%</div><h2>${correct} of ${total} correct</h2><p>${msg}${best!=null&&pct>best?' New best score.':''}</p>
+    ${reviewHtml?`<p class="instr" style="margin-top:22px">To review</p><ul class="review">${reviewHtml}</ul>`:''}
+    <div class="end-actions"><button class="btn" id="again">Play again</button><button class="btn alt" id="back">All games</button></div></div>`;
+  document.getElementById('again').onclick=again; document.getElementById('back').onclick=home;
+  keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); again(); } };
+}
+const wordNote = w => `<span class="wd"><b>${esc(w.w)}</b> (${w.pos}): ${esc(w.def)}</span>`;
+const reviewItem = (w, extra) => `<li><b>${esc(w.w)}</b> – ${esc(w.def)}${extra?`<br><i>${extra}</i>`:''}</li>`;
+
+// generic multiple-choice renderer
+function renderMC({instr, promptHtml, options, answer, onAnswer, after}){
+  const opts = shuffle(options);
+  stage().innerHTML = `<div class="card"><p class="instr">${instr}</p>${promptHtml}
+    <div class="opts">${opts.map((o,i)=>`<button class="opt" data-v="${esc(o)}"><kbd>${i+1}</kbd><span>${esc(o)}</span></button>`).join('')}</div>
+    <div id="fb"></div></div>`;
+  const btns=[...stage().querySelectorAll('.opt')];
+  let answered=false;
+  const choose = b => {
+    if(answered) return; answered=true;
+    const v=b.dataset.v, ok=v===answer;
+    btns.forEach(x=>{ x.disabled=true; if(x.dataset.v===answer) x.classList.add('ok'); else if(x===b) x.classList.add('no'); else x.classList.add('dim'); });
+    const fbHtml = after(ok, v);
+    document.getElementById('fb').innerHTML = `<div class="feedback ${ok?'ok':'no'}"><span class="verdict">${ok?'Correct.':'Not quite. The answer is '+esc(answer)+'.'}</span>${fbHtml}</div>
+      <div class="next-row"><button class="btn" id="next">Next →</button></div>`;
+    const nx=document.getElementById('next'); nx.focus({preventScroll:true});
+    nx.onclick=()=>onAnswer(ok,v);
+    keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); onAnswer(ok,v);} };
+  };
+  btns.forEach(b=>b.onclick=()=>choose(b));
+  keyHandler = e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length){ choose(btns[n-1]); } };
+}
+
+// ===== GAME 1: GAP FILL =====
+function playGap(){
+  let items = shuffle(GAPS.filter(g=>inSets(g[0]))).slice(0,10);
+  let i=0, score=0, missed=[];
+  shell('Fill the gap');
+  const step = () => {
+    setProgress(i,items.length,score);
+    if(i>=items.length) return endScreen('gap','Fill the gap',score,items.length, missed.map(m=>reviewItem(byId[m[0]], esc(m[1].replace('___',m[2])))).join(''), playGap);
+    const g=items[i], parts=g[1].split('___');
+    renderMC({instr:`Question ${i+1} of ${items.length} · Choose the word that fits`,
+      promptHtml:`<p class="sentence">${esc(parts[0])}<span class="slot" id="slot">&nbsp;</span>${esc(parts[1])}</p>`,
+      options:[g[2],...g[3]], answer:g[2],
+      after:(ok,v)=>{ const s=document.getElementById('slot'); s.textContent=g[2]; s.classList.add(ok?'ok':'no');
+        if(ok) score++; else missed.push(g);
+        setProgress(i+1,items.length,score);
+        return `<span>${g[4]}</span>${wordNote(byId[g[0]])}`; },
+      onAnswer:()=>{ i++; step(); }});
+  };
+  step();
+}
+
+// ===== GAME 4: CHINESE → ENGLISH =====
+function playZh(){
+  const p = pool();
+  const items = shuffle(p).slice(0,10);
+  let i=0, score=0, missed=[];
+  shell('中文 → English');
+  const step = () => {
+    setProgress(i,items.length,score);
+    if(i>=items.length) return endScreen('zh','中文 → English',score,items.length, missed.map(w=>reviewItem(w, esc(w.zh)+' · '+esc(w.ex))).join(''), playZh);
+    const w=items[i];
+    // distractors: same part of speech, different family; prefer the chosen sets, fall back to all words
+    const ok = x => x.id!==w.id && (!w.fam || x.fam!==w.fam);
+    let cand = shuffle(p.filter(x=>ok(x)&&x.pos===w.pos));
+    if(cand.length<3) cand = cand.concat(shuffle(WORDS.filter(x=>ok(x)&&x.pos===w.pos&&!cand.includes(x))));
+    const fams=new Set(); const ds=[];
+    cand = cand.concat(shuffle(p.filter(x=>ok(x)&&x.pos!==w.pos)));
+    for(const c of cand){ if(c.fam&&fams.has(c.fam)) continue; if(ds.includes(c.w)) continue; ds.push(c.w); if(c.fam) fams.add(c.fam); if(ds.length===3) break; }
+    renderMC({instr:`Question ${i+1} of ${items.length} · Choose the English word`,
+      promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(w.zh)}</div><div class="pos">${w.pos}</div>`,
+      options:[w.w,...ds], answer:w.w,
+      after:(good)=>{ if(good) score++; else missed.push(w); setProgress(i+1,items.length,score);
+        return `${wordNote(w)}<span class="wd"><i>${esc(w.ex)}</i></span>`; },
+      onAnswer:()=>{ i++; step(); }});
+  };
+  step();
+}
+
+// ===== GAMES 2 & 3: MATCHING =====
+function playMatch(mode){
+  const title = mode==='def'?'Match the meaning':'Synonym groups';
+  const BOARDS=3, PER=5;
+  let p = pool(); if(p.length<PER) p=WORDS;
+  // take three boards of distinct words where possible
+  let usedIds=new Set(), boards=[];
+  for(let b=0;b<BOARDS;b++){
+    let avail=p.filter(w=>!usedIds.has(w.id)); if(avail.length<PER) avail=p;
+    const set=pickDistinct(avail,PER); set.forEach(w=>usedIds.add(w.id)); boards.push(set);
+  }
+  let bi=0, tries=0, firstTry=0, missedIds=new Set();
+  const total=BOARDS*PER;
+  shell(title);
+  const board = () => {
+    if(bi>=BOARDS){
+      const rev=[...missedIds].map(id=>reviewItem(byId[id], mode==='syn'?esc(byId[id].syn.join(' · ')):'')).join('');
+      return endScreen(mode,title,firstTry,total,rev,()=>playMatch(mode));
+    }
+    const set=boards[bi];
+    const left=shuffle(set), right=shuffle(set);
+    const rightText = w => mode==='def' ? esc(w.def) : w.syn.map(s=>`<span>${esc(s)}</span>`).join('');
+    stage().innerHTML = `<div class="card"><p class="instr">Board ${bi+1} of ${BOARDS} · ${mode==='def'?'Tap a word, then its meaning':'Tap a word, then the group that means something similar'}</p>
+      <div class="match"><div class="col left">${left.map(w=>`<button class="tile word" data-id="${w.id}" data-side="L">${esc(w.w)}</button>`).join('')}</div>
+      <div class="col right">${right.map(w=>`<button class="tile ${mode}" data-id="${w.id}" data-side="R">${rightText(w)}</button>`).join('')}</div></div>
+      <div id="fb"></div></div>`;
+    let sel=null, done=0, wrongOn=new Set();
+    const upd=()=>{ document.getElementById('prog').style.width=(100*(bi*PER+done)/total)+'%'; document.getElementById('score').textContent=`First try ${firstTry}/${total}`; };
+    upd();
+    stage().querySelectorAll('.tile').forEach(t=>t.onclick=()=>{
+      if(t.classList.contains('done')) return;
+      if(!sel||sel.dataset.side===t.dataset.side){ if(sel) sel.classList.remove('sel'); sel=t; t.classList.add('sel'); return; }
+      const a=sel, b=t; a.classList.remove('sel'); sel=null;
+      const L = a.dataset.side==='L'?a:b;
+      if(a.dataset.id===b.dataset.id){
+        [a,b].forEach(x=>{x.classList.add('done'); x.disabled=true;});
+        if(!wrongOn.has(L.dataset.id)) firstTry++;
+        done++; upd();
+        if(done===PER){
+          document.getElementById('fb').innerHTML=`<div class="next-row"><button class="btn" id="next">${bi+1<BOARDS?'Next board →':'See results →'}</button></div>`;
+          const go=()=>{bi++; board();};
+          const nx=document.getElementById('next'); nx.onclick=go; nx.focus({preventScroll:true});
+          keyHandler=e=>{ if(e.key==='Enter'){e.preventDefault(); go();} };
+        }
+      } else {
+        wrongOn.add(L.dataset.id); missedIds.add(+L.dataset.id); tries++;
+        [a,b].forEach(x=>{x.classList.remove('shake'); void x.offsetWidth; x.classList.add('shake'); setTimeout(()=>x.classList.remove('shake'),400);});
+      }
+    });
+    keyHandler=null;
+  };
+  board();
+}
+
+// ===== GAME 5: IN YOUR OWN WORDS (0500 style) =====
+function playOwn(){
+  let items = shuffle(OWN.filter(o=>o.ids.some(inSets)));
+  if(items.length<3) items=shuffle(OWN);
+  items=items.slice(0,6);
+  const total=items.reduce((n,o)=>n+o.qs.length,0);
+  let i=0, score=0, answeredCount=0, missed=[];
+  shell('In your own words');
+  const step = () => {
+    setProgress(answeredCount,total,score);
+    if(i>=items.length) return endScreen('own','In your own words',score,total, missed.map(m=>reviewItem(byId[m.id], 'In context: '+esc(m.ans))).join(''), playOwn);
+    const o=items[i];
+    const words=[]; let k=0;
+    const textHtml = esc(o.t).replace(/\[([^\]]+)\]/g,(m,w)=>{words.push(w); return `<u data-k="${k++}">${w}</u>`;});
+    stage().innerHTML = `<div class="card"><p class="instr">Extract ${i+1} of ${items.length} · Using your own words, explain what the writer means by each of the underlined words</p>
+      <p class="extract">${textHtml}</p>
+      ${o.qs.map((q,j)=>{ const opts=shuffle([q[0],...q[1]]);
+        return `<div class="sub" data-j="${j}"><h4><b>${esc(words[j])}</b> means…</h4>
+        <div class="opts">${opts.map((x,n)=>`<button class="opt" data-v="${esc(x)}"><kbd>${n+1}</kbd><span>${esc(x)}</span></button>`).join('')}</div><div class="why"></div></div>`;}).join('')}
+      <div id="fb"></div></div>`;
+    let active=0, doneHere=0;
+    const subs=[...stage().querySelectorAll('.sub')];
+    const highlight=()=>stage().querySelectorAll('.extract u').forEach(u=>u.classList.toggle('now', +u.dataset.k===active));
+    highlight();
+    subs.forEach((sub,j)=>{
+      const q=o.qs[j], btns=[...sub.querySelectorAll('.opt')];
+      sub.addEventListener('focusin',()=>{ if(!sub.dataset.done){active=j; highlight();} });
+      sub.addEventListener('mouseenter',()=>{ if(!sub.dataset.done){active=j; highlight();} });
+      sub._choose = b => {
+        if(sub.dataset.done) return; sub.dataset.done='1';
+        const ok=b.dataset.v===q[0]; const w=byId[o.ids[j]];
+        btns.forEach(x=>{x.disabled=true; if(x.dataset.v===q[0]) x.classList.add('ok'); else if(x===b) x.classList.add('no'); else x.classList.add('dim');});
+        if(ok) score++; else missed.push({id:o.ids[j],ans:q[0]});
+        answeredCount++; doneHere++;
+        sub.querySelector('.why').innerHTML = `${ok?'Correct.':'In this extract it means “'+esc(q[0])+'”.'} Dictionary meaning of <b>${esc(w.w)}</b>: ${esc(w.def)}`;
+        setProgress(answeredCount,total,score);
+        const nextOpen = subs.findIndex(s=>!s.dataset.done);
+        if(nextOpen>=0){ active=nextOpen; highlight(); }
+        else {
+          active=-1; highlight();
+          document.getElementById('fb').innerHTML=`<div class="next-row"><button class="btn" id="next">${i+1<items.length?'Next extract →':'See results →'}</button></div>`;
+          const go=()=>{i++; step();};
+          const nx=document.getElementById('next'); nx.onclick=go; nx.focus({preventScroll:true});
+          keyHandler=e=>{ if(e.key==='Enter'){e.preventDefault(); go();} };
+        }
+      };
+      btns.forEach(b=>b.onclick=()=>sub._choose(b));
+    });
+    // number keys answer the highlighted word
+    keyHandler = e=>{ const n=parseInt(e.key,10); if(active>=0 && n>=1 && n<=4){ const sub=subs[active]; const b=sub.querySelectorAll('.opt')[n-1]; if(b) sub._choose(b);} };
+  };
+  step();
+}
+
+// ===== WORD LIST =====
+function wordList(){
+  keyHandler=null;
+  let showZh = store.get('zh',true), q='';
+  $app.innerHTML = topbar() + `<div class="bar"><span class="title">Word list</span><span style="flex:1"></span>
+    <label class="toggle"><input type="checkbox" id="zhT" ${showZh?'checked':''}> Show Chinese</label></div>
+    <input class="search" id="q" type="search" placeholder="Search words, meanings or synonyms" aria-label="Search the word list">
+    <div id="list"></div>`;
+  wireTop();
+  const draw=()=>{
+    const t=q.trim().toLowerCase();
+    let html='';
+    for(const s of SETS){
+      const ws=WORDS.filter(w=>w.set===s.n && (!t || w.w.includes(t) || w.def.toLowerCase().includes(t) || w.syn.some(x=>x.includes(t)) || w.zh.includes(t)));
+      if(!ws.length) continue;
+      html += `<p class="instr" style="margin:22px 0 8px">${s.name} · ${s.lvl}</p><div class="wl">${ws.map(w=>`<div class="wl-row"><span class="n">${w.id}</span>
+        <div class="w">${esc(w.w)}<small>${w.pos}</small>${showZh?`<span class="zh" lang="zh-CN">${esc(w.zh)}</span>`:''}</div>
+        <div class="d">${esc(w.def)}<br><i>${esc(w.ex)}</i><div class="syns">≈ ${esc(w.syn.join(' · '))}</div></div></div>`).join('')}</div>`;
+    }
+    document.getElementById('list').innerHTML = html || '<p>No words match that search.</p>';
+  };
+  document.getElementById('q').oninput=e=>{q=e.target.value; draw();};
+  document.getElementById('zhT').onchange=e=>{showZh=e.target.checked; store.set('zh',showZh); draw();};
+  draw();
+}
+
+home();
+</script>
+
+</body></html>
