@@ -11,6 +11,7 @@ Homepage → **English** or **Chinese version 中文版**
   Reading is greyed out on phones ("Only available on desktop devices"); the split is automatic.
 - **Chinese version** (`zh/`): vocabulary games with Chinese support. Topics are listed by subject:
   All subjects → Academic English Keywords; Media → Web design, Representation; English Language → Descriptive language.
+  Every topic has 8 games: 中文 → English, Match the meaning, Choose the meaning, Type it, True or false, Odd one out, Speed round (60 s), Survival (3 lives).
 
 ## Layout
 
@@ -23,6 +24,7 @@ Homepage → **English** or **Chinese version 中文版**
 | `en/data/` | One content file per subject, all in the same format (see the comment at the top of each file) |
 | `zh/index.html` | Chinese version: topics as a list, grouped by subject |
 | `zh/keywords/`, `zh/data/keywords.js` | Academic English Keywords: 95 general academic words (Essentials, Golden 100 academic set, Year 9 academic words and verbs, Year 8 explaining/analysing words), with Chinese |
+| `zh/web-design/`, `zh/representation/`, `zh/data/web-design.js`, `zh/data/representation.js` | Web design and Representation in the same design, built from the y8media and representation word banks (word groups as buttons) |
 | `zh/descriptive/` | Descriptive language: the Golden 100 Describing sets (uses `en/data/language.js` and `language-zh.js`) |
 | `representation/` | Year 9 Representation app (used by the Chinese version) |
 | `y8media/` | Year 8 Website Words app (used by the Chinese version) |
@@ -37,7 +39,7 @@ Homepage → **English** or **Chinese version 中文版**
 | Grammar | Fill the gap, Build the sentence, Spot the error, True or false |
 | Reading (desktop only) | In your own words, Read it, Answer the question |
 
-Chinese-side topic pages use the same engine with `data-only="zh"`: three games (中文 → English, Match the meaning with Chinese under each word, Choose the meaning). To add one, copy `zh/keywords/index.html` and add a bar to `zh/index.html`.
+Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/keywords/index.html` and add a bar to `zh/index.html`.
 
 To add a subject: copy `en/media/index.html` into a new folder, point it at a new `en/data/<subject>.js` in the same format, and add a button to `en/index.html`.
 

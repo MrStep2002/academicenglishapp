@@ -260,3 +260,23 @@ a.btn{text-decoration:none;display:inline-block}
 .zh-sub{font-family:var(--f-zh);font-size:16px;color:var(--ink)!important;margin-top:-4px!important}
 .zh-under{font-family:var(--f-zh);font-size:22px;color:var(--blue);margin:-12px 0 20px}
 .tile-zh{display:block;font-family:var(--f-zh);font-size:14px;color:var(--ink-2);margin-top:2px}
+
+/* group buttons with counts, level headings */
+.chip-n{font-family:var(--f-mono);font-size:11px;font-weight:500;padding:1px 7px;border-radius:99px;background:var(--paper);color:var(--ink-2)}
+.chip[aria-pressed="true"] .chip-n{background:rgba(255,255,255,.16);color:var(--paper)}
+.chip-all{border-style:dashed;color:var(--ink-2)}
+.set-head{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:14px 0 -6px}
+.group-label{margin:26px 0 -10px}
+/* type it */
+.typeform{display:flex;gap:10px;flex-wrap:wrap}
+.typeform input{flex:1 1 220px;min-width:0;font:inherit;font-size:20px;padding:12px 14px;border:1.5px solid var(--rule);border-radius:10px;background:var(--paper);color:var(--ink)}
+.typeform input:focus{outline:none;border-color:var(--blue)}
+.typeform input.ok{border-color:var(--good);background:var(--good-soft)}
+.typeform input.no{border-color:var(--bad);background:var(--bad-soft)}
+.hint-line{font-family:var(--f-mono);font-size:13px;color:var(--ink-2);min-height:20px;margin:10px 0 0}
+/* odd one out, challenges */
+.opt-zh{display:block;font-family:var(--f-zh);font-size:14px;color:var(--ink-2);font-weight:400;margin-left:auto}
+.timer{height:8px;background:var(--rule);border-radius:4px;overflow:hidden;margin:0 0 14px}
+.timer i{display:block;height:100%;width:100%;background:var(--mark);transition:width .1s linear}
+.lives{color:var(--bad);letter-spacing:2px;font-size:15px}
+.lives .lost{color:var(--rule)}

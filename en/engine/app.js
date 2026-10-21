@@ -455,27 +455,48 @@ function playQuestion(){
 const ZH = Object.fromEntries((window.SUBJECT_ZH||[]).map(x=>[x.id,x.zh]));
 const zhWords = () => pick(S.words).filter(w=>ZH[w.id]);
 const ZH_GAMES = [
-  {key:'zh',      name:'中文 → English',  zh:'看中文，选英文', blurb:'See the Chinese meaning and choose the English word.', run:()=>playZh()},
-  {key:'zhmatch', name:'Match the meaning', zh:'单词配释义', blurb:'Match each word to its English meaning. The Chinese is shown under the word.', run:()=>playMatch('def', true)},
-  {key:'zhmean',  name:'Choose the meaning', zh:'选出释义', blurb:'See the word and its Chinese, then choose the English meaning.', run:()=>playZhMeaning()}
+  {key:'zh',       type:'practice',  name:'中文 → English',     zh:'看中文，选英文', blurb:'See the Chinese meaning and choose the English word.', run:()=>playZh()},
+  {key:'zhmatch',  type:'practice',  name:'Match the meaning',  zh:'单词配释义',     blurb:'Match each word to its English meaning. The Chinese is shown under the word.', run:()=>playMatch('def', true)},
+  {key:'zhmean',   type:'practice',  name:'Choose the meaning', zh:'选出释义',       blurb:'See the word and its Chinese, then choose the English meaning.', run:()=>playZhMeaning()},
+  {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', run:()=>playType()},
+  {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'Does the meaning match the word? Decide quickly.', run:()=>playZhTF()},
+  {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', run:()=>playOdd(), needs:()=>oddReady()},
+  {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', run:()=>playSpeed()},
+  {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. Choose the meaning before time runs out. It gets faster.', run:()=>playSurvival()}
 ];
+const countIn = id => S.words.filter(w=>w.set===id && ZH[w.id]).length;
+function chipHtml(s){ return `<button class="chip" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}">${esc(s.name)} <span class="chip-n">${countIn(s.id)}</span></button>`; }
+function chipsHtml(){
+  if(S.sets.length<2) return '';
+  const heads=[...new Set(S.sets.map(s=>s.head||''))];
+  const all=`<button class="chip chip-all" data-all="1">${chosen.length===S.sets.length?'Clear 清除':'Select all 全选'}</button>`;
+  if(heads.length===1 && !heads[0]) return `<div class="sets" role="group" aria-label="Word groups">${S.sets.map(chipHtml).join('')}${S.sets.length>4?all:''}</div>`;
+  return heads.map(h=>`<p class="set-head">${esc(h)}</p><div class="sets" role="group" aria-label="${esc(h)}">${S.sets.filter(s=>(s.head||'')===h).map(chipHtml).join('')}</div>`).join('')+`<div class="sets">${all}</div>`;
+}
 function zhMenu(){
   const n=zhWords().length;
+  const card=g=>{ const off=g.needs && !g.needs();
+    const best=store.get((g.type==='challenge'?'best:':'streak:')+g.key,0);
+    return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}><h3>${g.name}</h3><p lang="zh-CN" class="zh-sub">${g.zh}</p><p>${g.blurb}</p>
+      <span class="best">${off?'Choose at least two groups 请至少选择两个组':best?(g.type==='challenge'?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`; };
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version'}, `
   <section class="hero">
     <p class="eyebrow">Chinese version 中文版</p>
     <h1>${esc(CFG.name||'')}</h1>
     ${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}
-    ${S.sets.length>1?`<div class="sets" role="group" aria-label="Word groups">${S.sets.map(s=>`<button class="chip" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}">${esc(s.name)}${s.lv?` <small>${esc(s.lv)}</small>`:''}</button>`).join('')}</div>`:''}
+    ${chipsHtml()}
     <p class="setnote">${n} words selected. 已选 ${n} 个单词。</p>
   </section>
-  <div class="games">${ZH_GAMES.map(g=>{ const best=store.get('streak:'+g.key,0);
-    return `<a class="game" href="#play-${g.key}"><h3>${g.name}</h3><p lang="zh-CN" class="zh-sub">${g.zh}</p><p>${g.blurb}</p>
-      <span class="best">${best?'Best streak: '+best:'Not played yet'}</span></a>`; }).join('')}</div>
+  <p class="instr group-label">Practice 练习</p>
+  <div class="games">${ZH_GAMES.filter(g=>g.type==='practice').map(card).join('')}</div>
+  <p class="instr group-label">Challenge 挑战</p>
+  <div class="games">${ZH_GAMES.filter(g=>g.type==='challenge').map(card).join('')}</div>
   <div class="wl-link"><p>See every word with its Chinese meaning. 查看所有单词和中文释义。</p><a class="btn alt" href="#words">Word list 词汇表</a></div>`);
-  $app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{ const s=c.dataset.set;
-    if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); } else chosen=S.sets.map(x=>x.id).filter(x=>x===s||chosen.includes(x));
-    store.set('sets',chosen); zhMenu(); });
+  $app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
+    if(c.dataset.all){ chosen = chosen.length===S.sets.length ? [S.sets[0].id] : S.sets.map(x=>x.id); }
+    else { const s=c.dataset.set;
+      if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); } else chosen=S.sets.map(x=>x.id).filter(x=>x===s||chosen.includes(x)); }
+    const y=window.scrollY; store.set('sets',chosen); zhMenu(); window.scrollTo(0,y); });
 }
 function zhShell(title, note){
   frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
@@ -504,6 +525,143 @@ function playZhMeaning(){
   step();
 }
 
+// ----- Chinese side: Type it -----
+const normAns = t => t.toLowerCase().replace(/\s*\(.*?\)\s*/g,' ').replace(/[’']/g,"'").replace(/\s+/g,' ').trim();
+const answersFor = w => { const base=normAns(w.w); return [base, ...base.split(/\s*\/\s*/)].filter(Boolean); };
+function playType(){
+  const p=zhWords(), deck=Deck(p), st=Stats('zhtype');
+  zhShell('Type it','Read the meaning, then type the English word. 看释义，拼写英文单词。'); st.draw();
+  const step=()=>{
+    const w=deck.next(), target=normAns(w.w).split(/\s*\/\s*/)[0];
+    const card=showCard(`<p class="instr">Type the English word 拼写英文单词</p>
+      <p class="prompt-def">${esc(w.def)}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>
+      <form class="typeform" autocomplete="off"><input id="typeIn" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Type the word" placeholder="Type here 在此输入">
+      <button class="btn" type="submit">Check</button><button class="btn alt" type="button" id="hint">Hint 提示</button></form>
+      <p class="hint-line" id="hintLine"></p><div class="fb"></div>`);
+    const input=card.querySelector('#typeIn'), form=card.querySelector('form'); let hints=0, done=false;
+    setTimeout(()=>input.focus({preventScroll:true}),50);
+    card.querySelector('#hint').onclick=()=>{ hints=Math.min(hints+1,target.length);
+      card.querySelector('#hintLine').textContent='Starts with 开头是: '+target.slice(0,hints)+'…'; input.focus(); };
+    form.onsubmit=e=>{ e.preventDefault(); if(done) return; const v=normAns(input.value); if(!v) return; done=true;
+      const ok=answersFor(w).includes(v); input.disabled=true; form.querySelectorAll('button').forEach(b=>b.disabled=true);
+      input.classList.add(ok?'ok':'no');
+      const fb=card.querySelector('.fb');
+      ok?fbOk(fb, w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''):fbNo(fb,w.w, w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:'');
+      settle(ok,card,st,deck,w,step); };
+    keyHandler=null;
+  };
+  step();
+}
+
+// ----- Chinese side: True or false (does this meaning match the word?) -----
+function playZhTF(){
+  const p=zhWords(), deck=Deck(p), st=Stats('zhtf');
+  zhShell('True or false','Does the meaning match the word? Press T or F, or tap. 释义和单词是否匹配？'); st.draw();
+  const step=()=>{
+    const w=deck.next(), truth=Math.random()<.5, other=truth?w:(distractors(w,p.length>=8?p:S.words,1)[0]||w), real=truth||other===w;
+    const card=showCard(`<p class="instr">True or false? 对还是错？</p>
+      <p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p>
+      <p class="statement">means: ${esc(other.def)}</p>
+      <div class="tf-btns"><button class="tfb yes" data-v="1">True 对</button><button class="tfb no" data-v="0">False 错</button></div><div class="fb"></div>`);
+    let done=false;
+    const choose=v=>{ if(done) return; done=true; const ok=(v===1)===real;
+      card.querySelectorAll('.tfb').forEach(b=>{ b.disabled=true; if(+b.dataset.v===(real?1:0)) b.classList.add('ok'); else b.classList.add('dim'); });
+      const fb=card.querySelector('.fb'), note=`<span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span>`;
+      ok?fbOk(fb,note):fbNo(fb,real?'True':'False',note);
+      settle(ok,card,st,deck,w,step); };
+    card.querySelectorAll('.tfb').forEach(b=>b.onclick=()=>choose(+b.dataset.v));
+    keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='t'||e.key==='ArrowRight'||k==='1') choose(1); if(k==='f'||e.key==='ArrowLeft'||k==='2') choose(0); };
+  };
+  step();
+}
+
+// ----- Chinese side: Odd one out (by word group, or by part of speech with data-odd="pos") -----
+const oddKey = w => CFG.odd==='pos' ? (w.pos||'') : w.set;
+const oddLabel = k => CFG.odd==='pos' ? k : ((S.sets.find(s=>s.id===k)||{}).name||k);
+function oddGroups(){ const g={}; zhWords().forEach(w=>{ const k=oddKey(w); if(k) (g[k]=g[k]||[]).push(w); }); return g; }
+function oddReady(){ const g=oddGroups(), keys=Object.keys(g); return keys.length>=2 && keys.some(k=>g[k].length>=3); }
+function playOdd(){
+  const st=Stats('zhodd');
+  zhShell('Odd one out','Three words belong together. Tap the odd one out. 三个词属于同一类，找出不同的那个。'); st.draw();
+  const step=()=>{
+    const g=oddGroups(), big=Object.keys(g).filter(k=>g[k].length>=3);
+    const main=big[Math.floor(Math.random()*big.length)], others=Object.keys(g).filter(k=>k!==main);
+    const three=shuffle(g[main]).filter((w,i,a)=>a.findIndex(x=>x.w===w.w)===i).slice(0,3);
+    const oddK=others[Math.floor(Math.random()*others.length)], odd=shuffle(g[oddK])[0];
+    const words=shuffle([...three,odd]);
+    const card=showCard(`<p class="instr">Which word is the odd one out? 哪个词不同类？</p>
+      <div class="opts">${words.map((w,i)=>`<button class="opt" data-id="${esc(w.id)}"><kbd>${i+1}</kbd><span>${esc(w.w)}</span></button>`).join('')}</div><div class="fb"></div>`);
+    const btns=[...card.querySelectorAll('.opt')]; let done=false;
+    const choose=b=>{ if(done) return; done=true; const ok=b.dataset.id===odd.id;
+      btns.forEach(x=>{ x.disabled=true; const w=byId[x.dataset.id];
+        x.innerHTML+=`<small class="opt-zh" lang="zh-CN">${esc(ZH[w.id]||'')}</small>`;
+        if(x.dataset.id===odd.id) x.classList.add('ok'); else if(x===b) x.classList.add('no'); else x.classList.add('dim'); });
+      const why = CFG.odd==='pos'
+        ? `<span><b>${esc(odd.w)}</b> is ${/^[aeiou]/i.test(oddK)?'an':'a'} ${esc(oddK)}. The others are ${esc(main)}s.</span>`
+        : `<span><b>${esc(odd.w)}</b> belongs to <i>${esc(oddLabel(oddK))}</i>. The others belong to <i>${esc(oddLabel(main))}</i>.</span>`;
+      const fb=card.querySelector('.fb'); ok?fbOk(fb,why):fbNo(fb,odd.w,why);
+      if(ok){ st.hit(); autoNext(card,step); } else { st.miss(); manualNext(card,step); } };
+    btns.forEach(b=>b.onclick=()=>choose(b));
+    keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) choose(btns[n-1]); };
+  };
+  step();
+}
+
+// ----- Chinese side: Challenge games (Speed round, Survival) -----
+function challengeEnd(key, title, score, missed, again){
+  clearTimers();
+  const prev=store.get('best:'+key,0), isBest=score>prev; if(isBest) store.set('best:'+key,score);
+  const card=showCard(`<div class="end"><p class="instr">${esc(title)} · finished 结束</p>
+    <div class="big">${score}</div><h2>${isBest?'New best score! 新纪录！':'Best score 最高分: '+Math.max(prev,score)}</h2>
+    ${missed.length?`<p class="instr" style="margin-top:22px">Words to practise 需要练习的单词</p><ul class="review">${[...new Map(missed.map(w=>[w.id,w])).values()].map(w=>`<li><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id]||'')}</span> – ${esc(w.def)}</li>`).join('')}</ul>`:''}
+    <div class="end-actions"><button class="btn" id="again">Play again 再玩一次</button><a class="btn alt" href="#">All games 所有游戏</a></div></div>`);
+  card.querySelector('#again').onclick=again;
+  keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); again(); } };
+}
+function timerBar(){ return `<div class="timer"><i id="timeFill"></i></div>`; }
+function playSpeed(){
+  const p=zhWords(), deck=Deck(p), SECS=60; let score=0, missed=[], end=Date.now()+SECS*1000, over=false;
+  zhShell('Speed round','60 seconds: see the Chinese, choose the English word. 60秒内尽量多答对。');
+  document.getElementById('stats').innerHTML=`<span>Score <b id="sc">0</b></span><span><b id="secs">${SECS}</b>s</span>`;
+  const feed=document.getElementById('feed'); feed.insertAdjacentHTML('beforebegin', timerBar());
+  const tick=()=>{ if(over) return; const left=Math.max(0,end-Date.now());
+    const f=document.getElementById('timeFill'); if(!f) return; f.style.width=(100*left/(SECS*1000))+'%';
+    document.getElementById('secs').textContent=Math.ceil(left/1000);
+    if(left<=0){ over=true; document.querySelector('.timer')?.remove(); challengeEnd('zhspeed','Speed round',score,missed,playSpeed); } else later(tick,100); };
+  const step=()=>{ if(over) return;
+    const w=deck.next(), ds=distractors(w,p.length>=8?p:S.words,3);
+    mcCard({instr:'Choose the English word 选出英文单词', promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>`,
+      options:[w.w,...ds.map(x=>x.w)], answer:w.w,
+      onResult:(ok)=>{ if(ok){ score++; document.getElementById('sc').textContent=score; later(step,250); } else { missed.push(w); later(step,900); } }});
+  };
+  tick(); step();
+}
+function playSurvival(){
+  const p=zhWords(), deck=Deck(p); let lives=3, score=0, missed=[], limit=10000, over=false;
+  zhShell('Survival','Three lives. Choose the meaning before time runs out. 三条命，在时间用完前选出释义。');
+  const draw=()=>{ document.getElementById('stats').innerHTML=`<span>Score <b>${score}</b></span><span class="lives" aria-label="${lives} lives left">${'♥'.repeat(lives)}<span class="lost">${'♥'.repeat(3-lives)}</span></span>`; };
+  draw();
+  const feed=document.getElementById('feed'); feed.insertAdjacentHTML('beforebegin', timerBar());
+  const lose=(w)=>{ lives--; missed.push(w); draw(); if(lives<=0){ over=true; document.querySelector('.timer')?.remove(); later(()=>challengeEnd('zhsurvive','Survival',score,missed,playSurvival),1100); return false; } return true; };
+  const step=()=>{ if(over) return;
+    const w=deck.next(), ds=distractors(w,p.length>=8?p:S.words,3), start=Date.now(), my=limit; let answered=false;
+    mcCard({instr:'Choose the meaning 选出释义', promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p>`,
+      options:[w.def,...ds.map(x=>x.def)], answer:w.def, optClass:'long',
+      onResult:(ok,card,fb)=>{ answered=true;
+        if(ok){ score++; limit=Math.max(4000,limit-300); draw(); later(step,300); }
+        else { fb.innerHTML=`<div class="feedback no"><span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span></div>`; if(lose(w)) later(step,1400); } }});
+    const card=document.querySelector('#feed .card');
+    const tick=()=>{ if(answered||over) return; const left=Math.max(0,my-(Date.now()-start));
+      const f=document.getElementById('timeFill'); if(f) f.style.width=(100*left/my)+'%';
+      if(left<=0){ answered=true; card.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===w.def) b.classList.add('ok'); else b.classList.add('dim'); });
+        card.querySelector('.fb').innerHTML=`<div class="feedback no"><span class="verdict">Time's up! 时间到！</span><span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span></div>`;
+        keyHandler=null; if(lose(w)) later(step,1400); }
+      else later(tick,100); };
+    tick();
+  };
+  step();
+}
+
 // ---------- WORD LIST ----------
 function wordList(){
   frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">Word list</span></div>
@@ -525,7 +683,7 @@ function route(){
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
     const g=ZH_GAMES.find(x=>'play-'+x.key===h);
-    return g ? g.run() : zhMenu();
+    return g && !(g.needs && !g.needs()) ? g.run() : zhMenu();
   }
   if(!h) return menu();
   if(h==='words') return wordList();
