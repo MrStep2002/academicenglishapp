@@ -2,7 +2,9 @@
 
    Home (#)  →  Chinese version (#zh): tick word chunks, then Timed round / Type it / Choose
              →  English version (#en): Build the sentence, Missing words, Spot the error,
-                plus a Quick fire vocab round on ticked chunks.
+                plus Timed vocab on ticked chunks (10 s per word, 7 s after 10 right, 5 s after 20).
+   Every game is endless: it deals every item once in a random order, then reshuffles and goes
+   round again. A missed item gets a second go a few cards later. The × button shows a summary.
    Content: data/words.js and data/sentences.js. Progress is saved in this browser only. */
 (function () {
   "use strict";
@@ -97,12 +99,7 @@
     const t = e.target.closest("[data-act]");
     if (!t || t.disabled || !app.contains(t)) return;
     const a = t.dataset.act;
-    if (a === "quit") {
-      e.preventDefault();
-      const back = game && game.onQuit;
-      stop();
-      return back ? back() : route();
-    }
+    if (a === "quit") { e.preventDefault(); return quit(); }
     const fn = (game && game.act && game.act[a]) || PAGE[a];
     if (fn) { e.preventDefault(); fn(t, e); }
   });
@@ -118,11 +115,19 @@
     refreshSel(v);
   });
   document.addEventListener("keydown", e => {
-    if (e.key === "Escape" && game && game.inPlay) { const back = game.onQuit; stop(); return back ? back() : route(); }
+    if (e.key === "Escape" && game && game.inPlay) return quit();
     // Enter on a focused button or field does that control's own job.
     if (e.key === "Enter" && e.target.closest && e.target.closest("button, a, input, textarea, select")) return;
     if (game && game.key && !e.metaKey && !e.ctrlKey && !e.altKey) game.key(e);
   });
+
+  // Leaving a game: show its summary if anything was answered, otherwise go straight back.
+  function quit() {
+    const g = game;
+    stop();
+    if (g && g.summary && g.right + g.wrong > 0) return summary(g);
+    return g && g.onQuit ? g.onQuit() : route();
+  }
 
   /* ================================================================ router */
   function route() {
@@ -157,7 +162,7 @@
           <span class="ver-badge">En</span>
           <span class="ver-text">
             <span class="ver-name">English version</span>
-            <span class="ver-sub">Build sentences, fix grammar and spot errors, plus a quick fire vocab round.</span>
+            <span class="ver-sub">Build sentences, fix grammar and spot errors, plus a timed vocab round.</span>
           </span>${I.chev}
         </a>
       </nav>
@@ -227,15 +232,15 @@
           </div>
           <div class="games" id="games">${gameCards()}</div>
         </section>
-        <section class="block" aria-labelledby="quick-h">
+        <section class="block" aria-labelledby="timed-h">
           <div class="block-head">
-            <h2 id="quick-h">Quick fire vocab</h2>
-            <p class="sub">Tick the word chunks, then answer as fast as you can.</p>
+            <h2 id="timed-h">Timed vocab</h2>
+            <p class="sub">Tick the word chunks, then race the clock: 10 seconds per word, 7 seconds after 10 right answers, and 5 seconds after 20.</p>
           </div>
           <div class="quickwrap">
             ${chunkSection(v)}
             <div class="quickbar">
-              <button class="btn primary big" data-act="quick" id="quickbtn">${I.bolt}<span>Start quick fire</span></button>
+              <button class="btn primary big" data-act="speed" id="quickbtn">${I.bolt}<span>Start Timed vocab</span></button>
             </div>
           </div>
         </section>
@@ -263,10 +268,11 @@
     const errs = byLevel(ERRORS, lv), done = errs.filter(x => S.err[x.id]).length;
     const card = (id, ico, name, sub, meta) => `<button class="game game-${id}" data-act="game" data-game="${id}">
       <span class="game-ico">${ico}</span>
-      <span class="game-text"><b>${name}</b><span>${sub}</span><small>${meta}</small></span>${I.chev}</button>`;
+      <span class="game-text"><b>${name}</b><span>${sub}</span><small${id === "speed" ? ' id="speedmeta"' : ""}>${meta}</small></span>${I.chev}</button>`;
     return card("build", I.tiles, "Build the sentence", "Put the colour-coded tiles in order. Some tiles are traps with grammar mistakes.", `${b} sentences`)
       + card("gap", I.gap, "Missing words", "Choose the word that fits. Watch out for answers with grammar mistakes.", `${g} sentences`)
-      + card("errors", I.spot, "Spot the error", "Find the grammar mistakes hidden in a paragraph.", `${errs.length} paragraphs · ${done} done`);
+      + card("errors", I.spot, "Spot the error", "Find the grammar mistakes hidden in a paragraph.", `${errs.length} paragraphs · ${done} done`)
+      + card("speed", I.bolt, "Timed vocab", "Words and meanings against the clock. It speeds up as you get answers right.", `${selWords("en").length} words ticked below`);
   }
 
   function chunkSection(v) {
@@ -307,7 +313,9 @@
     if (sc) sc.innerHTML = n ? `<b>${n}</b> words selected · ${zhs(`已选 ${n} 个单词`)}` : `Tick at least one chunk · ${zhs("请至少勾选一个词组")}`;
     app.querySelectorAll("[data-needsel]").forEach(b => { b.disabled = !n; });
     const q = document.getElementById("quickbtn");
-    if (q) { q.disabled = !n; q.querySelector("span").textContent = n ? `Start quick fire · ${n} words` : "Tick at least one chunk"; }
+    if (q) { q.disabled = !n; q.querySelector("span").textContent = n ? `Start Timed vocab · ${n} words` : "Tick at least one chunk"; }
+    const sm = document.getElementById("speedmeta");
+    if (sm) sm.textContent = n ? `${n} words ticked below` : "Tick word chunks below first";
     app.querySelectorAll('[data-act="all"]').forEach(b => {
       const ids = GROUPS.filter(g => g.lv === b.dataset.lv).map(g => g.id);
       const all = ids.every(id => S.sel[v].includes(id));
@@ -340,7 +348,11 @@
     const r = t.dataset.round;
     if (r === "type") startType(ids); else startMCQ("zh", r, ids);
   };
-  PAGE.quick = () => { const ids = selWords("en"); if (ids.length) startMCQ("en", "quick", ids); };
+  PAGE.speed = () => {
+    const ids = selWords("en");
+    if (ids.length) startMCQ("en", "speed", ids);
+    else document.getElementById("timed-h").scrollIntoView({ behavior: "smooth" });
+  };
   PAGE.setlvl = t => {
     S.lvl = t.dataset.lv; save();
     const seg = t.closest(".seg");
@@ -351,19 +363,71 @@
     const g = t.dataset.game;
     if (g === "build") startBuild(S.lvl);
     else if (g === "gap") startGap(S.lvl);
+    else if (g === "speed") PAGE.speed();
     else errorsList();
   };
 
+  /* ================================================================ endless decks
+     Deals every item once in a random order, then reshuffles and goes round again, so nothing
+     comes back until everything has had a turn. A missed item also gets one second go
+     a few cards later (when there are enough items for that to make sense). */
+  function makeDeck(items, first) {
+    const d = { size: items.length, cycle: 0, pos: 0, order: [], last: null, again: [], dealt: 0 };
+    function refill() {
+      d.order = shuffle(items);
+      if (d.order.length > 1 && d.order[0] === d.last) d.order.push(d.order.shift()); // no repeat across the join
+      d.pos = 0;
+      d.cycle++;
+    }
+    d.next = () => {
+      d.dealt++;
+      const k = d.again.findIndex(a => a.due <= d.dealt && a.item !== d.last);
+      if (k >= 0) { d.last = d.again.splice(k, 1)[0].item; return { item: d.last, retry: true }; }
+      if (d.pos >= d.order.length) refill();
+      d.last = d.order[d.pos++];
+      return { item: d.last, retry: false };
+    };
+    d.miss = item => { if (d.size >= 5 && !d.again.some(a => a.item === item)) d.again.push({ item, due: d.dealt + 4 }); };
+    if (first !== undefined) {
+      refill();
+      const i = d.order.indexOf(first);
+      if (i > 0) { d.order.splice(i, 1); d.order.unshift(first); }
+    }
+    return d;
+  }
+
+  // Shared set-up for every game. Each game adds deal() (take the next card) and render().
+  function newGame(v, title, opts) {
+    stop(); setTheme(v);
+    const g = game = Object.assign({ inPlay: true, summary: true, v, title, act: {}, right: 0, wrong: 0, missed: [], cur: null }, opts);
+    g.show = () => { if (!g.cur || g.cur.done) g.deal(); g.render(); };
+    g.next = () => { if (!g.cur || g.cur.moved) return; g.cur.moved = true; g.deal(); g.render(); window.scrollTo(0, 0); };
+    g.hit = () => { g.right++; updTally(g); };
+    g.miss = item => { g.wrong++; if (!g.missed.includes(item)) g.missed.push(item); g.deck.miss(item); updTally(g); };
+    return g;
+  }
+
   /* ================================================================ play frame */
-  function frame(inner, i, n, extraClass) {
-    const pct = n ? Math.round(100 * i / n) : 0;
-    return `<div class="play ${extraClass || ""}">
+  function tallyHtml(g) {
+    return `<span class="t-ok" title="Right">${I.check}${g.right}</span><span class="t-no" title="Wrong">${I.x}${g.wrong}</span>`;
+  }
+  function updTally(g) { const t = document.getElementById("tally"); if (t) t.innerHTML = tallyHtml(g); }
+
+  function frame(g, inner, title) {
+    const d = g.deck, isZh = g.v === "zh";
+    const pct = d.size ? Math.round(100 * d.pos / d.size) : 0;
+    const round = d.cycle > 1 ? `<span class="pround">Round ${d.cycle}${isZh ? " " + zhs(`第${d.cycle}轮`) : ""}</span>` : "";
+    return `<div class="play">
       <header class="pbar">
-        <button class="xbtn" data-act="quit" aria-label="Quit">${I.x}</button>
-        <div class="prog" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="${n}" aria-valuenow="${i}"><span style="width:${pct}%"></span></div>
-        <span class="pcount">${Math.min(i + 1, n)} / ${n}</span>
+        <button class="xbtn" data-act="quit" aria-label="Finish">${I.x}</button>
+        <div class="prog" role="progressbar" aria-label="Progress through this round" aria-valuemin="0" aria-valuemax="${d.size}" aria-valuenow="${d.pos}"><span style="width:${pct}%"></span></div>
+        <span class="pcount">${round}${d.pos} / ${d.size}</span>
       </header>
-      <main class="pmain">${inner}</main>
+      <main class="pmain">
+        <div class="ptop"><p class="round-title">${title || g.title}</p><p class="tally" id="tally" aria-live="polite">${tallyHtml(g)}</p></div>
+        ${g.cur && g.cur.retry ? `<p class="again">Second go${isZh ? " " + zhs("再试一次") : ""}</p>` : ""}
+        ${inner}
+      </main>
     </div>`;
   }
   const kbd = s => `<kbd>${s}</kbd>`;
@@ -392,47 +456,88 @@
     return isZh ? `${en[k]} ${zhs(zh[k])}` : en[k];
   }
 
+  /* ================================================================ summary (after ×) */
+  function summary(g) {
+    setTheme(g.v);
+    const isZh = g.v === "zh";
+    const L = (en, zh) => isZh ? `${en} ${zhs(zh)}` : en;
+    const total = g.right + g.wrong;
+    const pct = total ? Math.round(100 * g.right / total) : 0;
+    const msg = pct >= 90 ? ["Excellent!", "太棒了！"] : pct >= 70 ? ["Good work!", "做得好！"] : pct >= 50 ? ["Getting there. Keep going!", "有进步，继续加油！"] : ["Keep practising: try the missed ones again.", "继续练习：再练一遍错的。"];
+    app.innerHTML = `<div class="play">
+      <header class="pbar"><button class="xbtn" data-act="quit" aria-label="Finish">${I.x}</button><div class="prog"><span style="width:100%"></span></div><span class="pcount"></span></header>
+      <main class="pmain results">
+        <p class="round-title">${g.title}</p>
+        <div class="score"><span class="big">${pct}<small>%</small></span><span class="score-sub">${g.right} of ${total} ${g.unit || "right"}${isZh ? " · " + zhs(`答对 ${g.right} / ${total}`) : ""}</span></div>
+        <p class="msg">${L(msg[0], msg[1])}</p>
+        <div class="res-actions">
+          <button class="btn primary" data-act="resume">${L("Keep playing", "继续练习")}</button>
+          ${g.practise && g.missed.length ? `<button class="btn" data-act="practise">${L("Practise the missed ones", "再练错的")}</button>` : ""}
+          <button class="btn ghost" data-act="quit">${L("Finish", "结束")}</button>
+        </div>
+        ${g.missed.length ? `<h3 class="missed-h">${g.missedTitle}</h3><div class="missed">${g.missed.map(g.card).join("")}</div>` : ""}
+      </main></div>`;
+    game = {
+      inPlay: true, onQuit: g.onQuit,
+      act: {
+        resume: () => { setTheme(g.v); game = g; g.show(); window.scrollTo(0, 0); },
+        practise: () => g.practise(g.missed.slice())
+      }
+    };
+    window.scrollTo(0, 0);
+    const pb = app.querySelector(".res-actions .btn.primary"); if (pb) pb.focus({ preventScroll: true });
+  }
+
   /* ================================================================ multiple-choice rounds
      timed  (Chinese): see the Chinese, choose the English word. 5 seconds.
      choose (Chinese): word → meaning (Chinese next to the word) or meaning → word. No clock.
-     quick  (English): word → meaning (9 s) or meaning → word (6 s). */
-  function startMCQ(v, kind, ids) {
-    stop(); setTheme(v);
-    const isZh = v === "zh";
-    const list = shuffle(ids);
-    const pool = ids.map(id => byId[id]);
-    const g = game = { inPlay: true, i: 0, right: 0, missed: [], act: {}, cur: null };
-    const titles = { timed: isZh ? `Timed round ${zhs("限时挑战")}` : "Timed round", choose: `Choose ${zhs("选择")}`, quick: "Quick fire vocab" };
+     speed  (English): word → meaning or meaning → word. 10 s, then 7 s after 10 right, 5 s after 20. */
+  const speedMs = right => right < 10 ? 10000 : right < 20 ? 7000 : 5000;
 
-    function show() {
-      if (g.i >= list.length) return finish();
-      const w = byId[list[g.i]];
+  function startMCQ(v, kind, ids) {
+    const isZh = v === "zh";
+    const titles = { timed: isZh ? `Timed round ${zhs("限时挑战")}` : "Timed round", choose: `Choose ${zhs("选择")}`, speed: "Timed vocab" };
+    const g = newGame(v, titles[kind], {
+      missedTitle: isZh ? `Words to practise ${zhs("需要再练的单词")}` : "Words to practise",
+      card: id => wordCard(byId[id], isZh),
+      practise: m => startMCQ(v, kind, m)
+    });
+    g.deck = makeDeck(ids);
+    const pool = ids.map(id => byId[id]);
+
+    g.deal = () => {
+      const { item, retry } = g.deck.next();
+      const w = byId[item];
       const type = kind === "timed" ? "zh2w" : (Math.random() < 0.5 ? "w2d" : "d2w");
-      const opts = shuffle([w].concat(distractors(w, pool, 3)));
-      const ms = kind === "timed" ? 5000 : kind === "quick" ? (type === "w2d" ? 9000 : 6000) : 0;
-      g.cur = { w, opts, type, ms, done: false, moved: false };
+      g.cur = { item, retry, w, type, done: false, moved: false };
+    };
+    g.render = () => {
+      const c = g.cur, w = c.w;
+      c.opts = shuffle([w].concat(distractors(w, pool, 3)));  // answers in a new random order every time
+      c.done = false;
+      const ms = kind === "timed" ? 5000 : kind === "speed" ? speedMs(g.right) : 0;
       let ask, prompt;
-      if (type === "zh2w") {
+      if (c.type === "zh2w") {
         ask = `Which English word? ${zhs("是哪个英文单词？")}`;
         prompt = `<p class="q-zh" lang="zh">${esc(w.zh)}</p>`;
-      } else if (type === "w2d") {
+      } else if (c.type === "w2d") {
         ask = isZh ? `What does it mean? ${zhs("这个单词是什么意思？")}` : "What does it mean?";
         prompt = `<p class="q-word">${esc(w.w)}</p>${isZh ? `<p class="q-wzh" lang="zh">${esc(w.zh)}</p>` : ""}`;
       } else {
         ask = isZh ? `Which word matches? ${zhs("哪个单词符合这个释义？")}` : "Which word matches this meaning?";
         prompt = `<p class="q-def">${esc(w.d)}</p>`;
       }
-      app.innerHTML = frame(`
-        <p class="round-title">${titles[kind]}</p>
+      const title = kind === "speed" ? `${g.title}<span class="speed" title="Seconds per word">${ms / 1000} s</span>` : g.title;
+      app.innerHTML = frame(g, `
         ${ms ? `<div class="timer" aria-hidden="true"><span id="tbar"></span></div>` : ""}
         <p class="ask">${ask}</p>
         <div class="qcard">${prompt}</div>
-        <div class="opts${type === "w2d" ? " long" : ""}">${opts.map((o, k) => `
-          <button class="opt" data-act="pick" data-k="${k}"><span class="key">${k + 1}</span><span class="opt-t">${esc(type === "w2d" ? o.d : o.w)}</span></button>`).join("")}
+        <div class="opts${c.type === "w2d" ? " long" : ""}">${c.opts.map((o, k) => `
+          <button class="opt" data-act="pick" data-k="${k}"><span class="key">${k + 1}</span><span class="opt-t">${esc(c.type === "w2d" ? o.d : o.w)}</span></button>`).join("")}
         </div>
-        <div class="fb" id="fb" aria-live="polite"></div>`, g.i, list.length);
+        <div class="fb" id="fb" aria-live="polite"></div>`, title);
       if (ms) startTimer(ms);
-    }
+    };
 
     function startTimer(ms) {
       const bar = document.getElementById("tbar");
@@ -441,7 +546,7 @@
         bar.style.transition = `width ${ms}ms linear`;
         bar.style.width = "0%";
       }));
-      g.lowT = later(() => bar.classList.add("low"), ms - 1500);
+      g.lowT = later(() => bar.classList.add("low"), ms - Math.min(1500, ms / 3));
       g.endT = later(() => answer(-1), ms);
     }
     function freezeTimer() {
@@ -464,53 +569,46 @@
       });
       const fb = document.getElementById("fb");
       if (ok) {
-        g.right++;
-        fb.innerHTML = `<p class="fb-line ok">${I.check}<span>${praise(isZh)}</span></p>`;
-        later(next, kind === "choose" ? 1000 : 650);
+        const before = speedMs(g.right);
+        g.hit();
+        const faster = kind === "speed" && speedMs(g.right) < before;
+        fb.innerHTML = `<p class="fb-line ok">${I.check}<span>${praise(isZh)}</span></p>`
+          + (faster ? `<p class="fb-line fast">${I.bolt}<span>Faster! Now ${speedMs(g.right) / 1000} seconds per word.</span></p>` : "");
+        later(g.next, faster ? 1800 : kind === "choose" ? 1000 : 650);
       } else {
-        g.missed.push(c.w.id);
+        g.miss(c.item);
         const head = k < 0 ? (isZh ? `Time's up! ${zhs("时间到！")}` : "Time's up!") : (isZh ? `Not quite ${zhs("不对")}` : "Not quite");
         fb.innerHTML = `<div class="fb-card no"><b class="fb-head">${head}</b>${wordCard(c.w, isZh)}
           <button class="btn primary" data-act="next">Next${isZh ? " " + zhs("下一个") : ""} ${kbd("Enter")}</button></div>`;
         focusIn("fb");
       }
     }
-    function next() {
-      if (!g.cur || g.cur.moved) return;
-      g.cur.moved = true;
-      g.i++;
-      show();
-    }
-    function finish() {
-      results({
-        v, title: titles[kind], right: g.right, total: list.length,
-        missed: g.missed.map(id => wordCard(byId[id], isZh)),
-        missedTitle: isZh ? `Words to practise ${zhs("需要再练的单词")}` : "Words to practise",
-        again: () => startMCQ(v, kind, ids),
-        practise: g.missed.length ? (m => () => startMCQ(v, kind, m))(g.missed.slice()) : null
-      });
-    }
     g.act.pick = t => answer(+t.dataset.k);
-    g.act.next = next;
+    g.act.next = () => g.next();
     g.key = e => {
       if (/^[1-4]$/.test(e.key) && g.cur && !g.cur.done) { e.preventDefault(); answer(+e.key - 1); }
-      else if (e.key === "Enter" && g.cur && g.cur.done) { e.preventDefault(); next(); }
+      else if (e.key === "Enter" && g.cur && g.cur.done) { e.preventDefault(); g.next(); }
     };
-    show();
+    g.show();
   }
 
   /* ================================================================ Type it (Chinese version) */
   function startType(ids) {
-    stop(); setTheme("zh");
-    const list = shuffle(ids);
-    const g = game = { inPlay: true, i: 0, right: 0, missed: [], act: {}, cur: null };
+    const g = newGame("zh", `Type it ${zhs("拼写")}`, {
+      missedTitle: `Words to practise ${zhs("需要再练的单词")}`,
+      card: id => wordCard(byId[id], true),
+      practise: m => startType(m)
+    });
+    g.deck = makeDeck(ids);
 
-    function show() {
-      if (g.i >= list.length) return finish();
-      const w = byId[list[g.i]];
-      g.cur = { w, tries: 0, hints: 0, done: false, moved: false };
-      app.innerHTML = frame(`
-        <p class="round-title">Type it ${zhs("拼写")}</p>
+    g.deal = () => {
+      const { item, retry } = g.deck.next();
+      g.cur = { item, retry, w: byId[item], done: false, moved: false };
+    };
+    g.render = () => {
+      const c = g.cur, w = c.w;
+      Object.assign(c, { tries: 0, hints: 0, done: false });
+      app.innerHTML = frame(g, `
         <p class="ask">Type the word for this meaning. ${zhs("根据英文释义拼写单词。")}</p>
         <div class="qcard"><p class="q-def">${esc(w.d)}</p><div class="hints" id="hints"></div></div>
         <form class="typeform" id="tf" autocomplete="off">
@@ -522,21 +620,20 @@
           <button class="btn small" data-act="hint" id="hintbtn">Hint ${zhs("提示")}</button>
           <button class="btn small ghost" data-act="reveal" id="revbtn">Show answer ${zhs("看答案")}</button>
         </div>
-        <div class="fb" id="fb" aria-live="polite"></div>`, g.i, list.length);
+        <div class="fb" id="fb" aria-live="polite"></div>`);
       document.getElementById("tf").addEventListener("submit", e => { e.preventDefault(); check(); });
       const inp = document.getElementById("ti");
       inp.addEventListener("input", () => inp.classList.remove("no"));
       inp.focus({ preventScroll: true });
-    }
+    };
 
     function pattern(w) {
       const f = forms(w)[0];
       return f.split("").map((ch, i) => i === 0 ? ch : /[a-z]/i.test(ch) ? "_" : ch === " " ? " " : ch).join(" ");
     }
-
     function check() {
       const c = g.cur;
-      if (c.done) return next();
+      if (c.done) return g.next();
       const inp = document.getElementById("ti");
       const n = norm(inp.value);
       if (!n) return;
@@ -555,19 +652,20 @@
       inp.select();
     }
     function correct() {
-      const c = g.cur; c.done = true; g.right++;
+      const c = g.cur; c.done = true;
+      g.hit();
       rec(c.w.id, true);
       const inp = document.getElementById("ti");
       inp.readOnly = true; inp.classList.add("ok");
       lockTools();
       document.getElementById("fb").innerHTML = `<div class="fb-card ok"><b class="fb-head">${I.check} ${praise(true)}</b>${wordCard(c.w, true)}</div>`;
-      later(next, 1300);
+      later(g.next, 1300);
     }
     function reveal() {
       const c = g.cur; if (c.done) return;
       c.done = true;
       rec(c.w.id, false);
-      g.missed.push(c.w.id);
+      g.miss(c.item);
       const inp = document.getElementById("ti");
       inp.readOnly = true;
       lockTools();
@@ -581,19 +679,6 @@
       const sub = document.getElementById("tsub");
       if (sub) sub.innerHTML = `Next ${zhs("下一个")}`;
     }
-    function next() {
-      if (!g.cur || g.cur.moved) return;
-      g.cur.moved = true; g.i++; show();
-    }
-    function finish() {
-      results({
-        v: "zh", title: `Type it ${zhs("拼写")}`, right: g.right, total: list.length,
-        missed: g.missed.map(id => wordCard(byId[id], true)),
-        missedTitle: `Words to practise ${zhs("需要再练的单词")}`,
-        again: () => startType(ids),
-        practise: g.missed.length ? (m => () => startType(m))(g.missed.slice()) : null
-      });
-    }
     g.act.hint = () => {
       const c = g.cur; if (c.done || c.hints >= 2) return;
       c.hints++;
@@ -606,57 +691,39 @@
       document.getElementById("ti").focus({ preventScroll: true });
     };
     g.act.reveal = reveal;
-    g.act.next = next;
-    g.key = e => {
-      if (e.key === "Enter" && g.cur && g.cur.done) { e.preventDefault(); next(); }
-    };
-    show();
-  }
-
-  /* ================================================================ results */
-  function results(o) {
-    const isZh = o.v === "zh";
-    const pct = o.total ? Math.round(100 * o.right / o.total) : 0;
-    const msg = pct >= 90 ? ["Excellent!", "太棒了！"] : pct >= 70 ? ["Good work!", "做得好！"] : pct >= 50 ? ["Getting there. Keep going!", "有进步，继续加油！"] : ["Keep practising: try the missed ones again.", "继续练习：再练一遍错的。"];
-    const L = (en, zh) => isZh ? `${en} ${zhs(zh)}` : en;
-    app.innerHTML = `<div class="play">
-      <header class="pbar"><button class="xbtn" data-act="quit" aria-label="Back">${I.x}</button><div class="prog"><span style="width:100%"></span></div><span class="pcount">${o.total} / ${o.total}</span></header>
-      <main class="pmain results">
-        <p class="round-title">${o.title}</p>
-        <div class="score"><span class="big">${pct}<small>%</small></span><span class="score-sub">${o.right} of ${o.total} right${isZh ? " · " + zhs(`答对 ${o.right} / ${o.total}`) : ""}</span></div>
-        <p class="msg">${L(msg[0], msg[1])}</p>
-        <div class="res-actions">
-          ${o.practise ? `<button class="btn primary" data-act="practise">${L("Practise the missed ones", "再练错的")}</button>` : ""}
-          <button class="btn${o.practise ? "" : " primary"}" data-act="again">${L("Play again", "再玩一次")}</button>
-          <button class="btn ghost" data-act="quit">${L("Back", "返回")}</button>
-        </div>
-        ${o.missed.length ? `<h3 class="missed-h">${o.missedTitle}</h3><div class="missed">${o.missed.join("")}</div>` : ""}
-        ${o.extra || ""}
-      </main></div>`;
-    game = { inPlay: true, onQuit: o.onQuit, act: { practise: o.practise, again: o.again } };
-    window.scrollTo(0, 0);
-    const pb = app.querySelector(".res-actions .btn.primary"); if (pb) pb.focus({ preventScroll: true });
+    g.act.next = () => g.next();
+    g.key = e => { if (e.key === "Enter" && g.cur && g.cur.done) { e.preventDefault(); g.next(); } };
+    g.show();
   }
 
   /* ================================================================ Build the sentence */
   const ROLES = [["topic", "Topic"], ["verb", "Verb"], ["link", "Link"], ["detail", "Detail"], ["hedge", "Careful word"], ["judge", "Effect / judgement"]];
+  const CX = { 1: "Simple sentence", 2: "Two ideas joined", 3: "Complex sentence" };
   const tileHtml = (t, r, attrs) => `<button class="tile r-${r}" ${attrs || ""}>${esc(t)}</button>`;
+  const builtHtml = it => it.tiles.map(t => `<span class="inline r-${t[1]}">${esc(t[0])}</span>`).join(" ");
 
-  function startBuild(lv) {
-    stop(); setTheme("en");
-    const items = shuffle(byLevel(BUILD, lv)).slice(0, 8);
-    const g = game = { inPlay: true, i: 0, right: 0, missed: [], act: {}, cur: null };
+  function startBuild(lv, only) {
+    const items = only || byLevel(BUILD, lv);
+    const g = newGame("en", "Build the sentence", {
+      missedTitle: "Sentences to look at again",
+      card: it => `<div class="wc"><span class="built">${builtHtml(it)}</span><span>${esc(it.why)}</span></div>`,
+      practise: m => startBuild(lv, m)
+    });
+    g.deck = makeDeck(items);
 
-    function show() {
-      if (g.i >= items.length) return finish();
-      const it = items[g.i];
-      const pool = shuffle(it.tiles.map(t => ({ t: t[0], r: t[1] })).concat((it.decoys || []).map(t => ({ t: t[0], r: t[1], decoy: true }))));
-      g.cur = { it, pool, ans: [], tries: 0, done: false, moved: false };
-      const usedRoles = new Set(pool.map(p => p.r));
-      app.innerHTML = frame(`
-        <p class="round-title">Build the sentence</p>
+    g.deal = () => {
+      const { item, retry } = g.deck.next();
+      g.cur = { it: item, retry, done: false, moved: false };
+    };
+    g.render = () => {
+      const c = g.cur, it = c.it;
+      c.pool = shuffle(it.tiles.map(t => ({ t: t[0], r: t[1] })).concat((it.decoys || []).map(t => ({ t: t[0], r: t[1], decoy: true }))));
+      Object.assign(c, { ans: [], tries: 0, done: false });
+      const usedRoles = new Set(c.pool.map(p => p.r));
+      app.innerHTML = frame(g, `
         <p class="goal"><span>Goal</span>${esc(it.goal)}</p>
-        <div class="rolekey" aria-label="Colour key">${ROLES.filter(r => usedRoles.has(r[0])).map(r => `<span class="r-${r[0]}">${r[1]}</span>`).join("")}</div>
+        <div class="build-meta"><span class="cx cx${it.cx}">${CX[it.cx]}</span>
+          <span class="rolekey" aria-label="Colour key">${ROLES.filter(r => usedRoles.has(r[0])).map(r => `<span class="r-${r[0]}">${r[1]}</span>`).join("")}</span></div>
         <div class="answer" id="ans" aria-label="Your sentence"></div>
         <div class="pool" id="pool" aria-label="Tiles"></div>
         <p class="small muted">Tap tiles to build the sentence. Tap a tile in your sentence to remove it. Not every tile belongs.</p>
@@ -665,9 +732,9 @@
           <button class="btn" data-act="show" id="showbtn">Show answer</button>
           <button class="btn primary" data-act="check" id="checkbtn">Check ${kbd("Enter")}</button>
         </div>
-        <div class="fb" id="fb" aria-live="polite"></div>`, g.i, items.length);
+        <div class="fb" id="fb" aria-live="polite"></div>`);
       draw();
-    }
+    };
     function draw() {
       const c = g.cur;
       const ans = document.getElementById("ans");
@@ -682,13 +749,14 @@
     }
     function check() {
       const c = g.cur;
-      if (c.done) return next();
+      if (c.done) return g.next();
       if (!c.ans.length) return;
       const txt = c.ans.map(k => c.pool[k].t).join(" ");
       const want = [c.it.tiles.map(t => t[0]).join(" ")].concat((c.it.alt || []).map(a => a.join(" ")));
       const fb = document.getElementById("fb");
       if (want.includes(txt)) {
-        c.done = true; g.right++;
+        c.done = true;
+        g.hit();
         draw();
         document.getElementById("ans").classList.add("ok");
         fb.innerHTML = `<div class="fb-card ok"><b class="fb-head">${I.check} ${c.tries ? "Got it!" : praise(false)}</b><p class="tip">${esc(c.it.why)}</p>
@@ -709,64 +777,62 @@
     }
     function reveal() {
       const c = g.cur; if (c.done) return;
-      c.done = true; g.missed.push(c.it);
+      c.done = true;
+      g.miss(c.it);
       draw();
       document.getElementById("fb").innerHTML = `<div class="fb-card no"><b class="fb-head">The sentence is:</b>
-        <p class="built">${c.it.tiles.map(t => `<span class="inline r-${t[1]}">${esc(t[0])}</span>`).join(" ")}</p>
+        <p class="built">${builtHtml(c.it)}</p>
         <p class="tip">${esc(c.it.why)}</p>
         <button class="btn primary" data-act="next">Next ${kbd("Enter")}</button></div>`;
       lock(); focusIn("fb");
     }
     function lock() { ["clearbtn", "showbtn", "checkbtn"].forEach(id => { const b = document.getElementById(id); if (b) b.disabled = true; }); }
-    function next() { if (!g.cur || g.cur.moved) return; g.cur.moved = true; g.i++; show(); window.scrollTo(0, 0); }
-    function finish() {
-      results({
-        v: "en", title: "Build the sentence", right: g.right, total: items.length,
-        missed: g.missed.map(it => `<div class="wc"><span class="built">${it.tiles.map(t => `<span class="inline r-${t[1]}">${esc(t[0])}</span>`).join(" ")}</span><span>${esc(it.why)}</span></div>`),
-        missedTitle: "Sentences to look at again",
-        again: () => startBuild(lv), practise: null
-      });
-    }
     g.act.tile = t => { const c = g.cur; if (c.done) return; c.ans.push(+t.dataset.k); draw(); document.getElementById("fb").innerHTML = ""; };
     g.act.untile = t => { const c = g.cur; if (c.done) return; c.ans.splice(+t.dataset.i, 1); draw(); document.getElementById("fb").innerHTML = ""; };
     g.act.clear = () => { g.cur.ans = []; draw(); document.getElementById("fb").innerHTML = ""; };
     g.act.check = check;
     g.act.show = reveal;
-    g.act.next = next;
+    g.act.next = () => g.next();
     g.key = e => {
-      if (e.key === "Enter") { e.preventDefault(); g.cur.done ? next() : check(); }
+      if (e.key === "Enter") { e.preventDefault(); g.cur.done ? g.next() : check(); }
       else if (e.key === "Backspace" && !g.cur.done && g.cur.ans.length) { e.preventDefault(); g.cur.ans.pop(); draw(); }
     };
-    show();
+    g.show();
   }
 
   /* ================================================================ Missing words */
-  function startGap(lv) {
-    stop(); setTheme("en");
-    const items = shuffle(byLevel(GAPS, lv)).slice(0, 10);
-    const g = game = { inPlay: true, i: 0, right: 0, missed: [], act: {}, cur: null };
+  function startGap(lv, only) {
+    const items = only || byLevel(GAPS, lv);
     const label = s => s === "" ? "(no word)" : s;
+    const g = newGame("en", "Missing words", {
+      missedTitle: "Sentences to look at again",
+      card: it => `<div class="wc"><span>${esc(it.s).replace("___", `<mark>${esc(it.ans)}</mark>`)}</span><span>${esc(it.pt)}: ${esc(it.why)}</span></div>`,
+      practise: m => startGap(lv, m)
+    });
+    g.deck = makeDeck(items);
 
-    function show() {
-      if (g.i >= items.length) return finish();
-      const it = items[g.i];
-      const opts = shuffle([it.ans].concat(it.wrong));
-      g.cur = { it, opts, done: false, moved: false };
+    g.deal = () => {
+      const { item, retry } = g.deck.next();
+      g.cur = { it: item, retry, done: false, moved: false };
+    };
+    g.render = () => {
+      const c = g.cur, it = c.it;
+      c.opts = shuffle([it.ans].concat(it.wrong));
+      c.done = false;
       const [a, b] = it.s.split("___");
-      app.innerHTML = frame(`
-        <p class="round-title">Missing words</p>
+      app.innerHTML = frame(g, `
         <p class="ask">Choose the word that fits. Watch the grammar!</p>
         <div class="qcard"><p class="gap-s">${esc(a)}<span class="blank" id="blank">&nbsp;</span>${esc(b)}</p></div>
-        <div class="opts">${opts.map((o, k) => `
+        <div class="opts">${c.opts.map((o, k) => `
           <button class="opt" data-act="pick" data-k="${k}"><span class="key">${k + 1}</span><span class="opt-t${o === "" ? " muted" : ""}">${esc(label(o))}</span></button>`).join("")}
         </div>
-        <div class="fb" id="fb" aria-live="polite"></div>`, g.i, items.length);
-    }
+        <div class="fb" id="fb" aria-live="polite"></div>`);
+    };
     function answer(k) {
       const c = g.cur; if (c.done) return;
       c.done = true;
       const pick = c.opts[k], ok = pick === c.it.ans;
-      if (ok) g.right++; else g.missed.push(c.it);
+      if (ok) g.hit(); else g.miss(c.it);
       app.querySelectorAll(".opt").forEach((btn, i) => {
         btn.disabled = true;
         if (c.opts[i] === c.it.ans) btn.classList.add("right"); else if (i === k) btn.classList.add("wrong");
@@ -775,25 +841,17 @@
       blank.className = "blank filled " + (ok ? "ok" : "no");
       blank.innerHTML = ok ? esc(label(c.it.ans)) : `<s>${esc(label(pick))}</s> ${esc(c.it.ans)}`;
       document.getElementById("fb").innerHTML = `<div class="fb-card ${ok ? "ok" : "no"}"><b class="fb-head">${ok ? I.check + " " + praise(false) : `The answer is “${esc(c.it.ans)}”`}</b>
+        <p class="pt">Grammar point: <b>${esc(c.it.pt)}</b></p>
         <p class="tip">${esc(c.it.why)}</p><button class="btn primary" data-act="next">Next ${kbd("Enter")}</button></div>`;
       focusIn("fb");
     }
-    function next() { if (!g.cur || g.cur.moved) return; g.cur.moved = true; g.i++; show(); }
-    function finish() {
-      results({
-        v: "en", title: "Missing words", right: g.right, total: items.length,
-        missed: g.missed.map(it => `<div class="wc"><span>${esc(it.s).replace("___", `<mark>${esc(it.ans)}</mark>`)}</span><span>${esc(it.why)}</span></div>`),
-        missedTitle: "Sentences to look at again",
-        again: () => startGap(lv), practise: null
-      });
-    }
     g.act.pick = t => answer(+t.dataset.k);
-    g.act.next = next;
+    g.act.next = () => g.next();
     g.key = e => {
       if (/^[1-4]$/.test(e.key) && !g.cur.done && +e.key <= g.cur.opts.length) { e.preventDefault(); answer(+e.key - 1); }
-      else if (e.key === "Enter" && g.cur.done) { e.preventDefault(); next(); }
+      else if (e.key === "Enter" && g.cur.done) { e.preventDefault(); g.next(); }
     };
-    show();
+    g.show();
   }
 
   /* ================================================================ Spot the error */
@@ -810,6 +868,7 @@
     return segs;
   }
 
+  // The list of paragraphs. "Start" plays them all in a random cycle; tapping one starts the cycle there.
   function errorsList() {
     stop(); setTheme("en");
     const lv = S.lvl;
@@ -821,10 +880,10 @@
       <header class="intro">
         <p class="eyebrow">Spot the error</p>
         <h1>Find the mistakes</h1>
-        <p class="sub">Each paragraph has grammar mistakes. Tap the wrong words, then check your answers.</p>
+        <p class="sub">Each paragraph has grammar mistakes. Tap the wrong words, then check your answers. The paragraphs keep coming in a random order until you stop.</p>
       </header>
       <div class="block-head">${levelSeg(lv, "errlvl")}<p class="small muted">${done} of ${items.length} done</p></div>
-      <button class="btn primary big wide" data-act="errnext">${I.spot}<span>${done < items.length ? "Start the next paragraph" : "Play one at random"}</span></button>
+      <button class="btn primary big wide" data-act="errstart">${I.spot}<span>Start</span></button>
       <ol class="err-list">${items.map(x => {
         const r = S.err[x.id];
         const st = r ? `<span class="st ${r.f === r.n && !r.x ? "full" : ""}">${r.f}/${r.n}</span>` : `<span class="st new">New</span>`;
@@ -834,114 +893,120 @@
     game = {
       act: {
         errlvl: t => { S.lvl = t.dataset.lv; save(); errorsList(); },
-        erropen: t => playError(t.dataset.id),
-        errnext: () => {
-          const nxt = items.find(x => !S.err[x.id]) || items[Math.floor(Math.random() * items.length)];
-          if (nxt) playError(nxt.id);
+        erropen: t => startErrors(items, ERRORS.find(x => x.id === t.dataset.id)),
+        errstart: () => {
+          // Start with a paragraph the student hasn't done yet, if there is one.
+          const fresh = shuffle(items.filter(x => !S.err[x.id]));
+          startErrors(items, fresh[0]);
         }
       }
     };
     window.scrollTo(0, 0);
   }
 
-  function playError(id) {
-    stop(); setTheme("en");
-    const items = byLevel(ERRORS, S.lvl);
-    let idx = items.findIndex(x => x.id === id);
-    const item = idx >= 0 ? items[idx] : ERRORS.find(x => x.id === id);
-    const segs = parseErr(item.text);
-    const errs = segs.filter(s => s.wrong);
-    const toks = [];
-    let html = "";
-    segs.forEach(seg => {
-      if (seg.wrong) {
-        const ei = errs.indexOf(seg);
-        html += `<button class="tok" data-act="tok" data-k="${toks.length}">${esc(seg.wrong)}</button>`;
-        toks.push({ err: ei });
-        return;
-      }
-      seg.s.split(/(\s+)/).forEach(p => {
-        if (!p) return;
-        if (/^\s+$/.test(p)) { html += " "; return; }
-        const m = p.match(/^([^A-Za-z0-9]*)(.*?)([^A-Za-z0-9]*)$/);
-        if (!m[2]) { html += esc(p); return; }
-        html += esc(m[1]) + `<button class="tok" data-act="tok" data-k="${toks.length}">${esc(m[2])}</button>` + esc(m[3]);
-        toks.push({});
-      });
+  function startErrors(items, first) {
+    const g = newGame("en", "Spot the error", {
+      unit: "mistakes found",
+      onQuit: errorsList,
+      missedTitle: "Paragraphs to try again",
+      card: it => `<div class="wc"><b>${esc(it.title)}</b><span>${LEVELS[it.lv].name}</span></div>`,
+      practise: m => startErrors(m)
     });
-    html = html.replace(/([^\s<>]*)(<button class="tok"[^>]*>[^<]*<\/button>)([^\s<>]*)/g,
-      (all, a, btn, c) => (a || c) ? `<span class="nw">${a}${btn}${c}</span>` : btn);
-    const g = game = { inPlay: true, act: {}, marked: new Set(), done: false, onQuit: errorsList };
-    const pos = idx >= 0 ? `${idx + 1} / ${items.length}` : "";
-    app.innerHTML = `<div class="play">
-      <header class="pbar">
-        <button class="xbtn" data-act="quit" aria-label="All paragraphs">${I.x}</button>
-        <div class="prog"><span style="width:${idx >= 0 ? Math.round(100 * idx / items.length) : 0}%"></span></div>
-        <span class="pcount">${pos}</span>
-      </header>
-      <main class="pmain">
-        <p class="round-title">Spot the error · <span class="err-lv lv${item.lv}">${LEVELS[item.lv].name}</span></p>
-        <h2 class="err-title">${esc(item.title)}</h2>
+    g.deck = makeDeck(items, first);
+    g.deck.miss = () => {}; // a paragraph doesn't come straight back; it returns next time round
+
+    g.deal = () => {
+      const { item, retry } = g.deck.next();
+      g.cur = { item, retry, done: false, moved: false };
+    };
+    g.render = () => {
+      const c = g.cur, item = c.item;
+      const segs = parseErr(item.text);
+      const errs = segs.filter(x => x.wrong);
+      const toks = [];
+      let html = "";
+      segs.forEach(seg => {
+        if (seg.wrong) {
+          html += `<button class="tok" data-act="tok" data-k="${toks.length}">${esc(seg.wrong)}</button>`;
+          toks.push({ err: errs.indexOf(seg) });
+          return;
+        }
+        seg.s.split(/(\s+)/).forEach(p => {
+          if (!p) return;
+          if (/^\s+$/.test(p)) { html += " "; return; }
+          const m = p.match(/^([^A-Za-z0-9]*)(.*?)([^A-Za-z0-9]*)$/);
+          if (!m[2]) { html += esc(p); return; }
+          html += esc(m[1]) + `<button class="tok" data-act="tok" data-k="${toks.length}">${esc(m[2])}</button>` + esc(m[3]);
+          toks.push({});
+        });
+      });
+      // keep a word and the punctuation touching it on one line
+      html = html.replace(/([^\s<>]*)(<button class="tok"[^>]*>[^<]*<\/button>)([^\s<>]*)/g,
+        (all, a, btn, z) => (a || z) ? `<span class="nw">${a}${btn}${z}</span>` : btn);
+      Object.assign(c, { errs, toks, marked: new Set(), done: false });
+      app.innerHTML = frame(g, `
+        <h2 class="err-title">${esc(item.title)} <span class="err-lv lv${item.lv}">${LEVELS[item.lv].name}</span></h2>
         <p class="ask">Find <b>${errs.length} mistakes</b>. Tap a wrong word to mark it; tap again to unmark it.</p>
         <div class="errtext" id="errtext">${html}</div>
         <div class="actions">
           <span class="marked" id="marked">0 marked</span>
           <button class="btn primary" data-act="errcheck" id="errcheck" disabled>Check ${kbd("Enter")}</button>
         </div>
-        <div class="fb" id="fb" aria-live="polite"></div>
-      </main></div>`;
-    window.scrollTo(0, 0);
+        <div class="fb" id="fb" aria-live="polite"></div>`);
+    };
 
     g.act.tok = t => {
-      if (g.done) return;
+      const c = g.cur; if (c.done) return;
       const k = +t.dataset.k;
-      g.marked.has(k) ? g.marked.delete(k) : g.marked.add(k);
-      t.classList.toggle("t-marked", g.marked.has(k));
-      document.getElementById("marked").textContent = `${g.marked.size} marked`;
-      document.getElementById("errcheck").disabled = !g.marked.size;
+      c.marked.has(k) ? c.marked.delete(k) : c.marked.add(k);
+      t.classList.toggle("t-marked", c.marked.has(k));
+      document.getElementById("marked").textContent = `${c.marked.size} marked`;
+      document.getElementById("errcheck").disabled = !c.marked.size;
     };
     g.act.errcheck = () => {
-      if (g.done || !g.marked.size) return;
-      g.done = true;
+      const c = g.cur;
+      if (c.done || !c.marked.size) return;
+      c.done = true;
       app.querySelectorAll(".nw").forEach(n => n.classList.remove("nw"));
       let found = 0, falseMarks = 0;
       const foundSet = new Set();
       app.querySelectorAll(".tok").forEach(b => {
-        const k = +b.dataset.k, tk = toks[k], m = g.marked.has(k);
+        const k = +b.dataset.k, tk = c.toks[k], m = c.marked.has(k);
         b.disabled = true;
         b.classList.remove("t-marked");
         if (tk.err !== undefined) {
-          const e = errs[tk.err];
+          const e = c.errs[tk.err];
           if (m) { found++; foundSet.add(tk.err); }
           b.classList.add(m ? "t-found" : "t-missed");
           b.innerHTML = `<s>${esc(e.wrong)}</s> <ins>${esc(e.right)}</ins>`;
         } else if (m) { falseMarks++; b.classList.add("t-false"); }
       });
-      const prev = S.err[item.id];
-      S.err[item.id] = { f: found, n: errs.length, x: falseMarks, best: Math.max(found - falseMarks, prev ? prev.best || 0 : 0) };
+      const n = c.errs.length;
+      g.right += found; g.wrong += n - found;
+      if (found < n && !g.missed.includes(c.item)) g.missed.push(c.item);
+      updTally(g);
+      const prev = S.err[c.item.id];
+      S.err[c.item.id] = { f: found, n, x: falseMarks, best: Math.max(found - falseMarks, prev ? prev.best || 0 : 0) };
       save();
-      const nextItem = idx >= 0 && idx < items.length - 1 ? items[idx + 1] : null;
       document.getElementById("errcheck").disabled = true;
       document.getElementById("fb").innerHTML = `
-        <div class="fb-card ${found === errs.length && !falseMarks ? "ok" : "no"}">
-          <b class="fb-head">You found ${found} of ${errs.length} mistakes.</b>
+        <div class="fb-card ${found === n && !falseMarks ? "ok" : "no"}">
+          <b class="fb-head">You found ${found} of ${n} mistakes.</b>
           ${falseMarks ? `<p class="small">You also marked ${falseMarks} word${falseMarks > 1 ? "s" : ""} that ${falseMarks > 1 ? "were" : "was"} already correct (shown in red).</p>` : ""}
-          <ol class="err-why">${errs.map((e, i) => `<li class="${foundSet.has(i) ? "f" : "m"}"><span class="ew"><s>${esc(e.wrong)}</s> → <ins>${esc(e.right)}</ins></span><span>${esc(e.why)}</span></li>`).join("")}</ol>
+          <ol class="err-why">${c.errs.map((e, i) => `<li class="${foundSet.has(i) ? "f" : "m"}"><span class="ew"><s>${esc(e.wrong)}</s> → <ins>${esc(e.right)}</ins></span><span>${esc(e.why)}</span></li>`).join("")}</ol>
           <div class="res-actions">
-            ${nextItem ? `<button class="btn primary" data-act="errgo" data-id="${nextItem.id}">Next paragraph ${kbd("Enter")}</button>` : ""}
-            <button class="btn${nextItem ? "" : " primary"}" data-act="quit">All paragraphs</button>
+            <button class="btn primary" data-act="next">Next paragraph ${kbd("Enter")}</button>
           </div>
         </div>`;
-      g.nextId = nextItem && nextItem.id;
       focusIn("fb");
     };
-    g.act.errgo = t => playError(t.dataset.id);
+    g.act.next = () => g.next();
     g.key = e => {
       if (e.key !== "Enter") return;
       e.preventDefault();
-      if (!g.done) g.act.errcheck();
-      else if (g.nextId) playError(g.nextId);
+      if (!g.cur.done) g.act.errcheck(); else g.next();
     };
+    g.show();
   }
 
   /* ================================================================ go */
