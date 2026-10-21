@@ -7,6 +7,8 @@ Fill them in with any spreadsheet program (save as CSV, UTF-8) or have them writ
 | File | Game |
 |---|---|
 | `english-language/close-reading.csv` | English Language → Reading Comprehension → Close reading |
+| `english-language/big-idea.csv` | English Language → Reading Comprehension → Big idea (same columns; the question asks for the main idea) |
+| `english-language/notes.csv` | English Language → Reading Comprehension → Note taking (its own columns, below) |
 | `english-language/descriptive.csv` | Descriptive language → Reading → Read and answer |
 | `media/web-design.csv` | Web design → Reading → Read and answer |
 | `media/representation.csv` | Representation → Reading → Read and answer |
@@ -35,6 +37,14 @@ Every file here already has the columns for a second question.
 - `explanation` (optional) is shown after answering; `source` (optional) is never shown.
 
 `reading-template.csv` has the headings and one complete example with two questions.
+
+## Note taking columns
+
+`id,level,title,passage,topic,select_count,option1,option2,option3,option4,option5,option6,correct_options,explanation,source`
+
+- `topic`: the heading the notes go under (shown as "Notes on …").
+- `select_count`: how many notes to choose (3); `correct_options`: their numbers, e.g. `[1,3,5]`. The six options are shuffled on screen.
+- `explanation`: shown after checking; blank lines between the parts are kept.
 
 ## Checking before you push (optional)
 

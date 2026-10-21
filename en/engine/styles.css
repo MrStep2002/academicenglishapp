@@ -333,3 +333,12 @@ a.btn{text-decoration:none;display:inline-block}
 .prog-lvl b{font-family:var(--f-display);font-weight:400;font-size:20px;margin-right:4px}
 .prog-row .lvl-bar,.prog-meta{grid-column:1/-1}
 .prog-meta{font-size:13px;color:var(--ink-2)}
+
+/* Note taking: choose several notes, then Check */
+.note-task{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;border:1.5px dashed var(--rule);border-radius:10px;padding:10px 14px;margin:0 0 12px;background:var(--sheet)}
+.note-k{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.opts.notes .opt[aria-pressed="true"]:not(:disabled){border-color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);background:var(--sheet)}
+.opt.missed{border:2px dashed var(--good);color:var(--good)}
+.pick-n{margin-right:auto;align-self:center;font-size:14px;color:var(--ink-2)}
+.why{display:grid;gap:8px;margin-top:6px}
+.why p{margin:0}

@@ -25,7 +25,7 @@ Homepage → **English** or **Chinese version 中文版**
 | `progress/index.html` | My progress: overall level, answers, days in a row, a 14-day chart and every topic played. Uses the engine with `data-only="progress"` |
 | `en/essentials/`, `en/web-design/`, `en/representation/`, `en/descriptive/` | The English topics (each page loads its data and the engine; `data-sets` picks which sets of a data file it uses) |
 | `en/language/`, `en/media/` | Old addresses: forward to Descriptive language and the topic list |
-| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`, passages from `en/reading/english-language/close-reading.csv`); Big idea and Note taking coming soon. Computers only |
+| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`), Big idea (`big-idea/`) and Note taking (`note-taking/`, `data-format="notes"`), with passages from `close-reading.csv`, `big-idea.csv` and `notes.csv` in `en/reading/english-language/`. Computers only |
 | `en/reading/` | Reading passages: one CSV per subject and topic (e.g. `english-language/close-reading.csv`, `media/web-design.csv`). A passage can have several questions (`question2`, `correct2` … columns); see `en/reading/README.md`. `tools/check_reading.py` checks them |
 | `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css` |
 | `en/data/` | One content file per subject, all in the same format (see the comment at the top of each file) |

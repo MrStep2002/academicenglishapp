@@ -1,0 +1,61 @@
+id,level,title,passage,topic,select_count,option1,option2,option3,option4,option5,option6,correct_options,explanation,source
+"notes-001","B1","Mapping the Old Trees","Our forest survey takes place on Saturday. Volunteers will record the locations of old trees on sheets supplied at the meeting point. Please read the route notes emailed to you before you arrive. The notes explain which entrance to use and where to meet.
+
+The route includes uneven ground, so everyone must arrive wearing strong shoes. There is also an online group where you can introduce yourself to other volunteers beforehand. Joining it is optional; all essential information will be sent by email.
+
+Please bring a filled water bottle, as drinking water is not available along the route. After the survey, you will upload your completed records from home. The organisers will combine these records into a map, which volunteers can view online when it is finished.","Required preparations before arriving for the forest survey","3","Read the route notes sent before the survey.","Introduce yourself online to the other survey volunteers.","Wear strong shoes suitable for uneven forest paths.","Record tree locations using the organisers' survey sheets.","Bring drinking water in your own filled bottle.","Upload completed records after returning from the forest.","[1,3,5]","Read the route notes sent before the survey.
+Evidence: ""Please read the route notes emailed to you before you arrive.""
+
+Wear strong shoes suitable for uneven forest paths.
+Evidence: ""everyone must arrive wearing strong shoes""
+
+Bring drinking water in your own filled bottle.
+Evidence: ""Please bring a filled water bottle""","Original fictional notice. The event, route and participation requirements are invented for this exercise."
+"notes-002","B2","Looking After Drawings","Protecting a museum drawing involves more than repairing visible damage. Light can harm both paper and the materials used to make an image, even before a visitor notices a change. Museums therefore keep sensitive drawings under low lighting and limit the length of their exhibitions.
+
+Other conservation work addresses different problems. A conservator may remove harmful dirt from a drawing's surface or repair a tear in the paper. Photographs and written records document the object's condition before treatment. Such work is valuable, but it does not replace controls on light exposure.
+
+Between exhibitions, sensitive drawings return to storage away from display lighting. This reduces further exposure rather than reversing damage already caused. By rotating the works on their walls, museums can offer visitors changing exhibitions while giving individual drawings periods out of the light.","Methods used to reduce light exposure for drawings","3","Repairing tears in drawings before returning them to exhibitions.","Keeping sensitive drawings under carefully controlled low lighting levels.","Removing harmful surface dirt from drawings during conservation treatment.","Limiting the time individual drawings remain on public display.","Recording the condition of individual drawings through detailed photographs.","Returning sensitive drawings to storage between their exhibition periods.","[2,4,6]","Keeping sensitive drawings under carefully controlled low lighting levels.
+Evidence: ""Museums therefore keep sensitive drawings under low lighting""
+
+Limiting the time individual drawings remain on public display.
+Evidence: ""limit the length of their exhibitions""
+
+Returning sensitive drawings to storage between their exhibition periods.
+Evidence: ""Between exhibitions, sensitive drawings return to storage away from display lighting.""","Original nonfiction. Smithsonian conservation guidance: https://asia-archive.si.edu/research/conservation-scientific-research/paper-photographs/overview/ ; https://postalmuseum.si.edu/to-rotate-or-not-to-rotate ; https://siarchives.si.edu/what-we-do/preservation/environment"
+"notes-003","B1","My First Kitchen Project","When I joined the community kitchen, I could follow a recipe but had never cooked for a large group. During the project, I learned to calculate how much food we needed from the number of guests. The organiser then taught me to share jobs according to each volunteer's experience, rather than giving everyone the same task.
+
+At first, I found it difficult to explain a recipe without doing everything myself. By the final session, I could give clear instructions to newer volunteers and let them complete the work.
+
+There were other benefits too. I met neighbours I had never spoken to before. After our last event, we were allowed to take home the food left over. Everyone who completed the project also received a certificate, which I keep beside a photograph of our kitchen team.","Practical skills the narrator developed during the project","3","Meeting local people through regular shared kitchen sessions.","Planning meal quantities from the number of guests.","Receiving a certificate after completing the kitchen sessions.","Taking home food left over after the event.","Sharing kitchen jobs according to each person's experience.","Explaining recipes clearly to volunteers with less experience.","[2,5,6]","Planning meal quantities from the number of guests.
+Evidence: ""I learned to calculate how much food we needed from the number of guests.""
+
+Sharing kitchen jobs according to each person's experience.
+Evidence: ""share jobs according to each volunteer's experience""
+
+Explaining recipes clearly to volunteers with less experience.
+Evidence: ""I could give clear instructions to newer volunteers""","Original fiction. The narrator and community project are invented; this is not a report of research or an actual programme."
+"notes-004","B2","Ideas on the Move","In a 2014 study, researchers investigated whether walking affected different kinds of thinking. Adults completed tasks while sitting or walking. One involved suggesting unusual but possible uses for everyday objects. Another required finding a single word linking three other words.
+
+Walking improved performance on the creative uses task, but did not improve performance on the task with one correct answer. Some participants also showed a creative benefit when they sat down shortly after walking. The effect was therefore not restricted to moments when their feet were moving.
+
+Outdoor scenery was not essential: participants walking on an indoor treadmill, facing a blank wall, also benefited creatively. The research supports using a walk to help generate ideas. It does not show that walking improves every kind of thinking or every stage of a creative project.","Findings reported by the study about walking and thinking","3","Walking helped adults produce original ideas for everyday objects.","Walking improved accuracy on tasks requiring single correct answers.","Indoor walking also improved participants' performance on creative tasks.","Creative benefits sometimes remained after participants sat down again.","Outdoor scenery was necessary for improvements in creative performance.","Creative benefits disappeared immediately when participants stopped physically walking.","[1,3,4]","Walking helped adults produce original ideas for everyday objects.
+Evidence: ""Walking improved performance on the creative uses task""
+
+Indoor walking also improved participants' performance on creative tasks.
+Evidence: ""participants walking on an indoor treadmill, facing a blank wall, also benefited creatively.""
+
+Creative benefits sometimes remained after participants sat down again.
+Evidence: ""Some participants also showed a creative benefit when they sat down shortly after walking.""","Original nonfiction describing a real study. Oppezzo and Schwartz (2014), Give Your Ideas Some Legs: https://aaalab.stanford.edu/assets/papers/2014/Give_your_ideas_some_legs.pdf ; Stanford summary: https://ed.stanford.edu/news/study-finds-walking-boosts-creativity"
+"notes-005","C1","A Place to Begin","An arts centre that removes entrance fees may attract more visitors without making it easier for beginners to take part. Watching an exhibition and risking a first attempt at drawing are different experiences. A programme can be publicly available yet still assume that everyone arrives with equipment, confidence and spare time.
+
+I would therefore reserve one evening each week for beginners, with materials provided and no requirement to display finished work. Regular workshops could continue on other evenings. This would extend the programme rather than replace it.
+
+An annual exhibition would still be selected on artistic quality. Places in the beginner sessions, however, would be allocated by application order, not by portfolios. These arrangements serve different purposes: the exhibition presents accomplished work; the sessions give inexperienced people somewhere to start. Attendance figures alone would not tell us whether that second purpose had been achieved.","Arrangements proposed for the beginner sessions themselves","3","Supplying materials so beginners need not bring equipment.","Selecting exhibition entries according to their artistic quality.","Allocating places according to when applications are received.","Continuing the established workshops on other available evenings.","Displaying every participant's finished artwork in annual exhibitions.","Removing any requirement for participants to exhibit artwork.","[1,3,6]","Supplying materials so beginners need not bring equipment.
+Evidence: ""with materials provided""
+
+Allocating places according to when applications are received.
+Evidence: ""Places in the beginner sessions, however, would be allocated by application order, not by portfolios.""
+
+Removing any requirement for participants to exhibit artwork.
+Evidence: ""no requirement to display finished work""","Original opinion piece proposing a hypothetical programme. Reuses the passage in close-105 so that the two task formats can be compared. No actual arts centre or research results are claimed."

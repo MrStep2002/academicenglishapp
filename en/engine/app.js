@@ -577,9 +577,20 @@ function questionsOf(r){ const qs=[];
     if(!q.q) continue;
     if(q.opts.every(Boolean)) qs.push(q); else console.warn('Reading row '+r.id+': question '+n+' skipped (an answer is missing)'); }
   return qs; }
+// Note taking (data-format="notes"): id, level, title, passage, topic, select_count, option1…option6,
+// correct_options (e.g. [1,3,5]), explanation, source. Students choose the select_count options that are good notes on the topic.
+function notesRow(r){
+  const opts=[]; for(let n=1;n<=9;n++) if(r['option'+n]) opts.push(r['option'+n]);
+  let right=[]; try{ right=JSON.parse(r.correct_options||'[]'); }catch(e){ right=String(r.correct_options||'').split(/[^0-9]+/).filter(Boolean).map(Number); }
+  right=[...new Set(right.map(Number))].filter(n=>n>=1 && n<=opts.length);
+  const count=parseInt(r.select_count,10)||right.length;
+  if(!r.id || !r.passage || opts.length<3 || !right.length || right.length!==count){ console.warn('Notes row '+(r.id||'?')+' skipped: check the options, select_count and correct_options'); return null; }
+  return {id:r.id, level:r.level, title:r.title, text:r.passage, topic:r.topic||'', count, opts, right:right.map(n=>n-1), why:r.explanation||''};
+}
 let readingState = CFG.reading ? 'loading' : 'none';
 if(CFG.reading){
   fetch(CFG.reading, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(t=>{
+    if(CFG.format==='notes'){ S.passages=parseCSV(t).map(notesRow).filter(Boolean); readingState='ok'; return; }
     const need=['id','title','passage','question','correct','wrong1','wrong2','wrong3'];
     S.passages = parseCSV(t).filter(r=>{
       if(CFG.topic && r.topic && r.topic!==CFG.topic) return false;   // one file per topic; a topic column is optional
@@ -604,6 +615,36 @@ function playPassage(){
           if(ok){ st.hit(item); autoNext(card,next); } else { st.miss(item); if(!missed){ missed=true; deck.retry(r); } manualNext(card,next); } }});
     };
     ask(0);
+  };
+  step();
+}
+
+// Note taking: read the passage, then choose the notes that belong under the heading. Check marks them all at once.
+function playNotes(){
+  const items=S.passages||[], deck=Deck(items), st=Stats('notes'), game={key:'notes', name:CFG.name||'Note taking', cat:'reading'};
+  shell(game, `${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.`); st.draw();
+  const step=()=>{
+    const r=deck.next(), order=shuffle(r.opts.map((o,i)=>i)), picked=new Set();
+    const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+    const card=showCard(`<p class="instr">${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}</p><div class="passage">${paras}</div>
+      <div class="note-task"><span class="note-k">Notes on</span><b>${esc(r.topic)}</b></div>
+      <p class="question">Choose the ${r.count} notes that belong under this heading.</p>
+      <div class="opts long notes">${order.map((i,k)=>`<button class="opt" data-i="${i}" aria-pressed="false"><kbd>${k+1}</kbd><span>${esc(r.opts[i])}</span></button>`).join('')}</div>
+      <div class="next-row check-row"><span class="pick-n" id="pickN">0 of ${r.count} chosen</span><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>`);
+    const btns=[...card.querySelectorAll('.opt')], chk=card.querySelector('#check'), pn=card.querySelector('#pickN'); let done=false;
+    const toggle=b=>{ if(done) return; const i=+b.dataset.i;
+      if(picked.has(i)) picked.delete(i); else { if(picked.size>=r.count) return; picked.add(i); }
+      b.setAttribute('aria-pressed', picked.has(i)); pn.textContent=`${picked.size} of ${r.count} chosen`; chk.disabled=picked.size!==r.count; };
+    const check=()=>{ if(done || picked.size!==r.count) return; done=true; card.querySelector('.check-row').remove();
+      const got=[...picked].filter(i=>r.right.includes(i)).length, ok=got===r.count;
+      btns.forEach(b=>{ const i=+b.dataset.i, good=r.right.includes(i); b.disabled=true;
+        b.classList.add(picked.has(i) ? (good?'ok':'no') : (good?'missed':'dim')); });
+      const why=r.why ? `<div class="why">${r.why.split(/\n\s*\n/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}</div>` : '';
+      const fb=card.querySelector('.fb'); ok ? fbOk(fb, why) : fbNo(fb, '', `<span>You found ${got} of ${r.count}. The notes with a dashed green border were missed.</span>${why}`);
+      const item={id:r.id, level:r.level};
+      if(ok){ st.hit(item); autoNext(card,step); } else { st.miss(item); deck.retry(r); manualNext(card,step); } };
+    btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
+    keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) toggle(btns[n-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
   };
   step();
 }
@@ -899,6 +940,7 @@ function route(){
       : readingState==='failed' ? 'The passages could not be loaded. They load when the site is online.'
       : !(S.passages||[]).length ? 'No passages yet. Check back soon.' : '';
     if(msg) return frame(back, `<section class="hero"><p class="eyebrow">${esc(CFG.eyebrow||'Reading')}</p><h1>${esc(CFG.name||'')}</h1>${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}<p class="notice">${msg}</p></section>`);
+    if(CFG.format==='notes') return playNotes();
     GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
     return playPassage();
   }
@@ -919,6 +961,7 @@ function route(){
 }
 window.addEventListener('hashchange', route);
 window.addEventListener('resize', ()=>{ const p=isPhone(); if(p!==PHONE){ PHONE=p; document.documentElement.classList.toggle('phone',PHONE);
-  const h=location.hash.replace(/^#/,''); if(!h||CATS[h]) route(); } });
+  // re-draw menus for the new screen size, but never wipe a game in progress on a computer
+  const h=location.hash.replace(/^#/,''); if((!h||CATS[h]) && !(document.getElementById('feed') && !PHONE)) route(); } });
 route();
 })();
