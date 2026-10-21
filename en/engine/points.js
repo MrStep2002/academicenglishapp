@@ -9,6 +9,7 @@
 (function(){
   'use strict';
   var KEY = 'aea:points:v1', SKEY = 'aea:points:session', DOCK_EVERY = 5;
+  var WEEKLY_TARGET = 200;   // points to aim for each week (Monday to Sunday), for each side. Change it here.
   var pad = function(n){ return (n < 10 ? '0' : '') + n; };
   var dayKey = function(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
   function load(){
@@ -53,7 +54,9 @@
     var t = totals(side);
     var v = function(letter, n, title){ return '<span class="pts-v" title="' + title + '"><i>' + letter + '</i><b>' + fmt(n) + '</b></span>'; };
     return '<span class="pts-k">' + (side === 'zh' ? 'Points 积分' : 'Points') + '</span>' +
-      v('S', t.s, 'This session') + v('D', t.d, 'Today') + v('W', t.w, 'This week') + v('T', t.t, 'Total');
+      v('S', t.s, 'This session') + v('D', t.d, 'Today') +
+      '<span class="pts-v' + (t.w >= WEEKLY_TARGET ? ' pts-hit' : '') + '" title="This week (target ' + WEEKLY_TARGET + ')"><i>W</i><b>' + fmt(t.w) + '</b><small>/' + WEEKLY_TARGET + '</small></span>' +
+      v('T', t.t, 'Total');
   }
   // Fill every points bar on the page; show +n or -1 for a moment
   function render(side, change){
@@ -75,6 +78,7 @@
       '.pts-v{display:inline-flex;align-items:baseline;gap:4px}' +
       '.pts-v i{font-style:normal;font-size:11px;font-weight:700;opacity:.55;letter-spacing:.04em}' +
       '.pts-v b{font-size:16px;font-variant-numeric:tabular-nums}' +
+      '.pts-v small{font-size:11px;opacity:.6;margin-left:-2px}.pts-hit b{color:#23a05c}' +
       '.pts-pop{position:absolute;right:0;top:-12px;font-weight:700;font-size:14px;pointer-events:none;animation:ptsPop 1.3s ease-out forwards}' +
       '.pts-pop.up{color:#23a05c}.pts-pop.down{color:#e0533f}' +
       '@keyframes ptsPop{0%{opacity:0;transform:translateY(8px)}20%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-12px)}}' +
@@ -84,7 +88,7 @@
     document.head.appendChild(st);
   }
   style();
-  window.AEA_POINTS = {record: record, totals: totals, lastDays: lastDays, render: render, barHtml: barHtml, DOCK_EVERY: DOCK_EVERY};
+  window.AEA_POINTS = {record: record, totals: totals, lastDays: lastDays, render: render, barHtml: barHtml, DOCK_EVERY: DOCK_EVERY, WEEKLY_TARGET: WEEKLY_TARGET};
 
   // Pages without the game engine: <script … data-side="en|zh"> puts the bar next to the back link
   var me = document.currentScript, side = me && me.getAttribute('data-side');

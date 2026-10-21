@@ -964,7 +964,8 @@ function progressPage(){
   // Points: English and Chinese apart
   const ptsCard=(side,label)=>{ const t=PT?PT.totals(side):{};
     return `<div class="pts-card"><p class="pts-card-k">${label}</p><div class="pts-nums">${[['s','this session'],['d','today'],['w','this week'],['m','this month'],['t','total']]
-      .map(([k,l])=>`<div${k==='t'?' class="pts-total"':''}><b>${fmt(t[k])}</b><span>${l}</span></div>`).join('')}</div></div>`; };
+      .map(([k,l])=>`<div${k==='t'?' class="pts-total"':''}><b>${fmt(t[k])}</b><span>${l}</span></div>`).join('')}</div>
+      ${PT?(()=>{ const goal=PT.WEEKLY_TARGET, w=t.w||0; return `<p class="pts-goal">${w>=goal?`<b>Weekly target reached!</b> ${fmt(w)} of ${goal} points`:`This week: ${fmt(w)} of ${goal} points · ${fmt(goal-w)} to go`}</p><span class="lvl-bar"><i style="width:${Math.min(100,100*w/goal)}%"></i></span>`; })():''}</div>`; };
   const days=PT?PT.lastDays(14):[], pmax=Math.max(1,...days.map(x=>x.en+x.zh));
   const chart=`<div class="days pts-days" role="img" aria-label="Points per day over the last 14 days">${days.map(x=>{ const tot=x.en+x.zh;
       return `<span class="pcol${tot?'':' zero'}" title="${x.date.toDateString()}: ${x.en} English, ${x.zh} Chinese version"><i class="zh" style="height:${100*x.zh/pmax}%"></i><i class="en" style="height:${100*x.en/pmax}%"></i></span>`; }).join('')}</div>
@@ -973,7 +974,8 @@ function progressPage(){
     <ul><li>Only right answers earn points. Harder levels and longer tasks earn more.</li>
       <li>Every ${PT?PT.DOCK_EVERY:5} wrong answers take 1 point off (never below 0 for the day).</li>
       <li>A reading passage's points are shared between its questions.</li>
-      <li>English and Chinese version points are counted separately. The week starts on Monday.</li></ul>
+      <li>English and Chinese version points are counted separately. The week starts on Monday.</li>
+      <li>Weekly target: ${PT?PT.WEEKLY_TARGET:200} points.</li></ul>
     <div class="pts-table-wrap"><table class="pts-table"><thead><tr><th>Task</th>${Object.keys(LEVEL_NAMES).map(c=>`<th>${esc(LEVEL_NAMES[c])}</th>`).join('')}</tr></thead>
       <tbody>${POINT_KINDS.map(([k,label])=>`<tr><td>${esc(label)}</td>${POINTS[k].map(n=>`<td>${n}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;
   const row=t=>{ const found=t.n>=P.CAL, l=found?P.label(t.r):null, w=t.words;

@@ -403,3 +403,6 @@ a.btn{text-decoration:none;display:inline-block}
 .pts-table th:first-child,.pts-table td:first-child{text-align:left}
 .pts-table td:not(:first-child){font-variant-numeric:tabular-nums;font-weight:700}
 @media (max-width:620px){.pts-nums{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.pts-goal{margin:12px 0 6px;font-size:14px;color:var(--ink-2)}
+.pts-goal b{color:var(--good)}
