@@ -50,6 +50,8 @@ Chinese-side topic pages use the same engine with `data-only="zh"`: eight games 
 
 To add a subject: copy `en/media/index.html` into a new folder, point it at a new `en/data/<subject>.js` in the same format, and add a button to `en/index.html`.
 
+After changing `en/engine/app.js` or `styles.css`, change the `?v=` number after them in every topic page (one search-and-replace), so students' browsers fetch the new version instead of an old saved copy.
+
 Never change a word `id` once students have played: streaks and progress are stored against it.
 
 ## Levels and progress
