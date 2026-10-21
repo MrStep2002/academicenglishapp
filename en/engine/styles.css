@@ -157,7 +157,7 @@ mark,.hl{background:linear-gradient(transparent 12%, var(--mark) 12%, var(--mark
 .stats .streak b{color:var(--blue)}
 .bar{flex-wrap:wrap}
 .bar .spacer{flex:1}
-.auto{height:3px;background:var(--rule);border-radius:2px;overflow:hidden;margin-top:12px}
+.auto{height:3px;width:120px;margin-left:auto;background:var(--rule);border-radius:2px;overflow:hidden;margin-top:12px}   /* short: it only shows the card is about to move on */
 .auto i{display:block;height:100%;width:0;background:var(--good)}
 .auto.run i{width:100%;transition:width var(--dur,1.4s) linear}
 .hint{font-size:13px;color:var(--ink-2);margin-top:8px}
@@ -342,3 +342,20 @@ a.btn{text-decoration:none;display:inline-block}
 .pick-n{margin-right:auto;align-self:center;font-size:14px;color:var(--ink-2)}
 .why{display:grid;gap:8px;margin-top:6px}
 .why p{margin:0}
+
+/* Reading pages on a computer: wide page, passage on the left, questions on the right, so nothing drops off the bottom */
+.read-levels{margin:0 0 14px}
+@media (min-width:960px){
+  body.reading-wide .wrap{max-width:1320px}
+  .card.reading{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);column-gap:40px;align-items:start}
+  .card.reading > *{grid-column:2}
+  .card.reading > .instr{grid-column:1 / -1}
+  .card.reading > .passage{grid-column:1;grid-row:2 / span 40;margin:0;position:sticky;top:16px;max-height:calc(100vh - 40px);overflow:auto;font-size:17.5px;line-height:1.65}
+  .card.reading > .question{margin-top:0}
+  .card.reading{padding:24px 28px}
+  .card.reading .opts{gap:8px}
+  .card.reading .opt{padding:8px 12px;min-height:44px;font-size:16px;line-height:1.35}
+  .card.reading .note-task{margin-bottom:10px}
+  .card.reading .question{font-size:17px;margin-bottom:10px}
+  .card.reading .check-row{margin-top:10px}
+}

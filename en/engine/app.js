@@ -174,7 +174,7 @@ const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'w
 
 // ---------- page frame ----------
 function frame(back, inner){
-  clearTimers(); keyHandler=null;
+  clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide');
   $app.innerHTML = `${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:''}${inner}`;
   window.scrollTo(0,0);
 }
@@ -264,11 +264,12 @@ function manualNext(card, next, label){
 }
 const wordNote = w => w ? `<span class="wd"><b>${esc(w.w)}</b>${w.pos?` (${esc(w.pos)})`:''}: ${esc(w.def)}</span>` : '';
 
-function mcCard({instr, promptHtml, options, answer, onResult, optClass}){
+function mcCard({instr, promptHtml, options, answer, onResult, optClass, cardClass}){
   const opts = shuffle(options);
   const card = showCard(`<p class="instr">${instr}</p>${promptHtml}
     <div class="opts${optClass?' '+optClass:''}">${opts.map((o,i)=>`<button class="opt" data-v="${esc(o)}"><kbd>${i+1}</kbd><span>${esc(o)}</span></button>`).join('')}</div>
     <div class="fb"></div>`);
+  if(cardClass) card.classList.add(cardClass);
   const btns=[...card.querySelectorAll('.opt')]; let answered=false;
   const choose = b => {
     if(answered) return; answered=true;
@@ -311,7 +312,7 @@ function playMatch(mode, withZh){
   const spentL=new Set(), spentR=new Set();
   const paint=fresh=>{
     tiles('L').forEach((t,i)=>{ const w=L[i], sp=spentL.has(i); t.className='tile word'+(w?'':' gone')+(sp?' spent':'')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?esc(w.w)+(withZh&&ZH[w.id]?`<small class="tile-zh" lang="zh-CN">${esc(ZH[w.id])}</small>`:''):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
-    tiles('R').forEach((t,i)=>{ const w=R[i], sp=spentR.has(i); t.className='tile '+mode+(w?'':' gone')+(sp?' spent':'')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?right(w):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
+    tiles('R').forEach((t,i)=>{ const w=R[i], sp=spentR.has(i); t.className='tile '+mode+(w?'':' gone')+(sp?' spent':'');  /* new meanings are not highlighted: that would give them away */ t.innerHTML=w?right(w):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
   };
   paint(first);
   let sel=null; const wrongOn=new Set();
@@ -319,7 +320,10 @@ function playMatch(mode, withZh){
   const refill=()=>{
     const eL=[...spentL], eR=[...spentR]; eL.forEach(i=>L[i]=null); eR.forEach(i=>R[i]=null); spentL.clear(); spentR.clear();
     const fresh=draw(eL.length, L.filter(Boolean)); const sl=shuffle(eL), sr=shuffle(eR);
-    fresh.forEach((w,i)=>{ L[sl[i]]=w; R[sr[i]]=w; }); paint(fresh); };
+    fresh.forEach((w,i)=>{ L[sl[i]]=w; R[sr[i]]=w; });
+    shuffle(R.slice()).forEach((w,i)=>{ R[i]=w; });          // all meanings move, not just the new ones
+    if(sel){ sel.classList.remove('sel'); sel=null; }
+    paint(fresh); };
   card.addEventListener('click', e=>{
     const t=e.target.closest('.tile'); if(!t||t.disabled||t.classList.contains('done')||t.classList.contains('spent')) return;
     if(!sel||sel.dataset.side===t.dataset.side){ if(sel) sel.classList.remove('sel'); sel=t; t.classList.add('sel'); return; }
@@ -601,16 +605,16 @@ if(CFG.reading){
     .finally(()=>{ const h=location.hash.replace(/^#/,''); if(CFG.only==='passage'||!h||CATS[h]) route(); });
 }
 function playPassage(){
-  const game=GAMES.find(g=>g.key==='passage'), items=game.items(), deck=Deck(items), st=Stats('passage');
-  const nq=items.reduce((n,r)=>n+r.qs.length,0);
-  shell(game, `${items.length} passage${items.length===1?'':'s'}${nq>items.length?`, ${nq} questions`:''}. Read carefully, then choose the best answer.`); st.draw();
+  const game=GAMES.find(g=>g.key==='passage'), st=Stats('passage');
+  shell(game, ''); const items=readingTop(playPassage), deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
+  document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}${nq>items.length?`, ${nq} questions`:''}. Read carefully, then choose the best answer.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), many=r.qs.length>1; let missed=false;
     const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
     // One card per question; the passage stays on every card. A miss brings the whole passage back later (once).
     const ask=i=>{ const q=r.qs[i], next=i+1<r.qs.length ? ()=>ask(i+1) : step, item={id:r.id+(i?'#'+(i+1):''), level:r.level};
       mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}${many?` · Question ${i+1} of ${r.qs.length}`:''}`,
-        promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:'long',
+        promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:'long', cardClass:'reading',
         onResult:(ok,card,fb)=>{ ok?fbOk(fb, q.why?`<span>${esc(q.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(q.opts[0])}</b></span>${q.why?`<span>${esc(q.why)}</span>`:''}`);
           if(ok){ st.hit(item); autoNext(card,next); } else { st.miss(item); if(!missed){ missed=true; deck.retry(r); } manualNext(card,next); } }});
     };
@@ -619,10 +623,37 @@ function playPassage(){
   step();
 }
 
+// Level buttons for the Reading Comprehension pages. The choice is shared by all three pages.
+// First time: the student's level and the one above it (once known), otherwise every level.
+const READ_LV='aea:reading-levels';
+function readingLevels(all){
+  const num=n=>({Foundation:1,'Foundation+':2,Intermediate:3,'Intermediate+':4,Advanced:5})[n]||0;
+  const present=[...new Set(all.map(r=>r.level?levelName(r.level):'').filter(Boolean))].sort((a,b)=>num(a)-num(b));
+  const t=P.topic(), r=t&&t.n>=P.CAL ? t.r : P.overall();
+  const rec=r==null ? [] : present.filter(n=>num(n)>=Math.ceil(r-1) && num(n)<=Math.floor(r+0.75));
+  let saved=null; try{ saved=JSON.parse(localStorage.getItem(READ_LV)); }catch(e){}
+  let chosen=(Array.isArray(saved)?saved:[]).filter(n=>present.includes(n));
+  if(!chosen.length) chosen = rec.length ? rec : present.slice();
+  const items=all.filter(x=>!x.level || chosen.includes(levelName(x.level)));
+  const html = present.length<2 ? '' : `<div class="sets read-levels" role="group" aria-label="Levels">${present.map(n=>
+    `<button class="chip${rec.includes(n)?' chip-good':''}" data-lv="${esc(n)}" aria-pressed="${chosen.includes(n)}">${esc(n)} <small>${all.filter(x=>levelName(x.level)===n).length}</small></button>`).join('')}</div>`;
+  const wire=again=>document.querySelectorAll('.read-levels .chip').forEach(c=>c.onclick=()=>{ const n=c.dataset.lv;
+    let next = chosen.includes(n) ? chosen.filter(x=>x!==n) : [...chosen, n]; if(!next.length) return;
+    try{ localStorage.setItem(READ_LV, JSON.stringify(next)); }catch(e){} again(); });
+  return {items, html, wire};
+}
+function readingTop(again){   // the level buttons go between the hint and the game; the page goes wide
+  document.body.classList.add('reading-wide');
+  if(CFG.only!=='passage') return S.passages||[];
+  const L=readingLevels(S.passages||[]); if(L.html){ document.getElementById('feed').insertAdjacentHTML('beforebegin', L.html); L.wire(again); }
+  return L.items;
+}
+
 // Note taking: read the passage, then choose the notes that belong under the heading. Check marks them all at once.
 function playNotes(){
-  const items=S.passages||[], deck=Deck(items), st=Stats('notes'), game={key:'notes', name:CFG.name||'Note taking', cat:'reading'};
-  shell(game, `${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.`); st.draw();
+  const st=Stats('notes'), game={key:'notes', name:CFG.name||'Note taking', cat:'reading'};
+  shell(game, ''); const items=readingTop(playNotes), deck=Deck(items);
+  document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), order=shuffle(r.opts.map((o,i)=>i)), picked=new Set();
     const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
@@ -631,6 +662,7 @@ function playNotes(){
       <p class="question">Choose the ${r.count} notes that belong under this heading.</p>
       <div class="opts long notes">${order.map((i,k)=>`<button class="opt" data-i="${i}" aria-pressed="false"><kbd>${k+1}</kbd><span>${esc(r.opts[i])}</span></button>`).join('')}</div>
       <div class="next-row check-row"><span class="pick-n" id="pickN">0 of ${r.count} chosen</span><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>`);
+    card.classList.add('reading');
     const btns=[...card.querySelectorAll('.opt')], chk=card.querySelector('#check'), pn=card.querySelector('#pickN'); let done=false;
     const toggle=b=>{ if(done) return; const i=+b.dataset.i;
       if(picked.has(i)) picked.delete(i); else { if(picked.size>=r.count) return; picked.add(i); }
@@ -899,7 +931,12 @@ function progressPage(){
       <span class="prog-lvl">${found?`<b>${nameHtml(l.name)}</b>${t.side==='zh'&&l.zh?` <span lang="zh-CN">${l.zh}</span>`:''}`:`Finding level · ${t.n} of ${P.CAL}`}</span>
       <span class="lvl-bar"><i style="width:${found?l.pct:t.n*100/P.CAL}%"></i></span>
       <span class="prog-meta">${w&&w.total?`${w.known} of ${w.total} words known · `:''}${t.n} answers · ${t.n?Math.round(100*t.right/t.n):0}% right</span></a>`; };
-  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Back'}, `
+  let back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
+  try{ const ref=document.referrer && new URL(document.referrer);
+    if(ref && ref.origin===location.origin && ref.pathname!==location.pathname) back={href:ref.href, label:'Back'};
+    else { const side=(list[0]||{}).side; if(side) back={href:ROOT+(side==='zh'?'zh':'en')+'/index.html', label:side==='zh'?'中文版 Chinese version':'English topics'}; }
+  }catch(e){}
+  frame(back, `
   <section class="hero"><p class="eyebrow">My progress 我的进步</p>
     <h1>${L?`${nameHtml(L.name)} <span class="h-sub" lang="zh-CN">${L.zh}</span>`:'Let’s find your level'}</h1>
     <p>${L?`Your overall level, from everything you have played.${L.next?` You are ${L.pct}% of the way to ${esc(L.next)}.`:''}`:`Play any game. After ${P.CAL} answers in a topic, your level appears here. 在任一主题答 ${P.CAL} 题后，这里会显示你的水平。`}</p>
