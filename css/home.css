@@ -55,3 +55,31 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 .last-used[hidden] { display: none; }
 .backlink { color: var(--muted); text-decoration: none; font-weight: 700; font-size: .92rem; }
 .backlink:hover { color: var(--ink); }
+
+/* Third button colour (Academic English Essentials, Golden 100) and a three-up layout for the subjects page */
+:root { --ess: #17825a; --ess-soft: #ddf2e7; }
+@media (prefers-color-scheme: dark) { :root { --ess: #6fdcaa; --ess-soft: #163a2c; } }
+.unit-ess:hover { border-color: var(--ess); } .unit-ess .unit-num { background: var(--ess-soft); color: var(--ess); } .unit-ess svg { color: var(--ess); }
+@media (min-width: 620px) { .units-3 { grid-template-columns: 1fr; } }
+
+/* Chinese version: topics as a list of bars, grouped by subject */
+.topic-group { display: flex; flex-direction: column; gap: 10px; }
+.topic-group h2 { margin: 6px 0 0; font-family: var(--display); font-weight: 800; font-size: 1.05rem; letter-spacing: -.01em; color: var(--muted); }
+.topic-group h2 [lang="zh"] { font-weight: 400; margin-left: 4px; }
+.topics { display: flex; flex-direction: column; gap: 10px; }
+.topic { display: flex; align-items: center; gap: 14px; min-height: 64px; padding: 14px 14px 14px 22px; border-radius: 20px;
+  background: var(--card); border: 1.5px solid var(--line); color: var(--ink); text-decoration: none;
+  box-shadow: 0 1px 2px rgba(21,25,53,.04); transition: border-color .15s, box-shadow .15s; }
+.topic:hover { border-color: var(--muted); box-shadow: 0 2px 10px rgba(21,25,53,.08); }
+.topic:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
+.topic-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.topic-name { font-size: 1.12rem; font-weight: 700; }
+.topic-name [lang="zh"] { font-weight: 400; color: var(--muted); margin-left: 4px; }
+.topic-sub { font-size: .9rem; color: var(--muted); }
+.topic-sub [lang="zh"] { margin-left: 4px; }
+.topic-go { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; color: var(--muted); transition: background .15s, color .15s; }
+.topic-go svg { width: 22px; height: 22px; }
+.topic:hover .topic-go { background: var(--ink); color: var(--card); }
+.more { margin: 4px 0 0; font-size: .9rem; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .topic, .topic-go { transition: none; } }
+.topic-name [lang="zh"], .topic-sub [lang="zh"], .topic-group h2 [lang="zh"] { white-space: nowrap; display: inline-block; }

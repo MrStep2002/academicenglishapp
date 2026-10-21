@@ -61,17 +61,26 @@ const GAMES = [
    sample:'<span class="zh">不祥的</span> → ominous?', run:()=>playZh()}
 ];
 
-function topbar(){
-  return `<div class="top"><button class="brand" id="home" aria-label="Back to all games"><b>Golden 100</b><span>Word games · 0500 / 0408</span></button>
+// Back link: on the games menu it goes to the site homepage (if the page says where that is);
+// inside a game or the word list it goes back to the games menu.
+const SITE_HOME = $app.dataset.siteHome || '';
+function topbar(onMenu){
+  const back = onMenu
+    ? (SITE_HOME ? `<a class="back" href="${esc(SITE_HOME)}">← All games</a>` : '')
+    : `<button class="back" id="backBtn">← Back to games</button>`;
+  return `${back}<div class="top"><button class="brand" id="home" aria-label="Golden 100 games menu"><b>Golden 100</b><span>Word games · 0500 / 0408</span></button>
   <button class="ghost" id="wlBtn">Word list</button></div>`;
 }
-function wireTop(){ document.getElementById('home').onclick=home; document.getElementById('wlBtn').onclick=wordList; }
+function wireTop(){
+  document.getElementById('home').onclick=home; document.getElementById('wlBtn').onclick=wordList;
+  const b=document.getElementById('backBtn'); if(b) b.onclick=home;
+}
 
 // ---------- HOME ----------
 function home(){
   keyHandler=null; clearTimers();
   const n = pool().length, ownOff = descSets().length===0;
-  $app.innerHTML = topbar() + `
+  $app.innerHTML = topbar(true) + `
   <section class="hero">
     <h1>Use the words, don't just translate them.</h1>
     <p>Six games built on the Golden 100, for students working from upper B1 towards C1. Pick the word sets, choose a game and keep going for as long as you like.</p>

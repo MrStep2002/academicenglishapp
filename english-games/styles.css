@@ -189,3 +189,7 @@ mark,.hl{background:linear-gradient(transparent 12%, var(--mark) 12%, var(--mark
 .errlist li.miss b{color:var(--bad)}
 .errlist li.got b{color:var(--good)}
 .check-row{margin-top:14px}
+
+/* back link */
+.back{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;padding:6px 0;background:none;border:0;font:inherit;font-size:15px;font-weight:700;color:var(--ink-2);text-decoration:none;cursor:pointer}
+.back:hover{color:var(--ink)}

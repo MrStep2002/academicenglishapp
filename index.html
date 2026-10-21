@@ -29,65 +29,22 @@
 
   <header class="intro">
     <p class="eyebrow">Academic English App</p>
-    <h1>Choose your games</h1>
-    <p class="sub">Pick a set of games to play. Your progress is saved on this device.</p>
+    <h1>Choose your language</h1>
+    <p class="sub">English games start at B1/B2. The Chinese version teaches the words with Chinese support. <span lang="zh">中文版借助中文学习词汇。</span></p>
   </header>
 
-  <nav class="units" aria-label="Games">
-    <a class="unit unit-rep" href="y8media/index.html">
-      <span class="unit-num">Y8</span>
-      <span class="unit-text">
-        <span class="unit-name">Year 8 Media Games</span>
-        <span class="unit-sub">Website and web design words for Year 8 Media.</span>
-      </span>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-    <a class="unit unit-web" href="english-games/index.html">
+  <nav class="units" aria-label="Language">
+    <a class="unit unit-web" href="en/index.html">
       <span class="unit-num">En</span>
-      <span class="unit-text">
-        <span class="unit-name">English Games</span>
-        <span class="unit-sub">The Golden 100 words for IGCSE English (0500) and World Literature (0408).</span>
-      </span>
+      <span class="unit-text"><span class="unit-name">English</span><span class="unit-sub">Games in English for B1/B2 students: vocabulary, grammar and reading.</span></span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
-  </nav>
-
-  <!-- Hidden for now: the Year 9 Media Studies versions. To bring them back, move this block back into a <nav class="units">.
-  <header class="intro">
-    <p class="eyebrow">Year 9 Media Studies</p>
-    <h1>Choose your version</h1>
-    <p class="sub">Pick the one that matches your English. You can switch later.</p>
-  </header>
-
-  <nav class="units" aria-label="Versions">
-    <a class="unit unit-rep" href="zh/index.html" data-track="zh">
+    <a class="unit unit-rep" href="zh/index.html">
       <span class="unit-num" lang="zh">中</span>
-      <span class="unit-text">
-        <span class="unit-name">Chinese version <span lang="zh">中文版</span></span>
-        <span class="unit-sub">Learn the words with Chinese support and build up to B1. <span lang="zh">借助中文学习单词，逐步达到 B1 水平。</span></span>
-        <span class="last-used" hidden>Last used</span>
-      </span>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-    <a class="unit unit-web" href="en/index.html" data-track="en">
-      <span class="unit-num">En</span>
-      <span class="unit-text">
-        <span class="unit-name">English version</span>
-        <span class="unit-sub">Academic English for analysis, from B1/B2: precise vocabulary, sentences and accurate writing.</span>
-        <span class="last-used" hidden>Last used</span>
-      </span>
+      <span class="unit-text"><span class="unit-name">Chinese version <span lang="zh">中文版</span></span><span class="unit-sub">Vocabulary games with Chinese support. <span lang="zh">借助中文学习词汇。</span></span></span>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
     </a>
   </nav>
-  -->
 </main>
-<script>
-  // Mark the version this device used last.
-  try {
-    var t = (JSON.parse(localStorage.getItem("mediaVocabY9V1")) || {}).settings.track;
-    var a = t && document.querySelector('[data-track="' + t + '"] .last-used');
-    if (a) a.hidden = false;
-  } catch (e) {}
-</script>
 </body>
 </html>

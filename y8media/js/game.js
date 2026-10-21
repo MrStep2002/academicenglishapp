@@ -144,6 +144,7 @@
     document.title = "Website Words · Year 8 Web Design";
     app.innerHTML = `
     <main class="page home">
+      <a class="backlink" href="../index.html">← All games</a>
       ${mockup()}
       <header class="intro">
         <p class="eyebrow">Year 8 · Web Design</p>
