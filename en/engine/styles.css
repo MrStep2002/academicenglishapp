@@ -467,3 +467,4 @@ a.btn{text-decoration:none;display:inline-block}
 .end-zh{margin:0 0 8px;font-family:var(--f-zh);font-size:18px;color:var(--ink-2)}
 .end-sub{margin:6px 0 0;color:var(--ink-2)}
 @media (prefers-reduced-motion:reduce){.wb-bar i{transition:none}}
+.bank-note{margin:22px 0 0;font-size:14px;color:var(--ink-2)}
