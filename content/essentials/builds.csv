@@ -1,0 +1,9 @@
+﻿id,level,goal,pieces,decoys,also_right,explanation
+"ess-build-001","B1","Make a contrast in one sentence","link: Although | detail: the method is cheap, | topic: it | detail: is slow.","link: but","","'Although' already shows the contrast, so don't add 'but'."
+"ess-build-002","B1","Report a finding carefully","topic: The results | verb: suggest | link: that | judge: the drug is effective.","verb: suggests","","'The results' is plural, so 'suggest' with no -s. 'Suggest' is more careful than 'prove'."
+"ess-build-003","B1","Present evidence","verb: There is | topic: strong evidence | link: that | detail: exercise improves mood.","topic: evidences","","'Evidence' is uncountable: 'there is strong evidence', never 'evidences'."
+"ess-build-004","B1","Hedge a cause","topic: The rise | verb: was | hedge: probably | verb: caused by | detail: the hot weather.","verb: causing","","Passive (was caused by) plus a hedge: put 'probably' after 'was'."
+"ess-build-005","B1","Hedge a claim","topic: Social media | hedge: may | verb: have | judge: a significant effect | detail: on teenagers.","verb: has","","After 'may', use the base verb: 'may have', not 'may has'. 'an effect on' someone."
+"ess-build-006","B1","Give the other side","detail: Cars are convenient. | link: On the other hand, | topic: they | verb: cause pollution.","link: Although,","","'On the other hand' starts the opposite side of the argument."
+"ess-build-007","B1","Evaluate an argument","judge: One weakness | topic: of the argument | verb: is | detail: the lack of evidence.","detail: the lack of evidences.","","A clear evaluation: name the weakness, then say what it is."
+"ess-build-008","B1","Compare two things","topic: Cats | detail: are independent, | link: whereas | topic: dogs | detail: need more attention.","link: also","","'whereas' compares two different facts in one sentence."

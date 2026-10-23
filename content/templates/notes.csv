@@ -1,0 +1,6 @@
+﻿id,level,title,passage,topic,select_count,option1,option2,option3,option4,option5,option6,correct_options,explanation,source
+"notes-example","B1","The school garden","The school garden opened in May. Students grow tomatoes, beans and herbs, and the kitchen uses them in school lunches.
+
+Volunteers water the beds every morning before lessons. In the summer holidays, families take turns to look after the garden.","How the garden is looked after","3","Volunteers water the beds every morning","Opened in May","Families take turns in the summer holidays","Tomatoes, beans and herbs are grown","Watering happens before lessons","Vegetables are used in school lunches","[1,3,5]","Options 1, 3 and 5 are about looking after the garden.
+
+The others are true, but they are about what the garden is or what it grows.",""

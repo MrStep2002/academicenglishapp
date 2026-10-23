@@ -1,17 +1,13 @@
 // English games engine: one set of games for every subject.
-// A subject page loads its data (window.SUBJECT) and then this file.
+// A topic page says where its content is (data-content: a folder of CSV files, see content/README.md); this file loads it.
 // Routes (the part after # in the address): menu, #vocab, #grammar, #reading, #play-<game>, #words
 (function(){
 'use strict';
-const S = window.SUBJECT;
 // The site's top folder, worked out from where this file lives (en/engine/app.js), so links work on any host and from a local copy
 const ROOT = ((document.currentScript && document.currentScript.src) || '/en/engine/app.js').replace(/en\/engine\/app\.js([?#].*)?$/, '');
 const $app = document.getElementById('app');
-const CFG = $app.dataset;               // data-name, data-blurb, data-back, data-back-label, data-only, data-sets, data-store
-// data-sets: this page uses only some of the data's sets. Drop everything else, so the page only lists games it has content for.
-if(CFG.sets){ const keep=CFG.sets.split(','); S.sets=S.sets.filter(x=>keep.includes(x.id));
-  for(const k of ['words','gaps','builds','errors','tf','reads','questions','extracts']) if(Array.isArray(S[k])) S[k]=S[k].filter(x=>keep.includes(x.set)); }
-const KEY = CFG.store || S.key;
+const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd
+const KEY = CFG.store || (CFG.content||'').replace(/\/+$/,'').split('/').pop() || 'topic';   // where this page's progress is saved
 const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
 // The logo's mouse, top left of every page: a link to the homepage
 const HOME_MARK = '<svg viewBox="0 0 290 240" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M143.1 233.8C141.4 233.7 138.2 232.7 136.3 231.8C130.2 228.9 126.4 223.1 126.1 216.1C126.0 213.8 126.0 213.0 126.5 211.3C127.8 205.8 131.2 201.7 136.3 199.1C138.9 197.8 140.7 197.4 144.5 197.4C148.4 197.4 150.2 197.7 153.4 199.3C160.6 202.7 164.8 211.0 163.1 218.6C162.3 222.0 159.5 227.3 157.4 229.2C155.5 230.9 152.6 232.6 150.0 233.4C148.6 233.8 144.9 234.0 143.1 233.8ZM167.9 212.3C167.5 212.2 167.4 211.9 167.1 210.2C167.0 209.5 166.7 208.4 166.4 207.9L165.9 206.8L166.8 205.1C167.3 204.1 167.8 203.1 167.9 202.8C168.3 201.4 171.6 195.0 173.2 192.6C173.6 191.8 174.0 191.2 174.0 191.1C174.0 190.7 177.1 185.8 178.5 183.9C183.0 177.7 184.9 175.4 187.4 172.7C189.1 171.0 191.0 168.8 191.9 167.9C194.1 165.3 196.2 163.2 200.1 159.9C209.5 151.8 217.1 143.0 219.4 137.2C221.3 132.2 221.8 130.1 221.9 124.4C222.0 120.2 222.0 119.3 221.5 116.6C220.8 112.7 220.0 110.4 218.4 107.4C215.5 101.8 212.3 97.8 207.9 93.8C202.3 88.9 199.4 86.9 192.9 83.7C184.1 79.3 177.5 77.2 164.0 74.6C155.8 73.0 154.1 72.9 144.6 72.9C137.6 72.9 135.7 73.0 132.0 73.5C124.9 74.4 117.5 76.0 109.0 78.6C98.4 81.7 88.7 86.9 81.4 93.4C79.5 95.0 74.4 101.2 73.0 103.6C72.5 104.4 71.9 105.5 71.5 106.0C70.6 107.3 69.2 110.4 68.6 112.1C66.8 117.4 66.4 125.9 67.7 131.5C69.0 136.8 70.5 140.0 73.9 144.6C78.8 151.1 81.9 154.3 87.6 158.9C89.9 160.7 92.5 163.1 94.6 165.3C96.4 167.3 99.5 170.6 101.5 172.7C105.7 176.9 107.3 179.0 110.5 184.1C111.8 186.0 113.8 189.1 115.0 190.9C116.2 192.8 117.8 195.5 118.5 196.9C122.2 204.5 122.7 205.8 122.7 206.7C122.7 207.8 121.2 211.8 120.7 212.1C120.2 212.4 111.3 211.1 107.1 210.1C102.5 209.1 91.7 205.2 86.3 202.6C80.4 199.8 69.0 191.3 63.7 185.8C58.3 180.2 52.7 172.4 50.5 167.2C50.1 166.2 49.5 164.9 49.3 164.4C48.0 161.7 46.0 155.6 45.5 153.4C44.3 147.4 43.9 143.2 44.1 137.1C44.2 132.8 44.3 130.7 44.7 128.5C45.6 123.7 46.7 119.4 47.7 116.6C48.4 114.3 48.4 114.2 45.9 113.5C43.4 112.7 38.6 110.7 35.9 109.4C30.9 107.0 25.2 102.5 20.6 97.5C16.4 92.8 15.7 92.1 14.1 89.4C12.2 86.1 11.2 84.1 9.7 79.9C7.0 72.7 6.2 68.2 6.2 60.6C6.1 53.7 6.8 49.6 9.0 43.5C11.8 35.7 14.2 31.5 19.0 25.9C24.9 19.1 30.1 15.1 37.7 11.5C42.3 9.4 46.0 8.2 53.1 6.6C57.2 5.7 67.2 5.6 70.4 6.4C71.1 6.6 72.1 6.8 72.8 6.9C73.9 7.0 76.6 7.8 79.2 8.6C82.1 9.6 88.8 12.6 90.5 13.7C90.8 14.0 91.8 14.6 92.6 15.1C96.2 17.4 102.4 23.1 105.1 26.6C109.5 32.3 111.2 35.5 113.9 43.4C115.2 47.3 115.7 49.2 115.9 51.9C116.2 55.1 116.3 55.2 119.2 54.0C120.5 53.6 122.7 53.0 128.4 51.6C129.2 51.4 131.4 51.0 133.4 50.7C136.5 50.2 137.7 50.1 144.6 50.1C151.5 50.1 152.8 50.2 155.9 50.7C161.4 51.6 167.7 53.1 171.3 54.3C174.1 55.2 174.1 55.2 174.4 52.3C175.0 44.8 178.2 35.8 182.2 30.0C186.0 24.6 192.2 18.2 196.5 15.5C202.7 11.4 210.5 8.2 217.5 6.7C222.9 5.6 233.1 5.5 237.6 6.7C246.6 8.9 254.0 11.9 259.4 15.6C264.8 19.3 267.9 22.3 272.0 27.6C275.7 32.5 276.6 33.8 278.1 37.0C281.9 44.9 283.5 52.1 283.5 60.8C283.5 67.2 282.8 72.0 281.4 76.4C278.8 84.1 277.1 87.4 272.6 93.4C270.4 96.3 264.9 101.9 262.4 103.7C257.7 107.1 256.5 107.9 254.6 109.0C252.1 110.4 249.3 111.6 244.9 113.0C243.2 113.6 241.6 114.2 241.3 114.4C240.6 114.9 240.6 114.7 241.9 120.0C244.1 128.4 244.8 132.6 244.8 139.3C244.8 145.9 244.2 149.8 242.2 156.4C241.8 157.8 241.3 159.5 241.1 160.2C240.2 163.5 236.9 170.5 234.8 173.4C231.1 178.9 229.2 181.3 225.8 184.9C219.5 191.7 216.1 194.3 206.1 200.5C202.4 202.8 192.2 207.3 188.0 208.6C183.3 210.0 175.4 211.6 171.3 212.0C169.9 212.1 168.6 212.3 168.5 212.3C168.5 212.4 168.2 212.4 167.9 212.3ZM107.6 152.2C104.2 151.2 102.4 150.1 100.7 147.7C97.5 143.6 96.6 138.9 98.1 134.9C99.8 130.3 103.0 127.3 107.4 126.1C109.3 125.6 113.2 125.6 115.1 126.1C119.9 127.4 123.3 130.7 124.5 135.4C125.4 138.8 125.0 142.5 123.5 145.7C122.7 147.2 119.8 150.2 118.1 151.1C115.3 152.7 110.7 153.2 107.6 152.2ZM175.6 152.2C172.6 151.8 168.8 149.2 167.0 146.2C165.9 144.3 165.0 141.1 165.0 139.0C165.0 134.7 168.3 129.1 171.8 127.5C175.2 125.8 174.9 125.9 178.6 125.9C181.7 125.9 182.3 125.9 183.6 126.5C186.4 127.6 187.8 128.6 189.7 130.9C192.4 134.2 193.2 141.0 191.2 145.4C190.2 147.7 187.1 150.5 184.5 151.5C182.1 152.4 178.7 152.7 175.6 152.2ZM234.9 95.0C240.8 93.7 246.5 91.0 250.7 87.4C253.5 85.0 254.6 83.8 256.6 81.2C259.8 76.8 262.2 70.9 262.8 65.9C263.3 61.2 262.8 54.9 261.5 50.6C260.1 46.1 255.7 39.2 251.8 35.4C248.2 32.0 243.6 29.5 237.8 27.6C231.9 25.8 224.3 25.7 218.1 27.5C216.0 28.1 211.5 30.3 208.9 32.0C206.1 33.8 202.3 37.8 200.1 41.0C197.0 45.6 196.4 47.2 195.1 54.0C194.5 57.2 194.7 63.0 195.6 65.3C197.3 70.0 199.7 73.0 208.4 81.3C212.1 84.8 216.7 89.2 218.7 91.0C220.7 92.9 222.7 94.6 223.1 94.9C225.2 95.8 230.7 95.9 234.9 95.0ZM62.6 95.1C66.5 94.5 68.2 93.6 72.2 89.5C73.7 88.1 77.5 84.5 80.7 81.5C87.9 74.9 91.6 70.8 93.3 67.5C93.5 66.9 94.1 65.5 94.4 64.4C95.0 62.5 95.1 62.0 95.1 57.8C95.1 53.7 95.1 52.8 94.5 50.9C93.4 46.3 91.5 42.5 88.6 39.0C83.2 32.3 76.1 28.1 68.1 26.8C64.1 26.2 60.8 26.1 57.3 26.6C48.7 27.8 43.2 30.5 37.4 36.4C33.9 39.9 32.6 41.8 30.5 46.1C27.8 51.8 27.1 54.9 27.1 61.6C27.1 67.9 27.5 69.9 29.9 75.5C31.5 79.2 33.3 81.9 35.8 84.7C39.0 88.4 42.7 91.0 47.1 92.8C53.0 95.2 57.4 95.9 62.6 95.1Z"/></svg>';   // English and Chinese points are kept apart
@@ -24,6 +20,134 @@ const store = {
   get(k,d){ try{ const v=localStorage.getItem('aea:'+KEY+':'+k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
   set(k,v){ try{ localStorage.setItem('aea:'+KEY+':'+k, JSON.stringify(v)); }catch(e){} }
 };
+// Explanations may use <b>bold</b> and <i>italic</i>; everything else is shown as plain text
+const rich = s => esc(s||'').replace(/&lt;(\/?)(b|i)&gt;/g, '<$1$2>');
+
+// One scale for the whole site: A1=1, A2=2, B1=3, B2=4, C1=5 ("+" adds half a level). The CSV files can use the codes or the names.
+const LEVEL_CODES = ['', 'A1', 'A2', 'B1', 'B2', 'C1'];
+const LEVEL_NAMES = {A1:'Foundation', A2:'Foundation+', B1:'Intermediate', B2:'Intermediate+', C1:'Advanced'};   // names students see (codes stay hidden)
+const LEVEL_ZH = {A1:'基础', A2:'基础+', B1:'中级', B2:'中级+', C1:'高级'};   // beside the names on the Chinese side
+const LEVEL_BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
+const levelNum = code => { if(code==null || code==='') return null; if(typeof code==='number') return code;
+  const s=String(code).trim(), named=LEVEL_BY_NAME[s.toLowerCase().replace(/\s+/g,'')]; if(named) return named;
+  const m=s.toUpperCase().match(/^([ABC])([12])(\+)?$/); if(!m) return null;
+  return ({A:0,B:2,C:4})[m[1]] + (+m[2]) + (m[3]?0.5:0); };
+
+// ---------- CONTENT: one folder of CSV files per topic (content/<topic>/), described in content/README.md ----------
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false;
+  text=text.replace(/^﻿/,'');
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c; }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
+  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+}
+// Reading passages. Question 1 uses the plain column names; question n uses questionN, correctN, wrong1_N, wrong2_N, wrong3_N, explanationN.
+function questionsOf(r){ const qs=[];
+  for(let n=1;n<=9;n++){ const a=n===1?'':String(n), b=n===1?'':'_'+n;
+    const q={q:r['question'+a], opts:[r['correct'+a], r['wrong1'+b], r['wrong2'+b], r['wrong3'+b]], why:r['explanation'+a]||''};
+    if(!q.q) continue;
+    if(q.opts.every(Boolean)) qs.push(q); else console.warn('Reading row '+r.id+': question '+n+' skipped (an answer is missing)'); }
+  return qs; }
+// Note taking (data-format="notes"): id, level, title, passage, topic, select_count, option1…option6,
+// correct_options (e.g. [1,3,5]), explanation, source. Students choose the select_count options that are good notes on the topic.
+function notesRow(r){
+  const opts=[]; for(let n=1;n<=9;n++) if(r['option'+n]) opts.push(r['option'+n]);
+  let right=[]; try{ right=JSON.parse(r.correct_options||'[]'); }catch(e){ right=String(r.correct_options||'').split(/[^0-9]+/).filter(Boolean).map(Number); }
+  right=[...new Set(right.map(Number))].filter(n=>n>=1 && n<=opts.length);
+  const count=parseInt(r.select_count,10)||right.length;
+  if(!r.id || !r.passage || opts.length<3 || !right.length || right.length!==count){ console.warn('Notes row '+(r.id||'?')+' skipped: check the options, select_count and correct_options'); return null; }
+  return {id:r.id, level:r.level, title:r.title, text:r.passage, topic:r.topic||'', count, opts, right:right.map(n=>n-1), why:r.explanation||''};
+}
+const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
+// The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
+function buildSubject(T){
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], reads:[], questions:[], extracts:[], passages:[]};
+  const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
+  const lv=(file,r)=>{ const v=(r.level||'').trim();
+    if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
+    if(levelNum(v)==null){ warn(file,r,`level "${v}" not recognised, so it is used at every level`); return ''; }
+    return v; };
+  const wrongs=(r,b)=>[1,2,3,4].map(k=>r['wrong'+k+(b||'')]).filter(Boolean);
+  // Words. "similar": words never offered as wrong answers for this one; "accept": words Type it also accepts. Both list words (or ids), separated by ;
+  const ids=new Set();
+  (T.words||[]).forEach(r=>{ if(!r.id||!r.word||!r.meaning) return warn('words',r,'skipped: it needs an id, a word and a meaning');
+    if(ids.has(r.id)) return warn('words',r,'skipped: this id is used twice'); ids.add(r.id);
+    const syn=listOf(r.synonyms);
+    S.words.push({id:r.id, level:lv('words',r), w:r.word, pos:r.pos||'', def:r.meaning, ex:r.example||'', syn:syn.length?syn:undefined,
+      zh:r.zh||'', group:r.group||'', note:r.note||'', sim:listOf(r.similar), acc:listOf(r.accept)}); });
+  const byId=Object.fromEntries(S.words.map(w=>[w.id,w])), byText={};
+  S.words.forEach(w=>{ const k=w.w.toLowerCase(); (byText[k]=byText[k]||[]).push(w.id); });
+  const refs=v=>byId[v] ? [v] : (byText[String(v).trim().toLowerCase()]||[]);
+  const ref1=(file,r,v)=>{ if(!v) return null; const f=refs(v); if(!f.length) warn(file,r,`"${v}" is not in words.csv`); return f[0]||null; };
+  S.words.forEach(w=>{
+    w.sim.forEach(v=>{ const f=refs(v); if(!f.length) warn('words',w,`similar: "${v}" is not in words.csv`); f.forEach(id=>{ if(id!==w.id) S.alike.push([w.id,id]); }); });
+    w.acc.forEach(v=>{ const f=refs(v); if(!f.length) warn('words',w,`accept: "${v}" is not in words.csv`); f.forEach(id=>{ if(id!==w.id) S.accept.push([w.id,id]); }); });
+    delete w.sim; delete w.acc; });
+  (T.gaps||[]).forEach(r=>{ const wrong=wrongs(r);
+    if(!r.sentence||!r.sentence.includes('___')||!r.answer||!wrong.length) return warn('gaps',r,'skipped: it needs a sentence with ___, an answer and a wrong answer');
+    S.gaps.push({id:r.id, level:lv('gaps',r), s:r.sentence, ans:r.answer, wrong, why:r.explanation||'', pt:r.focus||'', wid:ref1('gaps',r,r.word)}); });
+  // Build the sentence: pieces are "colour: text", separated by |. Colours: topic, verb, detail, link, judge, hedge.
+  const ROLE=/^(topic|verb|detail|link|judge|hedge)\s*:\s*/i;
+  const pieces=(r,v)=>String(v||'').split('|').map(s=>s.trim()).filter(Boolean).map(p=>{ const m=p.match(ROLE);
+    if(!m) warn('builds',r,`"${p}" needs a colour first (topic:, verb:, detail:, link:, judge: or hedge:)`); return m?[p.slice(m[0].length),m[1].toLowerCase()]:[p,'detail']; });
+  (T.builds||[]).forEach(r=>{ const tiles=pieces(r,r.pieces);
+    if(tiles.length<2) return warn('builds',r,'skipped: it needs at least two pieces');
+    const alt=String(r.also_right||'').split('||').map(a=>a.split('|').map(s=>s.trim()).filter(Boolean)).filter(a=>a.length);
+    alt.forEach(a=>{ if(a.length!==tiles.length || a.some(t=>!tiles.some(x=>x[0]===t))) warn('builds',r,'also_right should use exactly the same pieces'); });
+    S.builds.push({id:r.id, level:lv('builds',r), goal:r.goal||'', tiles, decoys:pieces(r,r.decoys), alt, why:r.explanation||''}); });
+  (T.errors||[]).forEach(r=>{ if(!/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/.test(r.text||'')) return warn('errors',r,'skipped: the text needs at least one [wrong|right|why]');
+    S.errors.push({id:r.id, level:lv('errors',r), title:r.title||'', text:r.text}); });
+  (T.tf||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), t=/^(true|t|yes|y)$/.test(a);
+    if(!r.statement||(!t && !/^(false|f|no|n)$/.test(a))) return warn('tf',r,'skipped: it needs a statement and an answer of TRUE or FALSE');
+    S.tf.push({id:r.id, level:lv('tf',r), s:r.statement, t, why:r.explanation||''}); });
+  // Read it: [[word]] or [[shown text|word]] makes a word tappable (its meaning comes from words.csv)
+  (T.reads||[]).forEach(r=>{ const wrong=wrongs(r);
+    if(!r.text||!r.question||!r.correct||!wrong.length) return warn('reads',r,'skipped: it needs a text, a question, a correct answer and a wrong answer');
+    const text=r.text.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g,(m,shown,w)=>{ const id=ref1('reads',r,(w||shown).trim()); return id?`[[${shown}|${id}]]`:shown; });
+    S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text, q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
+  (T.questions||[]).forEach(r=>{ const wrong=wrongs(r);
+    if(!r.question||!r.correct||!wrong.length) return warn('questions',r,'skipped: it needs a question, a correct answer and a wrong answer');
+    S.questions.push({id:r.id, level:lv('questions',r), cmd:r.command||'', q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
+  // In your own words: each [underlined] word has word, correct, wrong1-3 (the first) or wordN, correctN, wrong1_N… (the Nth)
+  (T.extracts||[]).forEach(r=>{ const n=(String(r.extract||'').match(/\[[^\]]+\]/g)||[]).length, qs=[], wids=[];
+    for(let k=1;k<=9;k++){ const a=k===1?'':String(k), b=k===1?'':'_'+k; if(!r['correct'+a]) break; qs.push([r['correct'+a], wrongs(r,b)]); wids.push(ref1('extracts',r,r['word'+a])); }
+    if(!n || n!==qs.length || qs.some(q=>!q[1].length)) return warn('extracts',r,`skipped: ${n} word${n===1?'':'s'} in [brackets] but ${qs.length} set${qs.length===1?'':'s'} of answers`);
+    S.extracts.push({id:r.id, level:lv('extracts',r), t:r.extract, ids:wids, qs}); });
+  if(T.reading){
+    if(CFG.format==='notes') S.passages=T.reading.map(notesRow).filter(Boolean);
+    else { const need=['id','title','passage','question','correct','wrong1','wrong2','wrong3'];
+      S.passages=T.reading.filter(r=>{ const miss=need.filter(k=>!r[k]); if(miss.length){ warn('reading',r,'skipped: missing '+miss.join(', ')); return false; } return true; })
+        .map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, qs:questionsOf(r)})); }
+  }
+  return S;
+}
+// Load the page's files, then start. The Chinese version only needs the words.
+const FILES = ['words','gaps','builds','errors','tf','reads','questions','extracts','reading'];
+let readingState = 'none';
+function boot(){
+  const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
+  const jobs=(dir ? (SIDE==='zh' ? ['words'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  if(CFG.reading) jobs.push(['reading', CFG.reading]);
+  if(jobs.some(j=>j[0]==='reading')) readingState='loading';
+  if(jobs.length) $app.innerHTML='<p class="notice loading">Loading…</p>';
+  Promise.all(jobs.map(([f,url])=>fetch(url, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status+' '+url); return r.text(); })
+    .then(t=>[f,parseCSV(t)], e=>{ console.warn('Not loaded: '+url, e); return [f,null]; })))
+  .then(res=>{
+    const T={}; res.forEach(([f,rows])=>{ T[f]=rows; });
+    if('reading' in T) readingState = T.reading ? 'ok' : 'failed';
+    if(dir && !T.words){ $app.innerHTML=`<p class="notice">The games could not be loaded. They load when the site is online. <a href="${esc(CFG.back||'../index.html')}">Back</a></p>`; return; }
+    const S=buildSubject(T); window.AEA_SUBJECT=S;
+    main(S);
+  });
+}
+
+function main(S){
 const byId = Object.fromEntries(S.words.map(w=>[w.id,w]));
 const alikeOf = {}; (S.alike||[]).forEach((g,i)=>g.forEach(id=>{ (alikeOf[id]=alikeOf[id]||new Set()).add(i); }));
 const areAlike = (a,b) => { const A=alikeOf[a], B=alikeOf[b]; if(!A||!B) return false; for(const x of A) if(B.has(x)) return true; return false; };
@@ -34,10 +158,7 @@ const areAlike = (a,b) => { const A=alikeOf[a], B=alikeOf[b]; if(!A||!B) return 
 // (a rating that starts at B1 on the English side and A2 on the Chinese side, or at their overall level
 // once they have one). Every word they meet moves through stages: new → learning → familiar → known,
 // and can only move up again after a wait (10 minutes, 1 day, 3 days), so "known" means remembered over days.
-// Games then deal work close to the student's level first, plus words that are due for review.
-const LEVEL_CODES = ['', 'A1', 'A2', 'B1', 'B2', 'C1'];
-const LEVEL_NAMES = {A1:'Foundation', A2:'Foundation+', B1:'Intermediate', B2:'Intermediate+', C1:'Advanced'};   // names students see (codes stay hidden)
-const LEVEL_ZH = {A1:'基础', A2:'基础+', B1:'中级', B2:'中级+', C1:'高级'};   // beside the names on the Chinese side
+// Games then deal work at the chosen level (the student's own, unless they choose another), words due for review first.
 // POINTS for one right answer, by kind of task and level: [Foundation, Foundation+, Intermediate, Intermediate+, Advanced].
 // Change the numbers here; the "How to earn points" table on My progress is built from this.
 // A reading passage's points are shared between its questions (two questions at Intermediate: 8 + 8).
@@ -54,18 +175,15 @@ const POINT_KIND = {match:'word', syn:'word', meaning:'word', zh:'word', zhmatch
 const POINT_KINDS = [['word','Word games: Match the meaning, Synonym groups, Word or meaning, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it'], ['grammar','Fill the gap, True or false'], ['build','Build the sentence, Spot the error, In your own words'],
   ['short','Read it, Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
-const levelNum = code => { if(code==null || code==='') return null; if(typeof code==='number') return code;
-  const m=String(code).trim().toUpperCase().match(/^([ABC])([12])(\+)?/); if(!m) return null;
-  return ({A:0,B:2,C:4})[m[1]] + (+m[2]) + (m[3]?0.5:0); };
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
-const setLevel = {}; S.sets.forEach(s=>{ setLevel[s.id]=levelNum(s.level); });
 // For the big serif headings: the serif font's + is tiny, so it is set in the body font
 const nameHtml = n => esc(n).replace(/\+$/, '<span class="plus">+</span>');
 const wordOf = it => !it ? null : (byId[it.id]===it ? it : (it.wid && byId[it.wid]) || null);
+// An item's level: its own, or (with none) the level of the word it practises
 const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(own!=null) return own;
   const w=wordOf(it); if(w && w!==it){ const wl=levelNum(w.level); if(wl!=null) return wl; }
-  return it.set!=null && setLevel[it.set]!=null ? setLevel[it.set] : null; };
+  return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
   const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, zhtf:.5, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
@@ -114,11 +232,10 @@ const P = (function(){
       if(window.AEA_POINTS) earned(AEA_POINTS.record(SIDE, pts, ok));
     }catch(e){ console.warn('Progress not saved:', e); }
   };
-  // Sets whose level is close to the student's (from this topic once found, otherwise their overall level)
-  const recommended = () => { const t=topic(); const r = t && t.n>=CAL ? t.r : overall(); if(r==null) return [];
-    return S.sets.filter(s=>{ const l=setLevel[s.id]; return l!=null && l>=r-0.75 && l<=r+1; }).map(s=>s.id); };
+  // The student's rating for this topic (or their overall level, or the side's starting level), and whether it is known yet
   const rating = () => { const t=topic(); return t ? t.r : (overall() ?? (zhSide?2:3)); };
-  return {record, topic, label, recommended, overall, rating, CAL, refresh:()=>(data=load()), wordRec:id=>data.words[id], dayKey};
+  const known = () => { const t=topic(); return (t && t.n>=CAL) || overall()!=null; };
+  return {record, topic, label, known, overall, rating, CAL, refresh:()=>(data=load()), wordRec:id=>data.words[id], dayKey};
 })();
 // Order a round so that work near the student's level comes first, then words due for review;
 // words already known come last. Items with no level are simply shuffled.
@@ -140,12 +257,27 @@ function earned(change){
 function toastLevel(msg){ const t=document.createElement('div'); t.className='lvl-toast'; t.setAttribute('role','status'); t.textContent=msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(), 3800); }
 
-// First visit: the sets that suit the student's level (once it is known), otherwise the sets the data says to start with (S.start), otherwise all of them.
-const startSets = () => { const rec=P.recommended(); if(rec.length) return rec; return S.start && S.start.length ? S.start : S.sets.map(s=>s.id); };
-let chosen = store.get('sets', startSets());
-chosen = chosen.filter(id=>S.sets.some(s=>s.id===id)); if(!chosen.length) chosen=startSets();
-const inSets = x => chosen.includes(x.set);
-const pick = list => (list||[]).filter(inSets);
+// ---------- LEVEL CHOICE (one row of level buttons on a topic page) ----------
+// Every row in the CSV files has a level. A level gets its own button once it has MIN_LEVEL items on this page
+// (words, sentences, passages…); a level with fewer is played with the nearest level, so nothing is left out.
+// The games use the student's own level for this topic. A student can choose another level to push themselves;
+// that choice is saved for this topic until they press "Use my level" (or their level reaches it).
+const MIN_LEVEL = 6;
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
+const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
+const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
+let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
+if(!LEVELS.length && Object.keys(BAND_N).length) LEVELS=[+Object.keys(BAND_N).sort((a,b)=>BAND_N[b]-BAND_N[a])[0]];
+const nearestLevel = b => LEVELS.length ? LEVELS.reduce((best,x)=>Math.abs(x-b)<Math.abs(best-b)?x:best) : null;   // a tie goes to the lower level
+const playBand = x => { const b=bandOf(x); return b==null ? null : nearestLevel(b); };
+const myBand = () => nearestLevel(Math.max(1, Math.min(5, Math.floor(P.rating()))));
+let pickedBand = (()=>{ const n=levelNum(store.get('level', null)); return n==null ? null : Math.floor(n); })();
+const chosenBand = () => pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
+const chooseBand = b => { pickedBand = b; store.set('level', b==null ? null : LEVEL_CODES[b]); };
+// A choice that has become the student's own level is dropped, so from then on the page follows their level again
+const tidyChoice = () => { if(pickedBand!=null && P.known() && pickedBand===myBand()) chooseBand(null); };
+const pick = list => { const b=chosenBand(); return (list||[]).filter(x=>{ const p=playBand(x); return p==null || b==null || p===b; }); };
+const bandName = (b, zh) => { const c=LEVEL_CODES[b]; return c ? LEVEL_NAMES[c]+(zh?' '+LEVEL_ZH[c]:'') : ''; };
 
 // Phone or computer: decided automatically, and checked again if the window changes size.
 const isPhone = () => {
@@ -196,7 +328,7 @@ const GAMES = [
   {key:'build',    cat:'grammar', name:'Build the sentence',blurb:'Put the coloured pieces in order. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'error',    cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   {key:'tf',       cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
-  {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>S.passages||[], min:1, run:()=>playPassage()},
+  {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   {key:'own',      cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     cat:'reading', name:'Read it',           blurb:'Read a short text about a media product and answer a question.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   {key:'question', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
@@ -216,36 +348,28 @@ function go(hash){ if(location.hash===hash || (!hash && !location.hash)) route()
 
 // ---------- SUBJECT MENU ----------
 function menu(){
-  const n = pick(S.words).length;
+  tidyChoice(); const n = pick(S.words).length;
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Subjects'}, `
   <section class="hero">
     <p class="eyebrow">English games</p>
     <h1>${esc(CFG.name||'')}</h1>
     <p>${esc(CFG.blurb||'')}</p>
-    ${S.sets.length>1?`<div class="sets" role="group" aria-label="Topics and levels">
-      ${S.sets.map(s=>{ const tag=s.level?levelName(s.level):s.lv;
-        return `<button class="chip${P.recommended().includes(s.id)?' chip-good':''}" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}">${esc(s.name)}${tag&&tag!==s.name?` <small>${esc(tag)}</small>`:''}</button>`; }).join('')}
-    </div>`:''}
-    <p class="setnote">${n} words selected.</p>
+    ${levelsHtml()}
+    <p class="setnote">${levelNote(n)}</p>
     ${levelCard()}
   </section>
   <div class="cats">
     ${Object.entries(CATS).map(([k,c])=>{
-      const off = c.desktop && PHONE, games = gamesIn(k);
-      const none = !games.length;
+      const off = c.desktop && PHONE, games = gamesIn(k), here = games.filter(g=>g.items().length>=g.min);
+      const none = !here.length;
       return `<a class="cat cat-${k}${off||none?' off':''}" ${off||none?'aria-disabled="true"':`href="#${k}"`}>
         <span class="cat-name">${c.name}</span>
         <span class="cat-blurb">${c.blurb}</span>
-        <span class="cat-meta">${off?'Only available on desktop devices':none?'Coming soon':games.map(g=>esc(g.name)).join(' · ')}</span>
+        <span class="cat-meta">${off?'Only available on desktop devices':!games.length?'Coming soon':none?'None at this level yet':here.map(g=>esc(g.name)).join(' · ')}</span>
       </a>`;}).join('')}
   </div>
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
-  $app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
-    const s=c.dataset.set;
-    if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); } else chosen=S.sets.map(x=>x.id).filter(x=>x===s||chosen.includes(x));
-    store.set('sets',chosen); menu();
-  });
-  wirePickLevel(menu);
+  wireLevels(menu);
 }
 
 // ---------- CATEGORY: list of games ----------
@@ -258,12 +382,12 @@ function category(cat){
   }
   const note = cat==='reading' && readingState==='loading' ? '<p class="notice">Loading reading passages…</p>' : cat==='reading' && readingState==='failed' ? '<p class="notice">The reading passages could not be loaded. They load when the site is online.</p>' : '';
   frame({href:'#', label:CFG.name||'Back'}, `
-  <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}</p><h1>${c.name}</h1><p>${c.blurb}</p>${note}</section>
+  <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}${chosenBand()!=null?' · '+esc(bandName(chosenBand())):''}</p><h1>${c.name}</h1><p>${c.blurb}</p>${note}</section>
   <div class="games">${gamesIn(cat).map(g=>{
     const n=g.items().length, off=n<g.min, best=store.get('streak:'+g.key,0);
     return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
       <h3>${g.name}</h3><p>${g.blurb}</p>
-      <span class="best">${off?'None in your selected topics':best?'Best streak: '+best:'Not played yet'}</span></a>`;}).join('')}
+      <span class="best">${off?(n?'Not enough at this level yet':'None at this level yet'):best?'Best streak: '+best:'Not played yet'}</span></a>`;}).join('')}
   </div>`);
 }
 
@@ -403,7 +527,7 @@ function playMeaning(){
 // ---------- GRAMMAR: Fill the gap ----------
 function playGap(){
   const game=GAMES.find(g=>g.key==='gap'), items=game.items(), deck=Deck(items), st=Stats('gap');
-  shell(game, `${items.length} sentences in your selected topics. Correct answers move on by themselves.`); st.draw();
+  shell(game, `${items.length} sentences at this level. Correct answers move on by themselves.`); st.draw();
   const step=()=>{
     const g=deck.next(), parts=g.s.split('___');
     mcCard({instr:g.pt?`Choose the word that fits · ${esc(g.pt)}`:'Choose the word that fits the gap',
@@ -411,7 +535,7 @@ function playGap(){
       options:[g.ans,...g.wrong], answer:g.ans,
       onResult:(ok,card,fb)=>{
         const s=card.querySelector('.slot'); s.textContent=g.ans; s.classList.add(ok?'ok':'no');
-        if(ok) fbOk(fb,`<span>${g.why}</span>`); else fbNo(fb,g.ans,`<span>${g.why}</span>${wordNote(byId[g.wid])}`);
+        if(ok) fbOk(fb,`<span>${rich(g.why)}</span>`); else fbNo(fb,g.ans,`<span>${rich(g.why)}</span>${wordNote(byId[g.wid])}`);
         settle(ok,card,st,deck,g,step);
       }});
   };
@@ -447,7 +571,7 @@ function playBuild(){
       card.querySelectorAll('.piece').forEach(p=>p.disabled=true);
       const model=b.tiles.map(t=>`<span class="piece inline r-${t[1]}">${esc(t[0])}</span>`).join(' ');
       const fb=card.querySelector('.fb');
-      if(ok) fbOk(fb, b.why?`<span>${esc(b.why)}</span>`:''); else fbNo(fb,'',`<div class="model">${model}</div>${b.why?`<span>${esc(b.why)}</span>`:''}`);
+      if(ok) fbOk(fb, b.why?`<span>${rich(b.why)}</span>`:''); else fbNo(fb,'',`<div class="model">${model}</div>${b.why?`<span>${rich(b.why)}</span>`:''}`);
       settle(ok,card,st,deck,b,step);
     };
     check.onclick=doCheck;
@@ -473,7 +597,7 @@ function parseErrors(text){
 function playErr(){
   const game=GAMES.find(g=>g.key==='error'), items=game.items(), deck=Deck(items), st=Stats('error');
   let showCount=store.get('errCount',true);
-  shell(game, `${items.length} paragraphs in your selected topics. Tap each wrong word, then press Check.`); st.draw();
+  shell(game, `${items.length} paragraphs at this level. Tap each wrong word, then press Check.`); st.draw();
   const lab=document.createElement('label'); lab.className='toggle';
   lab.innerHTML=`<input type="checkbox" id="errCount" ${showCount?'checked':''}> Tell me how many`;
   document.querySelector('.bar').appendChild(lab);
@@ -521,7 +645,7 @@ function playTF(){
     let done=false;
     const choose=v=>{ if(done) return; done=true; const ok=(v===1)===!!t.t;
       card.querySelectorAll('.tfb').forEach(b=>{ b.disabled=true; if(+b.dataset.v===(t.t?1:0)) b.classList.add('ok'); else b.classList.add('dim'); });
-      const fb=card.querySelector('.fb'); ok?fbOk(fb,`<span>${esc(t.why||'')}</span>`):fbNo(fb,t.t?'True':'False',`<span>${esc(t.why||'')}</span>`);
+      const fb=card.querySelector('.fb'); ok?fbOk(fb,`<span>${rich(t.why)}</span>`):fbNo(fb,t.t?'True':'False',`<span>${rich(t.why)}</span>`);
       settle(ok,card,st,deck,t,step); };
     card.querySelectorAll('.tfb').forEach(b=>b.onclick=()=>choose(+b.dataset.v));
     keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='t'||e.key==='ArrowRight'||k==='1') choose(1); if(k==='f'||e.key==='ArrowLeft'||k==='2') choose(0); };
@@ -532,7 +656,7 @@ function playTF(){
 // ---------- READING: In your own words ----------
 function playOwn(){
   const game=GAMES.find(g=>g.key==='own'), items=game.items(), deck=Deck(items), st=Stats('own');
-  shell(game, `${items.length} extracts in your selected topics. Get every word right and the next extract appears by itself.`); st.draw();
+  shell(game, `${items.length} extracts at this level. Get every word right and the next extract appears by itself.`); st.draw();
   const step=()=>{
     const o=deck.next(), words=[]; let k=0;
     const textHtml=esc(o.t).replace(/\[([^\]]+)\]/g,(m,w)=>{ words.push(w); return `<u data-k="${k++}">${w}</u>`; });
@@ -568,7 +692,7 @@ function playRead(){
     const text=esc(r.text).replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g,(m,w,id)=>`<button class="kw" data-id="${esc(id)}">${w}</button>`);
     mcCard({instr:esc(r.title||'Read it'), promptHtml:`<div class="readtext">${text}</div><p class="peek" id="peek">Tap a highlighted word to see what it means.</p><p class="question">${esc(r.q)}</p>`,
       options:r.opts, answer:r.opts[r.a], optClass:'long',
-      onResult:(ok,card,fb)=>{ ok?fbOk(fb):fbNo(fb,r.opts[r.a]); settle(ok,card,st,deck,r,step); }});
+      onResult:(ok,card,fb)=>{ const why=r.why?`<span>${rich(r.why)}</span>`:''; ok?fbOk(fb,why):fbNo(fb,r.opts[r.a],why); settle(ok,card,st,deck,r,step); }});
     const card=document.querySelector('#feed .card');
     card.querySelectorAll('.kw').forEach(b=>b.onclick=()=>{ const w=byId[b.dataset.id]; card.querySelector('#peek').innerHTML=w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:''; });
   };
@@ -581,63 +705,16 @@ function playQuestion(){
   shell(game,'Choose the answer that does what the question asks.'); st.draw();
   const step=()=>{
     const q=deck.next();
-    const qHtml=esc(q.q).replace(new RegExp('^('+q.cmd.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'),'<mark>$1</mark>');
+    const qHtml=q.cmd ? esc(q.q).replace(new RegExp('^('+esc(q.cmd).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'),'<mark>$1</mark>') : esc(q.q);
     mcCard({instr:'Exam question', promptHtml:`<div class="exam-q">${qHtml}</div>`, options:q.opts, answer:q.opts[q.a], optClass:'long',
-      onResult:(ok,card,fb)=>{ ok?fbOk(fb,`<span>${esc(q.why||'')}</span>`):fbNo(fb,'',`<span>${esc(q.why||'')}</span>`); settle(ok,card,st,deck,q,step); }});
+      onResult:(ok,card,fb)=>{ ok?fbOk(fb,`<span>${rich(q.why)}</span>`):fbNo(fb,'',`<span>${rich(q.why)}</span>`); settle(ok,card,st,deck,q,step); }});
   };
   step();
 }
 
-// ---------- READING: Read and answer (questions come from a spreadsheet file, see en/reading/README.md) ----------
-// The page says where the file is (data-reading) and which topic it is (data-topic).
-// One CSV file per subject and topic (see en/reading/README.md).
+// ---------- READING: Read and answer (passages come from a CSV file: reading.csv in the topic's folder, see content/README.md) ----------
 // Columns: id, level, title, passage, question, correct, wrong1, wrong2, wrong3, explanation, source
-// More questions on the same passage (optional): question2, correct2, wrong1_2, wrong2_2, wrong3_2, explanation2,
-// then question3, correct3, wrong1_3 … and so on. They are asked in order, with the passage still on screen.
-// Level codes are shown to students by name: see LEVEL_NAMES near the top of this file.
-function parseCSV(text){
-  const rows=[]; let row=[], cell='', q=false;
-  text=text.replace(/^﻿/,'');
-  for(let i=0;i<text.length;i++){ const c=text[i];
-    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
-    else if(c==='"') q=true;
-    else if(c===','){ row.push(cell); cell=''; }
-    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
-    else cell+=c; }
-  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
-  const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
-  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
-}
-// Question 1 uses the plain column names; question n uses questionN, correctN, wrong1_N, wrong2_N, wrong3_N, explanationN.
-function questionsOf(r){ const qs=[];
-  for(let n=1;n<=9;n++){ const a=n===1?'':String(n), b=n===1?'':'_'+n;
-    const q={q:r['question'+a], opts:[r['correct'+a], r['wrong1'+b], r['wrong2'+b], r['wrong3'+b]], why:r['explanation'+a]||''};
-    if(!q.q) continue;
-    if(q.opts.every(Boolean)) qs.push(q); else console.warn('Reading row '+r.id+': question '+n+' skipped (an answer is missing)'); }
-  return qs; }
-// Note taking (data-format="notes"): id, level, title, passage, topic, select_count, option1…option6,
-// correct_options (e.g. [1,3,5]), explanation, source. Students choose the select_count options that are good notes on the topic.
-function notesRow(r){
-  const opts=[]; for(let n=1;n<=9;n++) if(r['option'+n]) opts.push(r['option'+n]);
-  let right=[]; try{ right=JSON.parse(r.correct_options||'[]'); }catch(e){ right=String(r.correct_options||'').split(/[^0-9]+/).filter(Boolean).map(Number); }
-  right=[...new Set(right.map(Number))].filter(n=>n>=1 && n<=opts.length);
-  const count=parseInt(r.select_count,10)||right.length;
-  if(!r.id || !r.passage || opts.length<3 || !right.length || right.length!==count){ console.warn('Notes row '+(r.id||'?')+' skipped: check the options, select_count and correct_options'); return null; }
-  return {id:r.id, level:r.level, title:r.title, text:r.passage, topic:r.topic||'', count, opts, right:right.map(n=>n-1), why:r.explanation||''};
-}
-let readingState = CFG.reading ? 'loading' : 'none';
-if(CFG.reading){
-  fetch(CFG.reading, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(t=>{
-    if(CFG.format==='notes'){ S.passages=parseCSV(t).map(notesRow).filter(Boolean); readingState='ok'; return; }
-    const need=['id','title','passage','question','correct','wrong1','wrong2','wrong3'];
-    S.passages = parseCSV(t).filter(r=>{
-      if(CFG.topic && r.topic && r.topic!==CFG.topic) return false;   // one file per topic; a topic column is optional
-      const miss=need.filter(k=>!r[k]); if(miss.length){ console.warn('Reading row '+(r.id||'?')+' skipped: missing '+miss.join(', ')); return false; }
-      return true; }).map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, qs:questionsOf(r)}));
-    readingState='ok';
-  }).catch(e=>{ console.warn('Reading file not loaded:', e); readingState='failed'; })
-    .finally(()=>{ const h=location.hash.replace(/^#/,''); if(CFG.only==='passage'||!h||CATS[h]) route(); });
-}
+// More questions on the same passage (optional): question2, correct2, wrong1_2, wrong2_2, wrong3_2, explanation2, and so on.
 function playPassage(){
   const game=GAMES.find(g=>g.key==='passage'), st=Stats('passage');
   shell(game, ''); const items=readingTop(); if(!items) return; const deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
@@ -649,7 +726,7 @@ function playPassage(){
     const ask=i=>{ const q=r.qs[i], next=i+1<r.qs.length ? ()=>ask(i+1) : step, item={id:r.id+(i?'#'+(i+1):''), level:r.level, qs:r.qs.length};
       mcCard({instr:`${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}${many?` · Question ${i+1} of ${r.qs.length}`:''}`,
         promptHtml:`<div class="passage">${paras}</div><p class="question">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:'long', cardClass:'reading',
-        onResult:(ok,card,fb)=>{ ok?fbOk(fb, q.why?`<span>${esc(q.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(q.opts[0])}</b></span>${q.why?`<span>${esc(q.why)}</span>`:''}`);
+        onResult:(ok,card,fb)=>{ ok?fbOk(fb, q.why?`<span>${rich(q.why)}</span>`:''):fbNo(fb,'', `<span>The answer is: <b>${esc(q.opts[0])}</b></span>${q.why?`<span>${rich(q.why)}</span>`:''}`);
           if(ok){ got++; st.hit(item); } else { st.miss(item); if(!missed){ missed=true; deck.retry(r); } }
           const last=i+1>=r.qs.length;
           if(last) passageDone(fb, got, r.qs.length);
@@ -674,7 +751,7 @@ function readingChoice(){
 function readingTop(){
   document.body.classList.add('reading-wide');
   const all=S.passages||[];
-  if(CFG.only!=='passage') return all;
+  if(CFG.only!=='passage') return pick(all);   // a topic page: the level chosen on its menu
   const choice=readingChoice(), change=`<a href="${esc(CFG.back||'../index.html')}">Change level</a>`;
   const items = choice===ALL_LEVELS ? all : all.filter(x=>x.level && levelName(x.level)===choice);
   document.getElementById('feed').insertAdjacentHTML('beforebegin', `<p class="hint read-lv">${choice===ALL_LEVELS?'All levels':`Level: ${esc(choice)}`}. ${change}</p>`);
@@ -708,7 +785,7 @@ function playNotes(){
       const got=[...picked].filter(i=>r.right.includes(i)).length, ok=got===r.count;
       btns.forEach(b=>{ const i=+b.dataset.i, good=r.right.includes(i); b.disabled=true;
         b.classList.add(picked.has(i) ? (good?'ok':'no') : (good?'missed':'dim')); });
-      const why=r.why ? `<div class="why">${r.why.split(/\n\s*\n/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}</div>` : '';
+      const why=r.why ? `<div class="why">${r.why.split(/\n\s*\n/).map(p=>`<p>${rich(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}</div>` : '';
       const fb=card.querySelector('.fb'); ok ? fbOk(fb, why) : fbNo(fb, '', `<span>You found ${got} of ${r.count}. The notes with a dashed green border were missed.</span>${why}`);
       const item={id:r.id, level:r.level};
       if(ok){ st.hit(item); } else { st.miss(item); deck.retry(r); }
@@ -721,7 +798,7 @@ function playNotes(){
 
 // ---------- CHINESE SIDE (data-only="zh"): vocabulary games with Chinese support ----------
 // Chinese appears next to the key word only. Answer options are always English.
-const ZH = Object.fromEntries((window.SUBJECT_ZH||[]).map(x=>[x.id,x.zh]));
+const ZH = Object.fromEntries(S.words.filter(w=>w.zh).map(w=>[w.id,w.zh]));   // the zh column of words.csv
 const zhWords = () => pick(S.words).filter(w=>ZH[w.id]);
 const ZH_GAMES = [
   {key:'zh',       type:'practice',  name:'中文 → English',     zh:'看中文，选英文', blurb:'See the Chinese meaning and choose the English word.', run:()=>playZh()},
@@ -733,32 +810,21 @@ const ZH_GAMES = [
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', run:()=>playSurvival()}
 ];
-const countIn = id => S.words.filter(w=>w.set===id && ZH[w.id]).length;
-function chipHtml(s){
-  // Keep the Chinese part of a group name together on its own span so it never splits mid-phrase
-  const m=s.name.match(/^(.*?)\s+([第\u4e00-\u9fff].*)$/);
-  const label=m?`<span class="chip-en">${esc(m[1])}</span> <span class="chip-zh" lang="zh-CN">${esc(m[2])}</span>`:esc(s.name);
-  return `<button class="chip${P.recommended().includes(s.id)?' chip-good':''}" data-set="${s.id}" aria-pressed="${chosen.includes(s.id)}"><span class="chip-label">${label}</span> <span class="chip-n">${countIn(s.id)}</span></button>`; }
-function chipsHtml(){
-  if(S.sets.length<2) return '';
-  const heads=[...new Set(S.sets.map(s=>s.head||''))];
-  const all=`<button class="chip chip-all" data-all="1">${chosen.length===S.sets.length?'Clear 清除':'Select all 全选'}</button>`;
-  if(heads.length===1 && !heads[0]) return `<div class="sets" role="group" aria-label="Word groups">${S.sets.map(chipHtml).join('')}${S.sets.length>4?all:''}</div>`;
-  return heads.map(h=>`<p class="set-head">${esc(h)}</p><div class="sets" role="group" aria-label="${esc(h)}">${S.sets.filter(s=>(s.head||'')===h).map(chipHtml).join('')}</div>`).join('')+`<div class="sets">${all}</div>`;
-}
+// A Chinese-version game needs at least 4 words at the chosen level (and Odd one out needs word groups)
+const zhReady = g => zhWords().length>=4 && !(g.needs && !g.needs());
 function zhMenu(){
-  const n=zhWords().length;
-  const card=g=>{ const off=g.needs && !g.needs();
+  tidyChoice(); const n=zhWords().length;
+  const card=g=>{ const off=!zhReady(g);
     const best=store.get((g.type==='challenge'?'best:':'streak:')+g.key,0);
     return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}><h3>${g.name}</h3><p lang="zh-CN" class="zh-sub">${g.zh}</p><p>${g.blurb}</p>
-      <span class="best">${off?'Choose at least two groups 请至少选择两个组':best?(g.type==='challenge'?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`; };
+      <span class="best">${off?(n<4?'Not enough words at this level yet 本级别单词不够':'Not enough word groups at this level yet 本级别词组不够'):best?(g.type==='challenge'?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`; };
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version'}, `
   <section class="hero">
     <p class="eyebrow">Chinese version 中文版</p>
     <h1>${esc(CFG.name||'')}</h1>
     ${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}
-    ${chipsHtml()}
-    <p class="setnote">${n} words selected. 已选 ${n} 个单词。</p>
+    ${levelsHtml()}
+    <p class="setnote">${levelNote(n)}</p>
     ${levelCard()}
   </section>
   <p class="instr group-label">Practice 练习</p>
@@ -766,12 +832,7 @@ function zhMenu(){
   <p class="instr group-label">Challenge 挑战</p>
   <div class="games">${ZH_GAMES.filter(g=>g.type==='challenge').map(card).join('')}</div>
   <div class="wl-link"><p>See every word with its Chinese meaning. 查看所有单词和中文释义。</p><a class="btn alt" href="#words">Word list 词汇表</a></div>`);
-  $app.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{
-    if(c.dataset.all){ chosen = chosen.length===S.sets.length ? [S.sets[0].id] : S.sets.map(x=>x.id); }
-    else { const s=c.dataset.set;
-      if(chosen.includes(s)){ if(chosen.length>1) chosen=chosen.filter(x=>x!==s); } else chosen=S.sets.map(x=>x.id).filter(x=>x===s||chosen.includes(x)); }
-    const y=window.scrollY; store.set('sets',chosen); zhMenu(); window.scrollTo(0,y); });
-  wirePickLevel(zhMenu);
+  wireLevels(zhMenu);
 }
 function zhShell(title, note){
   frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
@@ -857,20 +918,27 @@ function playZhTF(){
   step();
 }
 
-// ----- Chinese side: Odd one out (by word group, or by part of speech with data-odd="pos") -----
-// Odd one out groups by part of speech (data-odd="pos"), by topic when the data has topics, otherwise by set.
-const oddKey = w => CFG.odd==='pos' ? (w.pos||'') : (S.topics && w.topic ? w.topic : w.set);
-const oddLabel = k => CFG.odd==='pos' ? k : (((S.topics||[]).find(t=>t.id===k)||S.sets.find(s=>s.id===k)||{}).name||k);
-function oddGroups(){ const g={}; zhWords().forEach(w=>{ const k=oddKey(w); if(k) (g[k]=g[k]||[]).push(w); }); return g; }
-function oddReady(){ const g=oddGroups(), keys=Object.keys(g); return keys.length>=2 && keys.some(k=>g[k].length>=3); }
+// ----- Chinese side: Odd one out (by the group column of words.csv, or by part of speech with data-odd="pos") -----
+// Three words come from one group at the chosen level. The odd one comes from another group at that level,
+// or from another group in the topic when the level has only one group.
+const oddKey = w => CFG.odd==='pos' ? (w.pos||'') : (w.group||'');
+const oddLabel = k => k;
+const groupsOf = ws => { const g={}; ws.forEach(w=>{ const k=oddKey(w); if(k) (g[k]=g[k]||[]).push(w); }); return g; };
+const distinctWords = ws => ws.filter((w,i,a)=>a.findIndex(x=>x.w===w.w)===i);
+function oddGroups(){ return groupsOf(zhWords()); }
+function oddReady(){ const g=oddGroups(), big=Object.keys(g).filter(k=>distinctWords(g[k]).length>=3);
+  return big.length>0 && (Object.keys(g).length>=2 || Object.keys(groupsOf(S.words.filter(w=>ZH[w.id]))).length>=2); }
 function playOdd(){
   const st=Stats('zhodd');
   zhShell('Odd one out','Three words belong together. Tap the odd one out. 三个词属于同一类，找出不同的那个。'); st.draw();
   const step=()=>{
-    const g=oddGroups(), big=Object.keys(g).filter(k=>g[k].length>=3);
-    const main=big[Math.floor(Math.random()*big.length)], others=Object.keys(g).filter(k=>k!==main);
-    const three=shuffle(g[main]).filter((w,i,a)=>a.findIndex(x=>x.w===w.w)===i).slice(0,3);
-    const oddK=others[Math.floor(Math.random()*others.length)], odd=shuffle(g[oddK])[0];
+    const g=oddGroups(), big=Object.keys(g).filter(k=>distinctWords(g[k]).length>=3);
+    const main=big[Math.floor(Math.random()*big.length)];
+    const three=distinctWords(shuffle(g[main])).slice(0,3);
+    let pool=g, others=Object.keys(g).filter(k=>k!==main);
+    if(!others.length){ pool=groupsOf(S.words.filter(w=>ZH[w.id])); others=Object.keys(pool).filter(k=>k!==main); }
+    const oddK=others[Math.floor(Math.random()*others.length)], cands=shuffle(pool[oddK]);
+    const odd=cands.find(w=>!three.some(t=>t.w===w.w)) || cands[0];
     const words=shuffle([...three,odd]);
     const card=showCard(`<p class="instr">Which word is the odd one out? 哪个词不同类？</p>
       <div class="opts">${words.map((w,i)=>`<button class="opt" data-id="${esc(w.id)}"><kbd>${i+1}</kbd><span>${esc(w.w)}</span></button>`).join('')}</div><div class="fb"></div>`);
@@ -951,12 +1019,29 @@ function levelCard(){
   const head=`<p class="lvl-k">Your level${zh?' 你的水平':''}</p>`;
   if(n<P.CAL) return `<div class="lvl-card">${head}<p class="lvl-v">Finding your level…${zh?' 正在评估':''}</p><span class="lvl-bar"><i style="width:${n*100/P.CAL}%"></i></span>
     <p class="lvl-s">Answer ${left} more question${left===1?'':'s'} in any game below and your level will appear here.${zh?` 再答 ${left} 题即可看到你的水平。`:''}</p></div>`;
-  const L=P.label(t.r), w=t.words, rec=P.recommended(), same=rec.length===chosen.length && rec.every(x=>chosen.includes(x));
+  const L=P.label(t.r), w=t.words, mine=myBand(), off=LEVELS.length>1 && chosenBand()!==mine;
   return `<div class="lvl-card">${head}<p class="lvl-v"><b>${nameHtml(L.name)}</b>${zh&&L.zh?`<span lang="zh-CN">${L.zh}</span>`:''}</p><span class="lvl-bar"><i style="width:${L.pct}%"></i></span>
     <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''}${t.pts?` · ${Number(t.pts).toLocaleString('en-GB')} points here`:''} · <a href="${ROOT}progress/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">All my progress${zh?' 我的进步':''}</a></p>
-    ${rec.length && !same && S.sets.length>1 ? `<p class="lvl-s"><span class="dot-good"></span> marks the sets that suit your level.${zh?' 绿点表示适合你水平的词组。':''} <button class="btn alt small" id="pickLevel">Choose these for me${zh?' 帮我选择':''}</button></p>`:''}</div>`;
+    ${off ? `<p class="lvl-s"><span class="dot-good"></span> marks your level.${zh?' 绿点表示你的水平。':''} <button class="btn alt small" id="pickLevel">Use my level${zh?' 用我的水平':''}</button></p>`:''}</div>`;
 }
-function wirePickLevel(again){ const b=document.getElementById('pickLevel'); if(b) b.onclick=()=>{ const rec=P.recommended(); if(rec.length){ chosen=rec; store.set('sets',chosen); again(); } }; }
+// The row of level buttons on a topic menu (none when the page has only one level)
+function levelsHtml(){
+  if(LEVELS.length<2) return '';
+  const zh=SIDE==='zh', mine=P.known()?myBand():null, cb=chosenBand(), list=zh?S.words.filter(w=>ZH[w.id]):S.words;
+  return `<p class="set-head levels-head">Level${zh?' 级别':''}</p><div class="sets levels" role="group" aria-label="Level${zh?' 级别':''}">${LEVELS.map(b=>{ const c=LEVEL_CODES[b], n=list.filter(w=>playBand(w)===b).length;
+    return `<button class="chip${b===mine?' chip-good':''}" data-band="${b}" aria-pressed="${b===cb}"><span class="chip-label"><span class="chip-en">${esc(LEVEL_NAMES[c])}</span>${zh?` <span class="chip-zh" lang="zh-CN">${LEVEL_ZH[c]}</span>`:''}</span>${n?` <span class="chip-n" title="${n} words">${n}</span>`:''}</button>`; }).join('')}</div>`;
+}
+// The line under the level buttons: how many words there are at this level
+function levelNote(n){
+  const zh=SIDE==='zh', b=chosenBand(), words=`${n} word${n===1?'':'s'}`;
+  if(LEVELS.length>1) return zh ? `${words} at this level. 本级别共 ${n} 个单词。` : `${words} at this level.`;
+  if(b!=null) return zh ? `${words} · ${esc(bandName(b))} ${LEVEL_ZH[LEVEL_CODES[b]]}. 共 ${n} 个单词。` : `${words} · ${esc(bandName(b))} level.`;
+  return zh ? `${words}. 共 ${n} 个单词。` : `${words}.`;
+}
+function wireLevels(again){
+  $app.querySelectorAll('.levels .chip').forEach(c=>c.onclick=()=>{ const y=window.scrollY; chooseBand(+c.dataset.band); again(); window.scrollTo(0,y); });
+  const b=document.getElementById('pickLevel'); if(b) b.onclick=()=>{ chooseBand(null); again(); };
+}
 function progressPage(){
   const d=P.refresh(), list=Object.values(d.topics).sort((a,b)=>(b.last||0)-(a.last||0));
   const answers=list.reduce((s,t)=>s+t.n,0), right=list.reduce((s,t)=>s+t.right,0);
@@ -1018,9 +1103,12 @@ function wordList(){
     <input class="search" id="q" type="search" placeholder="Search words or meanings" aria-label="Search the word list"><div id="list"></div>`);
   let q='';
   const draw=()=>{ const t=q.trim().toLowerCase(); let html='';
-    for(const s of S.sets){ const ws=S.words.filter(w=>w.set===s.id && (!t||w.w.toLowerCase().includes(t)||w.def.toLowerCase().includes(t)||(w.syn||[]).some(x=>x.includes(t))||(ZH[w.id]||'').includes(t)));
+    // One heading per level, the chosen level first
+    const order=[chosenBand(), ...LEVELS.filter(b=>b!==chosenBand()), null].filter((b,i,a)=>a.indexOf(b)===i);
+    for(const lb of order){ const ws=S.words.filter(w=>(playBand(w)??null)===lb && (!t||w.w.toLowerCase().includes(t)||w.def.toLowerCase().includes(t)||(w.syn||[]).some(x=>x.includes(t))||(ZH[w.id]||'').includes(t)));
       if(!ws.length) continue;
-      html+=`<p class="instr" style="margin:22px 0 8px">${esc(s.name)}</p><div class="wl">${ws.map(w=>`<div class="wl-row">
+      const head=lb==null ? (LEVELS.length?'Other words':'') : bandName(lb, CFG.only==='zh')+(lb===chosenBand()&&LEVELS.length>1?(CFG.only==='zh'?' · chosen level 当前级别':' · chosen level'):'');
+      html+=`${head?`<p class="instr" style="margin:22px 0 8px">${esc(head)}</p>`:''}<div class="wl">${ws.map(w=>`<div class="wl-row">
         <div class="w">${esc(w.w)}${w.pos?`<small>${esc(w.pos)}</small>`:''}${ZH[w.id]&&CFG.only==='zh'?`<span class="zh" lang="zh-CN">${esc(ZH[w.id])}</span>`:''}</div>
         <div class="d">${esc(w.def)}${w.ex?`<br><i>${esc(w.ex)}</i>`:''}${w.syn&&w.syn.length?`<div class="syns">≈ ${esc(w.syn.join(' · '))}</div>`:''}</div></div>`).join('')}</div>`; }
     document.getElementById('list').innerHTML=html||'<p>No words match that search.</p>'; };
@@ -1045,7 +1133,7 @@ function route(){
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
     const g=ZH_GAMES.find(x=>'play-'+x.key===h);
-    return g && !(g.needs && !g.needs()) ? g.run() : zhMenu();
+    return g && zhReady(g) ? g.run() : zhMenu();
   }
   if(!h) return menu();
   if(h==='words') return wordList();
@@ -1062,4 +1150,7 @@ window.addEventListener('resize', ()=>{ const p=isPhone(); if(p!==PHONE && CFG.o
   // re-draw menus for the new screen size, but never wipe a game in progress on a computer
   const h=location.hash.replace(/^#/,''); if((!h||CATS[h]) && !(document.getElementById('feed') && !PHONE)) route(); } });
 route();
+}   // end of main()
+
+boot();
 })();

@@ -2,8 +2,9 @@
 """Check the reading CSV files before pushing.
 
 Run from the repository folder:
-    python3 tools/check_reading.py                  # every CSV in en/reading (except the template)
+    python3 tools/check_reading.py                  # every reading file in content/ (not the templates)
     python3 tools/check_reading.py path/to/file.csv # one file
+tools/check_content.py checks every content file, these included.
 Reports: wrong headings, empty cells, unknown levels, repeated ids, passage lengths, and how often the
 right answer is the longest of the four (a giveaway if it happens much more than 1 in 4).
 
@@ -18,7 +19,7 @@ import csv, sys, os, glob, re
 
 HEAD = ['id', 'level', 'title', 'passage', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation', 'source']
 NEED = ['id', 'title', 'passage', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3']
-LEVEL = re.compile(r'^(A1|A2|B1|B2|C1)\+?$')
+LEVEL = re.compile(r'^((A1|A2|B1|B2|C1)\+?|FOUNDATION\+?|INTERMEDIATE\+?|ADVANCED)$')
 EXTRA = re.compile(r'^(?:question|correct|explanation)([2-9])$|^wrong[123]_([2-9])$')
 
 def columns(n):
@@ -39,7 +40,7 @@ def check_notes(path, head, rows):
         gaps = [c for c in ['id', 'title', 'passage', 'topic', 'select_count', 'correct_options'] if not (r.get(c) or '').strip()]
         if gaps: problems.append(f'{rid}: empty {", ".join(gaps)}')
         lv = (r.get('level') or '').strip().upper()
-        if lv and not LEVEL.match(lv): problems.append(f'{rid}: level "{lv}" should be A1, A2, B1, B2 or C1')
+        if lv and not LEVEL.match(lv): problems.append(f'{rid}: level "{lv}" should be A1, A2, B1, B2 or C1 (or Foundation, Foundation+, Intermediate, Intermediate+, Advanced)')
         if rid in seen: problems.append(f'{rid}: id used more than once')
         seen.add(rid)
         if (r.get('passage') or '').strip(): lengths.append(words(r['passage']))
@@ -65,17 +66,14 @@ def check_notes(path, head, rows):
 def words(text):
     return len(re.findall(r"[A-Za-z0-9'’-]+", text))
 
-files = sys.argv[1:] or sorted(f for f in glob.glob(os.path.join('en', 'reading', '**', '*.csv'), recursive=True)
-                               if not f.endswith('reading-template.csv'))
-total_problems = 0
-for path in files:
+def check_file(path):
+    """Check one reading file; print what it finds; return the number of problems."""
     with open(path, encoding='utf-8-sig', newline='') as f:
         reader = csv.DictReader(f)
         head = [h.strip() for h in (reader.fieldnames or [])]
         rows = list(reader)
     if 'option1' in head:
-        total_problems += check_notes(path, head, rows)
-        continue
+        return check_notes(path, head, rows)
     problems, seen, longest, shortest, asked, lengths = [], set(), 0, 0, 0, []
     base = [h for h in head if not EXTRA.match(h)]
     extra = sorted({int(m.group(1) or m.group(2)) for m in map(EXTRA.match, head) if m})
@@ -90,7 +88,7 @@ for path in files:
         gaps = [c for c in NEED if not (r.get(c) or '').strip()]
         if gaps: problems.append(f'{rid}: empty {", ".join(gaps)}')
         lv = (r.get('level') or '').strip().upper()
-        if lv and not LEVEL.match(lv): problems.append(f'{rid}: level "{lv}" should be A1, A2, B1, B2 or C1')
+        if lv and not LEVEL.match(lv): problems.append(f'{rid}: level "{lv}" should be A1, A2, B1, B2 or C1 (or Foundation, Foundation+, Intermediate, Intermediate+, Advanced)')
         if rid in seen: problems.append(f'{rid}: id used more than once')
         seen.add(rid)
         if (r.get('passage') or '').strip(): lengths.append(words(r['passage']))
@@ -116,6 +114,19 @@ for path in files:
         print(f'  Right answer is the longest in {longest} ({round(100*longest/asked)}%), '
               f'shortest in {shortest} ({round(100*shortest/asked)}%). Aim for about 25% each.')
     for p in problems: print('  - ' + p)
-    total_problems += len(problems)
-print('No problems found.' if not total_problems else f'{total_problems} problem(s) found.')
-sys.exit(1 if total_problems else 0)
+    return len(problems)
+
+def reading_files(root='content'):
+    """Every CSV in content/ that holds reading passages (it has a passage column), not the templates."""
+    out = []
+    for f in sorted(glob.glob(os.path.join(root, '**', '*.csv'), recursive=True)):
+        if os.sep + 'templates' + os.sep in f: continue
+        with open(f, encoding='utf-8-sig', newline='') as fh:
+            head = [h.strip().lower() for h in (next(csv.reader(fh), None) or [])]
+        if 'passage' in head: out.append(f)
+    return out
+
+if __name__ == '__main__':
+    total_problems = sum(check_file(path) for path in (sys.argv[1:] or reading_files()))
+    print('No problems found.' if not total_problems else f'{total_problems} problem(s) found.')
+    sys.exit(1 if total_problems else 0)
