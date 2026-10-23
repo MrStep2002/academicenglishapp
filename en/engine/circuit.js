@@ -84,11 +84,13 @@ function indexPage(card){
   const side=card.dataset.side, zh=side==='zh', status=card.querySelector('[data-circuit-status]');
   const drawCard=()=>{ const subs=Object.keys(studying(side)).length, run=active(side), t=today(side), st=streak(side);
     let html;
-    if(run) html=`<b>${T(zh, `In progress: station ${Math.min(run.i+1, run.n)} of ${run.n}. Continue`, '进行中，继续')} →</b>`;
+    if(run) html=`<b>${T(zh, `In progress: station ${Math.min(run.i+1, run.n)} of ${run.n}`, `进行中：第 ${Math.min(run.i+1, run.n)} 站`)}</b>`;
     else if(!subs) html=T(zh, 'Switch on the subjects you study below to start.', '先在下面打开你在学的科目。');
     else if(t && t.runs) html=`<b class="cc-done">✓ ${T(zh, 'Done today', '今天已完成')}</b> · ${T(zh, `${t.right} right`, `答对 ${t.right}`)}${st>1?` · ${T(zh, `${st} days in a row`, `连续 ${st} 天`)}`:''}`;
     else html=`${T(zh, `${subs} subject${subs===1?'':'s'} switched on · not done today`, `已选 ${subs} 个科目 · 今天还没完成`)}${st?` · ${T(zh, `${st} day${st===1?'':'s'} in a row`, `连续 ${st} 天`)}`:''}`;
-    if(status) status.innerHTML=html; };
+    if(status) status.innerHTML=html;
+    const goBtn=card.querySelector('[data-circuit-go]');
+    if(goBtn) goBtn.innerHTML=(run ? T(zh, 'Continue', '继续') : t && t.runs ? T(zh, 'Play again', '再玩一次') : T(zh, 'Start', '开始'))+' →'; };
   document.querySelectorAll('.topic-sw').forEach(el=>{
     const a=el.querySelector('.topic-link'), b=el.querySelector('button.sw'); if(!a||!b) return;
     const path=pathOf(a.getAttribute('href')), name=(el.querySelector('.topic-name')||a).textContent.replace(/\s+/g,' ').trim();
