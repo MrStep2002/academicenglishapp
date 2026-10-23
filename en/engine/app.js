@@ -170,9 +170,9 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word',
+const POINT_KIND = {learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
-const POINT_KINDS = [['word','Word games: Match the meaning, Synonym groups, Word or meaning, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
+const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it'], ['grammar','Fill the gap, True or false'], ['build','Build the sentence, Spot the error, In your own words'],
   ['short','Read it, Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
@@ -202,14 +202,15 @@ const P = (function(){
     return (data.topics[KEY]={name:CFG.name||KEY, side:zhSide?'zh':'en', href:location.pathname, r:o ?? (zhSide?2:3), h:o==null?0:3, n:0, right:0}); };
   const label = r => { const b=Math.max(1, Math.min(5, Math.floor(r))), code=LEVEL_CODES[b];
     return {code, name:LEVEL_NAMES[code]||'', zh:LEVEL_ZH[code]||'', pct: b>=5 ? 100 : Math.round((r-b)*100), next: LEVEL_NAMES[LEVEL_CODES[b+1]]||''}; };
-  const record = (game, item, ok) => {
+  // opts.noRate (Learn the words): the answer moves the word on and earns points, but does not count towards the student's level
+  const record = (game, item, ok, opts) => {
     try{
       data=load();
-      const t=ensure(), before=t.n, now=Date.now(), d=itemLevel(item);
-      t.n++; if(ok) t.right++; t.last=now; t.href=location.pathname; if(CFG.name) t.name=CFG.name;
+      const rate=!(opts && opts.noRate), t=ensure(), before=t.n, now=Date.now(), d=itemLevel(item);
+      if(rate){ t.n++; if(ok) t.right++; } t.last=now; t.href=location.pathname; if(CFG.name) t.name=CFG.name;
       const dk=dayKey(new Date()); data.days[dk]=(data.days[dk]||0)+1;
       let msg='';
-      if(d!=null){
+      if(d!=null && rate){
         const g=GUESS[game] ?? .25, p=g+(1-g)/(1+Math.exp(-2.5*(t.r-d)));
         const k=Math.max(.12, .8/Math.sqrt(before+(t.h||0)+1)), oldBand=Math.floor(t.r);
         t.r=Math.max(1, Math.min(5.99, t.r + k*((ok?1:0)-p)));
@@ -819,14 +820,19 @@ function zhMenu(){
     return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}><h3>${g.name}</h3><p lang="zh-CN" class="zh-sub">${g.zh}</p><p>${g.blurb}</p>
       <span class="best">${off?(n<4?'Not enough words at this level yet 本级别单词不够':'Not enough word groups at this level yet 本级别词组不够'):best?(g.type==='challenge'?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`; };
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version'}, `
-  <section class="hero">
-    <p class="eyebrow">Chinese version 中文版</p>
-    <h1>${esc(CFG.name||'')}</h1>
-    ${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}
-    ${levelsHtml()}
-    <p class="setnote">${levelNote(n)}</p>
-    ${levelCard()}
+  <section class="hero hero-zh">
+    <div class="hero-main">
+      <p class="eyebrow">Chinese version 中文版</p>
+      <h1>${esc(CFG.name||'')}</h1>
+      ${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}
+    </div>
+    <aside class="hero-side" aria-label="Level 级别">
+      ${levelsHtml()}
+      <p class="setnote">${levelNote(n)}</p>
+      ${levelCard(true)}
+    </aside>
   </section>
+  ${learnHtml()}
   <p class="instr group-label">Practice 练习</p>
   <div class="games">${ZH_GAMES.filter(g=>g.type==='practice').map(card).join('')}</div>
   <p class="instr group-label">Challenge 挑战</p>
@@ -837,6 +843,99 @@ function zhMenu(){
 function zhShell(title, note){
   frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
+}
+// ----- Chinese side: LEARN THE WORDS (where every topic starts) -----
+// New words are shown a few at a time: a card with the Chinese and the English, then a quick multiple choice
+// (see the Chinese, choose the English word). Once answered, a word is in the student's word bank and the games
+// keep bringing it back. Words are taught in the order of words.csv, at the chosen level. A few older words that
+// are due come along too; when every word at the level has been met, the button gives a review round instead.
+// These answers move words on and earn points, but don't count towards the student's level (they have just seen the answers).
+const LEARN_N = 4, LEARN_EXTRA = 2, LEARN_REVIEW = 8;
+const stageOf = w => { const r=P.wordRec(w.id); return !r ? 'new' : r.s>=4 ? 'known' : r.s>=2 ? 'fam' : 'learn'; };
+const STAGES = [['known','Known','掌握'], ['fam','Familiar','熟悉'], ['learn','Learning','学习中'], ['new','New','新']];
+function learnHtml(){
+  P.refresh();
+  const p=zhWords(), c={known:0, fam:0, learn:0, new:0}; p.forEach(w=>c[stageOf(w)]++);
+  const total=p.length, met=total-c.new, ready=total>=4, next=Math.min(LEARN_N, c.new), b=chosenBand();
+  const pct=k=>total ? (100*c[k]/total).toFixed(2) : 0;
+  const status = !ready ? 'Not enough words at this level yet. 本级别单词不够。'
+    : c.new ? (met ? `${met} of ${total} words learned. Next: ${next} new word${next===1?'':'s'}. 已学 ${met} / ${total} 个单词，下一组：${next} 个新单词。`
+                   : `${total} words to learn. Start with the first ${next}. 共 ${total} 个单词，先学 ${next} 个。`)
+    : `You have met all ${total} words at this level. Review them to make them Known. 本级别的单词你都学过了，复习一下吧。`;
+  return `<section class="learn" aria-labelledby="learnH">
+    <p class="learn-k">Start here 从这里开始${b!=null && LEVELS.length>1 ? ' · '+esc(bandName(b, true)) : ''}</p>
+    <h2 id="learnH">Learn the words <span lang="zh-CN">学习单词</span></h2>
+    <p>Meet ${LEARN_N} new words at a time, then match each Chinese word to its English word. They go into your word bank, and the games below help you remember them.</p>
+    <p lang="zh-CN">每次认识 ${LEARN_N} 个新单词，然后把中文和英文配对。学过的单词会进入你的词库，下面的游戏帮你记住它们。</p>
+    ${total ? `<div class="wb"><p class="wb-k">Your words at this level 本级别的单词</p>
+      <span class="wb-bar" role="img" aria-label="${c.known} known, ${c.fam} familiar, ${c.learn} learning, ${c.new} new">${STAGES.filter(x=>x[0]!=='new').map(([k])=>`<i class="wb-${k}" style="width:${pct(k)}%"></i>`).join('')}</span>
+      <p class="wb-legend">${STAGES.map(([k,en,zh])=>`<span><i class="sw wb-${k}"></i>${en} <span lang="zh-CN">${zh}</span> <b>${c[k]}</b></span>`).join('')}</p></div>` : ''}
+    <div class="learn-row">${ready ? `<a class="btn big" href="#learn">${c.new ? 'Learn the words 学习单词' : 'Review the words 复习单词'} →</a>`
+      : `<span class="btn big off" aria-disabled="true">Learn the words 学习单词</span>`}<p class="learn-status">${status}</p></div>
+  </section>`;
+}
+function playLearn(){
+  P.refresh();
+  const p=zhWords(), pool=p.length>=8 ? p : S.words.filter(w=>ZH[w.id]), now=Date.now();
+  const batch=p.filter(w=>stageOf(w)==='new').slice(0, LEARN_N), review=!batch.length;
+  const isDue=w=>{ const r=P.wordRec(w.id); return r && r.s<4 && (r.due||0)<=now; };
+  const quiz = review ? rankForLevel(p).slice(0, LEARN_REVIEW)
+    : shuffle([...batch, ...rankForLevel(p.filter(w=>!batch.includes(w) && stageOf(w)!=='new')).filter(isDue).slice(0, LEARN_EXTRA)]);
+  let total=batch.length+quiz.length, done=0, answered=0, right=0;
+  const firstTry=new Set(), again=new Set(), queue=quiz.slice();
+  zhShell(review ? 'Review the words 复习单词' : 'Learn the words 学习单词',
+    review ? 'See the Chinese, choose the English word. 看中文，选出英文单词。'
+           : 'Meet the new words, then match each Chinese word to its English word. 先认识新单词，再把中文和英文配对。');
+  const sp=document.querySelector('.bar .spacer'); if(sp) sp.outerHTML='<span class="progress learn-progress" aria-hidden="true"><i id="learnFill"></i></span>';
+  const statsEl=document.getElementById('stats');
+  const tick=()=>{ const f=document.getElementById('learnFill'); if(f) f.style.width=(100*done/total)+'%'; };
+  // Wrong answers: the other new words first (the ones to tell apart), then other words at the level
+  const wrongFor=w=>{ const a=review ? [] : distractors(w, batch, Math.min(2, batch.length-1)).slice(0, Math.max(0, Math.min(2, batch.length-1)));
+    const rest=pool.filter(x=>!a.some(o=>o.id===x.id || o.w===x.w || areAlike(o.id,x.id)));
+    return [...a, ...distractors(w, rest, 3-a.length)].slice(0,3); };
+  const intro=i=>{
+    if(i>=batch.length) return quizStep();
+    const w=batch[i];
+    statsEl.innerHTML=`<span>New word <b>${i+1}</b>/${batch.length}</span>`;
+    const card=showCard(`<p class="instr">New word 新单词 · ${i+1} of ${batch.length}</p>
+      <div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>
+      <p class="prompt-word learn-en">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p>
+      <p class="learn-def">${esc(w.def)}</p>${w.ex?`<p class="learn-ex"><i>${esc(w.ex)}</i></p>`:''}`);
+    card.classList.add('learn-card');
+    manualNext(card, ()=>{ done++; tick(); intro(i+1); }, i+1<batch.length ? 'Next word 下一个 →' : 'Now match them 开始配对 →');
+  };
+  const quizStep=()=>{
+    const w=queue.shift(); if(!w) return finish();
+    statsEl.innerHTML=`<span>Right <b>${right}</b>/${answered}</span>`;
+    const old=!review && !batch.includes(w);
+    mcCard({instr:'Choose the English word 选出英文单词', promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>${old?'<p class="learn-tag">Review 复习</p>':''}`,
+      options:[w.w, ...wrongFor(w).map(x=>x.w)], answer:w.w,
+      onResult:(ok,card,fb)=>{ P.record('learn', w, ok, {noRate:true}); answered++;
+        const note=`<span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span>`;
+        statsEl.innerHTML=`<span>Right <b>${right+(ok?1:0)}</b>/${answered}</span>`;
+        if(ok){ right++; if(!again.has(w)) firstTry.add(w); done++; tick(); fbOk(fb, note); autoNext(card, quizStep); }
+        else { fbNo(fb, w.w, note);
+          // A missed word comes back once, two cards later (or at the end)
+          if(!again.has(w)){ again.add(w); queue.splice(Math.min(queue.length, 2), 0, w); total++; } else { done++; }
+          tick(); manualNext(card, quizStep); }
+      }});
+  };
+  const finish=()=>{
+    done=total; tick(); P.refresh();
+    const left=zhWords().filter(x=>stageOf(x)==='new').length, more=Math.min(LEARN_N, left), shown=review ? quiz : batch;
+    statsEl.innerHTML=`<span>Right <b>${right}</b>/${answered}</span>`;
+    const card=showCard(`<div class="end"><p class="instr">${review?'Review the words':'Learn the words'} · finished 完成</p>
+      <h2>${review ? 'Review done! 复习完成！' : `${batch.length} new word${batch.length===1?'':'s'} in your word bank`}</h2>
+      ${review ? '' : `<p class="end-zh" lang="zh-CN">${batch.length} 个新单词已加入你的词库。</p>`}
+      <p class="end-sub">${firstTry.size} of ${quiz.length} right first time. 第一次就答对 ${firstTry.size} / ${quiz.length}。</p>
+      <ul class="review">${shown.map(w=>`<li><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span> – ${esc(w.def)}</li>`).join('')}</ul>
+      ${!left && !review ? '<p class="end-sub">You have met every word at this level! 本级别的单词你都学过了！</p>' : ''}
+      <div class="end-actions"><button class="btn" id="more">${left ? `Learn ${more} more 再学 ${more} 个` : 'Review the words 复习单词'}</button>
+        <a class="btn alt" href="#play-zhmatch">Play Match the meaning 单词配释义</a><a class="btn alt" href="#">All games 所有游戏</a></div></div>`);
+    card.querySelector('#more').onclick=playLearn;
+    keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); playLearn(); } };
+  };
+  if(review){ total=quiz.length; quizStep(); } else intro(0);
 }
 function playZh(){
   const p=zhWords(), deck=Deck(p), st=Stats('zh');
@@ -1014,12 +1113,17 @@ function playSurvival(){
 }
 
 // ---------- LEVEL CARD (topic menus) and MY PROGRESS page ----------
-function levelCard(){
+function levelCard(compact){
   const zh=CFG.only==='zh', t=P.topic(), n=t?t.n:0, left=P.CAL-n;
   const head=`<p class="lvl-k">Your level${zh?' 你的水平':''}</p>`;
   if(n<P.CAL) return `<div class="lvl-card">${head}<p class="lvl-v">Finding your level…${zh?' 正在评估':''}</p><span class="lvl-bar"><i style="width:${n*100/P.CAL}%"></i></span>
     <p class="lvl-s">Answer ${left} more question${left===1?'':'s'} in any game below and your level will appear here.${zh?` 再答 ${left} 题即可看到你的水平。`:''}</p></div>`;
   const L=P.label(t.r), w=t.words, mine=myBand(), off=LEVELS.length>1 && chosenBand()!==mine;
+  // Compact (the level panel on a Chinese topic page): the word counts are shown in Learn the words instead
+  if(compact) return `<div class="lvl-card">${head}<p class="lvl-v"><b>${nameHtml(L.name)}</b>${zh&&L.zh?`<span lang="zh-CN">${L.zh}</span>`:''}</p><span class="lvl-bar"><i style="width:${L.pct}%"></i></span>
+    <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${t.pts?` · ${Number(t.pts).toLocaleString('en-GB')} points`:''}</p>
+    ${off ? `<p class="lvl-s"><span class="dot-good"></span> marks your level.${zh?' 绿点表示你的水平。':''}</p><p class="lvl-s"><button class="btn alt small" id="pickLevel">Use my level${zh?' 用我的水平':''}</button></p>`:''}
+    <p class="lvl-s"><a href="${ROOT}progress/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">All my progress${zh?' 我的进步':''}</a></p></div>`;
   return `<div class="lvl-card">${head}<p class="lvl-v"><b>${nameHtml(L.name)}</b>${zh&&L.zh?`<span lang="zh-CN">${L.zh}</span>`:''}</p><span class="lvl-bar"><i style="width:${L.pct}%"></i></span>
     <p class="lvl-s">${L.next?`${L.pct}% of the way to ${esc(L.next)}`:'Top level'}${w&&w.total?` · words: ${w.known} known, ${w.fam} familiar, ${w.learn} learning (of ${w.total})`:''}${t.pts?` · ${Number(t.pts).toLocaleString('en-GB')} points here`:''} · <a href="${ROOT}progress/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">All my progress${zh?' 我的进步':''}</a></p>
     ${off ? `<p class="lvl-s"><span class="dot-good"></span> marks your level.${zh?' 绿点表示你的水平。':''} <button class="btn alt small" id="pickLevel">Use my level${zh?' 用我的水平':''}</button></p>`:''}</div>`;
@@ -1132,6 +1236,7 @@ function route(){
   }
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
+    if(h==='learn') return zhWords().length>=4 ? playLearn() : zhMenu();
     const g=ZH_GAMES.find(x=>'play-'+x.key===h);
     return g && zhReady(g) ? g.run() : zhMenu();
   }
