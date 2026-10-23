@@ -14,7 +14,6 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `representation/` | English → Representation, and Chinese version → Representation |
 | `web-design/` | English → Web design, and Chinese version → Web design |
 | `keywords/` | Chinese version → Academic English Keywords |
-| `academic-toolkit/` | Not on a page yet: the Golden 100 academic words (analyse, infer, imply…) |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `templates/` | The headings and one example row for every kind of file |
 
