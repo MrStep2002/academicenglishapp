@@ -50,6 +50,10 @@ Chinese-side topic pages use the same engine with `data-only="zh"`: eight games 
 
 To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add a link to `en/index.html`. Details in `content/README.md`.
 
+Topic page layout: `data-layout="compact"` on a topic page (Descriptive language only, for now) gives the newer menu: the title, the
+level buttons, "Your level: …" with the level bar as the divider, then every game listed in three columns (Vocabulary, Grammar,
+Reading), with no category page in between. Pages without it keep the older layout. To switch a page over, add the attribute.
+
 After changing `en/engine/app.js` or `styles.css`, change the `?v=` number after them in every topic page (one search-and-replace), so students' browsers fetch the new version instead of an old saved copy.
 
 Never change a word `id` once students have played: streaks and progress are stored against it.
@@ -57,7 +61,8 @@ Never change a word `id` once students have played: streaks and progress are sto
 ## Points
 
 Every right answer earns points; English and Chinese version points are kept apart. The bar at the top of each page shows
-**S** (this session), **D** (today), **W** (this week, from Monday) and **T** (total); My progress also shows this month,
+**Day**, **Week** (from Monday, with the weekly target) and **Total**, then the Log in button or the student's name (which opens My progress,
+where they can also log out). The Choose your language page shows the side the student played last. My progress also shows this session, this month,
 a 14-day chart and a "How to earn points" table.
 
 - Points depend on the task and the level of the item (`POINTS` near the top of `en/engine/app.js`):

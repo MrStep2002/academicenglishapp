@@ -2,3 +2,5 @@
 *.db
 *.db-wal
 *.db-shm
+# Python cache from running the checker
+__pycache__/

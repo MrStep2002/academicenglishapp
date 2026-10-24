@@ -1,96 +1,96 @@
-﻿id,level,word,pos,meaning,example,synonyms,zh,group,similar,accept,note
-ess:describe,A2,describe,verb,Say what something is like or what happens. No reasons needed.,Describe the pattern shown in the graph.,,描述,Command words 指令词,outline,,
-ess:explain,A2,explain,verb,"Say why or how something happens, giving reasons.",Explain why the population of the city grew.,clarify; make clear; account for,解释（说明原因）,Command words 指令词,,,
-ess:compare,A2,compare,verb,Show how two or more things are similar and different.,Compare the two poems.,liken; measure against; weigh one against another,比较,Command words 指令词,contrast,,
-ess:identify,A2,identify,verb,"Name or point out something, without explaining it.",Identify two causes of the war.,,指出；识别,Command words 指令词,list; outline,,
-ess:list,A2,list,verb,"Write several things one after another, with no detail.",List three features of a newspaper front page.,,列出,Command words 指令词,identify; outline,,
-ess:suggest-in-a-question,A2,suggest (in a question),verb,"Put forward a possible idea, reason or answer.",Suggest one reason why sales fell.,,提出（可能的想法）,Command words 指令词,suggest (that),,
-ess:outline,B1,outline,verb,"Give the main points only, without detail.",Outline the main stages of the water cycle.,,概述,Command words 指令词,describe; list; identify,,
-ess:analyse,B1,analyse,verb,Look closely at the parts of something and how they work together.,Analyse how the writer creates tension.,,分析,Command words 指令词,,,British spelling: analyse. American spelling: analyze.
-ess:evaluate,B1,evaluate,verb,"Judge how good, important or successful something is, using evidence.",Evaluate the success of the policy.,,评价；评估,Command words 指令词,to what extent; discuss,,"Evaluate = give a judgement, not only a description."
-ess:justify,B1,justify,verb,Give reasons and evidence to support an opinion or decision.,Justify your choice of method.,,说明……的理由,Command words 指令词,,,
-ess:discuss,B1,discuss,verb,"Consider different sides of an issue, then reach a view.",Discuss the advantages and disadvantages of online learning.,,讨论（多方面论述）,Command words 指令词,evaluate; to what extent,,"We say 'discuss a topic', not 'discuss about a topic'."
-ess:to-what-extent,B1,to what extent,phrase,Asks how far something is true. You must give a clear judgement.,To what extent was the treaty fair?,,在多大程度上,Command words 指令词,evaluate; discuss,,"Answer with a judgement: 'to a large extent', 'only partly'."
-ess:because,A2,because,linker,Gives the reason for something.,The ice melted because the temperature rose.,,因为,Linking words 连接词,,,
-ess:so,A2,so,linker,Shows the result of something.,"The temperature rose, so the ice melted.",,所以,Linking words 连接词,therefore; as a result,,
-ess:but,A2,but,linker,Joins two ideas that are different or opposite.,"The method is cheap, but it is slow.",,但是,Linking words 连接词,however; although; whereas; on the other hand,,
-ess:however,A2,however,linker,Introduces an idea that contrasts with the one before.,"The method is cheap. However, it is slow.",,然而,Linking words 连接词,but; although; whereas; on the other hand,,
-ess:also,A2,also,linker,Adds another point.,Exercise improves health. It also reduces stress.,,也；而且,Linking words 连接词,in addition,in addition,
-ess:for-example,A2,for example,linker,Introduces an example to support a point.,"Some energy sources are renewable, for example wind and solar power.",,例如,Linking words 连接词,,,
-ess:therefore,B1,therefore,linker,Introduces a logical result or conclusion.,"The sample was small. Therefore, the results may not be reliable.",,因此,Linking words 连接词,so; as a result,,
-ess:although,B1,although,linker,Shows a contrast inside one sentence.,"Although the method is cheap, it is slow.",,虽然；尽管,Linking words 连接词,but; however; whereas; on the other hand,,"Never 'Although…, but…'. Use one or the other."
-ess:whereas,B1,whereas,linker,Compares two different facts or situations.,"Cats are independent, whereas dogs need more attention.",,而（表示对比）,Linking words 连接词,but; however; although; on the other hand,,
-ess:as-a-result,B1,as a result,linker,Introduces a result or consequence.,"Factories closed. As a result, many people lost their jobs.",,结果；因此,Linking words 连接词,so; therefore,,
-ess:in-addition,B1,in addition,linker,"Adds another point, often an important one.","Solar power is clean. In addition, it is becoming cheaper.",,此外,Linking words 连接词,also,also,
-ess:on-the-other-hand,B1,on the other hand,linker,Introduces the opposite side of an argument.,"Cars are convenient. On the other hand, they cause pollution.",,另一方面,Linking words 连接词,but; however; although; whereas,,
-ess:show,A2,show,verb,Make a fact or idea clear.,The graph shows a rise in temperature.,,表明；显示,Academic verbs 学术动词,indicate; suggest (that),indicate; suggest (that),
-ess:cause,A2,cause,verb,"Make something happen, often something bad.",Smoking can cause serious illness.,,导致；引起,Academic verbs 学术动词,lead to,lead to,
-ess:affect,A2,affect,verb,Change or influence something.,Lack of sleep affects concentration.,,影响,Academic verbs 学术动词,effect,,
-ess:increase,A2,increase,verb,Become or make bigger in number or amount.,The number of tourists increased in 2019.,,增加,Academic verbs 学术动词,,,
-ess:decrease,A2,decrease,verb,Become or make smaller in number or amount.,Crime decreased after the new law.,,减少,Academic verbs 学术动词,reduce,reduce,
-ess:change,A2,change,verb,"Become different, or make something different.",The climate is changing quickly.,,改变；变化,Academic verbs 学术动词,,,
-ess:suggest-that,B1,suggest (that),verb,"Show that something is probably true, without proving it.",The results suggest that the drug is effective.,indicate; point to; signal,表明；暗示,Academic verbs 学术动词,show; indicate; suggest (in a question); imply; implicit,show; indicate; imply,suggest that + sentence. Weaker and more careful than 'prove'.
-ess:indicate,B1,indicate,verb,Show or point to something as a sign.,The data indicate a link between diet and health.,,表明；显示,Academic verbs 学术动词,show; suggest (that),show; suggest (that),
-ess:lead-to,B1,lead to,verb,Cause something to happen as a result.,Cutting down forests can lead to flooding.,,导致,Academic verbs 学术动词,cause,cause,lead to + noun or -ing. Past: led to.
-ess:support,B1,support,verb,Give evidence that an idea is true.,This evidence supports the theory.,,支持（观点）,Academic verbs 学术动词,,,
-ess:argue,B1,argue,verb,Give reasons to show that an idea is right.,The writer argues that school should start later.,,论证；主张,Academic verbs 学术动词,,,"In academic English, 'argue' does not mean 'fight'."
-ess:reduce,B1,reduce,verb,Make something smaller or less.,Recycling reduces waste.,,降低；减少,Academic verbs 学术动词,decrease,decrease,
-ess:reason,A2,reason,noun,Why something happens or is done.,One reason for the change was cost.,,原因；理由,Key nouns 关键名词,,,
-ess:result,A2,result,noun,What happens because of something else.,The result of the experiment was surprising.,,结果,Key nouns 关键名词,effect,,
-ess:example,A2,example,noun,One thing that shows what a group or idea is like.,Wind power is an example of renewable energy.,,例子,Key nouns 关键名词,,,
-ess:problem,A2,problem,noun,A situation that causes difficulty.,Plastic waste is a serious problem.,,问题；难题,Key nouns 关键名词,,,
-ess:idea,A2,idea,noun,"A thought, opinion or plan.",The main idea of the article is clear.,,想法；观点,Key nouns 关键名词,,,
-ess:fact,A2,fact,noun,Something that is known to be true.,It is a fact that water boils at 100°C.,,事实,Key nouns 关键名词,evidence,,
-ess:evidence,B1,evidence,noun,Facts or information that show something is true.,There is strong evidence that exercise improves mood.,,证据,Key nouns 关键名词,fact,,"Uncountable: 'evidence', never 'evidences' or 'an evidence'."
-ess:factor,B1,factor,noun,One of the things that causes or influences a situation.,Cost is a key factor in the decision.,,因素,Key nouns 关键名词,,,
-ess:effect,B1,effect,noun,A change that happens because of something.,Social media has a strong effect on teenagers.,,影响；效果,Key nouns 关键名词,affect; result,,have an effect on something. The verb is 'affect'.
-ess:advantage,B1,advantage,noun,Something that makes a thing better or more useful.,One advantage of trains is that they are fast.,,优点；好处,Key nouns 关键名词,strength,strength,
-ess:disadvantage,B1,disadvantage,noun,Something that makes a thing worse or less useful.,A disadvantage of solar power is its cost.,,缺点；不利条件,Key nouns 关键名词,weakness,weakness,
-ess:method,B1,method,noun,A planned way of doing something.,The method used in the study was a survey.,,方法,Key nouns 关键名词,,,
-ess:i-think,A2,I think,phrase,Introduces your own opinion.,I think the second solution is better.,,我认为,Judging and opinion 评价与观点,,,
-ess:important,A2,important,adjective,Having a big effect or value.,Water is important for all living things.,,重要的,Judging and opinion 评价与观点,significant,significant,
-ess:useful,A2,useful,adjective,Helpful for doing something.,The map is useful for planning the route.,,有用的,Judging and opinion 评价与观点,,,
-ess:true,A2,true,adjective,Correct; matching the facts.,This statement is only partly true.,,正确的；真实的,Judging and opinion 评价与观点,,,
-ess:agree,A2,agree,verb,Have the same opinion.,I agree with the writer's view.,,同意,Judging and opinion 评价与观点,,,
-ess:disagree,A2,disagree,verb,Have a different opinion.,Some scientists disagree with this theory.,,不同意,Judging and opinion 评价与观点,,,
-ess:significant,B1,significant,adjective,Large or important enough to matter.,There was a significant increase in sales.,,重要的；显著的,Judging and opinion 评价与观点,important,important,
-ess:effective,B1,effective,adjective,Working well and producing the result you want.,The vaccine is highly effective.,,有效的,Judging and opinion 评价与观点,,,
-ess:reliable,B1,reliable,adjective,Able to be trusted to be accurate.,Not every website is a reliable source.,,可靠的,Judging and opinion 评价与观点,,,
-ess:strength,B1,strength,noun,A good feature or quality.,A strength of the study is its large sample.,,优点；长处,Judging and opinion 评价与观点,advantage,advantage,
-ess:weakness,B1,weakness,noun,A bad feature or a limitation.,One weakness of the argument is the lack of evidence.,,弱点；不足,Judging and opinion 评价与观点,disadvantage,disadvantage,
-ess:convincing,B1,convincing,adjective,Making you believe that something is true.,The writer gives a convincing argument.,,有说服力的,Judging and opinion 评价与观点,,,
-ess:probably,A2,probably,adverb,"Very likely, but not certain.",The rise was probably caused by the hot weather.,,很可能,Hedging 委婉表达,may; might; likely; seem to,,
-ess:may,B1,may,modal verb,Shows something is possible but not certain.,The results may be different in other countries.,,可能,Hedging 委婉表达,might; probably; likely; seem to,,"may + base verb: 'may be', not 'may is'."
-ess:might,B1,might,modal verb,Shows a weaker possibility than 'may'.,This might explain the fall in sales.,,也许（可能性较小）,Hedging 委婉表达,may; probably; likely; seem to,,
-ess:likely,B1,likely,adjective,Probably going to happen or be true.,Prices are likely to rise next year.,,可能的,Hedging 委婉表达,may; might; probably; seem to,,be likely to + verb.
-ess:tend-to,B1,tend to,verb,Usually do or be something.,Older people tend to read more newspapers.,,往往；倾向于,Hedging 委婉表达,,,
-ess:seem-to,B1,seem to,verb,"Appear to be true, from what we can see.",The policy seems to be working.,,似乎,Hedging 委婉表达,may; might; probably; likely,,
-ess:infer,B1+,infer,verb,Reach a conclusion using evidence and reasoning.,We can infer from his trembling hands that he is afraid.,deduce; work out; conclude,推断；推论,Analysing texts 分析文本,,,
-ess:imply,B1+,imply,verb,Communicate something without stating it directly.,Her refusal to answer implies that she has something to hide.,hint at; indicate indirectly; get at,暗示；言下之意是,Analysing texts 分析文本,suggest (that); implicit,suggest (that),
-ess:convey,B1+,convey,verb,Communicate an idea or feeling.,The short sentences convey a sense of urgency.,communicate; express; get across,传达；表达,Analysing texts 分析文本,,,
-ess:portray,B1+,portray,verb,Present someone or something in a particular way.,The writer portrays the father as caring but strict.,depict; represent; present,描绘；刻画,Analysing texts 分析文本,,,
-ess:emphasise,B1+,emphasise,verb,Give particular importance or attention to something.,The repetition emphasises her determination.,stress; highlight; underline,强调,Analysing texts 分析文本,,,
-ess:contrast,B1+,contrast,verb,Draw attention to differences.,The writer contrasts the noisy street with the silent house.,differentiate; distinguish; set apart,对比；形成对照,Command words 指令词,compare,,
-ess:perspective,B1+,perspective,noun,A particular way of seeing or understanding something.,The story presents the conflict from a child's perspective.,viewpoint; angle; standpoint,视角；观点,Key nouns 关键名词,,,
-ess:tone,B1+,tone,noun,The attitude expressed through language.,The phrase “another brilliant idea” creates a sarcastic tone.,voice; mood; register,语气；基调,Key nouns 关键名词,attitude,,
-ess:attitude,B1+,attitude,noun,A person's feelings or opinions about something.,Her dismissive reply reveals a negative attitude towards the plan.,outlook; stance; feelings,态度,Key nouns 关键名词,tone,,
-ess:relevant,B1+,relevant,adjective,Directly connected to the question or subject.,Choose a quotation that is relevant to your argument.,related; pertinent; to the point,相关的；切题的,Judging and opinion 评价与观点,,,
-ess:explicit,B1+,explicit,adjective,Stated clearly and directly.,The notice gives an explicit warning about the danger.,direct; plainly stated; spelled out,明确的；直截了当的,Judging and opinion 评价与观点,,,
-ess:implicit,B1+,implicit,adjective,Suggested without being stated directly.,There is an implicit threat in his promise to “remember this”.,unspoken; implied; hinted,含蓄的；暗含的,Judging and opinion 评价与观点,imply; suggest (that),,
-ess:analysis,B1,analysis,noun,"A close, detailed study of how something creates meaning.",Her analysis of the poster focuses on colour and lighting.,,分析（名词）,Key nouns 关键名词,,,
-ess:answer,B1,answer,noun / verb,What you say or write in reply to a question.,Use evidence from the image in your answer.,,回答；答案,Key nouns 关键名词,,,
-ess:detail,B1,detail,noun,A small part or fact that you notice.,One small detail is the ring on her finger.,,细节,Key nouns 关键名词,,,
-ess:meaning,B1,meaning,noun,What something expresses or tells the audience.,The colour red adds meaning to the image.,,意义；含义,Key nouns 关键名词,,,
-ess:purpose,B1,purpose,noun,The reason a media text was made; what it wants to do.,The purpose of the advert is to sell the perfume.,,目的,Key nouns 关键名词,,,
-ess:response,B1,response,noun,How someone reacts to a media text.,The audience's response may be sympathy.,,反应；回应,Key nouns 关键名词,,,
-ess:choice,B1,choice,noun,A decision the producer makes about how to create the text.,The choice of a city setting suggests a modern lifestyle.,,选择,Key nouns 关键名词,,,
-ess:present,B1,present,verb,Show someone or something in a particular way.,The article tries to present the team as heroes.,,呈现；展示,Analysing texts 分析文本,,,
-ess:create,B1,create,verb,"Make a mood, feeling or meaning.",The music and lighting create a tense mood.,,营造；创造,Analysing texts 分析文本,,,
-ess:challenge,B1,challenge,verb,Question or go against a usual idea or stereotype.,This advert tries to challenge the stereotype that girls are weak.,,挑战；质疑,Analysing texts 分析文本,,,
-ess:reinforce,B1,reinforce,verb,Make an existing idea or stereotype stronger.,Images like this reinforce the idea that men should be strong.,,强化；加强,Analysing texts 分析文本,,,
-ess:communicate,B1,communicate,verb,Pass a message or feeling to the audience.,Her body language helps to communicate confidence.,,传达；交流,Analysing texts 分析文本,,,
-ess:appeal-to,B1,appeal to,,Attract or interest a particular audience.,,,吸引,Analysing texts 分析文本,,,
-ess:stand-out,B1,stand out,,Be more noticeable than surrounding elements.,,,突出；显眼,Analysing texts 分析文本,,,
-ess:guide,B1,guide,,Help visitors move through content or towards an action.,,,引导,Analysing texts 分析文本,,,
-ess:prioritise,B2,prioritise,,Decide what should receive the most attention.,,,优先考虑,Analysing texts 分析文本,,,
-ess:intention,B2,intention,,What the designer aims to achieve.,,,意图,Key nouns 关键名词,,,
+﻿"id","level","word","pos","meaning","example","synonyms","zh","group","similar","accept","note"
+"ess:describe","A2","describe","verb","Say what something is like or what happens. No reasons needed.","Describe the pattern shown in the graph.","","描述","Command words 指令词","outline","",""
+"ess:explain","A2","explain","verb","Say why or how something happens, giving reasons.","Explain why the population of the city grew.","clarify; make clear; account for","解释（说明原因）","Command words 指令词","","",""
+"ess:compare","A2","compare","verb","Show how two or more things are similar and different.","Compare the two poems.","liken; measure against; weigh one against another","比较","Command words 指令词","contrast","",""
+"ess:identify","A2","identify","verb","Name or point out something, without explaining it.","Identify two causes of the war.","","指出；识别","Command words 指令词","list; outline","",""
+"ess:list","A2","list","verb","Write several things one after another, with no detail.","List three features of a newspaper front page.","","列出","Command words 指令词","identify; outline","",""
+"ess:suggest-in-a-question","A2","suggest (in a question)","verb","Put forward a possible idea, reason or answer.","Suggest one reason why sales fell.","","提出（可能的想法）","Command words 指令词","suggest (that)","",""
+"ess:outline","B1","outline","verb","Give the main points only, without detail.","Outline the main stages of the water cycle.","","概述","Command words 指令词","describe; list; identify","",""
+"ess:analyse","C1","analyse","verb","Look closely at the parts of something and how they work together.","Analyse how the writer creates tension.","","分析","Command words 指令词","","","British spelling: analyse. American spelling: analyze."
+"ess:evaluate","C1","evaluate","verb","Judge how good, important or successful something is, using evidence.","Evaluate the success of the policy.","","评价；评估","Command words 指令词","to what extent; discuss","","Evaluate = give a judgement, not only a description."
+"ess:justify","C1","justify","verb","Give reasons and evidence to support an opinion or decision.","Justify your choice of method.","","说明……的理由","Command words 指令词","","",""
+"ess:discuss","C1","discuss","verb","Consider different sides of an issue, then reach a view.","Discuss the advantages and disadvantages of online learning.","","讨论（多方面论述）","Command words 指令词","evaluate; to what extent","","We say 'discuss a topic', not 'discuss about a topic'."
+"ess:to-what-extent","C1","to what extent","phrase","Asks how far something is true. You must give a clear judgement.","To what extent was the treaty fair?","","在多大程度上","Command words 指令词","evaluate; discuss","","Answer with a judgement: 'to a large extent', 'only partly'."
+"ess:because","A1","because","linker","Gives the reason for something.","The ice melted because the temperature rose.","","因为","Linking words 连接词","","",""
+"ess:so","A1","so","linker","Shows the result of something.","The temperature rose, so the ice melted.","","所以","Linking words 连接词","therefore; as a result","",""
+"ess:but","A1","but","linker","Joins two ideas that are different or opposite.","The method is cheap, but it is slow.","","但是","Linking words 连接词","however; although; whereas; on the other hand","",""
+"ess:however","A2","however","linker","Introduces an idea that contrasts with the one before.","The method is cheap. However, it is slow.","","然而","Linking words 连接词","but; although; whereas; on the other hand","",""
+"ess:also","A1","also","linker","Adds another point.","Exercise improves health. It also reduces stress.","","也；而且","Linking words 连接词","in addition","in addition",""
+"ess:for-example","A2","for example","linker","Introduces an example to support a point.","Some energy sources are renewable, for example wind and solar power.","","例如","Linking words 连接词","","",""
+"ess:therefore","B1","therefore","linker","Introduces a logical result or conclusion.","The sample was small. Therefore, the results may not be reliable.","","因此","Linking words 连接词","so; as a result","",""
+"ess:although","B1","although","linker","Shows a contrast inside one sentence.","Although the method is cheap, it is slow.","","虽然；尽管","Linking words 连接词","but; however; whereas; on the other hand","","Never 'Although…, but…'. Use one or the other."
+"ess:whereas","B2","whereas","linker","Compares two different facts or situations.","Cats are independent, whereas dogs need more attention.","","而（表示对比）","Linking words 连接词","but; however; although; on the other hand","",""
+"ess:as-a-result","B1","as a result","linker","Introduces a result or consequence.","Factories closed. As a result, many people lost their jobs.","","结果；因此","Linking words 连接词","so; therefore","",""
+"ess:in-addition","B1","in addition","linker","Adds another point, often an important one.","Solar power is clean. In addition, it is becoming cheaper.","","此外","Linking words 连接词","also","also",""
+"ess:on-the-other-hand","B2","on the other hand","linker","Introduces the opposite side of an argument.","Cars are convenient. On the other hand, they cause pollution.","","另一方面","Linking words 连接词","but; however; although; whereas","",""
+"ess:show","A1","show","verb","Make a fact or idea clear.","The graph shows a rise in temperature.","","表明；显示","Academic verbs 学术动词","indicate; suggest (that)","indicate; suggest (that)",""
+"ess:cause","A2","cause","verb","Make something happen, often something bad.","Smoking can cause serious illness.","","导致；引起","Academic verbs 学术动词","lead to","lead to",""
+"ess:affect","A2","affect","verb","Change or influence something.","Lack of sleep affects concentration.","","影响","Academic verbs 学术动词","effect","",""
+"ess:increase","A2","increase","verb","Become or make bigger in number or amount.","The number of tourists increased in 2019.","","增加","Academic verbs 学术动词","","",""
+"ess:decrease","A2","decrease","verb","Become or make smaller in number or amount.","Crime decreased after the new law.","","减少","Academic verbs 学术动词","reduce","reduce",""
+"ess:change","A1","change","verb","Become different, or make something different.","The climate is changing quickly.","","改变；变化","Academic verbs 学术动词","","",""
+"ess:suggest-that","B2","suggest (that)","verb","Show that something is probably true, without proving it.","The results suggest that the drug is effective.","indicate; point to; signal","表明；暗示","Academic verbs 学术动词","show; indicate; suggest (in a question); imply; implicit","show; indicate; imply","suggest that + sentence. Weaker and more careful than 'prove'."
+"ess:indicate","B2","indicate","verb","Show or point to something as a sign.","The data indicate a link between diet and health.","","表明；显示","Academic verbs 学术动词","show; suggest (that)","show; suggest (that)",""
+"ess:lead-to","B1","lead to","verb","Cause something to happen as a result.","Cutting down forests can lead to flooding.","","导致","Academic verbs 学术动词","cause","cause","lead to + noun or -ing. Past: led to."
+"ess:support","B1","support","verb","Give evidence that an idea is true.","This evidence supports the theory.","","支持（观点）","Academic verbs 学术动词","","",""
+"ess:argue","B1","argue","verb","Give reasons to show that an idea is right.","The writer argues that school should start later.","","论证；主张","Academic verbs 学术动词","","","In academic English, 'argue' does not mean 'fight'."
+"ess:reduce","B1","reduce","verb","Make something smaller or less.","Recycling reduces waste.","","降低；减少","Academic verbs 学术动词","decrease","decrease",""
+"ess:reason","A1","reason","noun","Why something happens or is done.","One reason for the change was cost.","","原因；理由","Key nouns 关键名词","","",""
+"ess:result","A1","result","noun","What happens because of something else.","The result of the experiment was surprising.","","结果","Key nouns 关键名词","effect","",""
+"ess:example","A1","example","noun","One thing that shows what a group or idea is like.","Wind power is an example of renewable energy.","","例子","Key nouns 关键名词","","",""
+"ess:problem","A1","problem","noun","A situation that causes difficulty.","Plastic waste is a serious problem.","","问题；难题","Key nouns 关键名词","","",""
+"ess:idea","A1","idea","noun","A thought, opinion or plan.","The main idea of the article is clear.","","想法；观点","Key nouns 关键名词","","",""
+"ess:fact","A1","fact","noun","Something that is known to be true.","It is a fact that water boils at 100°C.","","事实","Key nouns 关键名词","evidence","",""
+"ess:evidence","B1","evidence","noun","Facts or information that show something is true.","There is strong evidence that exercise improves mood.","","证据","Key nouns 关键名词","fact","","Uncountable: 'evidence', never 'evidences' or 'an evidence'."
+"ess:factor","B1","factor","noun","One of the things that causes or influences a situation.","Cost is a key factor in the decision.","","因素","Key nouns 关键名词","","",""
+"ess:effect","B1","effect","noun","A change that happens because of something.","Social media has a strong effect on teenagers.","","影响；效果","Key nouns 关键名词","affect; result","","have an effect on something. The verb is 'affect'."
+"ess:advantage","B1","advantage","noun","Something that makes a thing better or more useful.","One advantage of trains is that they are fast.","","优点；好处","Key nouns 关键名词","strength","strength",""
+"ess:disadvantage","B1","disadvantage","noun","Something that makes a thing worse or less useful.","A disadvantage of solar power is its cost.","","缺点；不利条件","Key nouns 关键名词","weakness","weakness",""
+"ess:method","B1","method","noun","A planned way of doing something.","The method used in the study was a survey.","","方法","Key nouns 关键名词","","",""
+"ess:i-think","A2","I think","phrase","Introduces your own opinion.","I think the second solution is better.","","我认为","Judging and opinion 评价与观点","","",""
+"ess:important","A1","important","adjective","Having a big effect or value.","Water is important for all living things.","","重要的","Judging and opinion 评价与观点","significant","significant",""
+"ess:useful","A2","useful","adjective","Helpful for doing something.","The map is useful for planning the route.","","有用的","Judging and opinion 评价与观点","","",""
+"ess:true","A1","true","adjective","Correct; matching the facts.","This statement is only partly true.","","正确的；真实的","Judging and opinion 评价与观点","","",""
+"ess:agree","A2","agree","verb","Have the same opinion.","I agree with the writer's view.","","同意","Judging and opinion 评价与观点","","",""
+"ess:disagree","A2","disagree","verb","Have a different opinion.","Some scientists disagree with this theory.","","不同意","Judging and opinion 评价与观点","","",""
+"ess:significant","B1","significant","adjective","Large or important enough to matter.","There was a significant increase in sales.","","重要的；显著的","Judging and opinion 评价与观点","important","important",""
+"ess:effective","B1","effective","adjective","Working well and producing the result you want.","The vaccine is highly effective.","","有效的","Judging and opinion 评价与观点","","",""
+"ess:reliable","B1","reliable","adjective","Able to be trusted to be accurate.","Not every website is a reliable source.","","可靠的","Judging and opinion 评价与观点","","",""
+"ess:strength","B1","strength","noun","A good feature or quality.","A strength of the study is its large sample.","","优点；长处","Judging and opinion 评价与观点","advantage","advantage",""
+"ess:weakness","B1","weakness","noun","A bad feature or a limitation.","One weakness of the argument is the lack of evidence.","","弱点；不足","Judging and opinion 评价与观点","disadvantage","disadvantage",""
+"ess:convincing","B2","convincing","adjective","Making you believe that something is true.","The writer gives a convincing argument.","","有说服力的","Judging and opinion 评价与观点","","",""
+"ess:probably","A2","probably","adverb","Very likely, but not certain.","The rise was probably caused by the hot weather.","","很可能","Hedging 委婉表达","may; might; likely; seem to","",""
+"ess:may","B1","may","modal verb","Shows something is possible but not certain.","The results may be different in other countries.","","可能","Hedging 委婉表达","might; probably; likely; seem to","","may + base verb: 'may be', not 'may is'."
+"ess:might","B1","might","modal verb","Shows a weaker possibility than 'may'.","This might explain the fall in sales.","","也许（可能性较小）","Hedging 委婉表达","may; probably; likely; seem to","",""
+"ess:likely","B1","likely","adjective","Probably going to happen or be true.","Prices are likely to rise next year.","","可能的","Hedging 委婉表达","may; might; probably; seem to","","be likely to + verb."
+"ess:tend-to","B2","tend to","verb","Usually do or be something.","Older people tend to read more newspapers.","","往往；倾向于","Hedging 委婉表达","","",""
+"ess:seem-to","B2","seem to","verb","Appear to be true, from what we can see.","The policy seems to be working.","","似乎","Hedging 委婉表达","may; might; probably; likely","",""
+"ess:infer","C1","infer","verb","Reach a conclusion using evidence and reasoning.","We can infer from his trembling hands that he is afraid.","deduce; work out; conclude","推断；推论","Analysing texts 分析文本","","",""
+"ess:imply","C1","imply","verb","Communicate something without stating it directly.","Her refusal to answer implies that she has something to hide.","hint at; indicate indirectly; get at","暗示；言下之意是","Analysing texts 分析文本","suggest (that); implicit","suggest (that)",""
+"ess:convey","C1","convey","verb","Communicate an idea or feeling.","The short sentences convey a sense of urgency.","communicate; express; get across","传达；表达","Analysing texts 分析文本","","",""
+"ess:portray","C1","portray","verb","Present someone or something in a particular way.","The writer portrays the father as caring but strict.","depict; represent; present","描绘；刻画","Analysing texts 分析文本","","",""
+"ess:emphasise","C1","emphasise","verb","Give particular importance or attention to something.","The repetition emphasises her determination.","stress; highlight; underline","强调","Analysing texts 分析文本","","",""
+"ess:contrast","B2","contrast","verb","Draw attention to differences.","The writer contrasts the noisy street with the silent house.","differentiate; distinguish; set apart","对比；形成对照","Command words 指令词","compare","",""
+"ess:perspective","C1","perspective","noun","A particular way of seeing or understanding something.","The story presents the conflict from a child's perspective.","viewpoint; angle; standpoint","视角；观点","Key nouns 关键名词","","",""
+"ess:tone","B2","tone","noun","The attitude expressed through language.","The phrase “another brilliant idea” creates a sarcastic tone.","voice; mood; register","语气；基调","Key nouns 关键名词","attitude","",""
+"ess:attitude","B2","attitude","noun","A person's feelings or opinions about something.","Her dismissive reply reveals a negative attitude towards the plan.","outlook; stance; feelings","态度","Key nouns 关键名词","tone","",""
+"ess:relevant","B2","relevant","adjective","Directly connected to the question or subject.","Choose a quotation that is relevant to your argument.","related; pertinent; to the point","相关的；切题的","Judging and opinion 评价与观点","","",""
+"ess:explicit","C1","explicit","adjective","Stated clearly and directly.","The notice gives an explicit warning about the danger.","direct; plainly stated; spelled out","明确的；直截了当的","Judging and opinion 评价与观点","","",""
+"ess:implicit","C1","implicit","adjective","Suggested without being stated directly.","There is an implicit threat in his promise to “remember this”.","unspoken; implied; hinted","含蓄的；暗含的","Judging and opinion 评价与观点","imply; suggest (that)","",""
+"ess:analysis","B2","analysis","noun","A close, detailed study of how something creates meaning.","Her analysis of the poster focuses on colour and lighting.","","分析（名词）","Key nouns 关键名词","","",""
+"ess:answer","A1","answer","noun / verb","What you say or write in reply to a question.","Use evidence from the image in your answer.","","回答；答案","Key nouns 关键名词","","",""
+"ess:detail","A2","detail","noun","A small part or fact that you notice.","One small detail is the ring on her finger.","","细节","Key nouns 关键名词","","",""
+"ess:meaning","A2","meaning","noun","What something expresses or tells the audience.","The colour red adds meaning to the image.","","意义；含义","Key nouns 关键名词","","",""
+"ess:purpose","B1","purpose","noun","The reason a media text was made; what it wants to do.","The purpose of the advert is to sell the perfume.","","目的","Key nouns 关键名词","","",""
+"ess:response","B2","response","noun","How someone reacts to a media text.","The audience's response may be sympathy.","","反应；回应","Key nouns 关键名词","","",""
+"ess:choice","A2","choice","noun","A decision the producer makes about how to create the text.","The choice of a city setting suggests a modern lifestyle.","","选择","Key nouns 关键名词","","",""
+"ess:present","B2","present","verb","Show someone or something in a particular way.","The article tries to present the team as heroes.","","呈现；展示","Analysing texts 分析文本","","",""
+"ess:create","B1","create","verb","Make a mood, feeling or meaning.","The music and lighting create a tense mood.","","营造；创造","Analysing texts 分析文本","","",""
+"ess:challenge","B2","challenge","verb","Question or go against a usual idea or stereotype.","This advert tries to challenge the stereotype that girls are weak.","","挑战；质疑","Analysing texts 分析文本","","",""
+"ess:reinforce","C1","reinforce","verb","Make an existing idea or stereotype stronger.","Images like this reinforce the idea that men should be strong.","","强化；加强","Analysing texts 分析文本","","",""
+"ess:communicate","B2","communicate","verb","Pass a message or feeling to the audience.","Her body language helps to communicate confidence.","","传达；交流","Analysing texts 分析文本","","",""
+"ess:appeal-to","B2","appeal to","","Attract or interest a particular audience.","","","吸引","Analysing texts 分析文本","","",""
+"ess:stand-out","B2","stand out","","Be more noticeable than surrounding elements.","","","突出；显眼","Analysing texts 分析文本","","",""
+"ess:guide","B2","guide","","Help visitors move through content or towards an action.","","","引导","Analysing texts 分析文本","","",""
+"ess:prioritise","C1","prioritise","","Decide what should receive the most attention.","","","优先考虑","Analysing texts 分析文本","","",""
+"ess:intention","B2","intention","","What the designer aims to achieve.","","","意图","Key nouns 关键名词","","",""

@@ -342,7 +342,7 @@ const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'w
 
 // ---------- page frame ----------
 function frame(back, inner){
-  clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide');
+  clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide','menu-wide');
   const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
   $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
@@ -351,7 +351,12 @@ function frame(back, inner){
 function go(hash){ if(location.hash===hash || (!hash && !location.hash)) route(); else location.hash=hash; }
 
 // ---------- SUBJECT MENU ----------
+// data-layout="compact" on a topic page (Descriptive language first, 24 Oct): no blurb, a one-line level under the level
+// buttons with the level bar as the divider, and every game listed in three columns (Vocabulary, Grammar, Reading), so
+// there is no category page in between. Without it, the page keeps the older layout below.
+const COMPACT = CFG.layout==='compact';
 function menu(){
+  if(COMPACT) return menuCompact();
   tidyChoice(); const n = pick(S.words).length;
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Subjects'}, `
   <section class="hero">
@@ -376,8 +381,49 @@ function menu(){
   wireLevels(menu);
 }
 
+function menuCompact(){
+  tidyChoice();
+  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Subjects'}, `
+  <section class="hero hero-compact">
+    <p class="eyebrow">English games</p>
+    <h1>${esc(CFG.name||'')}</h1>
+    ${levelsHtml()}
+    ${levelLine()}
+  </section>
+  <div class="cols">
+    ${Object.entries(CATS).map(([k,c])=>{
+      const games=gamesIn(k), off=c.desktop && PHONE;
+      const note = off ? 'Only available on desktop devices'
+        : k==='reading' && readingState==='failed' ? 'The reading passages could not be loaded. They load when the site is online.'
+        : !games.length ? 'Coming soon' : '';
+      return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
+        ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}</section>`; }).join('')}
+  </div>
+  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
+  document.body.classList.add('menu-wide');
+  wireLevels(menu);
+}
+// "Your level: Advanced" in small type, then the level bar, which is also the line between the levels and the games
+function levelLine(){
+  const t=P.topic(), n=t?t.n:0;
+  if(n<P.CAL){ const left=P.CAL-n;
+    return `<div class="lvl-line"><p class="lvl-k">Your level: <span class="lvl-now">finding it</span> <span class="lvl-more">(${left} more answer${left===1?'':'s'})</span></p>
+      <span class="lvl-bar lvl-divider" role="img" aria-label="Finding your level: ${n} of ${P.CAL} answers"><i style="width:${n*100/P.CAL}%"></i></span></div>`; }
+  const L=P.label(t.r), tip=L.next?`${L.pct}% of the way to ${L.next}`:'Top level';
+  return `<div class="lvl-line"><p class="lvl-k">Your level: <span class="lvl-now">${esc(L.name)}</span></p>
+    <span class="lvl-bar lvl-divider" role="img" aria-label="${esc(tip)}" title="${esc(tip)}"><i style="width:${L.pct}%"></i></span></div>`;
+}
+// One game on a menu: its name, what it is, and the student's best streak (greyed when the level has too few items)
+function gameCard(g){
+  const n=g.items().length, off=n<g.min, best=store.get('streak:'+g.key,0);
+  return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
+    <h3>${g.name}</h3><p>${g.blurb}</p>
+    <span class="best">${off?(n?'Not enough at this level yet':'None at this level yet'):best?'Best streak: '+best:'Not played yet'}</span></a>`;
+}
+
 // ---------- CATEGORY: list of games ----------
 function category(cat){
+  if(COMPACT) return menu();
   const c=CATS[cat];
   if(c.desktop && PHONE){
     frame({href:'#', label:CFG.name||'Back'}, `<section class="hero"><p class="eyebrow">${esc(CFG.name||'')}</p><h1>${c.name}</h1>
@@ -387,18 +433,13 @@ function category(cat){
   const note = cat==='reading' && readingState==='loading' ? '<p class="notice">Loading reading passages…</p>' : cat==='reading' && readingState==='failed' ? '<p class="notice">The reading passages could not be loaded. They load when the site is online.</p>' : '';
   frame({href:'#', label:CFG.name||'Back'}, `
   <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}${chosenBand()!=null?' · '+esc(bandName(chosenBand())):''}</p><h1>${c.name}</h1><p>${c.blurb}</p>${note}</section>
-  <div class="games">${gamesIn(cat).map(g=>{
-    const n=g.items().length, off=n<g.min, best=store.get('streak:'+g.key,0);
-    return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
-      <h3>${g.name}</h3><p>${g.blurb}</p>
-      <span class="best">${off?(n?'Not enough at this level yet':'None at this level yet'):best?'Best streak: '+best:'Not played yet'}</span></a>`;}).join('')}
-  </div>`);
+  <div class="games">${gamesIn(cat).map(gameCard).join('')}</div>`);
 }
 
 // ---------- game shell ----------
 function shell(game, note){
   const c=CATS[game.cat];
-  frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+  frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
 }
 function showCard(html){
@@ -1216,8 +1257,10 @@ function progressPage(){
   <p class="instr">Topics</p>
   <div class="prog-list">${list.length?list.map(row).join(''):'<p class="notice">No games played yet on this device. 这台设备上还没有游戏记录。</p>'}</div>
   ${how}
-  <p class="hint" style="margin-top:22px">Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again.</p>`);
+  <p class="hint" style="margin-top:22px">${loggedIn()?'Your progress is saved to your account, so it is the same on every device you log in on.':'Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.'}</p>`);
 }
+
+const loggedIn = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(); return !!(a && a.token); }catch(e){ return false; } };
 
 // ---------- WORD LIST ----------
 function wordList(){

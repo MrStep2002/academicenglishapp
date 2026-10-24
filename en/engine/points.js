@@ -1,11 +1,13 @@
 /* Points. English and Chinese points are kept apart ("en" and "zh").
    Saved in this browser only: localStorage "aea:points:v1" = {en:{days:{"2026-10-21":{p,r,w}}, wrong}, zh:{…}}
      p = points that day, r = right answers, w = wrong answers; wrong = wrong answers since the last point was taken off.
-   The session total (S) is in sessionStorage, so it starts again in a new tab or browser window.
+   The session total is in sessionStorage, so it starts again in a new tab or browser window (shown on My progress only).
+   The bar at the top of the pages shows Day, Week (with the weekly target) and Total.
    Rules: only right answers earn points; every 5 wrong answers take 1 point off (never below 0 for the day or session).
    How many points each game and level earns is set in en/engine/app.js (POINTS).
    The game engine calls AEA_POINTS.record(side, points, ok). Other pages just show the bar:
-     <script src="…/en/engine/points.js" data-side="en"></script>  (it goes next to the page's back link) */
+     <script src="…/en/engine/points.js" data-side="en"></script>  (it goes next to the page's back link, or top right)
+   data-side="auto" (the homepage): the side the student played most recently, English if none. */
 (function(){
   'use strict';
   var KEY = 'aea:points:v1', SKEY = 'aea:points:session', DOCK_EVERY = 5;
@@ -51,12 +53,11 @@
   }
   var fmt = function(n){ return Number(n).toLocaleString('en-GB'); };
   function barHtml(side){
-    var t = totals(side);
-    var v = function(letter, n, title){ return '<span class="pts-v" title="' + title + '"><i>' + letter + '</i><b>' + fmt(n) + '</b></span>'; };
-    return '<span class="pts-k">' + (side === 'zh' ? 'Points 积分' : 'Points') + '</span>' +
-      v('S', t.s, 'This session') + v('D', t.d, 'Today') +
-      '<span class="pts-v' + (t.w >= WEEKLY_TARGET ? ' pts-hit' : '') + '" title="This week (target ' + WEEKLY_TARGET + ')"><i>W</i><b>' + fmt(t.w) + '</b><small>/' + WEEKLY_TARGET + '</small></span>' +
-      v('T', t.t, 'Total');
+    var t = totals(side), zh = side === 'zh';
+    var v = function(label, n, title){ return '<span class="pts-v" title="' + title + '"><i>' + label + '</i><b>' + fmt(n) + '</b></span>'; };
+    return v('Day', t.d, zh ? 'Points today 今天的积分' : 'Points today') +
+      '<span class="pts-v' + (t.w >= WEEKLY_TARGET ? ' pts-hit' : '') + '" title="' + (zh ? 'Points this week 本周积分' : 'Points this week') + ' (target ' + WEEKLY_TARGET + ')"><i>Week</i><b>' + fmt(t.w) + '</b><small>/' + WEEKLY_TARGET + '</small></span>' +
+      v('Total', t.t, zh ? 'All points 总积分' : 'All points');
   }
   // Fill every points bar on the page; show +n or -1 for a moment
   function render(side, change){
@@ -84,22 +85,32 @@
       '@keyframes ptsPop{0%{opacity:0;transform:translateY(8px)}20%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-12px)}}' +
       '@media (prefers-reduced-motion:reduce){.pts-pop{animation:none}}' +
       '@media (max-width:420px){.pts{gap:9px}.pts-k{display:none}}' +
-      '.pts-line{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 16px}' +
+      '.pts-line{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 16px}.pts-line-end{justify-content:flex-end}' +
       '.navline{display:inline-flex;align-items:center;gap:12px;min-width:0}.home-mark{display:inline-flex;width:30px;flex:none;color:var(--ink);border-radius:6px}.home-mark svg{width:100%;height:auto;display:block}.home-mark:hover{opacity:.75}';
     document.head.appendChild(st);
   }
   style();
   window.AEA_POINTS = {record: record, totals: totals, lastDays: lastDays, render: render, barHtml: barHtml, DOCK_EVERY: DOCK_EVERY, WEEKLY_TARGET: WEEKLY_TARGET};
 
-  // Pages without the game engine: <script … data-side="en|zh"> puts the bar next to the back link
+  // The side the student played most recently (from the topics in their saved progress), English if none
+  function lastSide(){
+    var t = {}, best = 0, side = 'en';
+    try { t = (JSON.parse(localStorage.getItem('aea:progress:v1')) || {}).topics || {}; } catch (e) {}
+    Object.keys(t).forEach(function(k){ var x = t[k] || {}; if ((x.last || 0) > best && (x.side === 'en' || x.side === 'zh')) { best = x.last; side = x.side; } });
+    return side;
+  }
+  // Pages without the game engine: <script … data-side="en|zh|auto"> puts the bar next to the back link (top right if there is none)
   var me = document.currentScript, side = me && me.getAttribute('data-side');
   if (side) {
     var mount = function(){
+      if (side === 'auto') side = lastSide();
       var back = document.querySelector('.backlink'), bar = document.createElement('div');
       bar.className = 'pts'; bar.setAttribute('data-points-bar', side);
       var left = back && (back.closest('.navline') || back);   // the back link, with the home mouse if there is one
-      if (left) { var line = document.createElement('div'); line.className = 'pts-line'; left.parentNode.insertBefore(line, left); line.appendChild(left); line.appendChild(bar); }
-      else { var main = document.querySelector('main') || document.body; main.insertBefore(bar, main.firstChild); }
+      var line = document.createElement('div'); line.className = 'pts-line';
+      if (left) { left.parentNode.insertBefore(line, left); line.appendChild(left); }
+      else { var main = document.querySelector('main') || document.body; line.className += ' pts-line-end'; main.insertBefore(line, main.firstChild); }
+      line.appendChild(bar);
       render(side, 0);
     };
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();

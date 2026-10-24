@@ -132,9 +132,26 @@ function chip(side){
   const href = ROOT + 'login/index.html?from=' + from;
   if(!a) return `<a class="acct-chip" href="${href}">${zh ? 'Log in 登录' : 'Log in'}</a>`;
   if(!a.token) return `<a class="acct-chip warn" href="${href}">${zh ? 'Log in again 重新登录' : 'Log in again'}</a>`;
-  const tip = state === 'offline' ? 'Offline: your progress is saved on this device and goes to your account when you are back online.'
-    : 'Logged in as ' + a.name + '. Your progress is saved to your account.';
-  return `<a class="acct-chip on${state==='offline'?' off':''}" href="${href}" title="${esc(tip)}"><span class="acct-dot" aria-hidden="true"></span><span class="acct-name">${esc(a.name)}</span></a>`;
+  // Logged in: the name opens My progress, which also has the Log out button
+  const tip = (state === 'offline' ? 'Offline: your progress is saved on this device and goes to your account when you are back online.'
+    : 'Logged in as ' + a.name + '. Your progress is saved to your account.') + ' Open My progress (log out there).';
+  return `<a class="acct-chip on${state==='offline'?' off':''}" href="${ROOT}progress/index.html?from=${from}" title="${esc(tip)}"><span class="acct-dot" aria-hidden="true"></span><span class="acct-name">${esc(a.name)}</span></a>`;
+}
+// My progress page: who is logged in, with Log out (or a Log in button), under the page's heading
+function panel(){
+  const a = account(), from = encodeURIComponent(location.pathname + location.search);
+  const login = ROOT + 'login/index.html?from=' + from;
+  if(a && a.token) return `<div class="acct-panel"><div class="acct-txt"><p class="acct-k">Your account 你的账户</p>` +
+    `<p class="acct-who"><b>${esc(a.name)}</b>${a.className ? ' · Class ' + esc(a.className) : ''}</p>` +
+    `<p class="acct-note">Your progress is saved to your account, so you can carry on from any computer or phone. On a shared computer, log out when you finish. ` +
+    `<span lang="zh">进度保存在你的账户里。在公用电脑上，结束后请退出。</span></p></div>` +
+    `<button class="acct-btn" type="button" data-acct-out>Log out 退出</button></div>`;
+  if(a) return `<div class="acct-panel"><div class="acct-txt"><p class="acct-k">Your account 你的账户</p><p class="acct-who"><b>${esc(a.name)}</b></p>` +
+    `<p class="acct-note">Please log in again to keep saving your progress to your account. <span lang="zh">请重新登录。</span></p></div>` +
+    `<a class="acct-btn" href="${login}">Log in again 重新登录</a></div>`;
+  return `<div class="acct-panel"><div class="acct-txt"><p class="acct-k">Your account 你的账户</p>` +
+    `<p class="acct-note">You are not logged in, so your progress is saved on this device only. Log in with the name and password from your teacher to carry on from any device. ` +
+    `<span lang="zh">登录后，在任何设备上都可以继续。</span></p></div><a class="acct-btn" href="${login}">Log in 登录</a></div>`;
 }
 function style(){
   if(document.getElementById('acct-style')) return;
@@ -149,6 +166,13 @@ function style(){
     '.acct-name{overflow:hidden;text-overflow:ellipsis}' +
     '.acct-dot{width:8px;height:8px;border-radius:50%;background:#23a05c;flex:none}.acct-chip.off .acct-dot{background:#9aa0b4}' +
     '.topline>.acct-chip{margin-left:auto}' +
+    '.acct-panel{display:flex;align-items:center;justify-content:space-between;gap:12px 20px;flex-wrap:wrap;margin:0 0 22px;padding:14px 16px;' +
+      'border:1px solid var(--rule,#dfe2ec);border-radius:12px;background:var(--sheet,#fff)}' +
+    '.acct-txt{min-width:0;flex:1 1 320px}.acct-panel p{margin:0}' +
+    '.acct-k{font-family:var(--f-mono,monospace);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2,#4a5270)}' +
+    '.acct-who{font-size:18px;margin:2px 0 4px !important}.acct-note{font-size:14px;color:var(--ink-2,#4a5270)}' +
+    '.acct-btn{font:inherit;font-weight:700;font-size:15px;padding:9px 16px;border-radius:10px;border:1.5px solid currentColor;background:transparent;color:inherit;cursor:pointer;text-decoration:none;white-space:nowrap}' +
+    '.acct-btn:hover{background:rgba(127,127,127,.12)}.acct-btn:disabled{opacity:.5;cursor:default}' +
     '@media print{.acct-chip,.acct-wrap>.acct-chip{display:none}}';
   document.head.appendChild(st);
 }
@@ -166,9 +190,19 @@ function render(){
     put(wrap, html);
   });
   if(!bars.length){
-    const top = document.querySelector('.topline'); if(!top) return;
-    const side = /^zh/.test((location.pathname.slice(new URL(ROOT, location.href).pathname.length))) ? 'zh' : 'en', html = chip(side);
-    put(top, html);
+    const top = document.querySelector('.topline');
+    if(top){ const side = /^zh/.test((location.pathname.slice(new URL(ROOT, location.href).pathname.length))) ? 'zh' : 'en'; put(top, chip(side)); }
+  }
+  // My progress page: the account panel under the heading
+  const hero = document.querySelector('#app[data-only="progress"] .hero');
+  if(hero){
+    const html = panel(); let p = hero.nextElementSibling;
+    if(!p || !p.classList.contains('acct-panel') || p._html !== html){
+      const t = document.createElement('div'); t.innerHTML = html; const n = t.firstChild; n._html = html;
+      if(p && p.classList.contains('acct-panel')) p.replaceWith(n); else hero.after(n);
+      const out = n.querySelector('[data-acct-out]');
+      if(out) out.onclick = () => { out.disabled = true; logout().then(()=>location.reload(), ()=>location.reload()); };
+    }
   }
 }
 // Add or update the button inside box (only when it has changed, so watching the page doesn't loop)
