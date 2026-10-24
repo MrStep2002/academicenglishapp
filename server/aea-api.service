@@ -1,0 +1,25 @@
+# The login program as a service: starts when the server starts, restarts if it ever stops.
+# install.sh copies this to /etc/systemd/system/aea-api.service (with __DIR__ replaced by the site's folder).
+[Unit]
+Description=Academic English App login server
+After=network.target
+
+[Service]
+User=aea
+Group=aea
+WorkingDirectory=__DIR__
+ExecStart=/usr/bin/env node --disable-warning=ExperimentalWarning __DIR__/server/server.js
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=DB_PATH=/var/lib/aea/aea.db
+Environment=SCHOOL_TZ=Asia/Shanghai
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/aea
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

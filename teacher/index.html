@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<meta name="theme-color" content="#151935">
+<meta name="robots" content="noindex">
+<title>Teacher · Academic English App</title>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/home.css?v=2026-10-24a">
+<style>
+  .home { max-width: 1040px; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+  .narrow { max-width: 480px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label, .lab { font-weight: 700; }
+  input[type=text], input[type=password], input[type=number], textarea { font: inherit; padding: 10px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
+  textarea { min-height: 160px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--web); }
+  input[type=number] { width: 7em; }
+  .btn { font: inherit; font-weight: 700; padding: 10px 16px; border-radius: 10px; border: 2px solid var(--ink); background: var(--ink); color: var(--card); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .btn.alt { background: transparent; color: var(--ink); }
+  .btn.small { padding: 5px 10px; font-size: .85rem; border-width: 1.5px; }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn:focus-visible, a:focus-visible { outline: 3px solid var(--web); outline-offset: 2px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .spread { display: flex; gap: 10px 16px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+  .err { margin: 0; color: #c0392b; font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .err { color: #ff8a78; } }
+  .note { margin: 0; color: var(--muted); font-size: .92rem; }
+  .warn { margin: 0; background: var(--hi); color: #151935; padding: 10px 14px; border-radius: 10px; font-weight: 700; }
+  h2 { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.4rem; }
+  .classes { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .class-card { display: flex; flex-direction: column; gap: 2px; padding: 18px; border-radius: 16px; background: var(--card); border: 2px solid var(--line); color: var(--ink); text-decoration: none; }
+  .class-card:hover { border-color: var(--web); }
+  .class-card b { font-family: var(--display); font-size: 1.3rem; }
+  .class-card span { color: var(--muted); font-size: .92rem; }
+  .choice { display: flex; gap: 8px; align-items: flex-start; }
+  .choice input { margin-top: 5px; }
+  .tablewrap { overflow-x: auto; border: 2px solid var(--line); border-radius: 14px; background: var(--card); }
+  table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+  th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  th { font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); background: var(--bg); }
+  th button { all: unset; cursor: pointer; } th button:focus-visible { outline: 2px solid var(--web); }
+  td.num { font-variant-numeric: tabular-nums; }
+  td .sub { color: var(--muted); font-size: .85rem; }
+  .zh { font-family: var(--zh); }
+  .muted { color: var(--muted); }
+  /* Login cards to print and cut out */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+  .lc { border: 2px dashed var(--line); border-radius: 12px; padding: 14px 16px; background: var(--card); display: flex; flex-direction: column; gap: 4px; break-inside: avoid; }
+  .lc .site { font-size: .8rem; color: var(--muted); }
+  .lc .k { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 700; margin-top: 4px; }
+  .lc .v { font-family: var(--display); font-weight: 800; font-size: 1.35rem; line-height: 1.1; }
+  .lc .pw { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; font-size: 1.35rem; font-weight: 500; letter-spacing: .04em; }
+  @media print {
+    body { background: #fff; color: #000; font-size: 12pt; }
+    .home { max-width: none; padding: 0; gap: 0; }
+    .home > :not(#view), #view > :not(.cards) { display: none !important; }
+    .cards { grid-template-columns: repeat(3, 1fr); gap: 4mm; }
+    .lc { border: 1px dashed #888; background: #fff; color: #000; padding: 4mm 5mm; }
+    .lc .site, .lc .k { color: #444; }
+  }
+</style>
+</head>
+<body>
+<main class="home">
+  <div class="navline spread"><a class="backlink" href="../index.html">← Academic English App</a><span id="me" class="note"></span></div>
+  <header class="intro">
+    <p class="eyebrow">Teacher</p>
+    <h1 id="title">Your classes</h1>
+  </header>
+  <div id="view" aria-live="polite"><p class="note">Loading…</p></div>
+  <noscript><p>Please turn on JavaScript.</p></noscript>
+</main>
+<script>
+/* Teacher page: make classes and student logins, print login cards, see each student's points, level and last activity.
+   Talks to the login server (server/server.js). The teacher's login is kept in this browser as "aea:account:teacher". */
+(function(){
+'use strict';
+var API = (function(){ var a = ''; try { a = localStorage.getItem('aea:api') || ''; } catch (e) {} return (a || 'https://api.academicenglishapp.com').replace(/\/+$/, ''); })();
+var TKEY = 'aea:account:teacher', SITE = 'academicenglishapp.com/login';
+var view = document.getElementById('view'), title = document.getElementById('title'), me = document.getElementById('me');
+var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+var auth = function(){ try { return JSON.parse(localStorage.getItem(TKEY)); } catch (e) { return null; } };
+var setAuth = function(a){ try { if (a) localStorage.setItem(TKEY, JSON.stringify(a)); else localStorage.removeItem(TKEY); } catch (e) {} };
+var lastCards = null;   // passwords just made: only kept on this page until it is left
+
+function call(path, body){
+  var a = auth(), headers = {'Content-Type': 'application/json'};
+  if (a && a.token) headers.Authorization = 'Bearer ' + a.token;
+  return fetch(API + path, {method: body ? 'POST' : 'GET', headers: headers, body: body ? JSON.stringify(body) : undefined})
+    .catch(function(){ throw new Error("Can't reach the server. Check your internet connection and try again."); })
+    .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(out){
+      if (r.status === 401 && path !== '/api/teacher/login') { setAuth(null); route(); throw new Error('Please log in again.'); }
+      if (!r.ok) throw new Error(out.error || ('Server error ' + r.status));
+      return out; }); });
+}
+var fail = function(id){ return function(x){ var e = document.getElementById(id || 'err'); if (e) { e.textContent = x.message; e.hidden = false; } var b = view.querySelector('button[disabled]'); if (b) b.disabled = false; }; };
+var setTitle = function(t){ title.textContent = t; document.title = t + ' · Teacher · Academic English App'; };
+
+// "today 14:05", "yesterday", "3 days ago"
+function when(t){
+  if (!t) return '<span class="muted">never</span>';
+  var d = new Date(t), now = new Date(), day = 864e5;
+  var start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  var hm = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+  if (t >= start) return 'today ' + hm;
+  if (t >= start - day) return 'yesterday ' + hm;
+  var n = Math.ceil((start - t) / day);
+  return n < 14 ? n + ' days ago' : d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', year: 'numeric'});
+}
+
+// ---------- logging in ----------
+function showLogin(msg){
+  setTitle('Teacher login'); me.innerHTML = '';
+  view.innerHTML = '<form class="card narrow" id="f">' +
+    '<div class="field"><label for="u">Username</label><input type="text" id="u" autocomplete="username" autocapitalize="off" spellcheck="false" required></div>' +
+    '<div class="field"><label for="p">Password</label><input type="password" id="p" autocomplete="current-password" required></div>' +
+    '<p class="err" id="err" role="alert"' + (msg ? '' : ' hidden') + '>' + esc(msg || '') + '</p>' +
+    '<div><button class="btn" type="submit">Log in</button></div>' +
+    '<p class="note">Teacher logins are made on the server (see server/README.md in the site\'s folder).</p></form>';
+  document.getElementById('u').focus();
+  document.getElementById('f').onsubmit = function(e){
+    e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
+    call('/api/teacher/login', {username: document.getElementById('u').value, password: document.getElementById('p').value})
+      .then(function(r){ setAuth({token: r.token, name: r.name}); route(); }).catch(fail());
+  };
+}
+function header(){
+  var a = auth();
+  me.innerHTML = esc(a.name) + ' · <a href="#/password" class="muted">Change password</a> · <button class="btn small alt" type="button" id="logout">Log out</button>';
+  document.getElementById('logout').onclick = function(){ call('/api/logout', {}).catch(function(){}).then(function(){ setAuth(null); location.hash = ''; route(); }); };
+}
+
+// ---------- classes ----------
+function showClasses(){
+  setTitle('Your classes'); header();
+  call('/api/teacher/classes').then(function(r){
+    view.innerHTML =
+      '<div class="spread" style="margin-bottom:14px"><p class="note">' + (r.classes.length ? 'Choose a class to see its students.' : 'No classes yet. Make your first one.') + '</p>' +
+      '<a class="btn" href="#/new">+ New class</a></div>' +
+      '<div class="classes">' + r.classes.map(function(c){
+        return '<a class="class-card" href="#/class/' + c.id + '"><b>' + esc(c.name) + '</b><span>' + c.students + ' student' + (c.students === 1 ? '' : 's') + '</span></a>'; }).join('') + '</div>';
+  }).catch(function(x){ view.innerHTML = '<p class="err">' + esc(x.message) + '</p>'; });
+}
+
+// The students part of a form: fun names made for you, or your own list
+function studentsFields(){
+  return '<fieldset class="card" style="padding:16px"><legend class="lab">Students</legend>' +
+    '<label class="choice"><input type="radio" name="how" value="count" checked><span>Make fun names for me: <input type="number" id="count" min="1" max="60" value="25"> students' +
+    '<br><span class="note">e.g. "Brave Panda", "Clever Otter". No real names are stored.</span></span></label>' +
+    '<label class="choice"><input type="radio" name="how" value="names"><span>I\'ll type the names, one per line (fun names, not real names)</span></label>' +
+    '<textarea id="names" placeholder="Batman&#10;Totoro&#10;Captain Kiwi" hidden></textarea></fieldset>';
+}
+function wireStudents(){
+  var ta = document.getElementById('names');
+  Array.prototype.forEach.call(document.querySelectorAll('input[name=how]'), function(r){
+    r.onchange = function(){ ta.hidden = r.value !== 'names' || !r.checked; if (!ta.hidden) ta.focus(); };
+  });
+}
+function studentsValue(){
+  var how = document.querySelector('input[name=how]:checked').value;
+  if (how === 'names') return {names: document.getElementById('names').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean)};
+  return {count: +document.getElementById('count').value || 0};
+}
+
+function showNew(){
+  setTitle('New class'); header();
+  view.innerHTML = '<form class="card narrow" id="f" style="max-width:620px">' +
+    '<div class="field"><label for="cn">Class name</label><input type="text" id="cn" placeholder="e.g. 8B Media" maxlength="60" required></div>' +
+    studentsFields() +
+    '<p class="err" id="err" role="alert" hidden></p>' +
+    '<div class="row"><button class="btn" type="submit">Make the class and logins</button><a class="btn alt" href="#/">Cancel</a></div></form>';
+  wireStudents(); document.getElementById('cn').focus();
+  document.getElementById('f').onsubmit = function(e){
+    e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
+    var body = studentsValue(); body.name = document.getElementById('cn').value;
+    call('/api/teacher/classes', body).then(function(r){ showCards(r.class.name, r.students, '#/class/' + r.class.id, 'The class is ready.'); }).catch(fail());
+  };
+}
+
+// ---------- one class ----------
+var sortBy = 'name', sortDown = false;
+var COLS = [
+  ['name', 'Student'], ['lastPlayed', 'Last active'], ['week', 'Points this week'], ['total', 'Points in all'],
+  ['level', 'Level'], ['known', 'Words known']];
+var LEVELS = {Foundation: 1, 'Foundation+': 2, Intermediate: 3, 'Intermediate+': 4, Advanced: 5};
+function sortVal(s, k){
+  if (k === 'name') return s.name.toLowerCase();
+  if (k === 'lastPlayed') return s.lastPlayed || s.lastSeen || 0;
+  if (k === 'week') return s.en.week + s.zh.week;
+  if (k === 'total') return s.en.total + s.zh.total;
+  if (k === 'level') return Math.max(LEVELS[s.en.level] || 0, LEVELS[s.zh.level] || 0);
+  if (k === 'known') return s.words.known;
+  return 0;
+}
+var pair = function(en, zh){ return '<span title="English version">' + en + '</span> <span class="sub">· <span class="zh" lang="zh" title="Chinese version">中</span> ' + zh + '</span>'; };
+
+function showClass(id){
+  header();
+  call('/api/teacher/classes/' + id).then(function(r){
+    var c = r.class, list = r.students.slice();
+    setTitle(c.name);
+    list.sort(function(a, b){ var x = sortVal(a, sortBy), y = sortVal(b, sortBy); var d = x < y ? -1 : x > y ? 1 : 0; if (sortBy !== 'name') d = -d; return sortDown ? -d : d; });
+    var head = COLS.map(function(col){ return '<th><button type="button" data-sort="' + col[0] + '">' + col[1] + (sortBy === col[0] ? (sortDown ? ' ▴' : ' ▾') : '') + '</button></th>'; }).join('') + '<th></th>';
+    var rows = list.map(function(s){
+      return '<tr><td><b>' + esc(s.name) + '</b></td>' +
+        '<td>' + when(s.lastPlayed || s.lastSeen) + '</td>' +
+        '<td class="num">' + pair(s.en.week, s.zh.week) + '</td>' +
+        '<td class="num">' + pair(s.en.total, s.zh.total) + '</td>' +
+        '<td>' + pair(s.en.level ? esc(s.en.level) : '<span class="muted">–</span>', s.zh.level ? esc(s.zh.level) : '<span class="muted">–</span>') + '</td>' +
+        '<td class="num">' + s.words.known + ' <span class="sub">(+' + s.words.learning + ' learning)</span></td>' +
+        '<td><button class="btn small alt" type="button" data-reset="' + s.id + '" data-name="' + esc(s.name) + '">New password</button></td></tr>';
+    }).join('');
+    view.innerHTML =
+      '<div class="spread" style="margin-bottom:14px"><a class="backlink" href="#/">← All classes</a>' +
+      '<div class="row"><button class="btn alt" type="button" id="add">+ Add students</button>' +
+      '<button class="btn alt" type="button" id="resetall">New passwords for everyone</button>' +
+      '<button class="btn alt" type="button" id="rename">Rename</button></div></div>' +
+      '<p class="err" id="err" role="alert" hidden></p>' +
+      (list.length ? '<div class="tablewrap"><table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        '<p class="note" style="margin-top:10px">Points: English version · 中 Chinese version. This week starts on Monday ' + esc(r.weekStart) + '. ' +
+        'A level shows once a student has answered 10 questions on that side. "Last active" is the last time the student played, or logged in.</p>'
+        : '<p class="note">No students in this class yet.</p>');
+    Array.prototype.forEach.call(view.querySelectorAll('[data-sort]'), function(b){ b.onclick = function(){
+      var k = b.getAttribute('data-sort'); if (sortBy === k) sortDown = !sortDown; else { sortBy = k; sortDown = false; } showClass(id); }; });
+    Array.prototype.forEach.call(view.querySelectorAll('[data-reset]'), function(b){ b.onclick = function(){
+      if (!confirm('Make a new password for ' + b.getAttribute('data-name') + '? Their old password stops working and they are logged out on every device. Their progress is kept.')) return;
+      b.disabled = true;
+      call('/api/teacher/students/' + b.getAttribute('data-reset') + '/reset', {}).then(function(r2){ showCards(c.name, r2.students, '#/class/' + id, 'New password made.'); }).catch(fail());
+    }; });
+    document.getElementById('resetall').onclick = function(){
+      if (!confirm('Make new passwords for everyone in ' + c.name + '? All the old passwords stop working. Progress is kept. Use this if the login cards are lost.')) return;
+      this.disabled = true;
+      call('/api/teacher/classes/' + id + '/reset-all', {}).then(function(r2){ showCards(c.name, r2.students, '#/class/' + id, 'New passwords made for the whole class.'); }).catch(fail());
+    };
+    document.getElementById('rename').onclick = function(){
+      var n = prompt('New name for the class:', c.name); if (!n || n.trim() === c.name) return;
+      call('/api/teacher/classes/' + id + '/rename', {name: n}).then(function(){ showClass(id); }).catch(fail());
+    };
+    document.getElementById('add').onclick = function(){ showAdd(id, c.name); };
+  }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
+}
+
+function showAdd(id, name){
+  setTitle('Add students to ' + name);
+  view.innerHTML = '<form class="card narrow" id="f" style="max-width:620px">' + studentsFields() +
+    '<p class="err" id="err" role="alert" hidden></p>' +
+    '<div class="row"><button class="btn" type="submit">Add them</button><a class="btn alt" href="#/class/' + id + '">Cancel</a></div></form>';
+  wireStudents(); document.getElementById('count').value = 1;
+  document.getElementById('f').onsubmit = function(e){
+    e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
+    call('/api/teacher/classes/' + id + '/students', studentsValue()).then(function(r){ showCards(name, r.students, '#/class/' + id, 'Students added.'); }).catch(fail());
+  };
+}
+
+// ---------- login cards: shown once, to print or copy ----------
+function showCards(className, students, back, msg){
+  lastCards = {className: className, students: students, back: back};
+  setTitle('Login cards: ' + className);
+  var text = students.map(function(s){ return s.name + '\t' + s.password; }).join('\n');
+  view.innerHTML =
+    '<div class="card" style="margin-bottom:16px">' +
+      '<p class="warn">' + esc(msg) + ' Print or copy these passwords now: they are not shown again. (If they get lost, make new ones from the class page.)</p>' +
+      '<div class="row"><button class="btn" type="button" id="print">Print the cards</button>' +
+      '<button class="btn alt" type="button" id="copy">Copy as a list</button>' +
+      '<a class="btn alt" href="' + back + '">Done</a></div>' +
+      '<p class="note">Students log in at <b>' + SITE + '</b>, or with the <b>Log in</b> button at the top of any page. Names don\'t care about capitals or spaces.</p>' +
+    '</div>' +
+    '<div class="cards">' + students.map(function(s){
+      return '<div class="lc"><span class="site">Academic English App · ' + esc(SITE) + '</span><span class="site">Class ' + esc(className) + '</span>' +
+        '<span class="k">Name 名字</span><span class="v">' + esc(s.name) + '</span>' +
+        '<span class="k">Password 密码</span><span class="pw">' + esc(s.password) + '</span></div>'; }).join('') + '</div>';
+  document.getElementById('print').onclick = function(){ window.print(); };
+  document.getElementById('copy').onclick = function(){
+    var b = this, done = function(){ b.textContent = 'Copied'; };
+    if (navigator.clipboard) navigator.clipboard.writeText(text).then(done, function(){ prompt('Copy this:', text); });
+    else prompt('Copy this:', text);
+  };
+  window.scrollTo(0, 0);
+}
+
+function showPassword(){
+  setTitle('Change your password'); header();
+  view.innerHTML = '<form class="card narrow" id="f">' +
+    '<div class="field"><label for="o">Current password</label><input type="password" id="o" autocomplete="current-password" required></div>' +
+    '<div class="field"><label for="n1">New password (at least 8 characters)</label><input type="password" id="n1" autocomplete="new-password" minlength="8" required></div>' +
+    '<div class="field"><label for="n2">New password again</label><input type="password" id="n2" autocomplete="new-password" minlength="8" required></div>' +
+    '<p class="err" id="err" role="alert" hidden></p>' +
+    '<div class="row"><button class="btn" type="submit">Change password</button><a class="btn alt" href="#/">Cancel</a></div></form>';
+  document.getElementById('f').onsubmit = function(e){
+    e.preventDefault(); var err = document.getElementById('err');
+    if (document.getElementById('n1').value !== document.getElementById('n2').value) { err.textContent = 'The new passwords don\'t match.'; err.hidden = false; return; }
+    this.querySelector('button').disabled = true; err.hidden = true;
+    call('/api/teacher/password', {old: document.getElementById('o').value, new: document.getElementById('n1').value})
+      .then(function(){ view.innerHTML = '<div class="card narrow"><p>Password changed. Other devices are logged out.</p><div><a class="btn" href="#/">Back to your classes</a></div></div>'; }).catch(fail());
+  };
+}
+
+function route(){
+  if (!auth()) return showLogin();
+  var h = location.hash, m;
+  if (h === '#/new') return showNew();
+  if (h === '#/password') return showPassword();
+  if ((m = /^#\/class\/(\d+)$/.exec(h))) return showClass(m[1]);
+  showClasses();
+}
+addEventListener('hashchange', route);
+// A link to the view's own address (e.g. Done after resetting a password) still redraws the view
+document.addEventListener('click', function(e){
+  var a = e.target.closest && e.target.closest('a[href^="#"]');
+  if (a && a.getAttribute('href') === (location.hash || '#/')) { e.preventDefault(); route(); }
+});
+// Leaving with passwords on screen that haven't been printed: ask first
+addEventListener('beforeunload', function(e){ if (lastCards && /^Login cards/.test(title.textContent)) { e.preventDefault(); e.returnValue = ''; } });
+route();
+})();
+</script>
+</body>
+</html>

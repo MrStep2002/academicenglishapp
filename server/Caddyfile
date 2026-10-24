@@ -1,0 +1,6 @@
+# Caddy (the web server in front): answers at api.academicenglishapp.com, adds HTTPS by itself,
+# and passes every request to the login program running on this server (port 3000).
+api.academicenglishapp.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}

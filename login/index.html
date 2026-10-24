@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#151935">
+<meta name="robots" content="noindex">
+<title>Log in · Academic English App</title>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../css/home.css?v=2026-10-24a">
+<style>
+  .home { max-width: 520px; }
+  .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-weight: 700; }
+  .field input { font: inherit; font-size: 1.1rem; padding: 12px 14px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); width: 100%; }
+  .field input:focus { outline: none; border-color: var(--web); }
+  .show { display: flex; align-items: center; gap: 8px; font-size: .92rem; color: var(--muted); }
+  .btn { font: inherit; font-weight: 700; font-size: 1.05rem; padding: 12px 18px; border-radius: 12px; border: 2px solid var(--ink); background: var(--ink); color: var(--card); cursor: pointer; text-align: center; text-decoration: none; display: inline-block; }
+  .btn.alt { background: transparent; color: var(--ink); }
+  .btn:disabled { opacity: .5; cursor: default; }
+  .btn:focus-visible { outline: 3px solid var(--web); outline-offset: 2px; }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .row .btn { flex: 1 1 180px; }
+  .err { margin: 0; color: #c0392b; font-weight: 700; }
+  @media (prefers-color-scheme: dark) { .err { color: #ff8a78; } }
+  .note { margin: 0; color: var(--muted); font-size: .92rem; }
+  .big { margin: 0; font-size: 1.15rem; }
+  .who { font-family: var(--display); font-weight: 800; font-size: 1.6rem; line-height: 1.1; margin: 0; }
+  .zh { font-family: var(--zh); }
+  .stat { display: inline-block; background: var(--hi); color: #151935; font-weight: 700; padding: 1px 8px; border-radius: 6px; }
+</style>
+</head>
+<body>
+<main class="home">
+  <div class="navline"><a class="backlink" id="back" href="../index.html">← Back</a></div>
+  <header class="intro">
+    <p class="eyebrow">Your account <span class="zh" lang="zh">你的账户</span></p>
+    <h1 id="title">Log in <span class="h1-zh" lang="zh">登录</span></h1>
+  </header>
+  <section class="card" id="panel" aria-live="polite"><p class="note">Loading…</p></section>
+  <noscript><p>Please turn on JavaScript to log in.</p></noscript>
+</main>
+<script src="../en/engine/account.js?v=2026-10-24a"></script>
+<script>
+(function(){
+  'use strict';
+  var A = window.AEA_ACCOUNT, panel = document.getElementById('panel'), title = document.getElementById('title');
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  // Where to go afterwards: the page the student came from (only pages on this site)
+  var from = new URLSearchParams(location.search).get('from');
+  if (!from || !/^\/(?!\/)/.test(from) || /\/login\//.test(from)) from = null;
+  if (from) document.getElementById('back').href = from;
+  var setTitle = function(en, zh){ title.innerHTML = esc(en) + ' <span class="h1-zh" lang="zh">' + esc(zh) + '</span>'; };
+
+  function showForm(msg){
+    var a = A.account();
+    setTitle(a ? 'Log in again' : 'Log in', a ? '重新登录' : '登录');
+    panel.innerHTML =
+      (a ? '<p class="big">Please log in again, <b>' + esc(a.name) + '</b>. <span class="zh" lang="zh">请重新登录。</span></p>' : '') +
+      '<form id="f" class="card" style="border:0;padding:0">' +
+        '<div class="field"><label for="name">Your name <span class="zh" lang="zh">名字</span></label>' +
+        '<input id="name" name="username" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required value="' + esc(a ? a.name : '') + '"></div>' +
+        '<div class="field"><label for="pw">Password <span class="zh" lang="zh">密码</span></label>' +
+        '<input id="pw" name="password" type="password" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" required></div>' +
+        '<label class="show"><input type="checkbox" id="showpw"> Show password <span class="zh" lang="zh">显示密码</span></label>' +
+        '<p class="err" id="err" role="alert"' + (msg ? '' : ' hidden') + '>' + esc(msg || '') + '</p>' +
+        '<button class="btn" type="submit" id="go">Log in <span class="zh" lang="zh">登录</span></button>' +
+      '</form>' +
+      '<p class="note">Your teacher gives you your name and password. <span class="zh" lang="zh">老师会给你名字和密码。</span></p>' +
+      '<p class="note">You can also play without logging in: your progress then stays on this device only. <span class="zh" lang="zh">不登录也可以玩，但进度只保存在这台设备上。</span></p>';
+    var f = document.getElementById('f'), err = document.getElementById('err'), go = document.getElementById('go');
+    document.getElementById('showpw').onchange = function(e){ document.getElementById('pw').type = e.target.checked ? 'text' : 'password'; };
+    document.getElementById(a ? 'pw' : 'name').focus();
+    f.onsubmit = function(e){
+      e.preventDefault(); err.hidden = true; go.disabled = true;
+      A.login(document.getElementById('name').value, document.getElementById('pw').value).then(function(r){
+        if (r.needsChoice) showChoice(r); else done();
+      }).catch(function(x){ err.textContent = x.message; err.hidden = false; go.disabled = false; });
+    };
+  }
+
+  function showChoice(r){
+    setTitle('One question', '一个问题');
+    panel.innerHTML =
+      '<p class="big">This device has progress saved without logging in: <span class="stat">' + r.guest.points + ' points</span> and <span class="stat">' + r.guest.words + ' words</span>.</p>' +
+      '<p class="big">Add it to <b>' + esc(r.name) + '</b>\'s account? <span class="zh" lang="zh">把这台设备上的进度加入你的账户吗？</span></p>' +
+      '<p class="note">If this is a shared computer and the progress isn\'t yours, choose <b>No</b>: it stays on this device and comes back when you log out. ' +
+      '<span class="zh" lang="zh">如果这不是你的进度，请选“不”。</span></p>' +
+      '<p class="err" id="err" role="alert" hidden></p>' +
+      '<div class="row"><button class="btn" type="button" id="yes">Yes, add it <span class="zh" lang="zh">是，加入</span></button>' +
+      '<button class="btn alt" type="button" id="no">No <span class="zh" lang="zh">不</span></button></div>';
+    var pickIt = function(add){
+      document.getElementById('yes').disabled = document.getElementById('no').disabled = true;
+      A.finishLogin(add).then(done).catch(function(x){ var e = document.getElementById('err'); e.textContent = x.message; e.hidden = false; });
+    };
+    document.getElementById('yes').onclick = function(){ pickIt(true); };
+    document.getElementById('no').onclick = function(){ pickIt(false); };
+    document.getElementById('yes').focus();
+  }
+
+  function done(){ if (from) location.href = from; else showAccount(); }
+
+  function showAccount(){
+    var a = A.account();
+    setTitle('Your account', '你的账户');
+    panel.innerHTML =
+      '<p class="note">Logged in as <span class="zh" lang="zh">已登录</span></p>' +
+      '<p class="who">' + esc(a.name) + '</p>' +
+      (a.className ? '<p class="note">Class ' + esc(a.className) + '</p>' : '') +
+      '<p>Your progress and points are saved to your account, so you can carry on from any computer or phone. ' +
+      '<span class="zh" lang="zh">你的进度保存在账户里，在任何设备上都可以继续。</span></p>' +
+      '<div class="row">' + (from ? '<a class="btn" href="' + esc(from) + '">Carry on <span class="zh" lang="zh">继续</span></a>' :
+        '<a class="btn" href="../en/index.html">English</a><a class="btn" href="../zh/index.html"><span class="zh" lang="zh">中文版</span></a>') + '</div>' +
+      '<p class="err" id="err" role="alert" hidden></p>' +
+      '<button class="btn alt" type="button" id="out">Log out <span class="zh" lang="zh">退出</span></button>' +
+      '<p class="note">On a shared computer, always log out when you finish. <span class="zh" lang="zh">在公用电脑上，结束后请退出。</span></p>';
+    document.getElementById('out').onclick = function(){
+      this.disabled = true;
+      A.logout().then(function(){ showForm(); }).catch(function(x){ var e = document.getElementById('err'); e.textContent = x.message; e.hidden = false; });
+    };
+  }
+
+  var a = A.account();
+  if (a && a.token) showAccount(); else showForm();
+})();
+</script>
+</body>
+</html>

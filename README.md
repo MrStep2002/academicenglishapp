@@ -78,7 +78,7 @@ a 14-day chart and a "How to earn points" table.
 
 ## Levels and progress
 
-Every answer in every game is saved in the student's own browser (`localStorage`, key `aea:progress:v1`). Nothing is sent anywhere and there are no accounts yet, so progress stays on one browser on one device.
+Every answer in every game is saved in the student's own browser (`localStorage`, key `aea:progress:v1`). Without a login, progress stays on that browser. Logged in, it is also saved to the student's account (see *Logins* below).
 
 - **Level codes.** Every row in `content/` has a `level`: a code (`A1`, `A2`, `B1`, `B2`, `C1`; add `+` for the upper half, `B1+`) or a name. Students see names, not codes: Foundation (A1), Foundation+ (A2), Intermediate (B1), Intermediate+ (B2), Advanced (C1); B1+ shows as Intermediate. The names are `LEVEL_NAMES` near the top of `en/engine/app.js` (Chinese beside them on the Chinese side: `LEVEL_ZH`).
 - **Level buttons.** Each topic page has one row of level buttons, one for each level with at least 6 items on that page (`MIN_LEVEL`; a smaller level is played with the nearest one). The games use the student's own level; a student can press another level to push themselves, and that choice is kept for the topic until they press "Use my level" or their level reaches it. A green dot marks their level once it is known. Reading Comprehension's level is chosen on its menu page instead. A row with no level plays at every level, but it does not change the student's level.
@@ -86,3 +86,19 @@ Every answer in every game is saved in the student's own browser (`localStorage`
 - **How work is chosen.** Every game uses only the items at the chosen level. Within it, items nearest the student's level come first (so B1+ before B1 for a strong Intermediate student), then words due for review; words they already know come last.
 - **Words.** Each word goes new → learning → familiar → known. A right answer only moves a word up after a gap (10 minutes, then 1 day, then 3 days: `WAIT`), so *known* means remembered on different days. A wrong answer moves it back a step.
 - **When you add content:** fill in the `level` of every row, and run `python3 tools/check_content.py` to see how much each level has.
+
+## Logins
+
+Students can log in with a fun name and password from their teacher (**Log in** button next to the points bar, or `login/`).
+Their progress then follows them to any device. Teachers make classes and logins, print login cards and see each student's
+points, level and last activity at `teacher/`. Without a login everything works as before.
+
+| Path | What it is |
+|---|---|
+| `en/engine/account.js` | The Log in button and saving to the account. Loaded on every page after `points.js` |
+| `login/index.html` | Students log in and out |
+| `teacher/index.html` | The teacher page |
+| `server/` | The login server at `api.academicenglishapp.com` (Tencent Cloud, Hong Kong). Setup, updates and teacher logins: `server/README.md` |
+
+Never rename the `aea:…` keys the games save in the browser: accounts store progress under the same names.
+

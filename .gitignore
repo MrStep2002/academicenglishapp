@@ -1,0 +1,4 @@
+# Test databases from running the login server on your own computer
+*.db
+*.db-wal
+*.db-shm
