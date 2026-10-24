@@ -50,7 +50,7 @@ Chinese-side topic pages use the same engine with `data-only="zh"`: eight games 
 
 To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add a link to `en/index.html`. Details in `content/README.md`.
 
-Topic page layout: `data-layout="compact"` on a topic page (Descriptive language only, for now) gives the newer menu: the title, the
+Topic page layout: `data-layout="compact"` on a topic page (all four English topics since 24 Oct) gives the newer menu: the title, the
 level buttons, "Your level: …" with the level bar as the divider, then every game listed in three columns (Vocabulary, Grammar,
 Reading), with no category page in between. Pages without it keep the older layout. To switch a page over, add the attribute.
 
