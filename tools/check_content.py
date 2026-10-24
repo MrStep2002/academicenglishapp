@@ -18,6 +18,7 @@ CODES = re.compile(r'^([ABC])([12])(\+)?$')
 NAMES = {'foundation': 1, 'foundation+': 2, 'intermediate': 3, 'intermediate+': 4, 'advanced': 5}
 LEVEL_NAMES = ['', 'Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced']
 MIN_LEVEL = 6   # the same number as MIN_LEVEL in en/engine/app.js
+OPTIONAL = {'correction'}   # columns a file may leave out
 
 HEADS = {
     'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note'],
@@ -25,6 +26,7 @@ HEADS = {
     'builds': ['id', 'level', 'goal', 'pieces', 'decoys', 'also_right', 'explanation'],
     'errors': ['id', 'level', 'title', 'text'],
     'tf': ['id', 'level', 'statement', 'answer', 'explanation'],
+    'right-wrong': ['id', 'level', 'statement', 'answer', 'explanation', 'correction'],
     'reads': ['id', 'level', 'title', 'text', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],
     'questions': ['id', 'level', 'command', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],
     'extracts': ['id', 'level', 'extract', 'word', 'correct', 'wrong1', 'wrong2', 'wrong3', 'word2', 'correct2', 'wrong1_2',
@@ -60,7 +62,7 @@ def check_folder(folder, all_word_ids):
         path = os.path.join(folder, kind + '.csv')
         if not os.path.exists(path): continue
         h, rows = read(path)
-        missing = [c for c in head if c not in h and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)]
+        missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)]
         unknown = [c for c in h if c not in head and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)]
         if missing: problems.append(f'{kind}.csv: missing column(s) {", ".join(missing)}')
         if unknown: problems.append(f'{kind}.csv: column(s) not used by the games: {", ".join(unknown)}')
@@ -113,13 +115,22 @@ def check_folder(folder, all_word_ids):
             elif kind == 'tf':
                 if not r.get('statement') or r.get('answer', '').strip().upper() not in ('TRUE', 'FALSE', 'T', 'F', 'YES', 'NO', 'Y', 'N'):
                     say(kind, r, 'needs a statement and an answer of TRUE or FALSE (skipped)'); ok = False
-            elif kind in ('reads', 'questions'):
-                if not r.get('question') or not r.get('correct') or not wrongs() or (kind == 'reads' and not r.get('text')):
-                    say(kind, r, f'needs {"a text, " if kind == "reads" else ""}a question, a correct answer and a wrong answer (skipped)'); ok = False
+            elif kind == 'right-wrong':
+                if not r.get('statement') or r.get('answer', '').strip().upper() not in ('RIGHT', 'WRONG', 'R', 'W', 'CORRECT', 'INCORRECT', 'TRUE', 'FALSE', 'YES', 'NO'):
+                    say(kind, r, 'needs a statement and an answer of RIGHT or WRONG (skipped)'); ok = False
+                elif r.get('correction') and r.get('answer', '').strip().upper() in ('RIGHT', 'R', 'CORRECT', 'TRUE', 'YES'):
+                    say(kind, r, 'has a correction but the answer is RIGHT')
+            elif kind == 'reads':   # Complete the text: the [[key words]] become the gaps; question columns are not used
+                found = 0
+                for shown, w in re.findall(r'\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', r.get('text', '')):
+                    if known((w or shown).strip()): found += 1
+                    else: say(kind, r, f'[[{shown}{"|" + w if w else ""}]]: "{(w or shown).strip()}" is not in words.csv')
+                if not r.get('text') or found < 2:
+                    say(kind, r, 'needs a text with at least 2 [[key words]] from words.csv (skipped)'); ok = False
+            elif kind == 'questions':
+                if not r.get('question') or not r.get('correct') or not wrongs():
+                    say(kind, r, 'needs a question, a correct answer and a wrong answer (skipped)'); ok = False
                 if r.get('correct') and r.get('correct') in wrongs(): say(kind, r, 'the correct answer is also a wrong answer')
-                if kind == 'reads':
-                    for shown, w in re.findall(r'\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', r.get('text', '')):
-                        if not known((w or shown).strip()): say(kind, r, f'[[{shown}{"|" + w if w else ""}]]: "{(w or shown).strip()}" is not in words.csv')
                 if kind == 'questions' and r.get('command') and not r.get('question', '').lower().startswith(r['command'].lower()):
                     say(kind, r, 'the question should start with the command word')
             elif kind == 'extracts':
@@ -149,13 +160,13 @@ def check_folder(folder, all_word_ids):
     topic_page = 'words' in data   # a topic folder (a reading-only folder's levels are chosen on its menu page instead)
     any_zh = any(w.get('zh') for w in words)
     if kinds:
-        print('  ' + 'Level'.ljust(15) + ''.join(k.rjust(11) for k in kinds) + ('   own button?' if topic_page else ''))
+        print('  ' + 'Level'.ljust(15) + ''.join(k.rjust(12) for k in kinds) + ('   own button?' if topic_page else ''))
         for b in range(1, 6):
             row = [(counts.get(k, {}) if k != 'reading' else rcount).get(b, 0) for k in kinds]
             if not any(row): continue
             zh = sum(1 for w in words if band(w.get('level')) == b and w.get('zh'))
             flag = ('yes' if sum(row) >= MIN_LEVEL else f'no: fewer than {MIN_LEVEL}, so played with the nearest level') if topic_page else ''
-            print('  ' + LEVEL_NAMES[b].ljust(15) + ''.join(str(n).rjust(11) for n in row) + ('   ' + flag if flag else '') + (f'   ({zh} with Chinese)' if any_zh else ''))
+            print('  ' + LEVEL_NAMES[b].ljust(15) + ''.join(str(n).rjust(12) for n in row) + ('   ' + flag if flag else '') + (f'   ({zh} with Chinese)' if any_zh else ''))
     else:
         print('  (no content yet)')
     if words:

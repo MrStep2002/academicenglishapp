@@ -1,0 +1,3 @@
+﻿id,level,statement,answer,explanation,correction
+"topic-rw-001","B1","The colours in the advert is bright.","WRONG","The subject <i>the colours</i> is plural, so the verb is <b>are</b>.","The colours in the advert are bright."
+"topic-rw-002","B1","The advert uses bright colours.","RIGHT","<i>The advert</i> is singular, so the verb is <b>uses</b>.",""

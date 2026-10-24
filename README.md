@@ -43,8 +43,8 @@ Homepage → **English** or **Chinese version 中文版**
 | Category | Games (shown only when the subject has content for them) |
 |---|---|
 | Vocabulary | Match the meaning, Synonym groups, Word or meaning |
-| Grammar | Fill the gap, Build the sentence, Spot the error, True or false |
-| Reading (desktop only) | Read and answer (`reading.csv`), In your own words (`extracts.csv`), Read it (`reads.csv`), Answer the question (`questions.csv`) |
+| Grammar | Fill the gap, Build the sentence, Spot the error, True or false, Right or wrong (`right-wrong.csv`) |
+| Reading (desktop only) | Read and answer (`reading.csv`), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`) |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
 

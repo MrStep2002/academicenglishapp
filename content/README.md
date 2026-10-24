@@ -17,7 +17,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `templates/` | The headings and one example row for every kind of file |
 
-Every topic folder has the same nine files. A file with only its heading row is simply empty for now.
+Every topic folder has the same ten files. A file with only its heading row is simply empty for now.
 The Chinese version uses only `words.csv` (and its `zh` column).
 
 | File | Games |
@@ -27,7 +27,8 @@ The Chinese version uses only `words.csv` (and its `zh` column).
 | `builds.csv` | Build the sentence |
 | `errors.csv` | Spot the error |
 | `tf.csv` | True or false |
-| `reads.csv` | Read it (a short text with tappable words) |
+| `right-wrong.csv` | Right or wrong (is the sentence right, or does it have a mistake?) |
+| `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
 | `extracts.csv` | In your own words |
 | `reading.csv` | Read and answer (a longer passage with one or more questions) |
@@ -122,13 +123,25 @@ Required columns are in **bold**.
 
 - **answer**: `TRUE` or `FALSE`.
 
-### reads.csv (Read it)
+### right-wrong.csv (Right or wrong)
 
-`id,level,title,text,question,correct,wrong1,wrong2,wrong3,explanation`
+`id,level,statement,answer,explanation` and, if you like, `correction`
 
-- **text**: a short text. `[[word]]` makes a word tappable (its meaning comes from `words.csv`);
-  `[[shown text|word]]` when the text differs from the word list: `[[suggests|suggest]]`.
-- **correct** and at least **wrong1** (up to `wrong3`).
+- **statement**: one sentence. Some are right; some have one mistake (grammar, spelling, word choice).
+- **answer**: `RIGHT` or `WRONG`.
+- explanation: shown after the answer, e.g. what the mistake is. `<b>` and `<i>` work.
+- correction (optional): the corrected sentence, shown after a WRONG one.
+- Aim for about half RIGHT and half WRONG at each level, so guessing doesn't pay.
+
+### reads.csv (Complete the text)
+
+`id,level,title,text` (the old `question,correct,wrong1,wrong2,wrong3,explanation` columns can stay but are no longer used)
+
+- **text**: a short text. Every `[[word]]` becomes a gap, and the word goes into the word bank under the text;
+  `[[shown text|word]]` when the text uses another form of the word: `[[suggests|suggest]]` (the gap needs "suggests").
+  At least 2 key words per text; 3–6 works best. The word must be in the same folder's `words.csv` (its meaning is shown after checking).
+- The bank also gets 1 extra key word from the same level (2 when the text has 3 or more gaps), so the last gap is never a giveaway.
+- **title**: shown above the text, e.g. `A perfume advert`.
 
 ### questions.csv (Answer the question)
 

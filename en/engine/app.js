@@ -68,7 +68,7 @@ function notesRow(r){
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
-  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], reads:[], questions:[], extracts:[], passages:[]};
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[]};
   const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
   const lv=(file,r)=>{ const v=(r.level||'').trim();
     if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
@@ -107,11 +107,17 @@ function buildSubject(T){
   (T.tf||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), t=/^(true|t|yes|y)$/.test(a);
     if(!r.statement||(!t && !/^(false|f|no|n)$/.test(a))) return warn('tf',r,'skipped: it needs a statement and an answer of TRUE or FALSE');
     S.tf.push({id:r.id, level:lv('tf',r), s:r.statement, t, why:r.explanation||''}); });
+  // Right or wrong (right-wrong.csv): is the sentence right, or does it have a mistake? Optional column: correction
+  (T['right-wrong']||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), ok=/^(right|r|correct|true|t|yes|y)$/.test(a);
+    if(!r.statement||(!ok && !/^(wrong|w|incorrect|false|f|no|n)$/.test(a))) return warn('right-wrong',r,'skipped: it needs a statement and an answer of RIGHT or WRONG');
+    S.rw.push({id:r.id, level:lv('right-wrong',r), s:r.statement, ok, fix:r.correction||'', why:r.explanation||''}); });
   // Read it: [[word]] or [[shown text|word]] makes a word tappable (its meaning comes from words.csv)
-  (T.reads||[]).forEach(r=>{ const wrong=wrongs(r);
-    if(!r.text||!r.question||!r.correct||!wrong.length) return warn('reads',r,'skipped: it needs a text, a question, a correct answer and a wrong answer');
+  // Complete the text (reads.csv): every [[key word]] in the text becomes a gap. The question columns are no longer used.
+  (T.reads||[]).forEach(r=>{
+    if(!r.text) return warn('reads',r,'skipped: it needs a text');
     const text=r.text.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g,(m,shown,w)=>{ const id=ref1('reads',r,(w||shown).trim()); return id?`[[${shown}|${id}]]`:shown; });
-    S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text, q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
+    if((text.match(/\[\[[^\]]+\]\]/g)||[]).length<2) return warn('reads',r,'skipped: the text needs at least 2 [[key words]] from words.csv');
+    S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text}); });
   (T.questions||[]).forEach(r=>{ const wrong=wrongs(r);
     if(!r.question||!r.correct||!wrong.length) return warn('questions',r,'skipped: it needs a question, a correct answer and a wrong answer');
     S.questions.push({id:r.id, level:lv('questions',r), cmd:r.command||'', q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
@@ -129,7 +135,7 @@ function buildSubject(T){
   return S;
 }
 // Load the page's files, then start. The Chinese version only needs the words.
-const FILES = ['words','gaps','builds','errors','tf','reads','questions','extracts','reading'];
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','reading'];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
@@ -172,10 +178,10 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word',
-  zhtype:'type', gap:'grammar', tf:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it'], ['grammar','Fill the gap, True or false'], ['build','Build the sentence, Spot the error, In your own words'],
-  ['short','Read it, Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
+  ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence, Spot the error, In your own words'],
+  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
 // For the big serif headings: the serif font's + is tiny, so it is set in the body font
@@ -187,7 +193,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, zhtf:.5, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
+  const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -266,7 +272,7 @@ function toastLevel(msg){ const t=document.createElement('div'); t.className='lv
 // The games use the student's own level for this topic. A student can choose another level to push themselves;
 // that choice is saved for this topic until they press "Use my level" (or their level reaches it).
 const MIN_LEVEL = 6;
-const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
 const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
 const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
 let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
@@ -332,13 +338,14 @@ const GAMES = [
   {key:'build',    cat:'grammar', name:'Build the sentence',blurb:'Put the coloured pieces in order. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'error',    cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   {key:'tf',       cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
+  {key:'rw',       cat:'grammar', name:'Right or wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   {key:'own',      cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
-  {key:'read',     cat:'reading', name:'Read it',           blurb:'Read a short text about a media product and answer a question.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
+  {key:'read',     cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   {key:'question', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
 // Only games this subject has content for
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
 // ---------- page frame ----------
 function frame(back, inner){
@@ -697,6 +704,26 @@ function playTF(){
   step();
 }
 
+// ---------- GRAMMAR: Right or wrong (right-wrong.csv) ----------
+function playRW(){
+  const game=GAMES.find(g=>g.key==='rw'), items=game.items(), deck=Deck(items), st=Stats('rw');
+  shell(game,'Press R or W on a keyboard, or tap.'); st.draw();
+  const step=()=>{
+    const t=deck.next();
+    const card=showCard(`<p class="instr">Right or wrong?</p><p class="statement">${esc(t.s)}</p>
+      <div class="tf-btns"><button class="tfb yes" data-v="1">Right</button><button class="tfb no" data-v="0">Wrong</button></div><div class="fb"></div>`);
+    let done=false;
+    const choose=v=>{ if(done) return; done=true; const ok=(v===1)===t.ok;
+      card.querySelectorAll('.tfb').forEach(b=>{ b.disabled=true; if(+b.dataset.v===(t.ok?1:0)) b.classList.add('ok'); else b.classList.add('dim'); });
+      const more=(!t.ok && t.fix ? `<span class="rw-fix">Correct: <b>${esc(t.fix)}</b></span>` : '')+(t.why?`<span>${rich(t.why)}</span>`:'');
+      const fb=card.querySelector('.fb'); ok?fbOk(fb,more):fbNo(fb,'',`<span>The sentence is <b>${t.ok?'right':'wrong'}</b>.</span>${more}`);
+      settle(ok,card,st,deck,t,step); };
+    card.querySelectorAll('.tfb').forEach(b=>b.onclick=()=>choose(+b.dataset.v));
+    keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='r'||k==='1') choose(1); if(k==='w'||k==='2') choose(0); };
+  };
+  step();
+}
+
 // ---------- READING: In your own words ----------
 function playOwn(){
   const game=GAMES.find(g=>g.key==='own'), items=game.items(), deck=Deck(items), st=Stats('own');
@@ -729,16 +756,67 @@ function playOwn(){
 
 // ---------- READING: Read it ----------
 function playRead(){
+  // Complete the text (key 'read', so best streaks and progress carry on from the old Read it).
+  // The text's [[key words]] become gaps; the word bank under it has those words (as they appear in the text) and
+  // 1-2 extra key words from the same level. Tap a word to put it in the selected gap (or the first empty one),
+  // tap a filled gap to take the word back. Check marks every gap: each counts as one answer for the key word it tests.
   const game=GAMES.find(g=>g.key==='read'), items=game.items(), deck=Deck(items), st=Stats('read');
-  shell(game,'Tap a highlighted word to see its meaning.'); st.draw();
+  shell(game,'Tap a word to put it in the next gap. Tap a filled gap to take the word out. Then press Check.'); st.draw();
+  const first = w => String(w||'').split(' / ')[0].trim();
   const step=()=>{
-    const r=deck.next();
-    const text=esc(r.text).replace(/\[\[([^|\]]+)\|([^\]]+)\]\]/g,(m,w,id)=>`<button class="kw" data-id="${esc(id)}">${w}</button>`);
-    mcCard({instr:esc(r.title||'Read it'), promptHtml:`<div class="readtext">${text}</div><p class="peek" id="peek">Tap a highlighted word to see what it means.</p><p class="question">${esc(r.q)}</p>`,
-      options:r.opts, answer:r.opts[r.a], optClass:'long',
-      onResult:(ok,card,fb)=>{ const why=r.why?`<span>${rich(r.why)}</span>`:''; ok?fbOk(fb,why):fbNo(fb,r.opts[r.a],why); settle(ok,card,st,deck,r,step); }});
-    const card=document.querySelector('#feed .card');
-    card.querySelectorAll('.kw').forEach(b=>b.onclick=()=>{ const w=byId[b.dataset.id]; card.querySelector('#peek').innerHTML=w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:''; });
+    const r=deck.next(), gaps=[], parts=[];
+    let last=0; const re=/\[\[([^|\]]+)\|([^\]]+)\]\]/g, m0=r.text; let m;
+    while((m=re.exec(m0))){ const before=m0.slice(0, m.index), cap=/(^|[.!?]["”’)]?\s+)$/.test(before) && /^[A-Z][a-z]/.test(m[1]);
+      parts.push(esc(m0.slice(last, m.index))); parts.push({i:gaps.length}); gaps.push({ans:m[1], show:cap ? m[1][0].toLowerCase()+m[1].slice(1) : m[1], cap, id:m[2]}); last=re.lastIndex; }
+    const inGap=(i,t)=>gaps[i].cap ? t[0].toUpperCase()+t.slice(1) : t;
+    parts.push(esc(m0.slice(last)));
+    // Extra words: key words at this text's level that are not in it (or any key word if the level has too few)
+    const lc=x=>x.toLowerCase(), taken=new Set(gaps.flatMap(g=>[g.id, ...(byId[g.id]?[lc(first(byId[g.id].w))]:[])])), answers=new Set(gaps.map(g=>lc(g.ans)));
+    const ok=w=>!taken.has(w.id) && !taken.has(lc(first(w.w))) && !answers.has(lc(first(w.w))) && first(w.w);
+    const b=playBand(r); let pool=S.words.filter(w=>ok(w) && (b==null || playBand(w)===b)); if(pool.length<2) pool=S.words.filter(ok);
+    const extra=shuffle(pool).slice(0, gaps.length>=3 ? 2 : 1).map(w=>first(w.w));
+    const bank=shuffle([...gaps.map(g=>g.show), ...extra]).map((t,i)=>({t, i, used:false}));
+    const filled=gaps.map(()=>null); let sel=0, checked=false;
+    const card=showCard(`<p class="instr">${esc(r.title||'Complete the text')}</p>
+      <div class="readtext ctext">${parts.map(p=>typeof p==='string'?p:`<button class="gapslot" type="button" data-i="${p.i}"></button>`).join('')}</div>
+      <p class="peek" id="peek"></p>
+      <div class="bank" role="group" aria-label="Word bank">${bank.map(x=>`<button class="bank-w" type="button" data-b="${x.i}"><kbd>${x.i+1}</kbd><span>${esc(x.t)}</span></button>`).join('')}</div>
+      <div class="next-row"><button class="btn" id="ctCheck" disabled>Check</button></div><div class="fb"></div>`);
+    card.classList.add('ct-card');
+    const slots=[...card.querySelectorAll('.gapslot')], chips=[...card.querySelectorAll('.bank-w')], check=card.querySelector('#ctCheck');
+    const firstEmpty=()=>filled.findIndex(x=>x==null);
+    const draw=()=>{
+      if(!checked) slots.forEach((s,i)=>{ const f=filled[i]; s.textContent=f==null?'':inGap(i, bank[f].t); s.classList.toggle('full', f!=null); s.classList.toggle('sel', !checked && i===sel && f==null);
+        s.setAttribute('aria-label', `Gap ${i+1}${f==null?', empty':': '+bank[f].t}`); });
+      chips.forEach(c=>{ const x=bank[+c.dataset.b]; c.disabled=checked || x.used; c.classList.toggle('used', x.used); });
+      check.disabled=checked || firstEmpty()!==-1;
+    };
+    const put=bi=>{ const x=bank[bi]; if(checked || x.used) return;
+      let g=(filled[sel]==null) ? sel : firstEmpty(); if(g===-1) return;
+      filled[g]=bi; x.used=true; const nx=firstEmpty(); sel=nx===-1?g:nx; draw();
+      if(firstEmpty()===-1) check.focus({preventScroll:true}); };
+    const takeOut=i=>{ if(checked) return; const f=filled[i]; if(f!=null){ bank[f].used=false; filled[i]=null; } sel=i; draw(); };
+    chips.forEach(c=>c.onclick=()=>put(+c.dataset.b));
+    slots.forEach(s=>s.onclick=()=>{ const i=+s.dataset.i;
+      if(checked){ const w=byId[gaps[i].id]; card.querySelector('#peek').innerHTML=w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:''; return; }
+      takeOut(i); });
+    const doCheck=()=>{ if(checked || firstEmpty()!==-1) return; checked=true; card.classList.add('done'); let got=0;
+      gaps.forEach((g,i)=>{ const right=lc(bank[filled[i]].t)===lc(g.ans), s=slots[i], item={id:r.id+'#'+(i+1), level:r.level, wid:g.id, qs:gaps.length};
+        if(right){ got++; s.classList.add('ok'); st.hit(item); }
+        else { s.classList.add('no'); s.innerHTML=`<s>${esc(inGap(i, bank[filled[i]].t))}</s> ${esc(g.ans)}`; st.miss(item); } });
+      draw(); check.parentNode.remove();
+      card.querySelector('#peek').textContent='Tap a word in the text to see what it means.';
+      const fb=card.querySelector('.fb'), n=gaps.length;
+      const notes=gaps.filter((g,i)=>lc(bank[filled[i]].t)!==lc(g.ans)).map(g=>wordNote(byId[g.id])).join('');
+      if(got===n) fbOk(fb, `<span>All ${n} gaps right.</span>`);
+      else { fb.innerHTML=`<div class="feedback no"><span class="verdict">${got} of ${n} right.</span><span>The right words are shown in the text.</span>${notes}</div>`; deck.retry(r); }
+      manualNext(card, step, 'Next text →'); };
+    check.onclick=doCheck;
+    keyHandler=e=>{ if(checked) return; const k=parseInt(e.key,10);
+      if(k>=1 && k<=bank.length){ e.preventDefault(); put(k-1); }
+      else if(e.key==='Backspace'){ e.preventDefault(); const lastF=[...filled.keys()].filter(i=>filled[i]!=null).pop(); if(lastF!=null) takeOut(lastF); }
+      else if(e.key==='Enter'){ e.preventDefault(); doCheck(); } };
+    draw();
   };
   step();
 }
