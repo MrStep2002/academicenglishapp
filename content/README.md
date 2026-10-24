@@ -10,10 +10,10 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | Folder | Used by |
 |---|---|
 | `descriptive/` | English → Descriptive language, and Chinese version → Descriptive language |
-| `essentials/` | English → Academic English Essentials |
+| `essentials/` | English → Academic English Essentials, and Chinese version → Academic English Essentials |
 | `representation/` | English → Representation, and Chinese version → Representation |
 | `web-design/` | English → Web design, and Chinese version → Web design |
-| `keywords/` | Chinese version → Academic English Keywords |
+| `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `templates/` | The headings and one example row for every kind of file |
 

@@ -12,7 +12,7 @@ Homepage → **English** or **Chinese version 中文版**
   Each topic → Vocabulary, Grammar or Reading → a game.
   Reading is greyed out on phones ("Only available on desktop devices"); the split is automatic.
 - **Chinese version** (`zh/`): vocabulary games with Chinese support. Topics are listed by subject:
-  All subjects → Academic English Keywords; Media → Web design, Representation; English Language → Descriptive language.
+  All subjects → Academic English Essentials; Media → Web design, Representation; English Language → Descriptive language.
   Every topic has 8 games: 中文 → English, Match the meaning, Choose the meaning, Type it, True or false, Odd one out, Speed round (60 s), Survival (3 lives).
 - **My progress** (`progress/`): linked at the top of both topic lists. Shows the student's level, their topics and the words they have learned (see *Levels and progress* below).
 
@@ -31,7 +31,7 @@ Homepage → **English** or **Chinese version 中文版**
 | `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css` |
 | `en/data/`, `zh/data/`, `en/reading/` | The old content files. Nothing uses them now: everything is in `content/` |
 | `zh/index.html` | Chinese version: topics as a list, grouped by subject |
-| `zh/keywords/` | Academic English Keywords (`content/keywords/`): 95 general academic words, with Chinese |
+| `zh/essentials/` | Academic English Essentials on the Chinese side. It shares `content/essentials/` with the English page, like every other topic (95 words, all with Chinese). `zh/keywords/` is its old address and forwards here |
 | `zh/web-design/`, `zh/representation/`, `zh/descriptive/` | The Chinese version of these topics. They share their folder in `content/` with the English pages and use the `zh` column of `words.csv` |
 | `representation/` | Old Year 9 Representation app. Nothing links to it now: its words are in `content/representation/` |
 | `y8media/` | Old Year 8 Website Words app. Nothing links to it now: its words are in `content/web-design/` |
@@ -46,7 +46,7 @@ Homepage → **English** or **Chinese version 中文版**
 | Grammar | Fill the gap, Build the sentence, Spot the error, True or false |
 | Reading (desktop only) | Read and answer (`reading.csv`), In your own words (`extracts.csv`), Read it (`reads.csv`), Answer the question (`questions.csv`) |
 
-Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/keywords/index.html` and add a bar to `zh/index.html`.
+Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
 
 To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add a link to `en/index.html`. Details in `content/README.md`.
 
