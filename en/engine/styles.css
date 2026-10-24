@@ -491,8 +491,7 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 
 /* Compact topic page (data-layout="compact" on the page, 24 Oct 2026; Descriptive language first).
    No blurb; "Your level: …" in small type under the level buttons, then the level bar as the divider;
-   all the games listed in three columns: Vocabulary, Grammar, Reading. */
-body.menu-wide .wrap{max-width:1040px}
+   all the games listed in three columns: Vocabulary, Grammar, Reading. Same 860px page width as every other page. */
 .hero-compact{border-bottom:0;padding-bottom:0;margin-bottom:26px}
 .hero-compact h1{margin-bottom:2px}
 .lvl-line{display:grid;gap:9px;margin-top:18px}

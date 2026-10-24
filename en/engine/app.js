@@ -342,7 +342,7 @@ const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'w
 
 // ---------- page frame ----------
 function frame(back, inner){
-  clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide','menu-wide');
+  clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide');
   const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
   $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
@@ -400,7 +400,6 @@ function menuCompact(){
         ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}</section>`; }).join('')}
   </div>
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
-  document.body.classList.add('menu-wide');
   wireLevels(menu);
 }
 // "Your level: Advanced" in small type, then the level bar, which is also the line between the levels and the games
