@@ -27,7 +27,7 @@ HEADS = {
     'errors': ['id', 'level', 'title', 'text'],
     'tf': ['id', 'level', 'statement', 'answer', 'explanation'],
     'right-wrong': ['id', 'level', 'statement', 'answer', 'explanation', 'correction'],
-    'reads': ['id', 'level', 'title', 'text', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],
+    'reads': ['id', 'level', 'title', 'text'],   # Complete the text
     'questions': ['id', 'level', 'command', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],
     'extracts': ['id', 'level', 'extract', 'word', 'correct', 'wrong1', 'wrong2', 'wrong3', 'word2', 'correct2', 'wrong1_2',
                  'wrong2_2', 'wrong3_2', 'word3', 'correct3', 'wrong1_3', 'wrong2_3', 'wrong3_3'],

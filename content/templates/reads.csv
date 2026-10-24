@@ -1,2 +1,2 @@
-﻿id,level,title,text,question,correct,wrong1,wrong2,wrong3,explanation
-"topic-read-001","B1","A perfume advert","The advert shows a young woman in the [[foreground]]. The [[lighting]] is soft and warm. The colour gold [[suggests|suggest]] that she is [[wealthy]].","What does the gold colour suggest?","She is wealthy.","She is vulnerable.","She is serious.","She is lonely.","Gold is linked with money and luxury."
+﻿id,level,title,text
+"topic-read-001","B1","A perfume advert","The advert shows a young woman in the [[foreground]]. The [[lighting]] is soft and warm. The colour gold [[suggests|suggest]] that she is [[wealthy]]."

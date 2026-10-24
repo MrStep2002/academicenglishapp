@@ -135,7 +135,7 @@ Required columns are in **bold**.
 
 ### reads.csv (Complete the text)
 
-`id,level,title,text` (the old `question,correct,wrong1,wrong2,wrong3,explanation` columns can stay but are no longer used)
+`id,level,title,text`
 
 - **text**: a short text. Every `[[word]]` becomes a gap, and the word goes into the word bank under the text;
   `[[shown text|word]]` when the text uses another form of the word: `[[suggests|suggest]]` (the gap needs "suggests").

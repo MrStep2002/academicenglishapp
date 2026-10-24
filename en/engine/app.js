@@ -772,7 +772,13 @@ function playRead(){
     parts.push(esc(m0.slice(last)));
     // Extra words: key words at this text's level that are not in it (or any key word if the level has too few)
     const lc=x=>x.toLowerCase(), taken=new Set(gaps.flatMap(g=>[g.id, ...(byId[g.id]?[lc(first(byId[g.id].w))]:[])])), answers=new Set(gaps.map(g=>lc(g.ans)));
-    const ok=w=>!taken.has(w.id) && !taken.has(lc(first(w.w))) && !answers.has(lc(first(w.w))) && first(w.w);
+    // An extra word must never fit a gap as well as its answer: skip words marked "similar" or "accept" to a key word
+    // in words.csv, and words listed as each other's synonyms
+    const syn=w=>(w.syn||[]).map(x=>lc(String(x).trim()));
+    const close=w=>gaps.some(g=>{ const k=byId[g.id]; if(!k) return false;
+      return areAlike(g.id, w.id) || (acceptOf[g.id] && acceptOf[g.id].has(w.id)) || (acceptOf[w.id] && acceptOf[w.id].has(g.id))
+        || syn(k).includes(lc(first(w.w))) || syn(w).includes(lc(first(k.w))) || syn(w).includes(lc(g.ans)); });
+    const ok=w=>!taken.has(w.id) && !taken.has(lc(first(w.w))) && !answers.has(lc(first(w.w))) && first(w.w) && !close(w);
     const b=playBand(r); let pool=S.words.filter(w=>ok(w) && (b==null || playBand(w)===b)); if(pool.length<2) pool=S.words.filter(ok);
     const extra=shuffle(pool).slice(0, gaps.length>=3 ? 2 : 1).map(w=>first(w.w));
     const bank=shuffle([...gaps.map(g=>g.show), ...extra]).map((t,i)=>({t, i, used:false}));
