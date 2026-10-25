@@ -538,17 +538,40 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .rolekey [lang="zh-CN"]{font-family:var(--f-zh);opacity:.8}
 .tok.t-near{background:var(--good-soft);color:var(--good)}   /* the word beside a missing-word gap, tapped instead of the bracketed word: counts as found */
 
-/* Word Snake (arcade game, 25 Oct): the meaning on top, the board, then the arrows on touch screens */
-.snake-card{padding:clamp(14px,3vw,24px)}
-.snake-def{font-size:clamp(17px,2.6vw,20px);line-height:1.45;margin:0 0 12px;min-height:2.9em}
-.phone .snake-card{padding:14px 12px}
-.phone .snake-def{font-size:17px;min-height:4.35em;margin-bottom:8px}
+/* Arcade games (25 Oct): the meaning on top, the board, then the message line */
+.arcade-card{padding:clamp(14px,3vw,24px)}
+.arcade-def{font-size:clamp(17px,2.6vw,20px);line-height:1.45;margin:0 0 12px;min-height:2.9em}
+.phone .arcade-card{padding:14px 12px}
+.phone .arcade-def{font-size:17px;min-height:4.35em;margin-bottom:8px}
+.arcade-toast{min-height:2.9em;margin:10px 0 0}
+
+/* Word Snake: the board, then the arrows on touch screens */
 .snake-board{position:relative;display:flex;justify-content:center}
 .snake-board canvas{display:block;border-radius:10px;box-shadow:0 0 0 1px var(--rule);touch-action:none;-webkit-user-select:none;user-select:none}
 .snake-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;padding:10px 18px;border-radius:999px;background:var(--ink);color:var(--paper);font-weight:700;font-size:15px;pointer-events:none;white-space:nowrap}
 .snake-msg[hidden]{display:none}
-.snake-toast{min-height:2.9em;margin:10px 0 0}
 .snake-pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,50px);grid-template-areas:". up ." "left down right";gap:8px;justify-content:center;margin-top:6px}
 .snake-pad button{border:1px solid var(--rule);background:var(--paper);border-radius:12px;font-size:20px;color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none}
 .snake-pad button:active{background:var(--blue-soft)}
 .pad-up{grid-area:up}.pad-left{grid-area:left}.pad-right{grid-area:right}.pad-down{grid-area:down}
+
+/* Whack-a-word: nine holes; each word is a card that pops up out of a hole (behind its rim) and drops back */
+.whack{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px;padding:16px 14px 10px;background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--rule);-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.hole{position:relative;height:96px}
+.hole .well{position:absolute;left:0;right:0;top:0;bottom:12px;overflow:hidden}
+.hole::after{content:"";position:absolute;left:3%;right:3%;bottom:3px;height:18px;border-radius:50%;background:var(--rule);background:radial-gradient(closest-side, color-mix(in srgb, #0b0e1f 42%, var(--rule)) 60%, var(--rule) 100%)}   /* the hole: dark in the middle */
+.hole kbd{position:absolute;left:2px;top:0;font-family:var(--f-mono);font-size:11px;color:var(--ink-2);opacity:.7}
+.mole{position:absolute;left:7%;right:7%;bottom:-4px;height:70px;display:flex;align-items:center;justify-content:center;padding:4px 8px 8px;border:1.5px solid var(--rule);border-radius:14px 14px 6px 6px;background:var(--sheet);color:var(--ink);font-weight:700;font-size:18px;line-height:1.15;text-align:center;transform:translateY(112%);transition:transform .17s ease-out, background .12s, border-color .12s, opacity .2s;cursor:pointer;touch-action:manipulation}
+.mole span{display:block;max-width:100%;overflow-wrap:break-word}
+.mole.up{transform:translateY(0)}
+.mole:disabled{cursor:default;color:var(--ink)}
+.mole.hit{background:var(--mark);border-color:var(--mark);color:var(--mark-ink);animation:whacked .25s ease-out}
+.mole.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+@keyframes whacked{40%{transform:translateY(8%) scale(1.04,.9)}100%{transform:translateY(0)}}
+.whack.stunned .mole{opacity:.45;cursor:not-allowed}
+.whack-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;background:color-mix(in srgb, var(--paper) 70%, transparent)}
+.whack-msg[hidden]{display:none}
+.phone .whack{gap:6px 8px;padding:12px 8px 8px}
+.phone .hole{height:86px}
+.phone .mole{left:2%;right:2%;height:62px;font-size:15px;padding:3px 5px 7px}
+@media (prefers-reduced-motion:reduce){.mole{transition:opacity .2s}.mole.hit{animation:none}}

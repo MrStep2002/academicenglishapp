@@ -177,9 +177,9 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word',
+const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
-const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, Word Snake, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
+const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, Word Snake, Whack-a-word, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
@@ -940,9 +940,10 @@ function playNotes(){
 // Every arcade game asks the same question: a meaning at the top, and the student goes for its word among a few on the
 // board. The words are this topic's, at the student's level. The first go at each meaning is recorded like any other
 // answer (word points, word stages, level). A game lasts one minute and never ends early: a mistake costs length or
-// points, not the game. Not on the topic menus yet: open one by adding #play-snake to an English topic page's address.
+// points, not the game. Not on the topic menus yet: open one by adding #play-snake or #play-whack to an English topic page's address.
 const ARCADE = [
-  {key:'snake', name:'Word Snake', blurb:'Steer the snake into the word that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playSnake()}
+  {key:'snake', name:'Word Snake', blurb:'Steer the snake into the word that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
+  {key:'whack', name:'Whack-a-word', blurb:'Words pop up and drop again. Tap the one that matches the meaning before it goes.', items:()=>pick(S.words), min:6, run:()=>playWhack()}
 ];
 // The shared question: the word to find, and the words on the board with it (the same part of speech where possible,
 // never two that are alike). Same choice of wrong answers as Word or meaning.
@@ -979,11 +980,11 @@ function playSnake(){
     <p class="hint">${PHONE?'Swipe on the board or tap the arrows to steer into the right word. Wrong words make the snake shorter.':`${touch?'Swipe on the board (or use the arrows)':'Use the arrow keys or WASD'} to steer into the word that matches the meaning. A wrong word makes the snake shorter. You can go through the walls.`}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
   const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>Found <b>${score}</b></span>${inCircuit?'':`<span><b id="snSecs">${SECS}</b>s</span>`}<span>Best <b>${Math.max(best,score)}</b></span>`; };
-  const card=showCard(`<p class="instr">Find the word that means</p><p class="snake-def" id="snDef"></p>
+  const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="snDef"></p>
     <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="Word Snake board"></canvas><p class="snake-msg" id="snMsg">${touch?'Swipe to start':'Press an arrow key to start'}</p></div>
-    <p class="toast snake-toast" id="toast" aria-live="polite"></p>
+    <p class="toast arcade-toast" id="toast" aria-live="polite"></p>
     ${touch?`<div class="snake-pad">${[['up','▲'],['left','◀'],['right','▶'],['down','▼']].map(([d,s])=>`<button type="button" class="pad-${d}" data-d="${d}" aria-label="${d}">${s}</button>`).join('')}</div>`:''}`);
-  card.classList.add('snake-card');
+  card.classList.add('arcade-card');
   const box=card.querySelector('#snBoard'), cv=card.querySelector('#snCanvas'), cx=cv.getContext('2d'), msg=card.querySelector('#snMsg');
   const alive=()=>document.body.contains(cv);   // false once the student has moved on to another page or game
 
@@ -1013,7 +1014,7 @@ function playSnake(){
   let prevHead=null, prevTail=null, lastTick=0, pills=[], flash=null, q=null, firstTry=true;
   let started=false, paused=false, over=false, end=0, left=SECS*1000, loop=0;
 
-  const say=(m, bad)=>{ const t=card.querySelector('#toast'); if(t){ t.textContent=m; t.className='toast snake-toast'+(bad?' no':''); } };
+  const say=(m, bad)=>{ const t=card.querySelector('#toast'); if(t){ t.textContent=m; t.className='toast arcade-toast'+(bad?' no':''); } };
   // Free cells for a label: not on the snake, not right beside or straight ahead of its head, and one cell clear of other labels
   function spot(L, block, near){
     for(let t=0;t<500;t++){ const x=Math.floor(Math.random()*(COLS-L.len+1)), y=Math.floor(Math.random()*(ROWS-L.h+1)); let ok=true;
@@ -1137,6 +1138,102 @@ function playSnake(){
 
   colours(); size(); stats();
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(()=>{ if(!alive()) return; newQuestion(); requestAnimationFrame(draw); });
+}
+
+// ----- Whack-a-word -----
+// Nine holes. Words pop up out of them for a moment and drop back. Tap (or click, or press its number) the word that
+// matches the meaning while it is up. Right: it is highlighted, and a new meaning comes with a new set of words.
+// Wrong: that word's meaning is shown and the hammer stops for a second (so tapping everything does not pay).
+// The right word comes up within a second or two of each new meaning, and again and again until it is found.
+// Words come up a little faster and stay up a little less as the score grows.
+function playWhack(){
+  const game=ARCADE.find(g=>g.key==='whack'), SECS=60, N=PHONE?4:5, MAXUP=3, STUN=1000;
+  const touch=PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+  const nextQ=arcadeQuestions(N), best=store.get('best:whack',0);
+  let score=0; const missed=[];
+  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+    <p class="hint">${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning while it is up. A wrong word stops your hammer for a second.</p>
+    ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
+  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>Found <b>${score}</b></span>${inCircuit?'':`<span><b id="wkSecs">${SECS}</b>s</span>`}<span>Best <b>${Math.max(best,score)}</b></span>`; };
+  const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="wkDef"></p>
+    <div class="whack" id="wkBoard">${[...Array(9)].map((_,i)=>`<div class="hole"><div class="well"><button type="button" class="mole" tabindex="-1" disabled><span></span></button></div>${touch?'':`<kbd>${i+1}</kbd>`}</div>`).join('')}
+      <div class="whack-msg" id="wkMsg"${inCircuit?' hidden':''}><button type="button" class="btn" id="wkGo">Start</button></div></div>
+    <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
+  card.classList.add('arcade-card');
+  const board=card.querySelector('#wkBoard'), msg=card.querySelector('#wkMsg'), goBtn=card.querySelector('#wkGo');
+  const alive=()=>document.body.contains(board);
+  const holes=[...board.querySelectorAll('.hole')].map(el=>({el, mole:el.querySelector('.mole'), w:null, up:false, token:0}));
+  let q=null, firstTry=true, between=false, pops=0, sinceT=0, stunnedTill=0;
+  let upMs=PHONE?2500:2300, gap=PHONE?720:660;
+  let started=false, paused=false, over=false, end=0, left=SECS*1000, loop=0;
+  const say=(m, bad)=>{ const t=card.querySelector('#toast'); if(t){ t.textContent=m; t.className='toast arcade-toast'+(bad?' no':''); } };
+
+  // A long word or phrase gets smaller type so it fits on its card
+  const fit=(mole, span)=>{ span.style.fontSize=''; let px=parseFloat(getComputedStyle(span).fontSize)||16;
+    while(px>11 && (span.scrollWidth>mole.clientWidth-10 || span.scrollHeight>mole.clientHeight-6)){ px--; span.style.fontSize=px+'px'; } };
+  function up(h, w){
+    h.w=w; h.up=true; const my=++h.token, span=h.mole.querySelector('span');
+    span.textContent=w.w; h.mole.className='mole'; fit(h.mole, span); h.mole.disabled=false;
+    requestAnimationFrame(()=>{ if(h.token===my) h.mole.classList.add('up'); });
+    later(()=>{ if(h.token===my) down(h); }, upMs);
+  }
+  function down(h){
+    const my=++h.token; h.up=false; h.mole.classList.remove('up'); h.mole.disabled=true;
+    later(()=>{ if(h.token===my){ h.w=null; h.mole.className='mole'; } }, 260);   // free again once it has dropped out of sight
+  }
+  function newQuestion(){
+    q=nextQ(); firstTry=true; between=false; pops=0; sinceT=0;
+    const def=card.querySelector('#wkDef'); if(def) def.textContent=q.w.def;
+  }
+  // Every so often a word comes up in an empty hole: never more than three up at once, never the same word twice at once.
+  // The right word is the second to come up for each meaning, and after that comes up at least every third time.
+  function spawn(){
+    if(between) return;
+    const upNow=holes.filter(h=>h.up), free=holes.filter(h=>!h.up && !h.w); if(upNow.length>=MAXUP || !free.length) return;
+    const targetUp=upNow.some(h=>h.w===q.w), others=q.words.filter(w=>w!==q.w && !upNow.some(h=>h.w===w));
+    const wantT=!targetUp && (pops===1 || sinceT>=2 || Math.random()<0.35 || !others.length);
+    if(!wantT && !others.length) return;
+    const w=wantT ? q.w : others[Math.floor(Math.random()*others.length)];
+    up(free[Math.floor(Math.random()*free.length)], w); pops++; sinceT = w===q.w ? 0 : sinceT+1;
+  }
+  const run=()=>{ const my=++loop; const t=()=>{ if(my!==loop || over || paused || !alive()) return; spawn(); later(t, gap); }; later(t, 250); };
+
+  function tap(h){
+    if(!started || paused || over || between || !h.up || performance.now()<stunnedTill) return;
+    if(h.w===q.w){
+      score++; stats(); if(firstTry) P.record('whack', q.w, true);
+      h.mole.classList.add('hit'); say('✓ '+q.w.w);
+      upMs=Math.max(PHONE?1600:1400, upMs-60); gap=Math.max(440, gap-15);
+      between=true; holes.forEach(o=>{ if(o!==h && o.up) down(o); });
+      later(()=>down(h), 380); later(newQuestion, 520);
+    } else {
+      h.mole.classList.add('bad');
+      if(firstTry){ firstTry=false; P.record('whack', q.w, false); missed.push(q.w); q.retry(); }
+      say(`✗ ${h.w.w}: ${h.w.def}`, true);
+      stunnedTill=performance.now()+STUN; board.classList.add('stunned'); later(()=>board.classList.remove('stunned'), STUN);
+      later(()=>down(h), 320);
+    }
+  }
+  function start(){ if(started) return; started=true; msg.hidden=true; if(!inCircuit) end=Date.now()+SECS*1000; run(); clock(); }
+  function pause(){ if(!started || paused || over) return; paused=true; if(!inCircuit) left=Math.max(0, end-Date.now());
+    holes.forEach(h=>{ if(h.up) down(h); }); goBtn.textContent='Carry on'; msg.hidden=false; }
+  function resume(){ if(!paused || over) return; paused=false; if(!inCircuit) end=Date.now()+left; msg.hidden=true; run(); }
+  function clock(){ if(over || inCircuit || !alive()) return;
+    const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('wkSecs');
+    if(f) f.style.width=(100*l/(SECS*1000))+'%'; if(s) s.textContent=Math.ceil(l/1000);
+    if(l<=0){ over=true; return arcadeEnd(game, score, missed, playWhack); }
+    later(clock, 200); }
+
+  holes.forEach(h=>h.mole.addEventListener('pointerdown', e=>{ e.preventDefault(); tap(h); }));
+  goBtn.onclick=()=>{ started ? resume() : start(); };
+  keyHandler=e=>{ const n=parseInt(e.key,10);
+    if(n>=1 && n<=9){ e.preventDefault(); tap(holes[n-1]); }
+    else if((e.key===' ' || e.key==='Enter') && (!started || paused)){ e.preventDefault(); started ? resume() : start(); } };
+  const onVis=()=>{ if(!alive()){ document.removeEventListener('visibilitychange', onVis); return; } if(document.hidden) pause(); };
+  document.addEventListener('visibilitychange', onVis);
+
+  stats(); newQuestion();
+  if(inCircuit) start(); else goBtn.focus({preventScroll:true});
 }
 
 // ---------- CHINESE SIDE (data-only="zh"): vocabulary games with Chinese support ----------
