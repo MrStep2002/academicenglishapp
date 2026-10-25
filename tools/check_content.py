@@ -18,7 +18,7 @@ CODES = re.compile(r'^([ABC])([12])(\+)?$')
 NAMES = {'foundation': 1, 'foundation+': 2, 'intermediate': 3, 'intermediate+': 4, 'advanced': 5}
 LEVEL_NAMES = ['', 'Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced']
 MIN_LEVEL = 6   # the same number as MIN_LEVEL in en/engine/app.js
-OPTIONAL = {'correction'}   # columns a file may leave out
+OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3'}   # columns a file may leave out
 
 HEADS = {
     'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note'],
@@ -27,7 +27,7 @@ HEADS = {
     'errors': ['id', 'level', 'title', 'text'],
     'tf': ['id', 'level', 'statement', 'answer', 'explanation'],
     'right-wrong': ['id', 'level', 'statement', 'answer', 'explanation', 'correction'],
-    'reads': ['id', 'level', 'title', 'text'],   # Complete the text
+    'reads': ['id', 'level', 'title', 'text', 'extra1', 'extra2', 'extra3'],   # Complete the text (extra1-3: the text's own extra words, optional)
     'questions': ['id', 'level', 'command', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],
     'extracts': ['id', 'level', 'extract', 'word', 'correct', 'wrong1', 'wrong2', 'wrong3', 'word2', 'correct2', 'wrong1_2',
                  'wrong2_2', 'wrong3_2', 'word3', 'correct3', 'wrong1_3', 'wrong2_3', 'wrong3_3'],
@@ -131,6 +131,9 @@ def check_folder(folder, all_word_ids):
                     else: say(kind, r, f'[[{shown}{"|" + w if w else ""}]]: "{(w or shown).strip()}" is not in words.csv')
                 if not r.get('text') or found < 2:
                     say(kind, r, 'needs a text with at least 2 [[key words]] from words.csv (skipped)'); ok = False
+                keys = {x.strip().lower() for pair in re.findall(r'\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', r.get('text', '')) for x in pair if x}
+                for k in ('extra1', 'extra2', 'extra3'):   # the text's own extra words must not also be gaps
+                    if r.get(k) and r[k].strip().lower() in keys: say(kind, r, f'{k} "{r[k]}" is also a [[key word]] in the text, so it would be in the word bank twice')
             elif kind == 'questions':
                 if not r.get('question') or not r.get('correct') or not wrongs():
                     say(kind, r, 'needs a question, a correct answer and a wrong answer (skipped)'); ok = False
@@ -180,6 +183,10 @@ def check_folder(folder, all_word_ids):
     if builds:   # Build the sentence is on the Chinese version only: a sentence without its Chinese is not played anywhere
         with_zh = sum(1 for r in builds if r.get('zh'))
         print(f'  builds.csv: {with_zh} of {len(builds)} sentences have Chinese (zh). Build the sentence (Chinese version) uses only those.')
+    reads = data.get('reads', [])
+    if reads:   # Complete the text: the word bank has only the key words and the text's own extra words
+        with_extra = sum(1 for r in reads if any(r.get(k) for k in ('extra1', 'extra2', 'extra3')))
+        print(f'  reads.csv: {with_extra} of {len(reads)} texts have extra words (extra1-3). The others show only their own key words in the word bank.')
     for p in problems: print('  - ' + p)
     n = len(problems)
     for f in reading:

@@ -1,2 +1,2 @@
-﻿id,level,title,text
-"topic-read-001","B1","A perfume advert","The advert shows a young woman in the [[foreground]]. The [[lighting]] is soft and warm. The colour gold [[suggests|suggest]] that she is [[wealthy]]."
+﻿id,level,title,text,extra1,extra2,extra3
+"topic-read-001","B1","A perfume advert","The advert shows a young woman in the [[foreground]]. The [[lighting]] is soft and warm. The colour gold [[suggests|suggest]] that she is [[wealthy]].","slogan","cheap",""

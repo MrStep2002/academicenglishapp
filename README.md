@@ -45,8 +45,8 @@ Homepage → **English** or **Chinese version 中文版**
 |---|---|
 | Vocabulary | Match the meaning, Synonym groups, Word or meaning |
 | Grammar | Fill the gap, Spot the error, True or false, Right or wrong (`right-wrong.csv`). Build the sentence moved to the Chinese version (25 Oct) |
-| Reading (desktop only) | Read and answer (`reading.csv`), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`) |
-| Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Planned as the middle station of the Daily Circuit |
+| Reading (desktop only) | In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
+| Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
 
@@ -55,6 +55,10 @@ To add a topic: make a folder in `content/` from `content/templates/`, copy a to
 Topic page layout: `data-layout="compact"` on a topic page (all four English topics since 24 Oct) gives the newer menu: the title, the
 level buttons, "Your level: …" with the level bar as the divider, then every game listed in three columns (Vocabulary, Grammar,
 Reading), with no category page in between. Pages without it keep the older layout. To switch a page over, add the attribute.
+
+Daily Circuit (English side, 25 Oct): five stations, 4 minutes: a short game (45 s), a long game (45 s), an arcade game (60 s), a long game (45 s), a short game (45 s). Each game in `GAMES` has `form: 'short'` or `'long'` (change it there to move a game); a station picks a game of its kind from any of the student's subjects at their level, never the same game twice when there is a choice. No long game at their level in any subject (e.g. on a phone, where reading games are off): a short game instead. Time up in the middle of a long game: what the student has done is marked (Spot the error: each mistake found counts at the station, without counting against their level; Complete the text: the filled gaps are marked). The Chinese side keeps five one-minute stations. Plan in `en/engine/circuit.js` (`EN_PLAN`).
+
+Switching a game off for one topic: add `data-hide="syn"` to the topic page's `<div id="app">` (the game's key; several keys with spaces between them). The game disappears from that page's menu and its Daily Circuit, and its content stays in the CSV files. Keys: match, syn, meaning, gap, error, tf, rw, passage, own, read, question. Academic English Essentials hides Synonym groups (`data-hide="syn"`, 25 Oct).
 
 After changing `en/engine/app.js` or `styles.css`, change the `?v=` number after them in every topic page (one search-and-replace), so students' browsers fetch the new version instead of an old saved copy.
 
@@ -76,7 +80,7 @@ a 14-day chart and a "How to earn points" table.
   | Fill the gap, True or false | 1 | 2 | 2 | 3 | 4 |
   | Build the sentence, Spot the error, In your own words | 2 | 3 | 4 | 5 | 6 |
   | Read it, Answer the question | 3 | 4 | 5 | 6 | 8 |
-  | A reading passage (Close reading, Big idea, Note taking, Read and answer) | 8 | 10 | 15 | 18 | 22 |
+  | A reading passage (Close reading, Big idea, Note taking) | 8 | 10 | 15 | 18 | 22 |
 
   A passage's points are shared between its questions; Note taking scores only when all the notes are right.
 - Only right answers earn points. Every 5 wrong answers take 1 point off (never below 0 for the day or session).

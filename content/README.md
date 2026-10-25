@@ -17,7 +17,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `templates/` | The headings and one example row for every kind of file |
 
-Every topic folder has the same ten files. A file with only its heading row is simply empty for now.
+Every topic folder has the same nine files. A file with only its heading row is simply empty for now.
 The Chinese version uses only `words.csv` (and its `zh` column).
 
 | File | Games |
@@ -31,7 +31,8 @@ The Chinese version uses only `words.csv` (and its `zh` column).
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
 | `extracts.csv` | In your own words |
-| `reading.csv` | Read and answer (a longer passage with one or more questions) |
+
+Longer reading passages are not in the topic folders: they are in `reading-comprehension/` (Close reading, Big idea, Note taking). The topic folders' empty `reading.csv` files (Read and answer, replaced by Close reading) were removed on 25 Oct.
 
 ## Levels
 
@@ -143,12 +144,16 @@ Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chi
 
 ### reads.csv (Complete the text)
 
-`id,level,title,text`
+`id,level,title,text,extra1,extra2,extra3`
 
 - **text**: a short text. Every `[[word]]` becomes a gap, and the word goes into the word bank under the text;
   `[[shown text|word]]` when the text uses another form of the word: `[[suggests|suggest]]` (the gap needs "suggests").
   At least 2 key words per text; 3–6 works best. The word must be in the same folder's `words.csv` (its meaning is shown after checking).
-- The bank also gets 1 extra key word from the same level (2 when the text has 3 or more gaps), so the last gap is never a giveaway.
+- **extra1**, **extra2**, **extra3** (optional): extra words for the word bank that do not fit any gap, so the last gap is never a giveaway.
+  They can be any words, not only words from `words.csv`; write them as they should appear (lower case unless they are names).
+  Use as many as suit the level: none, one, two or three. The game never adds extra words of its own, so a text with
+  none shows only its own key words (the last gap then fills itself).
+  An extra word must not also be one of the text's `[[key words]]`.
 - **title**: shown above the text, e.g. `A perfume advert`.
 
 ### questions.csv (Answer the question)
@@ -166,7 +171,7 @@ Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chi
 - For the first bracketed word: word (its entry in `words.csv`, e.g. `glance`), **correct** (what it means here),
   **wrong1**–**wrong3**. For the second: `word2`, `correct2`, `wrong1_2`… and so on. Up to three words per extract.
 
-### reading.csv, close-reading.csv, big-idea.csv (reading passages)
+### close-reading.csv, big-idea.csv (reading passages; template: `templates/reading.csv`)
 
 `id,level,title,passage,question,correct,wrong1,wrong2,wrong3,explanation,source`
 and, for a second question on the same passage, `question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanation2`

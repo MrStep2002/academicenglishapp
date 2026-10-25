@@ -1,4 +1,7 @@
-// 5-MINUTE DAILY CIRCUIT: five one-minute stations, each a game from one of the student's subjects, at their level.
+// DAILY CIRCUIT: five stations, each a game from one of the student's subjects, at their level.
+// English side (25 Oct): short game 45 s → longer game 45 s → arcade game 60 s → longer game 45 s → short game 45 s (4 minutes).
+// Each English game is tagged short or long in GAMES (en/engine/app.js); the arcade station takes turns between the arcade
+// games listed in CIRCUIT_ARCADE there. Chinese side: unchanged, five one-minute stations of any practice game.
 // This file does: the "I study this" switches and the Circuit card on en/index.html and zh/index.html,
 // the Circuit page (en/circuit/, zh/circuit/: start and results) and the saved state.
 // The stations themselves run on the topic pages (en/engine/app.js, address ending #circuit): the page chooses a game
@@ -8,7 +11,8 @@
 const SRC = (document.currentScript && document.currentScript.src) || '';
 const ROOT = SRC ? SRC.replace(/en\/engine\/circuit\.js([?#].*)?$/, '') : location.origin + '/';
 const KEY = 'aea:circuit:v1', STUDY = 'aea:studying:v1';
-const STATIONS = 5, SECS = 60;          // five stations of one minute each
+const STATIONS = 5, SECS = 60;          // the Chinese side: five stations of one minute each
+const EN_PLAN = [['short',45], ['long',45], ['arcade',60], ['long',45], ['short',45]];   // the English side: [kind, seconds]
 const STALE = 30*60*1000;               // a circuit left alone for 30 minutes is dropped
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read = (k,d) => { try{ const v=JSON.parse(localStorage.getItem(k)); return v==null ? d : v; }catch(e){ return d; } };
@@ -24,26 +28,32 @@ const studying = side => (read(STUDY, {})[side]) || {};
 const setStudying = (side, path, name, on) => { const s=read(STUDY, {}); s[side]=s[side]||{}; if(on) s[side][path]=name; else delete s[side][path]; write(STUDY, s); };
 
 // ----- The circuit in progress -----
-// {side, started, touched, n, secs, plan:[topic page per station], i, cur:{path, topic, game, name, zh, right, answered, pts, ends, left}, results:[…], skip:[…]}
+// {side, started, touched, n, arcade, plan:[{path, kind, secs, tried}], i, cur:{path, topic, game, name, zh, secs, right, answered, pts, ends, left}, results:[…], skip:[…]}
+// kind: 'short', 'long' or 'arcade' on the English side (null on the Chinese side); arcade: which arcade game's turn it is
 function active(side){ const r=load().run;
   if(!r || r.done || (side && r.side!==side)) return null;
+  if(!r.plan || typeof r.plan[0]==='string') return null;   // a circuit saved before 25 Oct: start a new one
   if(Date.now()-(r.touched||r.started) > STALE) return null;
   return r; }
 // One topic per station, mixed, never the same topic twice in a row when there is a choice
-function makePlan(topics){ const out=[]; let last=null;
+function makePlan(topics, side){ const out=[]; let last=null;
   while(out.length<STATIONS){ const round=shuffle(topics); if(round.length>1 && round[0]===last) round.push(round.shift());
     for(const t of round) if(out.length<STATIONS){ out.push(t); last=t; } }
-  return out; }
+  return out.map((path,i)=>side==='en' ? {path, kind:EN_PLAN[i][0], secs:EN_PLAN[i][1]} : {path, kind:null, secs:SECS}); }
 const go = path => { location.href = ROOT + path + '#circuit'; };
 const resultsUrl = side => ROOT + side + '/circuit/index.html#done';
 function start(side){ const topics=Object.keys(studying(side)); if(!topics.length) return false;
   const d=load(), now=Date.now();
-  d.run={side, started:now, touched:now, n:STATIONS, secs:SECS, plan:makePlan(topics), i:0, cur:null, results:[], skip:[]};
-  write(KEY, d); go(d.run.plan[0]); return true; }
-function cont(side){ const r=active(side); if(!r) return false; go(r.cur ? r.cur.path : r.plan[r.i]); return true; }
+  d.arcade=(d.arcade||0)+1;   // the arcade games take turns, one circuit each
+  d.run={side, started:now, touched:now, n:STATIONS, arcade:d.arcade, plan:makePlan(topics, side), i:0, cur:null, results:[], skip:[]};
+  write(KEY, d); go(d.run.plan[0].path); return true; }
+function cont(side){ const r=active(side); if(!r) return false; go(r.cur ? r.cur.path : r.plan[r.i].path); return true; }
 function mutate(fn){ const d=load(), r=d.run; if(!r || r.done) return null; const out=fn(r, d); r.touched=Date.now(); write(KEY, d); return out; }
 // The topic page starts a station, pauses it (the student left the page) and resumes it
-function begin(info){ return mutate(r=>{ r.cur=Object.assign({}, info, {right:0, answered:0, pts:0, ends:Date.now()+r.secs*1000, left:null}); return r.cur; }); }
+function begin(info){ return mutate(r=>{ const secs=(r.plan[r.i]||{}).secs||SECS;
+  r.cur=Object.assign({}, info, {secs, right:0, answered:0, pts:0, ends:Date.now()+secs*1000, left:null}); return r.cur; }); }
+// The station now: {path, kind, secs}, plus whose turn it is among the arcade games
+function station(){ const r=active(); if(!r) return null; return Object.assign({arcade:r.arcade||0}, r.plan[r.i]); }
 function resume(){ return mutate(r=>{ const c=r.cur; if(c && c.left!=null){ c.ends=Date.now()+c.left; c.left=null; } return c; }); }
 function pause(path){ mutate(r=>{ const c=r.cur; if(c && c.left==null && norm(c.path)===norm(path)) c.left=Math.max(0, c.ends-Date.now()); }); }
 function count(path, ok, pts){ mutate(r=>{ const c=r.cur;
@@ -59,16 +69,24 @@ function endStation(){ return mutate((r, d)=>{ const c=r.cur; let res=null;
   if(c){ res={path:c.path, topic:c.topic, game:c.game, name:c.name, zh:c.zh||'', right:c.right, answered:c.answered, pts:c.pts}; r.results.push(res); }
   r.cur=null; r.i++;
   if(r.i>=r.n){ finish(r, d); return {res, next:null, i:r.i, n:r.n}; }
-  return {res, next:r.plan[r.i], i:r.i, n:r.n}; }); }
+  return {res, next:r.plan[r.i].path, i:r.i, n:r.n}; }); }
 // A topic page with no game ready at the student's level: use the student's other subjects instead
 function skipTopic(path){
   const side=(active()||{}).side;
   const next=mutate((r, d)=>{ r.skip.push(norm(path));
-    const pool=[...new Set([...Object.keys(studying(r.side)), ...r.plan])].filter(p=>!r.skip.includes(norm(p)));
+    const pool=[...new Set([...Object.keys(studying(r.side)), ...r.plan.map(x=>x.path)])].filter(p=>!r.skip.includes(norm(p)));
     if(!pool.length){ r.empty=true; finish(r, d); return null; }
-    for(let k=r.i; k<r.n; k++) if(r.skip.includes(norm(r.plan[k]))) r.plan[k]=pool[Math.floor(Math.random()*pool.length)];
-    return r.plan[r.i]; });
+    for(let k=r.i; k<r.n; k++) if(r.skip.includes(norm(r.plan[k].path))) r.plan[k].path=pool[Math.floor(Math.random()*pool.length)];
+    return r.plan[r.i].path; });
   if(next) go(next); else location.href=resultsUrl(side||'en');
+}
+// A topic page with no game of this station's kind (a long game or an arcade game) at the student's level: try another of
+// their subjects for this station; when none has one, the station becomes a short game. Says where to go next.
+function retryStation(path){
+  return mutate(r=>{ const st=r.plan[r.i]; st.tried=st.tried||[]; if(!st.tried.includes(norm(path))) st.tried.push(norm(path));
+    const pool=Object.keys(studying(r.side)).filter(p=>!st.tried.includes(norm(p)) && !r.skip.includes(norm(p)));
+    if(pool.length){ st.path=pool[Math.floor(Math.random()*pool.length)]; return st.path; }
+    st.kind='short'; st.secs=EN_PLAN[0][1]; st.path=path; return path; });
 }
 const today = side => (load().days[dayKey()]||{})[side] || null;
 function streak(side){ const d=load(), x=new Date(); let n=0;
@@ -76,7 +94,7 @@ function streak(side){ const d=load(), x=new Date(); let n=0;
   while(((d.days[dayKey(x)]||{})[side]||{}).runs){ n++; x.setDate(x.getDate()-1); }
   return n; }
 
-window.AEA_CIRCUIT = {ROOT, STATIONS, SECS, norm, active, begin, resume, pause, count, endStation, skipTopic, resultsUrl, studying, today, streak};
+window.AEA_CIRCUIT = {ROOT, STATIONS, SECS, norm, active, station, begin, resume, pause, count, endStation, skipTopic, retryStation, resultsUrl, studying, today, streak};
 
 // ---------- the topic list pages (en/index.html, zh/index.html): switches and the Circuit card ----------
 const T = (zh, en, z) => zh ? `${en} <span lang="zh">${z}</span>` : en;
@@ -131,8 +149,9 @@ function circuitPage(box){
         <p class="cc-actions"><a class="cc-btn" href="${esc(back)}">${T(zh, 'Choose your subjects', '选择科目')} →</a></p>`;
     } else {
       main = `<p class="cc-k">${t && t.runs ? `✓ ${T(zh, 'Done today. You can play again', '今天已完成，可以再玩')}` : T(zh, 'Today', '今天')}</p>
-        <h2>${T(zh, `${STATIONS} stations · 1 minute each`, `${STATIONS} 站 · 每站 1 分钟`)}</h2>
-        <p>${T(zh, 'Each station is a game from one of your subjects, at your level. When the minute is up, you move on to the next one.', '每一站是你某个科目里的一个游戏，难度适合你。一分钟到了就进入下一站。')}</p>${streakLine}
+        <h2>${zh ? T(zh, `${STATIONS} stations · 1 minute each`, `${STATIONS} 站 · 每站 1 分钟`) : `${STATIONS} stations · 4 minutes`}</h2>
+        <p>${zh ? T(zh, 'Each station is a game from one of your subjects, at your level. When the minute is up, you move on to the next one.', '每一站是你某个科目里的一个游戏，难度适合你。一分钟到了就进入下一站。')
+               : 'A quick game, a longer one, an arcade game, another longer one and a quick one to finish, each from one of your subjects at your level. When the time is up, you move on to the next one.'}</p>${streakLine}
         <p class="cc-actions"><button class="cc-btn big" data-start>${T(zh, 'Start the circuit', '开始挑战')} →</button></p>`;
     }
     box.innerHTML = `<section class="cc-panel">${main}</section>${subjects?`<section class="cc-subjects">${subjects}</section>`:''}`;

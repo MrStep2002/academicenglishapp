@@ -6,7 +6,7 @@
 // The site's top folder, worked out from where this file lives (en/engine/app.js), so links work on any host and from a local copy
 const ROOT = ((document.currentScript && document.currentScript.src) || '/en/engine/app.js').replace(/en\/engine\/app\.js([?#].*)?$/, '');
 const $app = document.getElementById('app');
-const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd
+const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd, data-hide
 const KEY = CFG.store || (CFG.content||'').replace(/\/+$/,'').split('/').pop() || 'topic';   // where this page's progress is saved
 const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
 const PAGE = location.href.split('#')[0].split('?')[0].slice(ROOT.length);   // this page, from the site's top folder (e.g. zh/web-design/index.html)
@@ -112,12 +112,14 @@ function buildSubject(T){
     if(!r.statement||(!ok && !/^(wrong|w|incorrect|false|f|no|n)$/.test(a))) return warn('right-wrong',r,'skipped: it needs a statement and an answer of RIGHT or WRONG');
     S.rw.push({id:r.id, level:lv('right-wrong',r), s:r.statement, ok, fix:r.correction||'', why:r.explanation||''}); });
   // Read it: [[word]] or [[shown text|word]] makes a word tappable (its meaning comes from words.csv)
-  // Complete the text (reads.csv): every [[key word]] in the text becomes a gap. The question columns are no longer used.
+  // Complete the text (reads.csv): every [[key word]] in the text becomes a gap. Optional extra1–extra3: the text's own extra
+  // words for the word bank (they need not be in words.csv); without them the bank has only the text's key words.
   (T.reads||[]).forEach(r=>{
     if(!r.text) return warn('reads',r,'skipped: it needs a text');
     const text=r.text.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g,(m,shown,w)=>{ const id=ref1('reads',r,(w||shown).trim()); return id?`[[${shown}|${id}]]`:shown; });
     if((text.match(/\[\[[^\]]+\]\]/g)||[]).length<2) return warn('reads',r,'skipped: the text needs at least 2 [[key words]] from words.csv');
-    S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text}); });
+    const extras=['extra1','extra2','extra3'].map(k=>(r[k]||'').trim()).filter(Boolean);
+    S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text, extras}); });
   (T.questions||[]).forEach(r=>{ const wrong=wrongs(r);
     if(!r.question||!r.correct||!wrong.length) return warn('questions',r,'skipped: it needs a question, a correct answer and a wrong answer');
     S.questions.push({id:r.id, level:lv('questions',r), cmd:r.command||'', q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
@@ -135,7 +137,9 @@ function buildSubject(T){
   return S;
 }
 // Load the page's files, then start. The Chinese version only needs the words, and builds.csv for Build the sentence.
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','reading'];
+// A topic folder's files. Reading passages are not among them: the Reading Comprehension pages load theirs with data-reading
+// (Read and answer on the topic pages was replaced by Close reading, and the empty reading.csv files were removed, 25 Oct).
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts'];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
@@ -181,7 +185,7 @@ const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', mea
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
-  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
+  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
 // For the big serif headings: the serif font's + is tiny, so it is set in the body font
@@ -299,6 +303,9 @@ let PHONE = isPhone();
 document.documentElement.classList.toggle('phone', PHONE);
 
 let keyHandler=null, timers=[];
+// Daily Circuit: when a station's time is up, circuitFinish marks a long task the student has started (what they did counts)
+// and circuitStop stops an arcade game, so nothing is recorded after the station ends
+let circuitFinish=null, circuitStop=null;
 document.addEventListener('keydown', e => { if(keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey && e.target.tagName!=='INPUT') keyHandler(e); });
 const later = (fn,ms) => { const t=setTimeout(fn,ms); timers.push(t); return t; };
 const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
@@ -330,25 +337,30 @@ const CATS = {
   grammar: {name:'Grammar',    blurb:'Use the words accurately: word forms, verb forms, sentence building.'},
   reading: {name:'Reading',    blurb:'Read longer texts and work out meaning in context.', desktop:true}
 };
+// form: short (one quick answer at a time) or long (read something, then several answers): the Daily Circuit's
+// short and long stations choose from these. A game with no form (Read and answer) is never in the circuit.
 const GAMES = [
-  {key:'match',    cat:'vocab',   name:'Match the meaning', blurb:'Pair words with their meanings. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch('def')},
-  {key:'syn',      cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
-  {key:'meaning',  cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
-  {key:'gap',      cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'error',    cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
-  {key:'tf',       cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
-  {key:'rw',       cat:'grammar', name:'Right or wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair words with their meanings. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch('def')},
+  {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
+  {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
+  {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
+  {key:'error',    form:'long', cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
+  {key:'tf',       form:'short', cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
+  {key:'rw',       form:'short', cat:'grammar', name:'Right or wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
-  {key:'own',      cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
-  {key:'read',     cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
-  {key:'question', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
+  {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
+  {key:'read',     form:'long', cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
+  {key:'question', form:'long', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
-// Only games this subject has content for
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+// Games switched off on this page: data-hide="syn" (a game's key; several with spaces or commas). Its content stays in the files.
+const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
+// Only games this subject has content for (and has not switched off)
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
 // ---------- page frame ----------
 function frame(back, inner){
-  clearTimers(); keyHandler=null; document.body.classList.remove('reading-wide');
+  clearTimers(); keyHandler=null; circuitFinish=null; circuitStop=null; document.body.classList.remove('reading-wide');
   const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
   $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
@@ -669,8 +681,10 @@ function playErr(){
     current=upd; upd();
     card.querySelectorAll('.tok').forEach(b=>b.onclick=()=>{ if(checked) return; const i=+b.dataset.i;
       if(marked.has(i)){ marked.delete(i); b.classList.remove('t-marked'); } else { marked.add(i); b.classList.add('t-marked'); } upd(); });
-    const check=()=>{
-      if(checked) return; checked=true;
+    // partial: the Daily Circuit's time is up. If the student has tapped anything, the paragraph is marked as it stands;
+    // a paragraph they had not finished is not held against them (see partialCredit)
+    const check=(partial)=>{
+      if(checked || (partial && !marked.size)) return; checked=true;
       const errIdx=toks.map((t,i)=>t.err?i:-1).filter(i=>i>=0);
       // A missing word written only on the word after the gap ([stay|to stay|…]) also counts when the student taps the word
       // before it (and the other way round), since either word marks the gap. New content puts both words in the brackets.
@@ -690,9 +704,11 @@ function playErr(){
       const list=errIdx.map(i=>{ const t=toks[i]; return `<li class="${got.has(i)?'got':'miss'}"><span><s>${esc(t.text)}</s> → <b>${esc(t.err.right)}</b></span><span class="why">${esc(t.err.why)}</span></li>`; }).join('');
       const summary=`You found ${found} of ${errIdx.length}${falseMarks?` and marked ${falseMarks} correct word${falseMarks>1?'s':''} as wrong`:''}.`;
       card.querySelector('.fb').innerHTML=`<div class="feedback ${ok?'ok':'no'}"><span class="verdict">${ok?'All found.':summary}</span><ul class="errlist">${list}</ul></div>`;
+      if(partial && !ok){ partialCredit('error', it, found, falseMarks, errIdx.length); return; }
       settle(ok,card,st,deck,it,step);
     };
-    btn.onclick=check; keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); check(); } };
+    btn.onclick=()=>check(); keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); check(); } };
+    circuitFinish=()=>check(true);
   };
   step();
 }
@@ -769,12 +785,11 @@ function playOwn(){
 // ---------- READING: Read it ----------
 function playRead(){
   // Complete the text (key 'read', so best streaks and progress carry on from the old Read it).
-  // The text's [[key words]] become gaps; the word bank under it has those words (as they appear in the text) and
-  // 1-2 extra key words from the same level. Tap a word to put it in the selected gap (or the first empty one),
+  // The text's [[key words]] become gaps; the word bank under it has those words (as they appear in the text) and the
+  // text's own extra words (extra1–extra3), if it has any. Tap a word to put it in the selected gap (or the first empty one),
   // tap a filled gap to take the word back. Check marks every gap: each counts as one answer for the key word it tests.
   const game=GAMES.find(g=>g.key==='read'), items=game.items(), deck=Deck(items), st=Stats('read');
   shell(game,'Tap a word to put it in the next gap. Tap a filled gap to take the word out. Then press Check.'); st.draw();
-  const first = w => String(w||'').split(' / ')[0].trim();
   const step=()=>{
     const r=deck.next(), gaps=[], parts=[];
     let last=0; const re=/\[\[([^|\]]+)\|([^\]]+)\]\]/g, m0=r.text; let m;
@@ -782,17 +797,10 @@ function playRead(){
       parts.push(esc(m0.slice(last, m.index))); parts.push({i:gaps.length}); gaps.push({ans:m[1], show:cap ? m[1][0].toLowerCase()+m[1].slice(1) : m[1], cap, id:m[2]}); last=re.lastIndex; }
     const inGap=(i,t)=>gaps[i].cap ? t[0].toUpperCase()+t.slice(1) : t;
     parts.push(esc(m0.slice(last)));
-    // Extra words: key words at this text's level that are not in it (or any key word if the level has too few)
-    const lc=x=>x.toLowerCase(), taken=new Set(gaps.flatMap(g=>[g.id, ...(byId[g.id]?[lc(first(byId[g.id].w))]:[])])), answers=new Set(gaps.map(g=>lc(g.ans)));
-    // An extra word must never fit a gap as well as its answer: skip words marked "similar" or "accept" to a key word
-    // in words.csv, and words listed as each other's synonyms
-    const syn=w=>(w.syn||[]).map(x=>lc(String(x).trim()));
-    const close=w=>gaps.some(g=>{ const k=byId[g.id]; if(!k) return false;
-      return areAlike(g.id, w.id) || (acceptOf[g.id] && acceptOf[g.id].has(w.id)) || (acceptOf[w.id] && acceptOf[w.id].has(g.id))
-        || syn(k).includes(lc(first(w.w))) || syn(w).includes(lc(first(k.w))) || syn(w).includes(lc(g.ans)); });
-    const ok=w=>!taken.has(w.id) && !taken.has(lc(first(w.w))) && !answers.has(lc(first(w.w))) && first(w.w) && !close(w);
-    const b=playBand(r); let pool=S.words.filter(w=>ok(w) && (b==null || playBand(w)===b)); if(pool.length<2) pool=S.words.filter(ok);
-    const extra=shuffle(pool).slice(0, gaps.length>=3 ? 2 : 1).map(w=>first(w.w));
+    // Extra words: only the text's own (extra1–extra3), so the writer decides how many (none is fine, e.g. at the easiest
+    // levels). The game never adds words of its own. An extra word that is already one of the gaps is left out.
+    const lc=x=>x.toLowerCase(), answers=new Set(gaps.map(g=>lc(g.ans)));
+    const extra=[...new Set((r.extras||[]).filter(x=>!answers.has(lc(x)) && !gaps.some(g=>lc(g.show)===lc(x))))];
     const bank=shuffle([...gaps.map(g=>g.show), ...extra]).map((t,i)=>({t, i, used:false}));
     const filled=gaps.map(()=>null); let sel=0, checked=false;
     const card=showCard(`<p class="instr">${esc(r.title||'Complete the text')}</p>
@@ -818,18 +826,23 @@ function playRead(){
     slots.forEach(s=>s.onclick=()=>{ const i=+s.dataset.i;
       if(checked){ const w=byId[gaps[i].id]; card.querySelector('#peek').innerHTML=w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:''; return; }
       takeOut(i); });
-    const doCheck=()=>{ if(checked || firstEmpty()!==-1) return; checked=true; card.classList.add('done'); let got=0;
-      gaps.forEach((g,i)=>{ const right=lc(bank[filled[i]].t)===lc(g.ans), s=slots[i], item={id:r.id+'#'+(i+1), level:r.level, wid:g.id, qs:gaps.length};
+    // partial: the Daily Circuit's time is up. The gaps the student has filled are marked (each is one answer, as usual);
+    // empty gaps just show their word and are not counted
+    const doCheck=(partial)=>{ if(checked || (!partial && firstEmpty()!==-1) || (partial && filled.every(x=>x==null))) return; checked=true; card.classList.add('done'); let got=0;
+      gaps.forEach((g,i)=>{ const s=slots[i];
+        if(filled[i]==null){ s.classList.add('no'); s.textContent=g.ans; return; }
+        const right=lc(bank[filled[i]].t)===lc(g.ans), item={id:r.id+'#'+(i+1), level:r.level, wid:g.id, qs:gaps.length};
         if(right){ got++; s.classList.add('ok'); st.hit(item); }
         else { s.classList.add('no'); s.innerHTML=`<s>${esc(inGap(i, bank[filled[i]].t))}</s> ${esc(g.ans)}`; st.miss(item); } });
       draw(); check.parentNode.remove();
       card.querySelector('#peek').textContent='Tap a word in the text to see what it means.';
       const fb=card.querySelector('.fb'), n=gaps.length;
-      const notes=gaps.filter((g,i)=>lc(bank[filled[i]].t)!==lc(g.ans)).map(g=>wordNote(byId[g.id])).join('');
+      const notes=gaps.filter((g,i)=>filled[i]==null || lc(bank[filled[i]].t)!==lc(g.ans)).map(g=>wordNote(byId[g.id])).join('');
       if(got===n) fbOk(fb, `<span>All ${n} gaps right.</span>`);
       else { fb.innerHTML=`<div class="feedback no"><span class="verdict">${got} of ${n} right.</span><span>The right words are shown in the text.</span>${notes}</div>`; deck.retry(r); }
       manualNext(card, step, 'Next text →'); };
-    check.onclick=doCheck;
+    check.onclick=()=>doCheck();
+    circuitFinish=()=>doCheck(true);
     keyHandler=e=>{ if(checked) return; const k=parseInt(e.key,10);
       if(k>=1 && k<=bank.length){ e.preventDefault(); put(k-1); }
       else if(e.key==='Backspace'){ e.preventDefault(); const lastF=[...filled.keys()].filter(i=>filled[i]!=null).pop(); if(lastF!=null) takeOut(lastF); }
@@ -852,7 +865,7 @@ function playQuestion(){
   step();
 }
 
-// ---------- READING: Read and answer (passages come from a CSV file: reading.csv in the topic's folder, see content/README.md) ----------
+// ---------- READING: a passage and its questions (the Reading Comprehension pages: Close reading, Big idea; passages from the file in data-reading) ----------
 // Columns: id, level, title, passage, question, correct, wrong1, wrong2, wrong3, explanation, source
 // More questions on the same passage (optional): question2, correct2, wrong1_2, wrong2_2, wrong3_2, explanation2, and so on.
 function playPassage(){
@@ -934,6 +947,16 @@ function playNotes(){
     keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) toggle(btns[n-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
   };
   step();
+}
+
+// Daily Circuit, time up with a long task half done: each part the student got right counts as a right answer at this
+// station, with its share of the task's points; each wrong part counts as an answer. Nothing is recorded against their
+// level or their words, because they simply ran out of time.
+function partialCredit(game, item, right, wrong, parts){
+  if(!inCircuit || !window.AEA_CIRCUIT) return;
+  const n=itemLevel(item), band=n==null ? 3 : Math.max(1, Math.min(5, Math.floor(n))), per=Math.ceil(POINTS[POINT_KIND[game]||'word'][band-1]/Math.max(1,parts));
+  for(let k=0;k<right;k++){ AEA_CIRCUIT.count(PAGE, true, per); if(window.AEA_POINTS) AEA_POINTS.record(SIDE, per, true); }
+  for(let k=0;k<wrong;k++) AEA_CIRCUIT.count(PAGE, false, 0);
 }
 
 // ---------- ARCADE GAMES: the "proper game" in the middle of the Daily Circuit (Word Snake first, 25 Oct) ----------
@@ -1140,6 +1163,7 @@ function playSnake(){
   if(dark && dark.addEventListener) dark.addEventListener('change', colours);
   if(window.ResizeObserver){ const ro=new ResizeObserver(()=>{ if(!alive()){ ro.disconnect(); return; } size(); }); ro.observe(box); }
 
+  circuitStop=()=>{ over=true; };
   colours(); size(); stats();
   (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(()=>{ if(!alive()) return; newQuestion(); requestAnimationFrame(draw); });
 }
@@ -1233,6 +1257,7 @@ function playWhack(){
   const onVis=()=>{ if(!alive()){ document.removeEventListener('visibilitychange', onVis); return; } if(document.hidden) pause(); };
   document.addEventListener('visibilitychange', onVis);
 
+  circuitStop=()=>{ over=true; };
   stats(); newQuestion();
   if(inCircuit) start(); else goBtn.focus({preventScroll:true});
 }
@@ -1349,6 +1374,7 @@ function playInvaders(){
   document.addEventListener('visibilitychange', onVis);
   if(window.ResizeObserver){ const ro=new ResizeObserver(()=>{ if(!alive()){ ro.disconnect(); return; } measure(); place(); }); ro.observe(board); }
 
+  circuitStop=()=>{ over=true; };
   stats(); measure(); newWave(); requestAnimationFrame(tick);
   if(inCircuit) start(); else goBtn.focus({preventScroll:true});
 }
@@ -1795,13 +1821,17 @@ function wordList(){
   document.getElementById('q').oninput=e=>{q=e.target.value; draw();}; draw();
 }
 
-// ---------- 5-MINUTE DAILY CIRCUIT: one station (the circuit is planned and saved by en/engine/circuit.js) ----------
+// ---------- DAILY CIRCUIT: one station (the circuit is planned and saved by en/engine/circuit.js) ----------
 // The address ends #circuit. This page chooses a game the student is ready for at their own level (not a level they
-// picked), preferring one not played yet in this circuit, and plays it for one minute; every answer is counted.
-// Left out of the circuit: Read and answer (whole passages), Speed round and Survival (they have their own timers).
+// picked), preferring one not played yet in this circuit, and plays it until the station's time is up; every answer counts.
+// English side: the station's kind says which games it can use: short or long (the form in GAMES), or arcade (the games
+// in CIRCUIT_ARCADE take turns, one circuit each). No long game here at the student's level: another subject is tried,
+// then a short game is used. Time up in the middle of a long task: what the student has done is marked (circuitFinish).
+// Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
+const CIRCUIT_ARCADE = ['invaders', 'whack'];   // Word Snake is left out for now (teacher, 25 Oct)
 let ccTick = null;
-function circuitGames(){
+function circuitGames(kind){
   if(SIDE==='zh'){
     const list=ZH_GAMES.filter(g=>g.type==='practice' && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
     const lw=zhLevelWords();
@@ -1809,20 +1839,29 @@ function circuitGames(){
     if(lw.length>=4 && (!list.length || lw.some(w=>stageOf(w)==='new'))) list.push({key:'learn', name:'Learn the words', zh:'学习单词', run:playLearn});
     return list;
   }
-  return GAMES.filter(g=>g.key!=='passage' && !(CATS[g.cat].desktop && PHONE) && gamesIn(g.cat).includes(g) && g.items().length>=g.min)
+  if(kind==='arcade') return ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run}));
+  return GAMES.filter(g=>g.form && (!kind || g.form===kind) && !(CATS[g.cat].desktop && PHONE) && gamesIn(g.cat).includes(g) && g.items().length>=g.min)
     .map(g=>({key:g.key, name:g.name, run:g.run}));
 }
 function circuitStation(){
   const C=window.AEA_CIRCUIT, run=C && C.active(SIDE);
   if(!run){ leaveCircuit(); history.replaceState(null, '', location.pathname+location.search); return route(); }
   inCircuit=true;
-  const games=circuitGames();
+  const st=(SIDE==='en' && C.station && C.station()) || {}, kind=st.kind||null;
+  const games=circuitGames(kind);
   let cur=run.cur;
   if(cur && C.norm(cur.path)===C.norm(PAGE) && games.some(g=>g.key===cur.game)) cur=C.resume();
   else {
-    if(!games.length){ inCircuit=false; return C.skipTopic(PAGE); }   // nothing ready here: another of their subjects instead
-    const played=run.results.map(r=>r.game), fresh=games.filter(g=>!played.includes(g.key)), from=fresh.length ? fresh : games;
-    const g=from[Math.floor(Math.random()*from.length)];
+    if(!games.length){ inCircuit=false;
+      if(kind==='long' || kind==='arcade'){   // try another of their subjects for this station, or make it a short game
+        const next=C.retryStation(PAGE); if(!next) return;
+        if(C.norm(next)===C.norm(PAGE)) return circuitStation();
+        location.href=ROOT+next+'#circuit'; return; }
+      return C.skipTopic(PAGE); }   // nothing ready here: another of their subjects instead
+    let g;
+    if(kind==='arcade') g=games.find(x=>x.key===CIRCUIT_ARCADE[(st.arcade||0)%CIRCUIT_ARCADE.length]) || games[0];
+    else { const played=run.results.map(r=>r.game), fresh=games.filter(x=>!played.includes(x.key)), from=fresh.length ? fresh : games;
+      g=from[Math.floor(Math.random()*from.length)]; }
     cur=C.begin({path:PAGE, topic:CFG.name||'', game:g.key, name:g.name, zh:g.zh||''});
   }
   games.find(g=>g.key===cur.game).run();
@@ -1845,16 +1884,19 @@ function circuitBar(cur){
     <button class="cc-stop" type="button">Stop${zh?' 暂停':''}</button></div>`;
   document.body.appendChild(bar);
   bar.querySelector('.cc-stop').onclick=()=>{ leaveCircuit(); location.href=ROOT+SIDE+'/circuit/index.html'; };
-  const total=(run.secs||60)*1000;
+  const total=(cur.secs||run.secs||60)*1000;
   const tick=()=>{ const r=C.active(SIDE), c=r && r.cur; if(!c || !inCircuit || c.left!=null){ stopCircuitBar(); return; }
     const left=Math.max(0, c.ends-Date.now()), f=document.getElementById('ccFill'), sx=document.getElementById('ccSecs');
     if(f) f.style.width=(100*left/total)+'%'; if(sx) sx.textContent=Math.ceil(left/1000)+'s';
     if(left<=0) stationOver(); };
   tick(); if(document.getElementById('ccBar')) ccTick=setInterval(tick, 250);
 }
-// The minute is up: show the station's score, then go on to the next station (or the results)
+// The station's time is up: show its score, then go on to the next station (or the results)
 function stationOver(){
-  if(ccTick){ clearInterval(ccTick); ccTick=null; } clearTimers(); keyHandler=null;
+  if(ccTick){ clearInterval(ccTick); ccTick=null; }
+  if(circuitFinish){ try{ circuitFinish(); }catch(e){ console.warn(e); } circuitFinish=null; }   // mark a half-done long task
+  if(circuitStop){ circuitStop(); circuitStop=null; }   // stop an arcade game
+  clearTimers(); keyHandler=null;
   const C=window.AEA_CIRCUIT, zh=SIDE==='zh', out=C.endStation(); if(!out) return leaveCircuit();
   const r=out.res || {right:0, answered:0, pts:0};
   const over=document.createElement('div'); over.className='cc-over'; over.id='ccOver';
@@ -1906,7 +1948,7 @@ function route(){
     const a=ARCADE.find(x=>x.key===h.slice(5));   // arcade games (not on the menu yet)
     if(a) return a.items().length>=a.min ? a.run() : menu();
     const g=GAMES.find(x=>x.key===h.slice(5));
-    if(g && !(CATS[g.cat].desktop && PHONE) && g.items().length>=g.min) return g.run();
+    if(g && !HIDE.has(g.key) && !(CATS[g.cat].desktop && PHONE) && g.items().length>=g.min) return g.run();
     return category(g?g.cat:'vocab');
   }
   menu();
