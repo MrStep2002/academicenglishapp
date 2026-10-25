@@ -537,3 +537,18 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .zh-sentence{font-family:var(--f-zh);font-size:clamp(22px,3.6vw,28px);line-height:1.5;margin:0 0 18px;padding:12px 16px;border-radius:10px;background:var(--paper);border-left:4px solid var(--zhc,var(--mark))}
 .rolekey [lang="zh-CN"]{font-family:var(--f-zh);opacity:.8}
 .tok.t-near{background:var(--good-soft);color:var(--good)}   /* the word beside a missing-word gap, tapped instead of the bracketed word: counts as found */
+
+/* Word Snake (arcade game, 25 Oct): the meaning on top, the board, then the arrows on touch screens */
+.snake-card{padding:clamp(14px,3vw,24px)}
+.snake-def{font-size:clamp(17px,2.6vw,20px);line-height:1.45;margin:0 0 12px;min-height:2.9em}
+.phone .snake-card{padding:14px 12px}
+.phone .snake-def{font-size:17px;min-height:4.35em;margin-bottom:8px}
+.snake-board{position:relative;display:flex;justify-content:center}
+.snake-board canvas{display:block;border-radius:10px;box-shadow:0 0 0 1px var(--rule);touch-action:none;-webkit-user-select:none;user-select:none}
+.snake-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);margin:0;padding:10px 18px;border-radius:999px;background:var(--ink);color:var(--paper);font-weight:700;font-size:15px;pointer-events:none;white-space:nowrap}
+.snake-msg[hidden]{display:none}
+.snake-toast{min-height:2.9em;margin:10px 0 0}
+.snake-pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,50px);grid-template-areas:". up ." "left down right";gap:8px;justify-content:center;margin-top:6px}
+.snake-pad button{border:1px solid var(--rule);background:var(--paper);border-radius:12px;font-size:20px;color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.snake-pad button:active{background:var(--blue-soft)}
+.pad-up{grid-area:up}.pad-left{grid-area:left}.pad-right{grid-area:right}.pad-down{grid-area:down}
