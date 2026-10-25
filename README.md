@@ -46,7 +46,7 @@ Homepage → **English** or **Chinese version 中文版**
 | Vocabulary | Match the meaning, Synonym groups, Word or meaning |
 | Grammar | Fill the gap, Spot the error, True or false, Right or wrong (`right-wrong.csv`). Build the sentence moved to the Chinese version (25 Oct) |
 | Reading (desktop only) | Read and answer (`reading.csv`), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`) |
-| Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Planned as the middle station of the Daily Circuit |
+| Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Planned as the middle station of the Daily Circuit |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
 

@@ -538,12 +538,14 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .rolekey [lang="zh-CN"]{font-family:var(--f-zh);opacity:.8}
 .tok.t-near{background:var(--good-soft);color:var(--good)}   /* the word beside a missing-word gap, tapped instead of the bracketed word: counts as found */
 
-/* Arcade games (25 Oct): the meaning on top, the board, then the message line */
+/* Arcade games (25 Oct): the meaning on top, the board, then the message line; the Start / Carry on cover over the board */
 .arcade-card{padding:clamp(14px,3vw,24px)}
 .arcade-def{font-size:clamp(17px,2.6vw,20px);line-height:1.45;margin:0 0 12px;min-height:2.9em}
 .phone .arcade-card{padding:14px 12px}
 .phone .arcade-def{font-size:17px;min-height:4.35em;margin-bottom:8px}
 .arcade-toast{min-height:2.9em;margin:10px 0 0}
+.arcade-msg{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;border-radius:12px;background:color-mix(in srgb, var(--paper) 70%, transparent)}
+.arcade-msg[hidden]{display:none}
 
 /* Word Snake: the board, then the arrows on touch screens */
 .snake-board{position:relative;display:flex;justify-content:center}
@@ -569,9 +571,26 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .mole.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
 @keyframes whacked{40%{transform:translateY(8%) scale(1.04,.9)}100%{transform:translateY(0)}}
 .whack.stunned .mole{opacity:.45;cursor:not-allowed}
-.whack-msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:12px;background:color-mix(in srgb, var(--paper) 70%, transparent)}
-.whack-msg[hidden]{display:none}
 .phone .whack{gap:6px 8px;padding:12px 8px 8px}
 .phone .hole{height:86px}
 .phone .mole{left:2%;right:2%;height:62px;font-size:15px;padding:3px 5px 7px}
 @media (prefers-reduced-motion:reduce){.mole{transition:opacity .2s}.mole.hit{animation:none}}
+
+/* Word Invaders: the words come down in formation; the highlighter at the bottom fires a yellow beam at the word you tap */
+.invaders{position:relative;height:clamp(300px, calc(100vh - 290px), 430px);background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--rule);overflow:hidden;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.phone .invaders{height:clamp(300px, calc(100vh - 340px), 400px)}
+.iv-ground{position:absolute;left:12px;right:12px;bottom:56px;border-top:2px dashed var(--rule)}
+.iv-word{position:absolute;left:0;top:0;z-index:1;display:flex;align-items:center;justify-content:center;padding:4px 8px;border:1.5px solid var(--rule);border-radius:12px;background:var(--sheet);color:var(--ink);font-weight:700;font-size:17px;line-height:1.15;text-align:center;cursor:crosshair;will-change:transform;transition:opacity .3s, background .12s, border-color .12s;touch-action:manipulation}
+.iv-word span{display:block;max-width:100%;overflow-wrap:break-word}
+.iv-word kbd{position:absolute;left:5px;top:2px;font-family:var(--f-mono);font-size:10px;font-weight:400;color:var(--ink-2);opacity:.75}
+.iv-word.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad);text-decoration:line-through;opacity:.6;cursor:default}
+.iv-word.hit,.iv-word.reveal{background:var(--mark);border-color:var(--mark);color:var(--mark-ink)}
+.iv-word.hit{animation:ivhit .35s ease-out}
+.iv-word.gone{opacity:0;pointer-events:none}
+@keyframes ivhit{50%{scale:1.12}100%{scale:1}}
+.iv-gun{position:absolute;bottom:8px;left:50%;z-index:2;width:22px;height:40px;margin-left:-11px;border-radius:5px 5px 7px 7px;background:var(--ink);transition:left .12s ease-out, background .15s}
+.iv-gun::before{content:"";position:absolute;left:4px;right:4px;top:-9px;height:10px;background:var(--mark);clip-path:polygon(0 100%,100% 100%,78% 0,22% 0)}   /* the highlighter's tip */
+.iv-gun.hot{background:var(--bad)}
+.iv-beam{position:absolute;z-index:0;width:8px;margin-left:-4px;border-radius:4px;background:var(--mark);pointer-events:none;animation:ivbeam .25s ease-out forwards}
+@keyframes ivbeam{from{opacity:.95}to{opacity:0}}
+@media (prefers-reduced-motion:reduce){.iv-word.hit{animation:none}.iv-gun{transition:background .15s}}
