@@ -1,1 +1,401 @@
-﻿id,level,statement,answer,explanation
+id,level,statement,answer,explanation
+web-rw-001,A1,The portfolio shows the student’s best work.,RIGHT,The singular subject “portfolio” takes “shows”.
+web-rw-002,A2,The search bar is more useful than the long list of links.,RIGHT,The comparative form is “more useful”.
+web-rw-003,B1,The grid’s columns keep the project images aligned.,RIGHT,The singular possessive “grid’s” needs an apostrophe.
+web-rw-004,B2,"The button’s hover state is visible, whereas its keyboard focus is not.",RIGHT,The singular subject “focus” takes “is”.
+web-rw-005,C1,"The viewport changes with the device, so the design must adapt.",RIGHT,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-006,A1,The button opens the contact page.,RIGHT,The singular subject “button” takes “opens”.
+web-rw-007,A2,The contact form asks visitors to their email address.,WRONG,"Use “for” before the information requested, or “to enter” before an action."
+web-rw-008,B1,The target audience includes students which want to view the projects quickly.,WRONG,Use “who” for people.
+web-rw-009,B2,The text is more readable when line lengths is moderate.,WRONG,The plural subject “lengths” takes “are”.
+web-rw-010,C1,Content above the fold appears before a visitor scrolls.,RIGHT,The singular subject “content” takes “appears”.
+web-rw-011,A1,The footer contain the contact details.,WRONG,The singular subject “footer” takes “contains”.
+web-rw-012,A2,The form includes a input field for the visitor’s email address.,WRONG,Use “an” before the vowel sound in “input”.
+web-rw-013,B1,"The site’s tone is friendly, but although the subject is serious.",WRONG,Do not use “but” and “although” together for the same contrast.
+web-rw-014,B2,A responsive breakpoint change the layout when the screen becomes narrower.,WRONG,The singular subject “breakpoint” takes “changes”.
+web-rw-015,C1,Reducing cognitive load can makes complex choices easier to understand.,WRONG,A modal verb (“can”) takes the base verb “make”.
+web-rw-016,A1,The content are useful to new visitors.,WRONG,“Content” is uncountable here and takes “is”.
+web-rw-017,A2,The visitor looked through the gallery before downloading an image.,RIGHT,Use an “-ing” form after “before”.
+web-rw-018,B1,The site’s friendly tone matches its audience and purpose.,RIGHT,The singular subject “tone” takes “matches”.
+web-rw-019,B2,The layout is intuitive because visitors can predict what each icon will do.,RIGHT,A modal verb (“can”) takes the base form “predict”.
+web-rw-020,C1,Metadata helps search engines interprets a page’s title and description.,WRONG,"After “helps” and its object, use the base verb “interpret”."
+web-rw-021,A1,The button open the contact page.,WRONG,The singular subject “button” takes “opens”.
+web-rw-022,A2,The visitor clicked the icon and opened the project.,RIGHT,The past-tense verbs should agree: “clicked” and “opened”.
+web-rw-023,B1,Sans-serif lettering is often used for clear screen text.,RIGHT,“Lettering” is uncountable here and takes “is”.
+web-rw-024,B2,Legibility improves when text and background colours have sufficient contrast.,RIGHT,The singular subject “legibility” takes “improves”.
+web-rw-025,C1,Content above the fold appear before a visitor scrolls.,WRONG,The singular subject “content” takes “appears”.
+web-rw-026,A1,The website has a clear homepage.,RIGHT,The singular subject “website” takes “has”.
+web-rw-027,A2,The visitor reached the page through link in the email.,WRONG,The singular countable noun “link” needs an article here.
+web-rw-028,B1,"The hero section introduces the designer, whereas the gallery show the work.",WRONG,The singular subject “gallery” takes “shows”.
+web-rw-029,B2,The site loads faster because the image files is smaller.,WRONG,The plural subject “files” takes “are”.
+web-rw-030,C1,Information architecture determines how content is grouped and labelled.,RIGHT,“Architecture” includes a “t” after “c”.
+web-rw-031,A1,The logo appears in the header.,RIGHT,The singular subject “logo” takes “appears”.
+web-rw-032,A2,The form was easy to complete.,RIGHT,The singular subject “form” takes “was”.
+web-rw-033,B1,The designer aligned the headings with the left edge of the images.,RIGHT,The preposition “of” is needed before “the images”.
+web-rw-034,B2,The accessibility review identified labels that were difficult to understand.,RIGHT,The past-tense verb is “identified”.
+web-rw-035,C1,The user journey includes every step a visitor takes towards a goal.,RIGHT,The singular subject “journey” takes “includes”.
+web-rw-036,A1,The homepaqe has a large title.,WRONG,“Homepage” is spelled h-o-m-e-p-a-g-e.
+web-rw-037,A2,The input field are large enough for a full name.,WRONG,The singular subject “field” takes “is”.
+web-rw-038,B1,The alignment make the page feel orderly.,WRONG,The singular subject “alignment” takes “makes”.
+web-rw-039,B2,Visual feedback confirm that a button has been selected.,WRONG,“Feedback” is uncountable here and takes “confirms”.
+web-rw-040,C1,The contrast ratio are high enough to distinguish the text from its background.,WRONG,The singular subject “ratio” takes “is”.
+web-rw-041,A1,The menu are easy to find at the top of the page.,WRONG,The singular subject “menu” takes “is”.
+web-rw-042,A2,The visitor submit the answer before the page closed.,WRONG,Use the past tense “submitted” to match “closed”.
+web-rw-043,B1,"The colours contrast with one another, but they still supports the same identity.",WRONG,The plural subject “they” takes “support”.
+web-rw-044,B2,The usability test showed that the confirmation message were easy to miss.,WRONG,The singular subject “message” takes “was”.
+web-rw-045,C1,"The design brief define the audience, purpose and constraints that guide the design.",WRONG,The singular subject “brief” takes “defines”.
+web-rw-046,A1,The homepage has a large title.,RIGHT,“Homepage” is spelled h-o-m-e-p-a-g-e.
+web-rw-047,A2,"The video is embedded in the webpage, because visitors do not needs to open another site.",WRONG,"After “do not”, use the base verb “need”."
+web-rw-048,B1,"The headings are aligned, so the page are easier to scan.",WRONG,The singular subject “page” takes “is”.
+web-rw-049,B2,The interface remains accessible even if the hover state unavailable.,WRONG,The clause needs the verb “is”.
+web-rw-050,C1,The contrast ratio is high enough to distinguish the text from its background.,RIGHT,The singular subject “ratio” takes “is”.
+web-rw-051,A1,The caption describe the image.,WRONG,The singular subject “caption” takes “describes”.
+web-rw-052,A2,The form does not collect information that it does not need.,RIGHT,"After “does not”, use the base form “collect”."
+web-rw-053,B1,The designer selected a palette that was appropriate for the target audience.,RIGHT,"Use “that” for a palette, not “who”."
+web-rw-054,B2,The wireframe helped the team compare two navigation structures.,RIGHT,"Use “compare” or “to compare”, not “to comparing”."
+web-rw-055,C1,The user journey was revised after testing has revealed an unnecessary step.,WRONG,Keep the past-tense sequence consistent: “was revised” and “revealed”.
+web-rw-056,A1,The footer contains the contact details.,RIGHT,The singular subject “footer” takes “contains”.
+web-rw-057,A2,The visitor chose a tab and viewed the second section.,RIGHT,The simple past form is “chose”; “chosen” needs an auxiliary verb.
+web-rw-058,B1,Consistency across the pages makes the brand easier to recognise.,RIGHT,The singular subject “consistency” takes “makes”.
+web-rw-059,B2,The interface should be usable by people with different abilities.,RIGHT,Use “by” to identify who can use the interface.
+web-rw-060,C1,Reducing cognitive load can make complex choices easier to understand.,RIGHT,A modal verb (“can”) takes the base verb “make”.
+web-rw-061,A1,Visitors can clicks the menu.,WRONG,A modal verb such as “can” takes the base verb “click”.
+web-rw-062,A2,The form asks the visitor to submit a valid email address.,RIGHT,The infinitive marker “to” is needed after “asks the visitor”.
+web-rw-063,B1,The logo and palette create a consistent visual identity.,RIGHT,The compound subject takes the plural verb “create”.
+web-rw-064,B2,"The image was compressed to reduce loading time, not to improve its resolution.",RIGHT,Keep the parallel infinitive forms: “to reduce” and “to improve”.
+web-rw-065,C1,A conversion occur when a visitor completes the action the site was designed to encourage.,WRONG,The singular subject “conversion” takes “occurs”.
+web-rw-066,A1,The About page explains who made the site.,RIGHT,The singular subject “page” takes “explains”.
+web-rw-067,A2,The designer add a search bar to the homepage yesterday.,WRONG,The past-time marker “yesterday” requires “added”.
+web-rw-068,B1,A familiar convention help visitors predict where the menu will appear.,WRONG,The singular subject “convention” takes “helps”.
+web-rw-069,B2,Alt text describe an image for visitors who cannot see it.,WRONG,The singular subject “alt text” takes “describes”.
+web-rw-070,C1,A mobile-first design begins with small screens before adapting to larger displays.,RIGHT,The singular subject “it” takes “adapts”.
+web-rw-071,A1,The header include the logo and menu.,WRONG,The singular subject “header” takes “includes”.
+web-rw-072,A2,For example the landing page direct visitors to the booking form.,WRONG,"The introductory phrase needs a comma, and “landing page” takes “directs”."
+web-rw-073,B1,The grid makes the gallery more easier to scan.,WRONG,Do not use “more” with the comparative “easier”.
+web-rw-074,B2,The hover state provides feedback after a visitor select the control.,WRONG,The singular subject “visitor” takes “selects”.
+web-rw-075,C1,"The button’s affordance is unclear, which increase the cognitive load.",WRONG,The relative clause refers to the singular effect and takes “increases”.
+web-rw-076,A1,The portfolio show the student’s best work.,WRONG,The singular subject “portfolio” takes “shows”.
+web-rw-077,A2,The visitor click the link after reading the description yesterday.,WRONG,The past-time marker requires “clicked”.
+web-rw-078,B1,The use of contrast make the CTA stand out from the surrounding content.,WRONG,The singular subject “use” takes “makes”.
+web-rw-079,B2,The same interaction works with a keyboard as well as with using a touchscreen.,WRONG,Keep the parallel noun forms after “with”: “a keyboard” and “a touchscreen”.
+web-rw-080,C1,"The viewport changes with the device, the design must adapt.",WRONG,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-081,A1,The button has a clear label.,RIGHT,The singular subject “button” takes “has”.
+web-rw-082,A2,The form asks users entering their name.,WRONG,"After “asks users”, use the infinitive “to enter”."
+web-rw-083,B1,Whitespace separate the gallery from the introduction.,WRONG,“Whitespace” is singular here and takes “separates”.
+web-rw-084,B2,Each interaction should gives the visitor a clear response.,WRONG,A modal verb (“should”) takes the base verb “give”.
+web-rw-085,C1,A user flow should be tested with representative visitors before it is finalised.,RIGHT,The passive verb phrase needs “be” after the modal “should”.
+web-rw-086,A1,The footer is below the main content.,RIGHT,The singular subject “footer” takes “is”.
+web-rw-087,A2,The visitor submitted the answer before the page closed.,RIGHT,Use the past tense “submitted” to match “closed”.
+web-rw-088,B1,"The colours contrast with one another, but they still support the same identity.",RIGHT,The plural subject “they” takes “support”.
+web-rw-089,B2,The usability test showed that the confirmation message was easy to miss.,RIGHT,The singular subject “message” takes “was”.
+web-rw-090,C1,Information architecture is effective when visitors can predict where content belongs.,RIGHT,A modal verb (“can”) takes the base verb “predict”.
+web-rw-091,A1,The website is easy to read.,RIGHT,The singular subject “website” takes “is”.
+web-rw-092,A2,A clear navigation bar helps visitors move around the site.,RIGHT,"After “helps visitors”, use “move” or “to move”, not “to moving”."
+web-rw-093,B1,"The colours support the visual identity, while the typeface creates contrast.",RIGHT,The plural subject “colours” takes “support”.
+web-rw-094,B2,"The focal point is prominent, but it does not hide the navigation.",RIGHT,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-095,C1,Keyboard navigation enables visitors to operate the site without a pointer.,RIGHT,The singular subject “navigation” takes “enables”.
+web-rw-096,A1,The subheading are smaller than the main heading.,WRONG,The singular subject “subheading” takes “is”.
+web-rw-097,A2,A visitor can selected a checkbox to turn an option on.,WRONG,A modal verb (“can”) is followed by the base verb “select”.
+web-rw-098,B1,The button’s label are clear enough for the target audience.,WRONG,The singular subject “label” takes “is”.
+web-rw-099,B2,Visitors engaged with the prototype for longer after the task instructions was simplified.,WRONG,The plural subject “instructions” takes “were”.
+web-rw-100,C1,A constraint may limits a designer’s choices without preventing an effective solution.,WRONG,A modal verb (“may”) takes the base verb “limit”.
+web-rw-101,A1,The Contact page list an email address.,WRONG,The singular subject “page” takes “lists”.
+web-rw-102,A2,A visitor can browses the gallery before choosing a project.,WRONG,A modal verb (“can”) is followed by the base verb “browse”.
+web-rw-103,B1,The brand remain consistent even when the layout changes.,WRONG,The singular subject “brand” takes “remains”.
+web-rw-104,B2,Accesibility improves when visitors can navigate the site without a mouse.,WRONG,“Accessibility” has two “c”s after the initial “a”.
+web-rw-105,C1,User testing reveal where a design fails to match visitors’ expectations.,WRONG,The singular subject “testing” takes “reveals”.
+web-rw-106,A1,The webpage have two clear headings.,WRONG,The singular subject “webpage” takes “has”.
+web-rw-107,A2,The page gives visitors a choice between two tabs.,RIGHT,The number “two” requires the plural noun “tabs”.
+web-rw-108,B1,The effectiveness of the site depends on whether visitors can complete the task.,RIGHT,The singular subject “effectiveness” takes “depends”.
+web-rw-109,B2,A strong focal point helps visitors locate the primary call to action.,RIGHT,Use “locate” or “to locate” after “helps visitors”.
+web-rw-110,C1,Search engine optimisation can increases the chance that relevant visitors find the site.,WRONG,A modal verb (“can”) takes the base verb “increase”.
+web-rw-111,A1,The logo appear in the header.,WRONG,The singular subject “logo” takes “appears”.
+web-rw-112,A2,The input field is large enough for a full name.,RIGHT,The singular subject “field” takes “is”.
+web-rw-113,B1,The alignment makes the page feel orderly.,RIGHT,The singular subject “alignment” takes “makes”.
+web-rw-114,B2,Visual feedback confirms that a button has been selected.,RIGHT,“Feedback” is uncountable here and takes “confirms”.
+web-rw-115,C1,The user journey include every step a visitor takes towards a goal.,WRONG,The singular subject “journey” takes “includes”.
+web-rw-116,A1,The navigation helps visitors find the main pages.,RIGHT,The singular subject “navigation” takes “helps”.
+web-rw-117,A2,The visitor looked through the gallery before to download an image.,WRONG,Use an “-ing” form after “before”.
+web-rw-118,B1,The site’s friendly tone match its audience and purpose.,WRONG,The singular subject “tone” takes “matches”.
+web-rw-119,B2,The layout is intuitive because visitors can predicts what each icon will do.,WRONG,A modal verb (“can”) takes the base form “predict”.
+web-rw-120,C1,Progressive disclosure keeps essential information visible while revealing details when needed.,RIGHT,The singular subject “disclosure” takes “keeps”.
+web-rw-121,A1,The menu have four clear links.,WRONG,The singular subject “menu” takes “has”.
+web-rw-122,A2,The dropdown menu is useful for grouping related pages.,RIGHT,Use “useful for” before a noun or an “-ing” form.
+web-rw-123,B1,The site is effective because it helps visitors complete their task.,RIGHT,The singular subject “it” takes “helps”.
+web-rw-124,B2,The interface is intuitive because its labels match the visitors’ expectations.,RIGHT,The plural subject “labels” takes “match”.
+web-rw-125,C1,A user flow map the screens and actions needed to complete a task.,WRONG,The singular subject “flow” takes “maps”.
+web-rw-126,A1,The image has a short caption.,RIGHT,The singular subject “image” takes “has”.
+web-rw-127,A2,Embedded media can make a page more engaging.,RIGHT,A modal verb (“can”) is followed by the base verb “make”.
+web-rw-128,B1,Visual hierarchy directs attention to the project title first.,RIGHT,The singular subject “hierarchy” takes “directs”.
+web-rw-129,B2,Higher resolution can make detailed images appear clearer.,RIGHT,A modal verb (“can”) takes the base verb “make”.
+web-rw-130,C1,The affordance of a button should suggest how it can be used.,RIGHT,A modal verb (“should”) takes the base verb “suggest”.
+web-rw-131,A1,A link takes visitors to the gallery.,RIGHT,The singular subject “link” takes “takes”.
+web-rw-132,A2,The purpose of the landing page is to help visitors find the booking form.,RIGHT,The singular subject “purpose” takes “is”.
+web-rw-133,B1,The branding uses the same colours and symbols across the website.,RIGHT,“Branding” is singular here and takes “uses”.
+web-rw-134,B2,The user interface makes common tasks easy to complete.,RIGHT,The singular subject “interface” takes “makes”.
+web-rw-135,C1,Visual salience depends on how strongly an element differs from its surroundings.,RIGHT,The singular subject “salience” takes “depends”.
+web-rw-136,A1,The subheading is smaller than the main heading.,RIGHT,The singular subject “subheading” takes “is”.
+web-rw-137,A2,The form were easy to complete.,WRONG,The singular subject “form” takes “was”.
+web-rw-138,B1,The designer aligned the headings with the left edge the images.,WRONG,The preposition “of” is needed before “the images”.
+web-rw-139,B2,The accessibility review identify labels that were difficult to understand.,WRONG,The past-tense verb is “identified”.
+web-rw-140,C1,A constraint may limit a designer’s choices without preventing an effective solution.,RIGHT,A modal verb (“may”) takes the base verb “limit”.
+web-rw-141,A1,The gallery have six images.,WRONG,The singular subject “gallery” takes “has”.
+web-rw-142,A2,Visitors download the guide before they begin the task.,RIGHT,The plural subject “visitors” takes “download”.
+web-rw-143,B1,Responsive design allows the page to adapt to smaller screens.,RIGHT,Use the infinitive “to adapt” after “allows the page”.
+web-rw-144,B2,The prototype allowed the team to test the navigation before launch.,RIGHT,Use the infinitive “to test” after “allowed the team”.
+web-rw-145,C1,Each iteration should responds to evidence gathered from user testing.,WRONG,A modal verb (“should”) takes the base verb “respond”.
+web-rw-146,A1,The visitor scroll down to see more work.,WRONG,The singular subject “visitor” takes “scrolls”.
+web-rw-147,A2,The tab switch between two sections without leaving the page.,WRONG,The singular subject “tab” takes “switches”.
+web-rw-148,B1,The target audience are more likely to understand familiar icons.,WRONG,The singular subject “audience” takes “is” in this sentence.
+web-rw-149,B2,A wireframe shows where will content appear before visual styling is added.,WRONG,An embedded question uses statement word order: “where content will appear”.
+web-rw-150,C1,The design reduced cognitive load by show the essential choices first.,WRONG,Use the “-ing” form after the preposition “by”.
+web-rw-151,A1,The visitor scrolls down to see more work.,RIGHT,The singular subject “visitor” takes “scrolls”.
+web-rw-152,A2,The dropdown menu opens when the visitor selects it.,RIGHT,The singular subject “menu” takes “opens”.
+web-rw-153,B1,Typography affects how formal the portfolio appears.,RIGHT,The singular subject “typography” takes “affects”.
+web-rw-154,B2,An intuitive menu reduces the need for instructions.,RIGHT,The singular subject “menu” takes “reduces”.
+web-rw-155,C1,The design reduced cognitive load by showing the essential choices first.,RIGHT,Use the “-ing” form after the preposition “by”.
+web-rw-156,A1,A link take visitors to the gallery.,WRONG,The singular subject “link” takes “takes”.
+web-rw-157,A2,The URL takes visitors to the correct webpage.,RIGHT,The singular subject “URL” takes “takes”.
+web-rw-158,B1,A call to action encourages visitors to contact the designer.,RIGHT,Use “to contact” after “encourages visitors”.
+web-rw-159,B2,The loading time decreased after the images were compressed.,RIGHT,The past-tense verb is “decreased”.
+web-rw-160,C1,Visual salience depend on how strongly an element differs from its surroundings.,WRONG,The singular subject “salience” takes “depends”.
+web-rw-161,A1,The webpage has two clear headings.,RIGHT,The singular subject “webpage” takes “has”.
+web-rw-162,A2,"The page includes a short video, for example a tutorial about the menu.",WRONG,"In this sentence, set off the example with a comma after “for example”."
+web-rw-163,B1,A strong CTA can guides visitors towards the contact page.,WRONG,A modal verb (“can”) takes the base form “guide”.
+web-rw-164,B2,Alt text should describes the image’s relevant content rather than repeat its filename.,WRONG,A modal verb (“should”) takes the base form “describe”.
+web-rw-165,C1,Search engine optimisation can increase the chance that relevant visitors find the site.,RIGHT,A modal verb (“can”) takes the base verb “increase”.
+web-rw-166,A1,Visitors can click the menu.,RIGHT,A modal verb such as “can” takes the base verb “click”.
+web-rw-167,A2,The form includes an input field for the visitor’s email address.,RIGHT,Use “an” before the vowel sound in “input”.
+web-rw-168,B1,"The site’s tone is friendly, although the subject is serious.",RIGHT,Do not use “but” and “although” together for the same contrast.
+web-rw-169,B2,A responsive breakpoint changes the layout when the screen becomes narrower.,RIGHT,The singular subject “breakpoint” takes “changes”.
+web-rw-170,C1,A conversion occurs when a visitor completes the action the site was designed to encourage.,RIGHT,The singular subject “conversion” takes “occurs”.
+web-rw-171,A1,The footer are below the main content.,WRONG,The singular subject “footer” takes “is”.
+web-rw-172,A2,"For example, the landing page directs visitors to the booking form.",RIGHT,"The introductory phrase needs a comma, and “landing page” takes “directs”."
+web-rw-173,B1,The grid makes the gallery easier to scan.,RIGHT,Do not use “more” with the comparative “easier”.
+web-rw-174,B2,The hover state provides feedback after a visitor selects the control.,RIGHT,The singular subject “visitor” takes “selects”.
+web-rw-175,C1,Information architecture is effective when visitors can predicts where content belongs.,WRONG,A modal verb (“can”) takes the base verb “predict”.
+web-rw-176,A1,The website have a clear homepage.,WRONG,The singular subject “website” takes “has”.
+web-rw-177,A2,Users can download the image or view it in the gallery.,RIGHT,Keep the verbs parallel after “can”: “download” and “view”.
+web-rw-178,B1,The homepage hero is effective because it states the site’s purpose clearly.,RIGHT,The singular subject “it” takes “states”.
+web-rw-179,B2,The image’s resolution is sufficient for the large display.,RIGHT,The singular possessive “image’s” needs an apostrophe.
+web-rw-180,C1,Information architecure determines how content is grouped and labelled.,WRONG,“Architecture” includes a “t” after “c”.
+web-rw-181,A1,There are three sections on the homepage.,RIGHT,The plural subject “three sections” takes “are”.
+web-rw-182,A2,A visitor can select a checkbox to turn an option on.,RIGHT,A modal verb (“can”) is followed by the base verb “select”.
+web-rw-183,B1,The button’s label is clear enough for the target audience.,RIGHT,The singular subject “label” takes “is”.
+web-rw-184,B2,Visitors engaged with the prototype for longer after the task instructions were simplified.,RIGHT,The plural subject “instructions” takes “were”.
+web-rw-185,C1,A microinteraction confirms an action without interrupting the user journey.,RIGHT,The singular subject “microinteraction” takes “confirms”.
+web-rw-186,A1,The content is useful to new visitors.,RIGHT,“Content” is uncountable here and takes “is”.
+web-rw-187,A2,The landing page was designed for students which need a quick answer.,WRONG,"Use “who” for people, not “which”."
+web-rw-188,B1,The page feels balanced because the whitespace separate each section.,WRONG,The singular subject “whitespace” takes “separates”.
+web-rw-189,B2,"The interface presents the next action clearly, which reduce uncertainty.",WRONG,The relative pronoun “which” refers to the singular effect and takes “reduces”.
+web-rw-190,C1,Metadata helps search engines interpret a page’s title and description.,RIGHT,"After “helps” and its object, use the base verb “interpret”."
+web-rw-191,A1,The caption describes the image.,RIGHT,The singular subject “caption” takes “describes”.
+web-rw-192,A2,The landing page was designed for students who need a quick answer.,RIGHT,"Use “who” for people, not “which”."
+web-rw-193,B1,The page feels balanced because the whitespace separates each section.,RIGHT,The singular subject “whitespace” takes “separates”.
+web-rw-194,B2,"The interface presents the next action clearly, which reduces uncertainty.",RIGHT,The relative pronoun “which” refers to the singular effect and takes “reduces”.
+web-rw-195,C1,The user journey was revised after testing revealed an unnecessary step.,RIGHT,Keep the past-tense sequence consistent: “was revised” and “revealed”.
+web-rw-196,A1,The header includes the logo and menu.,RIGHT,The singular subject “header” takes “includes”.
+web-rw-197,A2,The visitor click the icon and opened the project.,WRONG,The past-tense verbs should agree: “clicked” and “opened”.
+web-rw-198,B1,Sans-serif lettering are often used for clear screen text.,WRONG,“Lettering” is uncountable here and takes “is”.
+web-rw-199,B2,Legibility improve when text and background colours have sufficient contrast.,WRONG,The singular subject “legibility” takes “improves”.
+web-rw-200,C1,"The button’s affordance is unclear, which increases the cognitive load.",RIGHT,The relative clause refers to the singular effect and takes “increases”.
+web-rw-201,A1,The navigation help visitors find the main pages.,WRONG,The singular subject “navigation” takes “helps”.
+web-rw-202,A2,The menu opens when a visitor click the icon.,WRONG,The singular subject “visitor” takes “clicks”.
+web-rw-203,B1,The selected font creates a more formal tone that the original font.,WRONG,Use “than” for a comparison.
+web-rw-204,B2,Compression can reduces loading time without making every image visibly blurred.,WRONG,A modal verb (“can”) takes the base verb “reduce”.
+web-rw-205,C1,Progressive disclosure keep essential information visible while revealing details when needed.,WRONG,The singular subject “disclosure” takes “keeps”.
+web-rw-206,A1,The About page explain who made the site.,WRONG,The singular subject “page” takes “explains”.
+web-rw-207,A2,The purpose of the landing page are to help visitors find the booking form.,WRONG,The singular subject “purpose” takes “is”.
+web-rw-208,B1,The branding use the same colours and symbols across the website.,WRONG,“Branding” is singular here and takes “uses”.
+web-rw-209,B2,The user interface make common tasks easy to complete.,WRONG,The singular subject “interface” takes “makes”.
+web-rw-210,C1,A mobile-first design begins with small screens before it adapt to larger displays.,WRONG,The singular subject “it” takes “adapts”.
+web-rw-211,A1,The website are easy to read.,WRONG,The singular subject “website” takes “is”.
+web-rw-212,A2,The visitor submit the form after checking the details.,WRONG,The completed action takes the past tense “submitted”.
+web-rw-213,B1,The homepage hero introduce the portfolio’s main purpose.,WRONG,The singular subject “hero” takes “introduces”.
+web-rw-214,B2,"Compression reduces file size, although excessive compression may blurs details.",WRONG,A modal verb (“may”) takes the base verb “blur”.
+web-rw-215,C1,Keyboard navigation enable visitors to operate the site without a pointer.,WRONG,The singular subject “navigation” takes “enables”.
+web-rw-216,A1,The menu is easy to find at the top of the page.,RIGHT,The singular subject “menu” takes “is”.
+web-rw-217,A2,The form asks users to enter their name.,RIGHT,"After “asks users”, use the infinitive “to enter”."
+web-rw-218,B1,Whitespace separates the gallery from the introduction.,RIGHT,“Whitespace” is singular here and takes “separates”.
+web-rw-219,B2,Each interaction should give the visitor a clear response.,RIGHT,A modal verb (“should”) takes the base verb “give”.
+web-rw-220,C1,"The design brief defines the audience, purpose and constraints that guide the design.",RIGHT,The singular subject “brief” takes “defines”.
+web-rw-221,A1,There is three sections on the homepage.,WRONG,The plural subject “three sections” takes “are”.
+web-rw-222,A2,"The icon represents the gallery, while the text label explains it.",RIGHT,The singular subject “label” takes “explains”.
+web-rw-223,B1,The designer chose a palette that reflects the target audience.,RIGHT,"The completed action requires “chose”, the past tense of “choose”."
+web-rw-224,B2,The prototype was tested by users who had not seen the design before.,RIGHT,Use “by” to identify who performed the testing.
+web-rw-225,C1,A microinteraction confirm an action without interrupting the user journey.,WRONG,The singular subject “microinteraction” takes “confirms”.
+web-rw-226,A1,The menu has four clear links.,RIGHT,The singular subject “menu” takes “has”.
+web-rw-227,A2,The URL are printed below the title.,WRONG,The singular subject “URL” takes “is”.
+web-rw-228,B1,The visual hierarchy make the most important information easiest to notice.,WRONG,The singular subject “hierarchy” takes “makes”.
+web-rw-229,B2,The designer adjusted the breakpoint so the menu would fits on a narrow screen.,WRONG,The modal verb “would” takes the base form “fit”.
+web-rw-230,C1,A user flow maps the screens and actions needed to complete a task.,RIGHT,The singular subject “flow” takes “maps”.
+web-rw-231,A1,The image have a short caption.,WRONG,The singular subject “image” takes “has”.
+web-rw-232,A2,The About page explains who did designed the website.,WRONG,Use the simple past “designed” in the embedded question; do not add “did” before a past-tense verb.
+web-rw-233,B1,The designer use whitespace to separate the projects.,WRONG,The past-tense verb is “used”.
+web-rw-234,B2,"The aspect ratio remains constant, the image does not look stretched.",WRONG,"Use a full stop, semicolon or conjunction instead of a comma splice."
+web-rw-235,C1,The affordance of a button should suggests how it can be used.,WRONG,A modal verb (“should”) takes the base verb “suggest”.
+web-rw-236,A1,The gallery has six images.,RIGHT,The singular subject “gallery” takes “has”.
+web-rw-237,A2,The thumbnail links to a larger version of the image.,RIGHT,Use “links to” for the destination.
+web-rw-238,B1,A clear layout helps the target audience find relevant information.,RIGHT,Use “find” or “to find” after “helps”.
+web-rw-239,B2,The site’s readability improved after the designer increased line spacing.,RIGHT,Use the simple past with the past-time marker “yesterday”.
+web-rw-240,C1,Each iteration should respond to evidence gathered from user testing.,RIGHT,A modal verb (“should”) takes the base verb “respond”.
+web-rw-241,A1,The Contact page lists an email address.,RIGHT,The singular subject “page” takes “lists”.
+web-rw-242,A2,The navigation bar contains links to the main sections.,RIGHT,“Navigation” is spelled n-a-v-i-g-a-t-i-o-n.
+web-rw-243,B1,A serif typeface can make a heading feel traditional.,RIGHT,A modal verb (“can”) takes the base verb “make”.
+web-rw-244,B2,The focal point attracts attention before visitors read the smaller text.,RIGHT,The singular subject “focal point” takes “attracts”.
+web-rw-245,C1,User testing reveals where a design fails to match visitors’ expectations.,RIGHT,The singular subject “testing” takes “reveals”.
+web-rw-246,A1,The button have a clear label.,WRONG,The singular subject “button” takes “has”.
+web-rw-247,A2,The thumbnail links for a larger version of the image.,WRONG,Use “links to” for the destination.
+web-rw-248,B1,A clear layout helps the target audience to finding relevant information.,WRONG,Use “find” or “to find” after “helps”.
+web-rw-249,B2,The site’s readability improved after the designer has increased line spacing yesterday.,WRONG,Use the simple past with the past-time marker “yesterday”.
+web-rw-250,C1,A user flow should tested with representative visitors before it is finalised.,WRONG,The passive verb phrase needs “be” after the modal “should”.
+web-rw-251,A2,The designer changed the form because visitors found it confusing.,RIGHT,The plural subject “visitors” takes “find”.
+web-rw-252,B1,The design uses a convention that visitors already recognise.,RIGHT,The plural subject “visitors” takes “recognise”.
+web-rw-253,B2,The prototype was revised after user testing exposed a confusing interaction.,RIGHT,Keep the past-tense sequence consistent: “was revised” and “exposed”.
+web-rw-254,A2,The tab switches between two sections without leaving the page.,RIGHT,The singular subject “tab” takes “switches”.
+web-rw-255,B1,The target audience is more likely to understand familiar icons.,RIGHT,The singular subject “audience” takes “is” in this sentence.
+web-rw-256,B2,A wireframe shows where content will appear before visual styling is added.,RIGHT,An embedded question uses statement word order: “where content will appear”.
+web-rw-257,A2,"The page includes a short video, for example, a tutorial about the menu.",RIGHT,"In this sentence, set off the example with a comma after “for example”."
+web-rw-258,B1,A strong CTA can guide visitors towards the contact page.,RIGHT,A modal verb (“can”) takes the base form “guide”.
+web-rw-259,B2,Alt text should describe the image’s relevant content rather than repeat its filename.,RIGHT,A modal verb (“should”) takes the base form “describe”.
+web-rw-260,A2,A thumbnail gives visitors a preview for the full image.,WRONG,Use “preview of” to introduce what is being previewed.
+web-rw-261,B1,The grid help the designer align images across the page.,WRONG,The singular subject “grid” takes “helps”.
+web-rw-262,B2,The image keeps it’s aspect ratio when the width changes.,WRONG,"Use possessive “its”, not the contraction “it’s”."
+web-rw-263,A2,The designer changed the form because visitors finds it confusing.,WRONG,The plural subject “visitors” takes “find”.
+web-rw-264,B1,The design uses a convention which visitors already recognises.,WRONG,The plural subject “visitors” takes “recognise”.
+web-rw-265,B2,The prototype was revised after user testing have exposed a confusing interaction.,WRONG,Keep the past-tense sequence consistent: “was revised” and “exposed”.
+web-rw-266,A2,The page gives visitors a choice between two tab.,WRONG,The number “two” requires the plural noun “tabs”.
+web-rw-267,B1,The effectiveness of the site depend on whether visitors can complete the task.,WRONG,The singular subject “effectiveness” takes “depends”.
+web-rw-268,B2,A strong focal point helps visitors locating the primary call to action.,WRONG,Use “locate” or “to locate” after “helps visitors”.
+web-rw-269,A2,A checkbox lets visitors select one option.,RIGHT,"The singular subject takes “lets”; after “let”, use the base verb “select”."
+web-rw-270,B1,The contrast between the text and the background improves legibility.,RIGHT,The singular subject “contrast” takes “improves”.
+web-rw-271,B2,Engagement increased after the gallery became easier to browse.,RIGHT,The past-tense verb is “increased”.
+web-rw-272,A2,The visitor submitted the form after checking the details.,RIGHT,The completed action takes the past tense “submitted”.
+web-rw-273,B1,The homepage hero introduces the portfolio’s main purpose.,RIGHT,The singular subject “hero” takes “introduces”.
+web-rw-274,B2,"Compression reduces file size, although excessive compression may blur details.",RIGHT,A modal verb (“may”) takes the base verb “blur”.
+web-rw-275,A2,The About page explains who designed the website.,RIGHT,Use the simple past “designed” in the embedded question; do not add “did” before a past-tense verb.
+web-rw-276,B1,The designer used whitespace to separate the projects.,RIGHT,The past-tense verb is “used”.
+web-rw-277,B2,"The aspect ratio remains constant, so the image does not look stretched.",RIGHT,"Use a full stop, semicolon or conjunction instead of a comma splice."
+web-rw-278,A2,The navigation bar is more visible when the background are dark.,WRONG,The singular subject “background” takes “is”.
+web-rw-279,B1,The responsive layout adapts when the viewport become narrower.,WRONG,The singular subject “viewport” takes “becomes”.
+web-rw-280,B2,The usability findings are relevant because they explains where visitors hesitate.,WRONG,The plural subject “findings” takes “explain”.
+web-rw-281,A2,"The icon represents the gallery, while the text label explain it.",WRONG,The singular subject “label” takes “explains”.
+web-rw-282,B1,The designer choose a palette that reflects the target audience.,WRONG,"The completed action requires “chose”, the past tense of “choose”."
+web-rw-283,B2,The prototype was tested from users who had not seen the design before.,WRONG,Use “by” to identify who performed the testing.
+web-rw-284,A2,The dropdown menu is useful to grouping related pages.,WRONG,Use “useful for” before a noun or an “-ing” form.
+web-rw-285,B1,The site is effective because it help visitors complete their task.,WRONG,The singular subject “it” takes “helps”.
+web-rw-286,B2,The interface is intuitive because its labels matches the visitors’ expectations.,WRONG,The plural subject “labels” takes “match”.
+web-rw-287,A2,The sidebar contain extra information about the project.,WRONG,The singular subject “sidebar” takes “contains”.
+web-rw-288,B1,The layout place the most important content near the top.,WRONG,The singular subject “layout” takes “places”.
+web-rw-289,B2,The hover state change when the pointer rests over the button.,WRONG,The singular subject “state” takes “changes”.
+web-rw-290,A2,The thumbnail is smaller than the original image.,RIGHT,Do not add “more” to the comparative “smaller”.
+web-rw-291,B1,"The CTA is visible, so visitors can quickly find the next step.",RIGHT,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-292,B2,The design is accessible to visitors who use keyboard navigation.,RIGHT,The adjective “accessible” needs the preposition “to” before the people who can use the design.
+web-rw-293,A2,The visitor chosen a tab and viewed the second section.,WRONG,The simple past form is “chose”; “chosen” needs an auxiliary verb.
+web-rw-294,B1,Consistency across the pages make the brand easier to recognise.,WRONG,The singular subject “consistency” takes “makes”.
+web-rw-295,B2,The interface should be usable from people with different abilities.,WRONG,Use “by” to identify who can use the interface.
+web-rw-296,A2,The form does not collects information that it does not need.,WRONG,"After “does not”, use the base form “collect”."
+web-rw-297,B1,The designer selected a palette who was appropriate for the target audience.,WRONG,"Use “that” for a palette, not “who”."
+web-rw-298,B2,The wireframe helped the team to comparing two navigation structures.,WRONG,"Use “compare” or “to compare”, not “to comparing”."
+web-rw-299,A2,The search bar helps users find a specific project.,RIGHT,The singular subject “search bar” takes “helps”.
+web-rw-300,B1,The colour palette contains three colours that work well together.,RIGHT,The singular subject “palette” takes “contains”.
+web-rw-301,B2,User experience depends on how quickly visitors can complete essential tasks.,RIGHT,The singular subject “experience” takes “depends”.
+web-rw-302,A2,The thumbnail is more smaller than the original image.,WRONG,Do not add “more” to the comparative “smaller”.
+web-rw-303,B1,"The CTA is visible, visitors can quickly find the next step.",WRONG,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-304,B2,The design is accessible visitors who use keyboard navigation.,WRONG,The adjective “accessible” needs the preposition “to” before the people who can use the design.
+web-rw-305,A2,The dropdown menu open when the visitor selects it.,WRONG,The singular subject “menu” takes “opens”.
+web-rw-306,B1,Typography affect how formal the portfolio appears.,WRONG,The singular subject “typography” takes “affects”.
+web-rw-307,B2,An intuitive menu reduce the need for instructions.,WRONG,The singular subject “menu” takes “reduces”.
+web-rw-308,A2,The search bar works well because its label is easy to understand.,RIGHT,The second clause needs the verb “is”.
+web-rw-309,B1,The typeface is readable because its letters are clearly spaced.,RIGHT,The plural subject “letters” takes “are”.
+web-rw-310,B2,A clear feedback message tells visitors what happened after they submit a form.,RIGHT,The plural subject “visitors” takes “submit”.
+web-rw-311,A2,A checkbox let visitors selects one option.,WRONG,"The singular subject takes “lets”; after “let”, use the base verb “select”."
+web-rw-312,B1,The contrast between the text and the background improve legibility.,WRONG,The singular subject “contrast” takes “improves”.
+web-rw-313,B2,Engagement increase after the gallery became easier to browse.,WRONG,The past-tense verb is “increased”.
+web-rw-314,A2,The navigation bar is more visible when the background is dark.,RIGHT,The singular subject “background” takes “is”.
+web-rw-315,B1,The responsive layout adapts when the viewport becomes narrower.,RIGHT,The singular subject “viewport” takes “becomes”.
+web-rw-316,B2,The usability findings are relevant because they explain where visitors hesitate.,RIGHT,The plural subject “findings” takes “explain”.
+web-rw-317,A2,The visitor browsed the site and then opened the About page.,RIGHT,Keep the coordinated past-tense verbs parallel: “browsed” and “opened”.
+web-rw-318,B1,The designer chose a sans-serif font because it improved legibility.,RIGHT,The past-tense verb is “improved”.
+web-rw-319,B2,"When the screen narrows, the breakpoint moves the navigation into a dropdown menu.",RIGHT,The singular subject “screen” takes “narrows”.
+web-rw-320,A2,The designer added a search bar to the homepage.,RIGHT,The past-time marker “yesterday” requires “added”.
+web-rw-321,B1,A familiar convention helps visitors predict where the menu will appear.,RIGHT,The singular subject “convention” takes “helps”.
+web-rw-322,B2,Alt text describes an image for visitors who cannot see it.,RIGHT,The singular subject “alt text” takes “describes”.
+web-rw-323,A2,"The menu has several choices, but the visitor can still find the main pages.",RIGHT,"After “can”, use the base verb “find”."
+web-rw-324,B1,The layout changed after the designer tested it with visitors.,RIGHT,Keep the past-time sequence consistent: “changed” and “tested”.
+web-rw-325,B2,The prototype revealed that visitors could not find the search control.,RIGHT,Use statement word order in the clause after “revealed that”.
+web-rw-326,A2,The search bar works well because its label easy to understand.,WRONG,The second clause needs the verb “is”.
+web-rw-327,B1,The typeface is readable because its letters is clearly spaced.,WRONG,The plural subject “letters” takes “are”.
+web-rw-328,B2,A clear feedback message tells visitors what happened after they submits a form.,WRONG,The plural subject “visitors” takes “submit”.
+web-rw-329,A2,The search bar help users find a specific project.,WRONG,The singular subject “search bar” takes “helps”.
+web-rw-330,B1,The colour palette contain three colours that work well together.,WRONG,The singular subject “palette” takes “contains”.
+web-rw-331,B2,User experience depend on how quickly visitors can complete essential tasks.,WRONG,The singular subject “experience” takes “depends”.
+web-rw-332,A2,A visitor scrolls down because the project list continues below.,RIGHT,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-333,B1,The heading stands out because it has a strong contrast with the background.,RIGHT,The singular subject “it” takes “has”.
+web-rw-334,B2,The page remains readable even when the viewport is reduced.,RIGHT,The singular subject “viewport” takes “is”.
+web-rw-335,A2,A clear navigation bar helps visitors to moving around the site.,WRONG,"After “helps visitors”, use “move” or “to move”, not “to moving”."
+web-rw-336,B1,"The colours supports the visual identity, while the typeface creates contrast.",WRONG,The plural subject “colours” takes “support”.
+web-rw-337,B2,"The focal point is prominent, it does not hide the navigation.",WRONG,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-338,A2,Visitors downloads the guide before they begin the task.,WRONG,The plural subject “visitors” takes “download”.
+web-rw-339,B1,Responsive design allows the page adapting to smaller screens.,WRONG,Use the infinitive “to adapt” after “allows the page”.
+web-rw-340,B2,The prototype allowed the team testing the navigation before launch.,WRONG,Use the infinitive “to test” after “allowed the team”.
+web-rw-341,A2,The contact form asks visitors for their email address.,RIGHT,"Use “for” before the information requested, or “to enter” before an action."
+web-rw-342,B1,The target audience includes students who want to view the projects quickly.,RIGHT,Use “who” for people.
+web-rw-343,B2,The text is more readable when line lengths are moderate.,RIGHT,The plural subject “lengths” takes “are”.
+web-rw-344,A2,"The menu has several choices, but the visitor still can finds the main pages.",WRONG,"After “can”, use the base verb “find”."
+web-rw-345,B1,The layout changed after the designer has tested it with visitors.,WRONG,Keep the past-time sequence consistent: “changed” and “tested”.
+web-rw-346,B2,The prototype revealed that could visitors not find the search control.,WRONG,Use statement word order in the clause after “revealed that”.
+web-rw-347,A2,The form asks the visitor submit a valid email address.,WRONG,The infinitive marker “to” is needed after “asks the visitor”.
+web-rw-348,B1,The logo and palette creates a consistent visual identity.,WRONG,The compound subject takes the plural verb “create”.
+web-rw-349,B2,"The image was compressed to reduce loading time, not improving its resolution.",WRONG,Keep the parallel infinitive forms: “to reduce” and “to improve”.
+web-rw-350,A2,The page is easier to use because each tab has a clear label.,RIGHT,“Each tab” is singular and takes “has”.
+web-rw-351,B1,"The menu remains visible, although the visitor scrolls down the page.",RIGHT,"“Despite” is followed by a noun or “-ing” form, not a full clause."
+web-rw-352,B2,"The interface gives immediate feedback, so visitors know whether the action worked.",RIGHT,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-353,A2,A visitor can browse the gallery before choosing a project.,RIGHT,A modal verb (“can”) is followed by the base verb “browse”.
+web-rw-354,B1,The brand remains consistent even when the layout changes.,RIGHT,The singular subject “brand” takes “remains”.
+web-rw-355,B2,Accessibility improves when visitors can navigate the site without a mouse.,RIGHT,“Accessibility” has two “c”s after the initial “a”.
+web-rw-356,A2,A thumbnail gives visitors a preview of the full image.,RIGHT,Use “preview of” to introduce what is being previewed.
+web-rw-357,B1,The grid helps the designer align images across the page.,RIGHT,The singular subject “grid” takes “helps”.
+web-rw-358,B2,The image keeps its aspect ratio when the width changes.,RIGHT,"Use possessive “its”, not the contraction “it’s”."
+web-rw-359,A2,The visitor reached the page through a link in the email.,RIGHT,The singular countable noun “link” needs an article here.
+web-rw-360,B1,"The hero section introduces the designer, whereas the gallery shows the work.",RIGHT,The singular subject “gallery” takes “shows”.
+web-rw-361,B2,The site loads faster because the image files are smaller.,RIGHT,The plural subject “files” takes “are”.
+web-rw-362,A2,The visitor browsed the site and then opening the About page.,WRONG,Keep the coordinated past-tense verbs parallel: “browsed” and “opened”.
+web-rw-363,B1,The designer chose a sans-serif font because it improve legibility.,WRONG,The past-tense verb is “improved”.
+web-rw-364,B2,"When the screen narrow, the breakpoint moves the navigation into a dropdown menu.",WRONG,The singular subject “screen” takes “narrows”.
+web-rw-365,A2,The page is easier to use because each tab have a clear label.,WRONG,“Each tab” is singular and takes “has”.
+web-rw-366,B1,"The menu remains visible, despite the visitor scrolls down the page.",WRONG,"“Despite” is followed by a noun or “-ing” form, not a full clause."
+web-rw-367,B2,"The interface gives immediate feedback, visitors know whether the action worked.",WRONG,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-368,A2,The URL take visitors to the correct webpage.,WRONG,The singular subject “URL” takes “takes”.
+web-rw-369,B1,A call to action encourages visitors contacting the designer.,WRONG,Use “to contact” after “encourages visitors”.
+web-rw-370,B2,The loading time decrease after the images were compressed.,WRONG,The past-tense verb is “decreased”.
+web-rw-371,A2,The menu opens when a visitor clicks the icon.,RIGHT,The singular subject “visitor” takes “clicks”.
+web-rw-372,B1,The selected font creates a more formal tone than the original font.,RIGHT,Use “than” for a comparison.
+web-rw-373,B2,Compression can reduce loading time without making every image visibly blurred.,RIGHT,A modal verb (“can”) takes the base verb “reduce”.
+web-rw-374,A2,"A visitor scrolls down, the project list continues below.",WRONG,"A comma alone cannot join two independent clauses; use a full stop, semicolon or coordinating conjunction."
+web-rw-375,B1,The heading stands out because it have a strong contrast with the background.,WRONG,The singular subject “it” takes “has”.
+web-rw-376,B2,The page remains readable even when the viewport are reduced.,WRONG,The singular subject “viewport” takes “is”.
+web-rw-377,A2,The URL is printed below the title.,RIGHT,The singular subject “URL” takes “is”.
+web-rw-378,B1,The visual hierarchy makes the most important information easiest to notice.,RIGHT,The singular subject “hierarchy” takes “makes”.
+web-rw-379,B2,The designer adjusted the breakpoint so that the menu would fit on a narrow screen.,RIGHT,The modal verb “would” takes the base form “fit”.
+web-rw-380,A2,Embedded media can makes a page more engaging.,WRONG,A modal verb (“can”) is followed by the base verb “make”.
+web-rw-381,B1,Visual hierarchy direct attention to the project title first.,WRONG,The singular subject “hierarchy” takes “directs”.
+web-rw-382,B2,Higher resolution can makes detailed images appear clearer.,WRONG,A modal verb (“can”) takes the base verb “make”.
+web-rw-383,A2,The navagation bar contains links to the main sections.,WRONG,“Navigation” is spelled n-a-v-i-g-a-t-i-o-n.
+web-rw-384,B1,A serif typeface can makes a heading feel traditional.,WRONG,A modal verb (“can”) takes the base verb “make”.
+web-rw-385,B2,The focal point attract attention before visitors read the smaller text.,WRONG,The singular subject “focal point” takes “attracts”.
+web-rw-386,A2,The sidebar contains extra information about the project.,RIGHT,The singular subject “sidebar” takes “contains”.
+web-rw-387,B1,The layout places the most important content near the top.,RIGHT,The singular subject “layout” takes “places”.
+web-rw-388,B2,The hover state changes when the pointer rests over the button.,RIGHT,The singular subject “state” takes “changes”.
+web-rw-389,A2,The visitor clicked the link after reading the description.,RIGHT,The past-time marker requires “clicked”.
+web-rw-390,B1,The use of contrast makes the CTA stand out from the surrounding content.,RIGHT,The singular subject “use” takes “makes”.
+web-rw-391,B2,The same interaction works with a keyboard as well as a touchscreen.,RIGHT,Keep the parallel noun forms after “with”: “a keyboard” and “a touchscreen”.
+web-rw-392,A2,The search bar is usefuler than the long list of links.,WRONG,The comparative form is “more useful”.
+web-rw-393,B1,The grids columns keep the project images aligned.,WRONG,The singular possessive “grid’s” needs an apostrophe.
+web-rw-394,B2,"The button’s hover state is visible, whereas its keyboard focus are not.",WRONG,The singular subject “focus” takes “is”.
+web-rw-395,A2,Users can download the image or viewing it in the gallery.,WRONG,Keep the verbs parallel after “can”: “download” and “view”.
+web-rw-396,B1,The homepage hero is effective because it state the site’s purpose clearly.,WRONG,The singular subject “it” takes “states”.
+web-rw-397,B2,The images resolution is sufficient for the large display.,WRONG,The singular possessive “image’s” needs an apostrophe.
+web-rw-398,A2,"The video is embedded in the webpage, so visitors do not need to open another site.",RIGHT,"After “do not”, use the base verb “need”."
+web-rw-399,B1,"The headings are aligned, so the page is easier to scan.",RIGHT,The singular subject “page” takes “is”.
+web-rw-400,B2,The interface remains accessible even if the hover state is unavailable.,RIGHT,The clause needs the verb “is”.

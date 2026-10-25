@@ -1,2 +1,2 @@
-﻿id,level,goal,pieces,decoys,also_right,explanation
-"topic-build-001","B2","Make a balanced judgement","link: Although | topic: the layout | judge: is asymmetrical, | topic: it | verb: still feels | judge: balanced.","link: However,","Although | it | is asymmetrical, | the layout | still feels | balanced.","'Although' joins two ideas in one sentence. 'However' starts a new sentence."
+﻿id,level,goal,zh,pieces,decoys,also_right,explanation
+"topic-build-001","B2","Make a balanced judgement","虽然版面不对称，但仍然显得平衡。","link: Although | topic: the layout | judge: is asymmetrical, | topic: it | verb: still feels | judge: balanced.","link: However,","Although | it | is asymmetrical, | the layout | still feels | balanced.","'Although' joins two ideas in one sentence. 'However' starts a new sentence."

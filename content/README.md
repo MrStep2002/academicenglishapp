@@ -24,7 +24,7 @@ The Chinese version uses only `words.csv` (and its `zh` column).
 |---|---|
 | `words.csv` | Match the meaning, Synonym groups, Word or meaning, and every Chinese-version game |
 | `gaps.csv` | Fill the gap |
-| `builds.csv` | Build the sentence |
+| `builds.csv` | Build the sentence (Chinese version only: see the sentence in Chinese, build it in English) |
 | `errors.csv` | Spot the error |
 | `tf.csv` | True or false |
 | `right-wrong.csv` | Right or wrong (is the sentence right, or does it have a mistake?) |
@@ -101,9 +101,13 @@ Required columns are in **bold**.
 
 ### builds.csv (Build the sentence)
 
-`id,level,goal,pieces,decoys,also_right,explanation`
+`id,level,goal,zh,pieces,decoys,also_right,explanation`
 
-- **goal**: the instruction, e.g. `Describe a creative choice`.
+Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chinese sentence and build it in English.
+
+- **zh**: the whole sentence in natural Chinese, e.g. `特写镜头清楚地展示了她的面部表情。` A sentence with no Chinese is not played.
+  If there is an also_right order, the Chinese must fit it too.
+- goal: a short English note of what the sentence does, e.g. `Describe a creative choice` (for writers; students don't see it).
 - **pieces**: the pieces in the right order, separated by `|`. Each starts with its colour:
   `topic:` (who or what), `verb:`, `detail:`, `link:` (linking word), `judge:` (judgement), `hedge:`.
   Example: `topic: The close-up | verb: shows | detail: her facial expression | detail: clearly.`
@@ -116,6 +120,10 @@ Required columns are in **bold**.
 
 - **text**: a paragraph. Each mistake is written `[wrong|right|why]`:
   `The magazine cover [show|shows|'The cover' is singular, so add -s.] a young woman.`
+- Everything inside the brackets is one tap for the student. So when the mistake is a **missing word**, put the words on
+  both sides of the gap inside the brackets: `encourages [visitors stay|visitors to stay|encourage + person + to + verb.] longer.`
+  (Bracketing only `stay` means a student who taps `visitors` is marked wrong.) The same goes for an extra word:
+  `[beside of|beside|…]`, and for any mistake that is more than one word: `[more big|bigger|…]`.
 
 ### tf.csv (True or false)
 

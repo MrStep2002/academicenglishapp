@@ -1,1 +1,401 @@
-﻿id,level,statement,answer,explanation
+id,level,statement,answer,explanation
+ess-rw-001,A1,The graph shows a rise in temperature.,RIGHT,The singular subject “graph” takes “shows”.
+ess-rw-002,A2,The teacher asked us to describing what the picture shows.,WRONG,"After “to”, use the base verb “describe”."
+ess-rw-003,B1,The report gives a reliably account of the event.,WRONG,The adjective “reliable” modifies the noun “account”.
+ess-rw-004,B2,The design communicates it’s intention through the visual hierarchy.,WRONG,"Use possessive “its”, not the contraction “it’s”."
+ess-rw-005,C1,We can infer from his trembling hands that he is afraid.,RIGHT,A reader infers a conclusion from evidence; a writer or text implies it.
+ess-rw-006,A1,"Because the temperature rose, so the ice melted.",WRONG,Do not use both “because” and “so” to link the same cause and result.
+ess-rw-007,A2,The students compare both accounts yesterday before they agreed.,WRONG,The past-time marker “yesterday” requires “compared”.
+ess-rw-008,B1,Prices are likely rise next year.,WRONG,The infinitive marker “to” is needed after “likely”.
+ess-rw-009,B2,The evidence is relevant the question of long-term impact.,WRONG,The adjective “relevant” requires the preposition “to”.
+ess-rw-010,C1,Her refusal to answer infers that she has something to hide.,WRONG,A clue or action implies; a reader infers.
+ess-rw-011,A1,The results were surprising to the class.,RIGHT,“Results” is plural; the singular form “result” would take “was”.
+ess-rw-012,A2,The report identifies a changing in the population.,WRONG,The noun “change” is needed after the article “a”.
+ess-rw-013,B1,The findings is significant for the local community.,WRONG,The plural subject “findings” takes “are”.
+ess-rw-014,B2,The second image reinforces the first images message.,WRONG,The singular possessive “image’s” needs an apostrophe.
+ess-rw-015,C1,The author’s emphasis on cost reinforces the reader’s impression of scarcity.,RIGHT,The singular subject “emphasis” takes “reinforces”.
+ess-rw-016,A1,This idea change the way the class worked.,WRONG,The past-tense verb is “changed”.
+ess-rw-017,A2,For example one source use solar power.,WRONG,"The introductory phrase needs a comma, and singular “source” takes “uses”."
+ess-rw-018,B1,The result may different if the sample is larger.,WRONG,The verb “be” is required after “may”.
+ess-rw-019,B2,The writer contrasts the character’s public image to her private doubts.,WRONG,The preferred pattern is “contrast X with Y”.
+ess-rw-020,C1,Although the evidence is limited; the conclusion is carefully qualified.,WRONG,A semicolon cannot separate a dependent “although” clause from its main clause.
+ess-rw-021,A1,The writer give one reason for the result.,WRONG,The singular subject “writer” takes “gives”.
+ess-rw-022,A2,The report suggests that the change was useful.,RIGHT,The singular subject “change” takes “was”.
+ess-rw-023,B1,"Although sales increased, the company reduced its advertising budget.",RIGHT,Do not add “but” after an “although” clause.
+ess-rw-024,B2,The page guides readers to the contact form.,RIGHT,Use “to” to show the destination.
+ess-rw-025,C1,The evidence do not justify the certainty of the final claim.,WRONG,The singular subject “evidence” takes “does”.
+ess-rw-026,A1,The student changed the answer yesterday.,RIGHT,The past-time marker “yesterday” requires “changed”.
+ess-rw-027,A2,I think the second solution is more useful.,RIGHT,"Use “I think”, without “am”, for this opinion."
+ess-rw-028,B1,A disadvantage of solar power is its cost.,RIGHT,The singular subject “disadvantage” takes “is”.
+ess-rw-029,B2,The audience’s responses were mixed.,RIGHT,The plural subject “responses” takes “were”.
+ess-rw-030,C1,The analysis distinguishes explicit claims from implicit assumptions.,RIGHT,Use “distinguishes X from Y”.
+ess-rw-031,A1,Wind power is example of renewable energy.,WRONG,The singular countable noun “example” needs an article here.
+ess-rw-032,A2,"Some energy sources are renewable, for example, wind and solar power.",RIGHT,The plural subject “sources” takes “are”.
+ess-rw-033,B1,Recycling reduces the amount of waste sent to landfill.,RIGHT,The singular subject “recycling” takes “reduces”.
+ess-rw-034,B2,The writer contrasts the noisy street with the silent house.,RIGHT,The standard construction is “contrast X with Y”.
+ess-rw-035,C1,"The notice gives an implicit warning about the danger, stated directly.",WRONG,“Implicit” means suggested indirectly; “stated directly” describes an explicit warning.
+ess-rw-036,A1,One reason for the change was cost.,RIGHT,The singular subject “reason” takes “was”.
+ess-rw-037,A2,The map is useful for planning the route.,RIGHT,"After “for”, use the noun or the “-ing” form “planning”."
+ess-rw-038,B1,The method used in the study was a survey.,RIGHT,The singular subject “method” takes “was”.
+ess-rw-039,B2,The article presents the team as heroes.,RIGHT,Use an article before the singular countable noun “hero”.
+ess-rw-040,C1,The repetition emphasises her determination.,RIGHT,The singular subject “repetition” takes “emphasises”.
+ess-rw-041,A1,The result were surprising to the class.,WRONG,“Results” is plural; the singular form “result” would take “was”.
+ess-rw-042,A2,The student can explains the reason for the result.,WRONG,A modal verb (“can”) is followed by the base verb “explain”.
+ess-rw-043,B1,The study has one weakness; because it includes only ten participants.,WRONG,The semicolon cannot introduce a dependent “because” clause as a complete sentence.
+ess-rw-044,B2,The advertisement challenges a stereotype and present an alternative perspective.,WRONG,The coordinated verbs share the singular subject “advertisement”: “challenges” and “presents”.
+ess-rw-045,C1,The author’s emphasis on cost reinforce the reader’s impression of scarcity.,WRONG,The singular subject “emphasis” takes “reinforces”.
+ess-rw-046,A1,This statement is only partly truth.,WRONG,“True” is the adjective required after “is”.
+ess-rw-047,A2,The student explained the meaning for the phrase.,WRONG,Use “of” to identify the meaning belonging to a phrase.
+ess-rw-048,B1,"The data supports the theory, but they do not prove it.",WRONG,"In this sentence “data” is plural, so use “support”."
+ess-rw-049,B2,The article appeals readers who value detailed analysis.,WRONG,The phrase is “appeals to” an audience.
+ess-rw-050,C1,To what extent was the policy fair remains open to debate.,WRONG,"In this embedded clause, use statement word order: “the policy was fair”."
+ess-rw-051,A1,The ice melted because the temperature rose.,RIGHT,Do not use both “because” and “so” to link the same cause and result.
+ess-rw-052,A2,The student listed three features of the newspaper.,RIGHT,The number “three” requires the plural noun “features”.
+ess-rw-053,B1,Cutting down forests can lead to flooding.,RIGHT,A modal verb (“can”) takes the base form “lead”.
+ess-rw-054,B2,The writer presents a convincing argument.,RIGHT,The adjective “convincing” modifies the noun “argument”.
+ess-rw-055,C1,Her refusal to answer implies that she has something to hide.,RIGHT,A clue or action implies; a reader infers.
+ess-rw-056,A1,Plastic waste is a serious problem.,RIGHT,“Serious” is the adjective needed before the noun “problem”.
+ess-rw-057,A2,The rise probably caused by hot weather.,WRONG,The passive verb phrase needs “was”: “was caused”.
+ess-rw-058,B1,Not every website are a reliable source.,WRONG,“Every website” is grammatically singular and takes “is”.
+ess-rw-059,B2,The colour palette appeal to younger readers.,WRONG,The singular subject “palette” takes “appeals”.
+ess-rw-060,C1,The threat is implicit in his promise to “remember this”.,RIGHT,"“Explicit” means stated directly, which conflicts with “never stated directly”."
+ess-rw-061,A1,Exercise improves health. It also reduces stress.,RIGHT,The singular subject “exercise” takes “improves”.
+ess-rw-062,A2,The report describe the pattern shown in the graph.,WRONG,The singular subject “report” takes “describes”.
+ess-rw-063,B1,"The sample was small, therefore the results may not be reliable.",WRONG,A semicolon or a full stop is needed before the conjunctive adverb “therefore”.
+ess-rw-064,B2,"Cats are independent, whereas dogs often seeks company.",WRONG,The plural subject “dogs” takes “seek”.
+ess-rw-065,C1,The writer portrays the father as caring but strict.,RIGHT,Use “as” in the structure “portray someone as”.
+ess-rw-066,A1,The graph shows that the river level rose.,RIGHT,The sentence needs a finite verb: “shows”.
+ess-rw-067,A2,The question asks students to suggests one reason for the fall.,WRONG,"After “to”, use the base verb “suggest”."
+ess-rw-068,B1,These evidence supports the theory.,WRONG,"“Evidence” is uncountable in this meaning and takes “this”, not “these”."
+ess-rw-069,B2,Older participants tends to read longer reports.,WRONG,The plural subject “participants” takes “tend”.
+ess-rw-070,C1,The writer’s perspective is conveyed through the details she selects.,RIGHT,The singular subject “perspective” takes “is”.
+ess-rw-071,A1,Plastic waste is a seriously problem.,WRONG,“Serious” is the adjective needed before the noun “problem”.
+ess-rw-072,A2,The report gives a useful explain of the pattern.,WRONG,The noun “explanation” is needed after the adjective “useful”.
+ess-rw-073,B1,The two methods has produced similar results yesterday.,WRONG,The past-time marker “yesterday” calls for the simple past “produced”.
+ess-rw-074,B2,The audience’s response were divided.,WRONG,“Response” is singular and takes “was”.
+ess-rw-075,C1,"The threat is explicit in his promise to “remember this”, although it is never stated directly.",WRONG,"“Explicit” means stated directly, which conflicts with “never stated directly”."
+ess-rw-076,A1,The result of the experiment were surprising.,WRONG,The singular subject “result” takes “was”.
+ess-rw-077,A2,Crime decrease after the new law was introduced.,WRONG,The completed event requires the past-tense verb “decreased”.
+ess-rw-078,B1,One advantage of trains are that they are fast.,WRONG,The singular subject “advantage” takes “is”.
+ess-rw-079,B2,Her analysis the poster focuses on colour and lighting.,WRONG,The noun “analysis” takes “of” before its subject.
+ess-rw-080,C1,The story presents the conflict from a childs perspective.,WRONG,The singular possessive “child’s” requires an apostrophe.
+ess-rw-081,A1,The graph show a rise in temperature.,WRONG,The singular subject “graph” takes “shows”.
+ess-rw-082,A2,The student listed three feature of the newspaper.,WRONG,The number “three” requires the plural noun “features”.
+ess-rw-083,B1,Cutting down forests can leads to flooding.,WRONG,A modal verb (“can”) takes the base form “lead”.
+ess-rw-084,B2,The writer presents a convincingly argument.,WRONG,The adjective “convincing” modifies the noun “argument”.
+ess-rw-085,C1,We can imply from his trembling hands that he is afraid.,WRONG,A reader infers a conclusion from evidence; a writer or text implies it.
+ess-rw-086,A1,The important fact is easy to remember.,RIGHT,“Important” is spelled with “a” in the second syllable.
+ess-rw-087,A2,"The method is cheap, however it is slow.",WRONG,The second version creates a comma splice; use a full stop before “however”.
+ess-rw-088,B1,The writer argue that the school day should start later.,WRONG,The singular subject “writer” takes “argues”.
+ess-rw-089,B2,The policy seems being working.,WRONG,Use “seems to be working” for this continuing action.
+ess-rw-090,C1,"The study’s limitations are explicit, whereas its assumptions remain implicit.",RIGHT,The plural subject “assumptions” takes “remain”.
+ess-rw-091,A1,The main idea of the article is clear.,RIGHT,The singular subject “idea” takes “is”.
+ess-rw-092,A2,The writer’s idea is useful in this discussion because it explain the issue.,WRONG,The singular subject “it” takes “explains”.
+ess-rw-093,B1,One factor that affect attendance is the weather.,WRONG,The singular subject “factor” takes “affects”.
+ess-rw-094,B2,The writer’s analysis is relevant because it address the question directly.,WRONG,The singular subject “it” takes “addresses”.
+ess-rw-095,C1,The analysis evaluates whether the policy achieved its stated aims.,RIGHT,The singular subject “analysis” takes “evaluates”.
+ess-rw-096,A1,The result of the experiment was surprising.,RIGHT,The singular subject “result” takes “was”.
+ess-rw-097,A2,The essay compars the two poems.,WRONG,The correct spelling is “compares”.
+ess-rw-098,B1,"Factories closed, as a result many people lost their jobs.",WRONG,Use a full stop or semicolon before “as a result”; the comma alone creates a splice.
+ess-rw-099,B2,The results suggests that the treatment may be effective.,WRONG,The plural subject “results” takes “suggest”.
+ess-rw-100,C1,The story presents the conflict from a child’s perspective.,RIGHT,The singular possessive “child’s” requires an apostrophe.
+ess-rw-101,A1,Use evidence from the image in your answer.,RIGHT,The correct preposition is “in your answer”.
+ess-rw-102,A2,The class listed three examples and then discuss their meaning.,WRONG,The coordinated verbs should share the past tense: “listed” and “discussed”.
+ess-rw-103,B1,The evidence suggest that the method is effective.,WRONG,“Evidence” is singular and takes “suggests”.
+ess-rw-104,B2,The policy seems to reduced waiting times.,WRONG,Use “to have reduced” after “seems” for a completed action.
+ess-rw-105,C1,The conclusion is justified by the evidence presented in the study.,RIGHT,The passive structure needs “by” before the agent or source of justification.
+ess-rw-106,A1,It is a fact that water boils at 100°C.,RIGHT,The singular subject “water” takes “boils”.
+ess-rw-107,A2,The table identify two causes of the change.,WRONG,The singular subject “table” takes “identifies”.
+ess-rw-108,B1,Solar power is clean. In addition it becoming cheaper.,WRONG,The second clause needs the verb “is”.
+ess-rw-109,B2,The results indicates a link between diet and health.,WRONG,The plural subject “results” takes “indicate”.
+ess-rw-110,C1,The student justified the conclusion with evidence from both sources.,RIGHT,“Evidence” is uncountable; use “with evidence” or “by citing evidence”.
+ess-rw-111,A1,"The method is cheap, but it works well.",RIGHT,“Also” adds a point; it does not join these contrasting clauses as “but” does.
+ess-rw-112,A2,The experiment probably was cause the change.,WRONG,Use the passive participle “caused” after “was”.
+ess-rw-113,B1,The writer argues that could the policy be improved.,WRONG,Use statement word order in a clause introduced by “that”.
+ess-rw-114,B2,"The article’s tone is formal, whereas the interview conversational.",WRONG,The second clause needs the verb “is”.
+ess-rw-115,C1,The findings imply that the policy may have had an unintended effect.,RIGHT,The plural subject “findings” takes “imply”.
+ess-rw-116,A1,The answer use one clear fact.,WRONG,The singular subject “answer” takes “uses”.
+ess-rw-117,A2,The meaning of the final sentence are clear.,WRONG,The singular subject “meaning” takes “is”.
+ess-rw-118,B1,The main factor were the cost of transport.,WRONG,The singular subject “factor” takes “was”.
+ess-rw-119,B2,The data seems to indicate a gradual change.,WRONG,"With plural “data” in this sentence, use “seem”."
+ess-rw-120,C1,The student analysed how does the narrator’s perspective shape the account.,WRONG,An embedded question uses statement word order after “analysed how”.
+ess-rw-121,A1,The student change the answer yesterday.,WRONG,The past-time marker “yesterday” requires “changed”.
+ess-rw-122,A2,The student explained why the population had grown.,RIGHT,An embedded question uses statement word order: “why the population had grown”.
+ess-rw-123,B1,"Although the method is cheap, it is slow.",RIGHT,Do not use “although” and “but” together to mark the same contrast.
+ess-rw-124,B2,"Cars are convenient. On the other hand, they cause pollution.",RIGHT,Use a full stop or semicolon before “on the other hand”.
+ess-rw-125,C1,The analysis distinguishes explicit claims with implicit assumptions.,WRONG,Use “distinguishes X from Y”.
+ess-rw-126,A1,One problem with plastic are its long life.,WRONG,The singular subject “problem” takes “is”.
+ess-rw-127,A2,Several scientists disagree with this theory.,RIGHT,The plural subject “scientists” takes “disagree”.
+ess-rw-128,B1,The vaccine is highly effective against the disease.,RIGHT,The adverb “highly” modifies the adjective “effective”.
+ess-rw-129,B2,Her body language helps to communicate confidence.,RIGHT,The intended meaning is that confidence is communicated; use the noun “confidence”.
+ess-rw-130,C1,"The report evaluates the policy’s impact, whereas it merely describe its aims.",WRONG,The singular subject “it” takes “describes”.
+ess-rw-131,A1,This idea changed the way the class worked.,RIGHT,The past-tense verb is “changed”.
+ess-rw-132,A2,The student explained the meaning of the phrase.,RIGHT,Use “of” to identify the meaning belonging to a phrase.
+ess-rw-133,B1,"The data support the theory, but they do not prove it.",RIGHT,"In this sentence “data” is plural, so use “support”."
+ess-rw-134,B2,The article appeals to readers who value detailed analysis.,RIGHT,The phrase is “appeals to” an audience.
+ess-rw-135,C1,"Although the evidence is limited, the conclusion is carefully qualified.",RIGHT,A semicolon cannot separate a dependent “although” clause from its main clause.
+ess-rw-136,A1,Wind power is an example of renewable energy.,RIGHT,The singular countable noun “example” needs an article here.
+ess-rw-137,A2,"Some energy sources is renewable, for example, wind and solar power.",WRONG,The plural subject “sources” takes “are”.
+ess-rw-138,B1,Recycling reduce the amount of waste sent to landfill.,WRONG,The singular subject “recycling” takes “reduces”.
+ess-rw-139,B2,The writer contrasts the noisy street to the silent house.,WRONG,The standard construction is “contrast X with Y”.
+ess-rw-140,C1,The notice gives an explicit warning about the danger.,RIGHT,“Implicit” means suggested indirectly; “stated directly” describes an explicit warning.
+ess-rw-141,A1,There are two examples in the report.,RIGHT,The plural subject “two examples” takes “are”.
+ess-rw-142,A2,The graph shows that sales have increase.,WRONG,The present perfect requires the past participle “increased”.
+ess-rw-143,B1,"In addition cost, the researchers considered safety.",WRONG,The phrase is “in addition to”.
+ess-rw-144,B2,The poster communicates urgent through its short sentences.,WRONG,The noun “urgency” is needed after “communicates”.
+ess-rw-145,C1,The researcher prioritised evidence that was relevant to the question.,RIGHT,The singular relative pronoun “that” refers to uncountable “evidence”; use “was”.
+ess-rw-146,A1,"The method is cheap, but it is slow.",RIGHT,The second version joins two complete sentences with only a comma.
+ess-rw-147,A2,The map is useful for plan the route.,WRONG,"After “for”, use the noun or the “-ing” form “planning”."
+ess-rw-148,B1,The method used in the study were a survey.,WRONG,The singular subject “method” takes “was”.
+ess-rw-149,B2,The article presents the team as hero.,WRONG,Use an article before the singular countable noun “hero”.
+ess-rw-150,C1,The short sentences convey a sense of urgency.,RIGHT,The plural subject “sentences” takes “convey”.
+ess-rw-151,A1,Exercise improve health. It also reduces stress.,WRONG,The singular subject “exercise” takes “improves”.
+ess-rw-152,A2,The rise was probably caused by hot weather.,RIGHT,The passive verb phrase needs “was”: “was caused”.
+ess-rw-153,B1,Not every website is a reliable source.,RIGHT,“Every website” is grammatically singular and takes “is”.
+ess-rw-154,B2,The colour palette appeals to younger readers.,RIGHT,The singular subject “palette” takes “appeals”.
+ess-rw-155,C1,The writer portrays the father caring but strict.,WRONG,Use “as” in the structure “portray someone as”.
+ess-rw-156,A1,There is two examples in the report.,WRONG,The plural subject “two examples” takes “are”.
+ess-rw-157,A2,The red colour adds meaning to the image.,RIGHT,The noun “meaning” is required after the verb “adds”.
+ess-rw-158,B1,One weakness of the argument is its lack of evidence.,RIGHT,Use the possessive determiner “its” before the noun “lack”.
+ess-rw-159,B2,Clear headings guide readers through the report.,RIGHT,The plural subject “headings” takes “guide”.
+ess-rw-160,C1,The researcher prioritised evidence which were relevant to the question.,WRONG,The singular relative pronoun “that” refers to uncountable “evidence”; use “was”.
+ess-rw-161,A1,The climate changing quickly.,WRONG,The sentence needs the auxiliary verb “is”.
+ess-rw-162,A2,The example is useful because it support the main idea.,WRONG,The singular subject “it” takes “supports”.
+ess-rw-163,B1,A careful method can reduces the risk of error.,WRONG,A modal verb (“can”) takes the base form “reduce”.
+ess-rw-164,B2,The text presents the character to be ambitious but uncertain.,WRONG,The standard structure is “present someone as” a particular type.
+ess-rw-165,C1,The author infers a criticism that the reader must imply from the contrast.,WRONG,The author implies; the reader infers.
+ess-rw-166,A1,"The method is cheap, it is slow.",WRONG,The second version joins two complete sentences with only a comma.
+ess-rw-167,A2,The report identifies a change in the population.,RIGHT,The noun “change” is needed after the article “a”.
+ess-rw-168,B1,The findings are significant for the local community.,RIGHT,The plural subject “findings” takes “are”.
+ess-rw-169,B2,The second image reinforces the first image’s message.,RIGHT,The singular possessive “image’s” needs an apostrophe.
+ess-rw-170,C1,The short sentences conveys a sense of urgency.,WRONG,The plural subject “sentences” takes “convey”.
+ess-rw-171,A1,The climate is changing quickly.,RIGHT,The sentence needs the auxiliary verb “is”.
+ess-rw-172,A2,The two results are probably different.,RIGHT,The plural subject “results” takes “are”.
+ess-rw-173,B1,The change in method had a positive effect on the results.,RIGHT,The correct preposition is “on” after “effect”.
+ess-rw-174,B2,The title stands out because its colour contrasts with the background.,RIGHT,The singular subject “colour” takes “contrasts”.
+ess-rw-175,C1,The author implies a criticism that the reader must infer from the contrast.,RIGHT,The author implies; the reader infers.
+ess-rw-176,A1,The main idea of the article are clear.,WRONG,The singular subject “idea” takes “is”.
+ess-rw-177,A2,The table identifies two causes of the change.,RIGHT,The singular subject “table” takes “identifies”.
+ess-rw-178,B1,"Solar power is clean. In addition, it is becoming cheaper.",RIGHT,The second clause needs the verb “is”.
+ess-rw-179,B2,The results indicate a link between diet and health.,RIGHT,The plural subject “results” takes “indicate”.
+ess-rw-180,C1,The analysis evaluate whether the policy achieved its stated aims.,WRONG,The singular subject “analysis” takes “evaluates”.
+ess-rw-181,A1,"The method is cheap, also it works well.",WRONG,“Also” adds a point; it does not join these contrasting clauses as “but” does.
+ess-rw-182,A2,"The method is cheap. However, it is slow.",RIGHT,The second version creates a comma splice; use a full stop before “however”.
+ess-rw-183,B1,The writer argues that the school day should start later.,RIGHT,The singular subject “writer” takes “argues”.
+ess-rw-184,B2,The policy seems to be working.,RIGHT,Use “seems to be working” for this continuing action.
+ess-rw-185,C1,The findings implies that the policy may have had an unintended effect.,WRONG,The plural subject “findings” takes “imply”.
+ess-rw-186,A1,A fact can supports an idea.,WRONG,A modal verb such as “can” is followed by the base form “support”.
+ess-rw-187,A2,The class listed three examples and then discussed their meaning.,RIGHT,The coordinated verbs should share the past tense: “listed” and “discussed”.
+ess-rw-188,B1,The evidence suggests that the method is effective.,RIGHT,“Evidence” is singular and takes “suggests”.
+ess-rw-189,B2,The policy seems to have reduced waiting times.,RIGHT,Use “to have reduced” after “seems” for a completed action.
+ess-rw-190,C1,The argument is convincing in so far as its evidence are relevant and reliable.,WRONG,"In this construction, “evidence” is uncountable and takes “is”."
+ess-rw-191,A1,Water are important for all living things.,WRONG,“Water” is singular here and takes “is”.
+ess-rw-192,A2,The number of visitors increase in 2019.,WRONG,The past-time marker “in 2019” calls for “increased”.
+ess-rw-193,B1,Social media has a strong affect on teenagers.,WRONG,The noun is “effect”; “affect” is usually the verb.
+ess-rw-194,B2,Choose a quotation that is relevent to your argument.,WRONG,The correct spelling is “relevant”.
+ess-rw-195,C1,The essay discusses both the benefits or the limitations of the method.,WRONG,The paired structure “both…and…” requires “and”.
+ess-rw-196,A1,Water is important for all living things.,RIGHT,“Water” is singular here and takes “is”.
+ess-rw-197,A2,The student explained why had the population grown.,WRONG,An embedded question uses statement word order: “why the population had grown”.
+ess-rw-198,B1,"Although the method is cheap, but it is slow.",WRONG,Do not use “although” and “but” together to mark the same contrast.
+ess-rw-199,B2,"Cars are convenient, on the other hand they cause pollution.",WRONG,Use a full stop or semicolon before “on the other hand”.
+ess-rw-200,C1,The essay discusses both the benefits and the limitations of the method.,RIGHT,The paired structure “both…and…” requires “and”.
+ess-rw-201,A1,It is a fact that water boil at 100°C.,WRONG,The singular subject “water” takes “boils”.
+ess-rw-202,A2,I am think the second solution is more useful.,WRONG,"Use “I think”, without “am”, for this opinion."
+ess-rw-203,B1,A disadvantage of solar power are its cost.,WRONG,The singular subject “disadvantage” takes “is”.
+ess-rw-204,B2,The audience’s responses was mixed.,WRONG,The plural subject “responses” takes “were”.
+ess-rw-205,C1,The student justified the conclusion by evidences from both sources.,WRONG,“Evidence” is uncountable; use “with evidence” or “by citing evidence”.
+ess-rw-206,A1,One problem with plastic is its long life.,RIGHT,The singular subject “problem” takes “is”.
+ess-rw-207,A2,One small detail is the ring on her finger.,RIGHT,The singular subject “detail” takes “is”.
+ess-rw-208,B1,A strength of the study is its large sample.,RIGHT,The singular subject “strength” takes “is”.
+ess-rw-209,B2,The title stands out against the pale background.,RIGHT,"Use either “stands out against” or “stands out from”, not both."
+ess-rw-210,C1,"The report evaluates the policy’s impact, whereas it merely describes its aims.",RIGHT,The singular subject “it” takes “describes”.
+ess-rw-211,A1,The graph showing that the river level rose.,WRONG,The sentence needs a finite verb: “shows”.
+ess-rw-212,A2,The report gives a useful explanation of the pattern.,RIGHT,The noun “explanation” is needed after the adjective “useful”.
+ess-rw-213,B1,The two methods produced similar results.,RIGHT,The past-time marker “yesterday” calls for the simple past “produced”.
+ess-rw-214,B2,The audience’s response was divided.,RIGHT,“Response” is singular and takes “was”.
+ess-rw-215,C1,The writer’s perspective are conveyed through the details she selects.,WRONG,The singular subject “perspective” takes “is”.
+ess-rw-216,A1,This statement is only partly true.,RIGHT,“True” is the adjective required after “is”.
+ess-rw-217,A2,Crime decreased after the new law was introduced.,RIGHT,The completed event requires the past-tense verb “decreased”.
+ess-rw-218,B1,One advantage of trains is that they are fast.,RIGHT,The singular subject “advantage” takes “is”.
+ess-rw-219,B2,Her analysis of the poster focuses on colour and lighting.,RIGHT,The noun “analysis” takes “of” before its subject.
+ess-rw-220,C1,To what extent the policy was fair remains open to debate.,RIGHT,"In this embedded clause, use statement word order: “the policy was fair”."
+ess-rw-221,A1,The importent fact is easy to remember.,WRONG,“Important” is spelled with “a” in the second syllable.
+ess-rw-222,A2,The report describes the pattern shown in the graph.,RIGHT,The singular subject “report” takes “describes”.
+ess-rw-223,B1,"The sample was small; therefore, the results may not be reliable.",RIGHT,A semicolon or a full stop is needed before the conjunctive adverb “therefore”.
+ess-rw-224,B2,"Cats are independent, whereas dogs often seek company.",RIGHT,The plural subject “dogs” takes “seek”.
+ess-rw-225,C1,"The study’s limitations are explicit, whereas its assumptions remains implicit.",WRONG,The plural subject “assumptions” takes “remain”.
+ess-rw-226,A1,The writer gives one reason for the result.,RIGHT,The singular subject “writer” takes “gives”.
+ess-rw-227,A2,The report suggests that the change were useful.,WRONG,The singular subject “change” takes “was”.
+ess-rw-228,B1,"Although sales increased, but the company reduced its advertising budget.",WRONG,Do not add “but” after an “although” clause.
+ess-rw-229,B2,The page guides readers for the contact form.,WRONG,Use “to” to show the destination.
+ess-rw-230,C1,The evidence does not justify the certainty of the final claim.,RIGHT,The singular subject “evidence” takes “does”.
+ess-rw-231,A1,A fact can support an idea.,RIGHT,A modal verb such as “can” is followed by the base form “support”.
+ess-rw-232,A2,The answer probably depend on the quality of the evidence.,WRONG,The singular subject “answer” takes “depends”.
+ess-rw-233,B1,The purpose of the advert are to sell the perfume.,WRONG,The singular subject “purpose” takes “is”.
+ess-rw-234,B2,"The two accounts differ in tone, whereas their conclusions is similar.",WRONG,The plural subject “conclusions” takes “are”.
+ess-rw-235,C1,The argument is convincing insofar as its evidence is relevant and reliable.,RIGHT,"In this construction, “evidence” is uncountable and takes “is”."
+ess-rw-236,A1,Use evidence from the image into your answer.,WRONG,The correct preposition is “in your answer”.
+ess-rw-237,A2,The researcher explained the result a simple example.,WRONG,The sentence needs “with” to show what the researcher used to explain the result.
+ess-rw-238,B1,The results are likely change after the second trial.,WRONG,Use “likely to” before the base verb.
+ess-rw-239,B2,"The evidence may supports the claim, but further analysis is needed.",WRONG,A modal verb (“may”) takes the base form “support”.
+ess-rw-240,C1,The conclusion is justified the evidence presented in the study.,WRONG,The passive structure needs “by” before the agent or source of justification.
+ess-rw-241,A1,One reason for the change were cost.,WRONG,The singular subject “reason” takes “was”.
+ess-rw-242,A2,The report describes the result but do not explain its cause.,WRONG,The singular subject “report” takes “does”.
+ess-rw-243,B1,This might explains the fall in sales.,WRONG,A modal verb (“might”) takes the base form “explain”.
+ess-rw-244,B2,The report suggests that trend may continue.,WRONG,The singular countable noun “trend” needs an article here.
+ess-rw-245,C1,The repetition emphasise her determination.,WRONG,The singular subject “repetition” takes “emphasises”.
+ess-rw-246,A1,The answer uses one clear fact.,RIGHT,The singular subject “answer” takes “uses”.
+ess-rw-247,A2,The two groups probably chooses different methods.,WRONG,The plural subject “groups” takes “choose”.
+ess-rw-248,B1,The survey was reliable because the same method were used twice.,WRONG,The singular subject “method” takes “was”.
+ess-rw-249,B2,The designer guided visitors to towards the relevant information.,WRONG,Use either “guided visitors to” or “guided visitors towards”.
+ess-rw-250,C1,The student analysed how the narrator’s perspective shapes the account.,RIGHT,An embedded question uses statement word order after “analysed how”.
+ess-rw-251,A2,I am agree with the writer’s view.,WRONG,Do not add “am” before the main verb “agree”.
+ess-rw-252,B1,There was a significantly increase in sales.,WRONG,The adjective “significant” modifies the noun “increase”.
+ess-rw-253,B2,The advert challenge the stereotype that girls are weak.,WRONG,The singular subject “advert” takes “challenges”.
+ess-rw-254,A2,The student can explain the reason for the result.,RIGHT,A modal verb (“can”) is followed by the base verb “explain”.
+ess-rw-255,B1,The study has one weakness: it includes only ten participants.,RIGHT,The semicolon cannot introduce a dependent “because” clause as a complete sentence.
+ess-rw-256,B2,The advertisement challenges a stereotype and presents an alternative perspective.,RIGHT,The coordinated verbs share the singular subject “advertisement”: “challenges” and “presents”.
+ess-rw-257,A2,The two groups probably chose different methods.,RIGHT,The plural subject “groups” takes “choose”.
+ess-rw-258,B1,The survey was reliable because the same method was used twice.,RIGHT,The singular subject “method” takes “was”.
+ess-rw-259,B2,The designer guided visitors towards the relevant information.,RIGHT,Use either “guided visitors to” or “guided visitors towards”.
+ess-rw-260,A2,The red colour adds meaningful to the image.,WRONG,The noun “meaning” is required after the verb “adds”.
+ess-rw-261,B1,One weakness of the argument is it lack of evidence.,WRONG,Use the possessive determiner “its” before the noun “lack”.
+ess-rw-262,B2,Clear headings guides readers through the report.,WRONG,The plural subject “headings” takes “guide”.
+ess-rw-263,A2,The writer suggests one possible reason the decline.,WRONG,Use “for” before the noun phrase: “reason for the decline”.
+ess-rw-264,B1,"Although the evidence is limited, the result are useful.",WRONG,The singular subject “result” takes “is”.
+ess-rw-265,B2,The survey results tend supporting the original claim.,WRONG,Use “tend to” followed by the base verb.
+ess-rw-266,A2,"For example, one source uses solar power.",RIGHT,"The introductory phrase needs a comma, and singular “source” takes “uses”."
+ess-rw-267,B1,The result may be different if the sample is larger.,RIGHT,The verb “be” is required after “may”.
+ess-rw-268,B2,The writer contrasts the character’s public image with her private doubts.,RIGHT,The preferred pattern is “contrast X with Y”.
+ess-rw-269,A2,Smoking can causes serious illness.,WRONG,"After “can”, use the base verb “cause”."
+ess-rw-270,B1,There are strong evidence that exercise improves mood.,WRONG,“Evidence” is uncountable here and takes “is”.
+ess-rw-271,B2,The phrase create a sarcastic tone.,WRONG,The singular subject “phrase” takes “creates”.
+ess-rw-272,A2,The change effected the final result.,WRONG,Use the verb “affected” to mean “influenced”.
+ess-rw-273,B1,The evidence is reliable enough supporting a cautious conclusion.,WRONG,Use the infinitive “to support” after “enough”.
+ess-rw-274,B2,The report analyses the effect the change on attendance.,WRONG,The phrase needs “of” between “effect” and the thing that caused it.
+ess-rw-275,A2,The teacher asked us to describe what the picture shows.,RIGHT,"After “to”, use the base verb “describe”."
+ess-rw-276,B1,The report gives a reliable account of the event.,RIGHT,The adjective “reliable” modifies the noun “account”.
+ess-rw-277,B2,The design communicates its intention through the visual hierarchy.,RIGHT,"Use possessive “its”, not the contraction “it’s”."
+ess-rw-278,A2,The teacher asked us to identify the main idea.,RIGHT,"After “to”, use the base verb “identify”."
+ess-rw-279,B1,The music and lighting create a tense mood.,RIGHT,The compound subject takes the plural verb “create”.
+ess-rw-280,B2,The analysis focuses on how the image guides the viewer’s attention.,RIGHT,Use “focuses on” before the topic of analysis.
+ess-rw-281,A2,The experiment probably caused the change.,RIGHT,Use the passive participle “caused” after “was”.
+ess-rw-282,B1,The writer argues that the policy could be improved.,RIGHT,Use statement word order in a clause introduced by “that”.
+ess-rw-283,B2,"The article’s tone is formal, whereas the interview is conversational.",RIGHT,The second clause needs the verb “is”.
+ess-rw-284,A2,The two results is probably different.,WRONG,The plural subject “results” takes “are”.
+ess-rw-285,B1,The change in method had a positive effect to the results.,WRONG,The correct preposition is “on” after “effect”.
+ess-rw-286,B2,The title stands out because its colour contrast with the background.,WRONG,The singular subject “colour” takes “contrasts”.
+ess-rw-287,A2,A decrease of noise helped the students concentrate.,WRONG,The usual phrase is “a decrease in” a quantity.
+ess-rw-288,B1,The argument is convincing because it use relevant evidence.,WRONG,The singular subject “it” takes “uses”.
+ess-rw-289,B2,The phrase “another brilliant idea” convey a sarcastic tone.,WRONG,The singular subject “phrase” takes “conveys”.
+ess-rw-290,A2,The researcher explained the result with a simple example.,RIGHT,The sentence needs “with” to show what the researcher used to explain the result.
+ess-rw-291,B1,The results are likely to change after the second trial.,RIGHT,Use “likely to” before the base verb.
+ess-rw-292,B2,"The evidence may support the claim, but further analysis is needed.",RIGHT,A modal verb (“may”) takes the base form “support”.
+ess-rw-293,A2,The teacher asked us to identified the main idea.,WRONG,"After “to”, use the base verb “identify”."
+ess-rw-294,B1,The music and lighting creates a tense mood.,WRONG,The compound subject takes the plural verb “create”.
+ess-rw-295,B2,The analysis focuses in how the image guides the viewer’s attention.,WRONG,Use “focuses on” before the topic of analysis.
+ess-rw-296,A2,The essay compares the two poems.,RIGHT,The correct spelling is “compares”.
+ess-rw-297,B1,"Factories closed. As a result, many people lost their jobs.",RIGHT,Use a full stop or semicolon before “as a result”; the comma alone creates a splice.
+ess-rw-298,B2,The results suggest that the treatment may be effective.,RIGHT,The plural subject “results” takes “suggest”.
+ess-rw-299,A2,The choice of a city setting suggests a modern lifestyle.,RIGHT,The singular subject “choice” takes “suggests”.
+ess-rw-300,B1,The results may differ in other countries.,RIGHT,A modal verb (“may”) takes the base form “differ”.
+ess-rw-301,B2,The designer’s intention was to simplify the page.,RIGHT,The singular subject “intention” takes “was”.
+ess-rw-302,A2,The writer disagrees with the claim about cost.,RIGHT,The singular subject “writer” takes “disagrees”.
+ess-rw-303,B1,The result was affected by the small sample.,RIGHT,Use “affected” to mean influenced.
+ess-rw-304,B2,The conclusion is convincing because it follows from the evidence.,RIGHT,Use “follows from” when a conclusion is supported by evidence.
+ess-rw-305,A2,The writer’s idea is useful for this discussion.,RIGHT,The singular subject “it” takes “explains”.
+ess-rw-306,B1,One factor that affects attendance is the weather.,RIGHT,The singular subject “factor” takes “affects”.
+ess-rw-307,B2,The writer’s analysis is relevant because it addresses the question directly.,RIGHT,The singular subject “it” takes “addresses”.
+ess-rw-308,A2,The examiner asked the class compare the two results.,WRONG,The infinitive marker “to” is needed after “asked the class”.
+ess-rw-309,B1,The studies main strength is its large sample.,WRONG,The possessive form “study’s” needs an apostrophe.
+ess-rw-310,B2,"The evidence is relevant to the claim, but it are not conclusive.",WRONG,The singular pronoun “it” takes “is”.
+ess-rw-311,A2,The number of visitors increased in 2019.,RIGHT,The past-time marker “in 2019” calls for “increased”.
+ess-rw-312,B1,Social media has a strong effect on teenagers.,RIGHT,The noun is “effect”; “affect” is usually the verb.
+ess-rw-313,B2,Choose a quotation that is relevant to your argument.,RIGHT,The correct spelling is “relevant”.
+ess-rw-314,A2,Smoking can cause serious illness.,RIGHT,"After “can”, use the base verb “cause”."
+ess-rw-315,B1,There is strong evidence that exercise improves mood.,RIGHT,“Evidence” is uncountable here and takes “is”.
+ess-rw-316,B2,The phrase creates a sarcastic tone.,RIGHT,The singular subject “phrase” takes “creates”.
+ess-rw-317,A2,The students agreed that the second answer is stronger yesterday.,WRONG,The past-time context requires “was stronger”.
+ess-rw-318,B1,One disadvantage is that the system require extra time.,WRONG,The singular subject “system” takes “requires”.
+ess-rw-319,B2,The introduction guides readers towards to the central question.,WRONG,Do not use both “towards” and “to”.
+ess-rw-320,A2,A usefully detail can support the answer.,WRONG,The adjective “useful” modifies the noun “detail”.
+ess-rw-321,B1,The report outline the main stages of the process.,WRONG,The singular subject “report” takes “outlines”.
+ess-rw-322,B2,"The writer’s attitude is critical, however the tone remains polite.",WRONG,Use “although” to join the clauses; “however” needs separate punctuation.
+ess-rw-323,A2,Several scientists disagrees with this theory.,WRONG,The plural subject “scientists” takes “disagree”.
+ess-rw-324,B1,The vaccine is high effective against the disease.,WRONG,The adverb “highly” modifies the adjective “effective”.
+ess-rw-325,B2,Her body language helps communicate confidently.,WRONG,The intended meaning is that confidence is communicated; use the noun “confidence”.
+ess-rw-326,A2,Lack of sleep affects concentration.,RIGHT,The singular subject “lack” takes “affects”.
+ess-rw-327,B1,Cost is a key factor in the decision.,RIGHT,The established phrase is “a factor in” a decision.
+ess-rw-328,B2,Her dismissive reply reveals a negative attitude towards the plan.,RIGHT,"In this context, “attitude” describes her feelings or opinion; “tone” describes the language’s expressed manner."
+ess-rw-329,A2,I agree with the writer’s view.,RIGHT,Do not add “am” before the main verb “agree”.
+ess-rw-330,B1,There was a significant increase in sales.,RIGHT,The adjective “significant” modifies the noun “increase”.
+ess-rw-331,B2,The advert challenges the stereotype that girls are weak.,RIGHT,The singular subject “advert” takes “challenges”.
+ess-rw-332,A2,The example is useful because it supports the main idea.,RIGHT,The singular subject “it” takes “supports”.
+ess-rw-333,B1,A careful method can reduce the risk of error.,RIGHT,A modal verb (“can”) takes the base form “reduce”.
+ess-rw-334,B2,The text presents the character as ambitious but uncertain.,RIGHT,The standard structure is “present someone as” a particular type.
+ess-rw-335,A2,The writer disagree with the claim about cost.,WRONG,The singular subject “writer” takes “disagrees”.
+ess-rw-336,B1,The result was effected by the small sample.,WRONG,Use “affected” to mean influenced.
+ess-rw-337,B2,The conclusion is convincing because it is followed from the evidence.,WRONG,Use “follows from” when a conclusion is supported by evidence.
+ess-rw-338,A2,The graph shows that sales increased.,RIGHT,The present perfect requires the past participle “increased”.
+ess-rw-339,B1,"In addition to cost, the researchers considered safety.",RIGHT,The phrase is “in addition to”.
+ess-rw-340,B2,The poster communicates urgency through its short sentences.,RIGHT,The noun “urgency” is needed after “communicates”.
+ess-rw-341,A2,The examiner asked the class to compare the two results.,RIGHT,The infinitive marker “to” is needed after “asked the class”.
+ess-rw-342,B1,The study’s main strength is its large sample.,RIGHT,The possessive form “study’s” needs an apostrophe.
+ess-rw-343,B2,"The evidence is relevant to the claim, but it is not conclusive.",RIGHT,The singular pronoun “it” takes “is”.
+ess-rw-344,A2,A decrease in noise helped the students concentrate.,RIGHT,The usual phrase is “a decrease in” a quantity.
+ess-rw-345,B1,The argument is convincing because it uses relevant evidence.,RIGHT,The singular subject “it” takes “uses”.
+ess-rw-346,B2,The phrase “another brilliant idea” conveys a sarcastic tone.,RIGHT,The singular subject “phrase” takes “conveys”.
+ess-rw-347,A2,The change affected the final result.,RIGHT,Use the verb “affected” to mean “influenced”.
+ess-rw-348,B1,The evidence is reliable enough to support a cautious conclusion.,RIGHT,Use the infinitive “to support” after “enough”.
+ess-rw-349,B2,The report analyses the effect of the change on attendance.,RIGHT,The phrase needs “of” between “effect” and the thing that caused it.
+ess-rw-350,A2,The question asks students to suggest one reason for the fall.,RIGHT,"After “to”, use the base verb “suggest”."
+ess-rw-351,B1,This evidence supports the theory.,RIGHT,"“Evidence” is uncountable in this meaning and takes “this”, not “these”."
+ess-rw-352,B2,Older participants tend to read longer reports.,RIGHT,The plural subject “participants” takes “tend”.
+ess-rw-353,A2,The writer suggests one possible cause of the decline.,RIGHT,Use “for” before the noun phrase: “reason for the decline”.
+ess-rw-354,B1,"Although the evidence is limited, the result is useful.",RIGHT,The singular subject “result” takes “is”.
+ess-rw-355,B2,The survey results tend to support the original claim.,RIGHT,Use “tend to” followed by the base verb.
+ess-rw-356,A2,One small detail are the ring on her finger.,WRONG,The singular subject “detail” takes “is”.
+ess-rw-357,B1,A strength of the study are its large sample.,WRONG,The singular subject “strength” takes “is”.
+ess-rw-358,B2,The title stands out from against the pale background.,WRONG,"Use either “stands out against” or “stands out from”, not both."
+ess-rw-359,A2,The class agreed with the conclusion after reviewing the evidence.,RIGHT,Use “agree with” for accepting a view or conclusion.
+ess-rw-360,B1,The method is effective because it reduces wasted time.,RIGHT,The singular subject “it” takes “reduces”.
+ess-rw-361,B2,The article seems to present the policy as successful.,RIGHT,The infinitive marker “to” is needed after “seems”.
+ess-rw-362,A2,The class agreed to the conclusion after reviewing the evidence.,WRONG,Use “agree with” for accepting a view or conclusion.
+ess-rw-363,B1,The method is effective because it reduce wasted time.,WRONG,The singular subject “it” takes “reduces”.
+ess-rw-364,B2,The article seems present the policy as successful.,WRONG,The infinitive marker “to” is needed after “seems”.
+ess-rw-365,A2,The students compared both accounts yesterday before they agreed.,RIGHT,The past-time marker “yesterday” requires “compared”.
+ess-rw-366,B1,Prices are likely to rise next year.,RIGHT,The infinitive marker “to” is needed after “likely”.
+ess-rw-367,B2,The evidence is relevant to the question of long-term impact.,RIGHT,The adjective “relevant” requires the preposition “to”.
+ess-rw-368,A2,The report describes the result but does not explain its cause.,RIGHT,The singular subject “report” takes “does”.
+ess-rw-369,B1,This might explain the fall in sales.,RIGHT,A modal verb (“might”) takes the base form “explain”.
+ess-rw-370,B2,The report suggests that the trend may continue.,RIGHT,The singular countable noun “trend” needs an article here.
+ess-rw-371,A2,The choice of a city setting suggest a modern lifestyle.,WRONG,The singular subject “choice” takes “suggests”.
+ess-rw-372,B1,The results may differs in other countries.,WRONG,A modal verb (“may”) takes the base form “differ”.
+ess-rw-373,B2,The designer’s intention were to simplify the page.,WRONG,The singular subject “intention” takes “was”.
+ess-rw-374,A2,The students agreed that the second answer was stronger.,RIGHT,The past-time context requires “was stronger”.
+ess-rw-375,B1,One disadvantage is that the system requires extra time.,RIGHT,The singular subject “system” takes “requires”.
+ess-rw-376,B2,The introduction guides readers towards the central question.,RIGHT,Do not use both “towards” and “to”.
+ess-rw-377,A2,The meaning of the final sentence is clear.,RIGHT,The singular subject “meaning” takes “is”.
+ess-rw-378,B1,The main factor was the cost of transport.,RIGHT,The singular subject “factor” takes “was”.
+ess-rw-379,B2,The data seem to indicate a gradual change.,RIGHT,"With plural “data” in this sentence, use “seem”."
+ess-rw-380,A2,The answer probably depends on the quality of the evidence.,RIGHT,The singular subject “answer” takes “depends”.
+ess-rw-381,B1,The purpose of the advert is to sell the perfume.,RIGHT,The singular subject “purpose” takes “is”.
+ess-rw-382,B2,"The two accounts differ in tone, whereas their conclusions are similar.",RIGHT,The plural subject “conclusions” takes “are”.
+ess-rw-383,A2,The report lists several details about the method.,RIGHT,“Several” requires the plural noun “details”.
+ess-rw-384,B1,"The sample was small; as a result, the conclusion remains tentative.",RIGHT,The singular subject “conclusion” takes “remains”.
+ess-rw-385,B2,"The findings suggest a link, although they do not establish causation.",RIGHT,The plural subject “findings” takes “suggest”.
+ess-rw-386,A2,The student gave a clearly answer to the question.,WRONG,The adjective “clear” modifies the noun “answer”.
+ess-rw-387,B1,The findings led a reduction in waiting times.,WRONG,The phrase is “lead to” or “led to”.
+ess-rw-388,B2,The researcher prioritise the most relevant evidence.,WRONG,The past-tense verb is “prioritised”.
+ess-rw-389,A2,The student gave a clear answer to the question.,RIGHT,The adjective “clear” modifies the noun “answer”.
+ess-rw-390,B1,The findings led to a reduction in waiting times.,RIGHT,The phrase is “lead to” or “led to”.
+ess-rw-391,B2,The researcher prioritised the most relevant evidence.,RIGHT,The past-tense verb is “prioritised”.
+ess-rw-392,A2,A useful detail can support the answer.,RIGHT,The adjective “useful” modifies the noun “detail”.
+ess-rw-393,B1,The report outlines the main stages of the process.,RIGHT,The singular subject “report” takes “outlines”.
+ess-rw-394,B2,"The writer’s attitude is critical, although the tone remains polite.",RIGHT,Use “although” to join the clauses; “however” needs separate punctuation.
+ess-rw-395,A2,Lack of sleep affect concentration.,WRONG,The singular subject “lack” takes “affects”.
+ess-rw-396,B1,Cost is a key factor for the decision.,WRONG,The established phrase is “a factor in” a decision.
+ess-rw-397,B2,Her dismissive reply reveals a negative tone towards the plan.,WRONG,"In this context, “attitude” describes her feelings or opinion; “tone” describes the language’s expressed manner."
+ess-rw-398,A2,The report lists several detail about the method.,WRONG,“Several” requires the plural noun “details”.
+ess-rw-399,B1,The sample was small; as a result the conclusion remain tentative.,WRONG,The singular subject “conclusion” takes “remains”.
+ess-rw-400,B2,"The findings suggests a link, although they do not establish causation.",WRONG,The plural subject “findings” takes “suggest”.

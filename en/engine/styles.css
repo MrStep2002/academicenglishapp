@@ -532,3 +532,8 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .ct-card .next-row{margin-top:16px}
 .ct-card.done .bank{opacity:.55}
 .ct-card #ctCheck:disabled{opacity:.35;cursor:default}
+
+/* Build the sentence on the Chinese version (25 Oct 2026): the Chinese sentence across the top */
+.zh-sentence{font-family:var(--f-zh);font-size:clamp(22px,3.6vw,28px);line-height:1.5;margin:0 0 18px;padding:12px 16px;border-radius:10px;background:var(--paper);border-left:4px solid var(--zhc,var(--mark))}
+.rolekey [lang="zh-CN"]{font-family:var(--f-zh);opacity:.8}
+.tok.t-near{background:var(--good-soft);color:var(--good)}   /* the word beside a missing-word gap, tapped instead of the bracketed word: counts as found */

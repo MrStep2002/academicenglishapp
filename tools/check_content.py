@@ -23,7 +23,7 @@ OPTIONAL = {'correction'}   # columns a file may leave out
 HEADS = {
     'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note'],
     'gaps': ['id', 'level', 'sentence', 'answer', 'wrong1', 'wrong2', 'wrong3', 'explanation', 'focus', 'word'],
-    'builds': ['id', 'level', 'goal', 'pieces', 'decoys', 'also_right', 'explanation'],
+    'builds': ['id', 'level', 'goal', 'zh', 'pieces', 'decoys', 'also_right', 'explanation'],   # Build the sentence: Chinese version only
     'errors': ['id', 'level', 'title', 'text'],
     'tf': ['id', 'level', 'statement', 'answer', 'explanation'],
     'right-wrong': ['id', 'level', 'statement', 'answer', 'explanation', 'correction'],
@@ -112,6 +112,10 @@ def check_folder(folder, all_word_ids):
                 t = r.get('text', '')
                 if not ERR.search(t): say(kind, r, 'the text needs at least one [wrong|right|why] (skipped)'); ok = False
                 if t.count('[') != t.count(']'): say(kind, r, 'a [ or ] is missing')
+                for wrong, right, _ in ERR.findall(t):   # a missing word: both words around the gap belong inside the brackets
+                    w, rt = wrong.strip().lower(), right.strip().lower()
+                    if rt.endswith(' ' + w) or rt.startswith(w + ' '):
+                        say(kind, r, f'[{wrong}|{right}|…] adds a missing word: put the word on the other side of the gap inside the brackets too, e.g. [visitors stay|visitors to stay|…]')
             elif kind == 'tf':
                 if not r.get('statement') or r.get('answer', '').strip().upper() not in ('TRUE', 'FALSE', 'T', 'F', 'YES', 'NO', 'Y', 'N'):
                     say(kind, r, 'needs a statement and an answer of TRUE or FALSE (skipped)'); ok = False
@@ -172,6 +176,10 @@ def check_folder(folder, all_word_ids):
     if words:
         no_zh = sum(1 for w in words if not w.get('zh'))
         if no_zh and no_zh < len(words): print(f'  {no_zh} word(s) have no Chinese (zh): the Chinese version leaves them out.')
+    builds = data.get('builds', [])
+    if builds:   # Build the sentence is on the Chinese version only: a sentence without its Chinese is not played anywhere
+        with_zh = sum(1 for r in builds if r.get('zh'))
+        print(f'  builds.csv: {with_zh} of {len(builds)} sentences have Chinese (zh). Build the sentence (Chinese version) uses only those.')
     for p in problems: print('  - ' + p)
     n = len(problems)
     for f in reading:

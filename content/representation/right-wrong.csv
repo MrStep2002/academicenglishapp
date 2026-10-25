@@ -1,1 +1,401 @@
-﻿id,level,statement,answer,explanation
+id,level,statement,answer,explanation
+repr_rw_a1_001,A1,The weak light makes the yellow colour on the open notebook hard to see.,RIGHT,The singular subject “light” correctly takes “makes.”
+repr_rw_a1_002,A1,The weak light make the yellow colour on the open notebook hard to see.,WRONG,The singular subject “light” needs “makes.”
+repr_rw_a1_003,A1,Sam wear a white flight suit in the image.,WRONG,The singular subject “Sam” needs “wears.”
+repr_rw_a1_004,A1,The weak light make the purple colour on the paper star map hard to see.,WRONG,The singular subject “light” needs “makes.”
+repr_rw_a1_005,A1,The weak light makes the green colour on the silver whistle hard to see.,RIGHT,The singular subject “light” correctly takes “makes.”
+repr_rw_a1_006,A1,The camera shows Mara helping a friend; this friendly action may seem caring.,RIGHT,"The singular subject “camera” takes “shows,” and the clauses are correctly joined."
+repr_rw_a1_007,A1,The picture shows Ari as a strong leader in the group.,RIGHT,The subject and verb agree: “picture shows.”
+repr_rw_a1_008,A1,The camera shows Eli helping a friend; this friendly action may seem caring.,RIGHT,"The singular subject “camera” takes “shows,” and the clauses are correctly joined."
+repr_rw_a1_009,A1,The picture shows Eli as a strong leader in the group.,RIGHT,The subject and verb agree: “picture shows.”
+repr_rw_a1_010,A1,Eli is an inventor who repairs a radio for the team. A short answer can point to one detail.,RIGHT,Both sentences are correctly formed; the second suggests a simple way to support an observation.
+repr_rw_a1_011,A1,A short answer can names Mara and one detail.,WRONG,"After “can,” use the base verb “name.”"
+repr_rw_a1_012,A1,The picture shows Jules as a strong leader in the group.,RIGHT,The subject and verb agree: “picture shows.”
+repr_rw_a1_013,A1,A short answer can names Eli and one detail.,WRONG,"After “can,” use the base verb “name.”"
+repr_rw_a1_014,A1,Ari wear a striped shirt in the image.,WRONG,The singular subject “Ari” needs “wears.”
+repr_rw_a1_015,A1,Mara is a woman and a superhero; she guides the team. A short answer can point to one detail.,RIGHT,Both sentences are correctly formed; the second suggests a simple way to support an observation.
+repr_rw_a1_016,A1,Mara wears a silver cape in the image.,RIGHT,The singular subject “Mara” takes “wears.”
+repr_rw_a1_017,A1,A short answer can names Ari and one detail.,WRONG,"After “can,” use the base verb “name.”"
+repr_rw_a1_018,A1,Sam is an astronaut who checks the route with the crew. A short answer can point to one detail.,RIGHT,Both sentences are correctly formed; the second suggests a simple way to support an observation.
+repr_rw_a1_019,A1,The camera shows Jules helping a friend; this friendly action may seem caring.,RIGHT,"The singular subject “camera” takes “shows,” and the clauses are correctly joined."
+repr_rw_a1_020,A1,The picture show Mara as a strong leader in the group.,WRONG,"“Picture” is singular, so use “shows.”"
+repr_rw_a1_021,A1,A short answer can names Jules and one detail.,WRONG,"After “can,” use the base verb “name.”"
+repr_rw_a1_022,A1,The camera shows Sam helping a friend; this friendly action may seem caring.,RIGHT,"The singular subject “camera” takes “shows,” and the clauses are correctly joined."
+repr_rw_a1_023,A1,The picture shows Mara as a strong leader in the group.,RIGHT,The subject and verb agree: “picture shows.”
+repr_rw_a1_024,A1,Jules wears a work apron in the image.,RIGHT,The singular subject “Jules” takes “wears.”
+repr_rw_a1_025,A1,The weak light make the blue colour on the rescue map hard to see.,WRONG,The singular subject “light” needs “makes.”
+repr_rw_a1_026,A1,The serious expression make Ari look focused.,WRONG,The singular subject “expression” needs “makes.”
+repr_rw_a1_027,A1,The weak light make the orange colour on the red toolbox hard to see.,WRONG,The singular subject “light” needs “makes.”
+repr_rw_a1_028,A1,The weak light makes the blue colour on the rescue map hard to see.,RIGHT,The singular subject “light” correctly takes “makes.”
+repr_rw_a1_029,A1,The weak light makes the orange colour on the red toolbox hard to see.,RIGHT,The singular subject “light” correctly takes “makes.”
+repr_rw_a1_030,A1,The serious expression make Sam look focused.,WRONG,The singular subject “expression” needs “makes.”
+repr_rw_a1_031,A1,Jules wear a work apron in the image.,WRONG,The singular subject “Jules” needs “wears.”
+repr_rw_a1_032,A1,Jules is a mechanic who fixes the team’s bicycle. A short answer can point to one detail.,RIGHT,Both sentences are correctly formed; the second suggests a simple way to support an observation.
+repr_rw_a1_033,A1,The weak light make the green colour on the silver whistle hard to see.,WRONG,The singular subject “light” needs “makes.”
+repr_rw_a1_034,A1,The camera shows Ari helping a friend; this friendly action may seem caring.,RIGHT,"The singular subject “camera” takes “shows,” and the clauses are correctly joined."
+repr_rw_a1_035,A1,Eli wear a green jacket in the image.,WRONG,The singular subject “Eli” needs “wears.”
+repr_rw_a1_036,A1,The serious expression make Jules look focused.,WRONG,The singular subject “expression” needs “makes.”
+repr_rw_a1_037,A1,The picture show Sam as a strong leader in the group.,WRONG,"“Picture” is singular, so use “shows.”"
+repr_rw_a1_038,A1,The serious expression make Eli look focused.,WRONG,The singular subject “expression” needs “makes.”
+repr_rw_a1_039,A1,The picture show Eli as a strong leader in the group.,WRONG,"“Picture” is singular, so use “shows.”"
+repr_rw_a1_040,A1,The picture show Jules as a strong leader in the group.,WRONG,"“Picture” is singular, so use “shows.”"
+repr_rw_a1_041,A1,Ari is the football captain who listens to the team. A short answer can point to one detail.,RIGHT,Both sentences are correctly formed; the second suggests a simple way to support an observation.
+repr_rw_a1_042,A1,Eli wears a green jacket in the image.,RIGHT,The singular subject “Eli” takes “wears.”
+repr_rw_a1_043,A1,Sam wears a white flight suit in the image.,RIGHT,The singular subject “Sam” takes “wears.”
+repr_rw_a1_044,A1,The weak light makes the purple colour on the paper star map hard to see.,RIGHT,The singular subject “light” correctly takes “makes.”
+repr_rw_a1_045,A1,Mara wear a silver cape in the image.,WRONG,The singular subject “Mara” needs “wears.”
+repr_rw_a1_046,A1,Ari wears a striped shirt in the image.,RIGHT,The singular subject “Ari” takes “wears.”
+repr_rw_a1_047,A1,A short answer can names Sam and one detail.,WRONG,"After “can,” use the base verb “name.”"
+repr_rw_a1_048,A1,The picture show Ari as a strong leader in the group.,WRONG,"“Picture” is singular, so use “shows.”"
+repr_rw_a1_049,A1,The serious expression make Mara look focused.,WRONG,The singular subject “expression” needs “makes.”
+repr_rw_a1_050,A1,The picture shows Sam as a strong leader in the group.,RIGHT,The subject and verb agree: “picture shows.”
+repr_rw_a2_001,A2,"An ordinary setting such as a quiet control room can make the scene feel like everyday life, even when the action is unusual.",RIGHT,The modal “can” is correctly followed by “make.”
+repr_rw_a2_002,A2,"An ordinary setting such as a bright garage can make the scene feel like everyday life, even when the action is unusual.",RIGHT,The modal “can” is correctly followed by “make.”
+repr_rw_a2_003,A2,"When the camera looks up at Jules, the character may seemed powerful.",WRONG,"After “may,” use the base verb “seem.”"
+repr_rw_a2_004,A2,These choices help create a clear meaning for the audience in a busy workshop.,RIGHT,The plural subject “choices” correctly takes “help.”
+repr_rw_a2_005,A2,This is one example of how a picture can present Eli.,RIGHT,The singular subject “this” correctly takes “is.”
+repr_rw_a2_006,A2,This is one example of how a picture can present Jules.,RIGHT,The singular subject “this” correctly takes “is.”
+repr_rw_a2_007,A2,"One detail is a steady gaze, which helps the audience notice Mara.",RIGHT,"“One detail is” is singular, and “which helps” refers to that detail."
+repr_rw_a2_008,A2,"The a silver cape make Mara look ready for the task, although the image shows only one moment.",WRONG,The singular subject “clothing” takes “makes.”
+repr_rw_a2_009,A2,The caption explains one reason why Eli’s choice matters in the scene.,RIGHT,The singular subject “caption” correctly takes “explains.”
+repr_rw_a2_010,A2,These choices helps create a clear meaning for the audience in an empty sports hall.,WRONG,The plural subject “choices” takes “help.”
+repr_rw_a2_011,A2,"Because Sam listens to the team, the picture may present Sam as thoughtful.",RIGHT,The clause beginning with “because” is correctly joined to the main clause.
+repr_rw_a2_012,A2,These choices helps create a clear meaning for the audience in a busy workshop.,WRONG,The plural subject “choices” takes “help.”
+repr_rw_a2_013,A2,A close-up of Ari can makes a small facial expression easier to notice.,WRONG,"After “can,” use “make,” not “makes.”"
+repr_rw_a2_014,A2,"The a green jacket make Eli look ready for the task, although the image shows only one moment.",WRONG,The singular subject “clothing” takes “makes.”
+repr_rw_a2_015,A2,A close-up of Jules can make a small facial expression easier to notice.,RIGHT,The modal “can” is correctly followed by the base verb “make.”
+repr_rw_a2_016,A2,"The image feel modern in an empty sports hall, and its green colour is attractive without proving that Ari is wealthy or successful.",WRONG,The singular subject “image” needs “feels.”
+repr_rw_a2_017,A2,"Because Ari listen to the team, the picture may present Ari as thoughtful.",WRONG,The singular subject “Ari” needs “listens.”
+repr_rw_a2_018,A2,"The image feel modern in a bright garage, and its orange colour is attractive without proving that Jules is wealthy or successful.",WRONG,The singular subject “image” needs “feels.”
+repr_rw_a2_019,A2,These choices helps create a clear meaning for the audience in a bright garage.,WRONG,The plural subject “choices” takes “help.”
+repr_rw_a2_020,A2,This is one example of how a picture can present Ari.,RIGHT,The singular subject “this” correctly takes “is.”
+repr_rw_a2_021,A2,The caption explain one reason why Mara’s choice matters in the scene.,WRONG,The singular subject “caption” needs “explains.”
+repr_rw_a2_022,A2,"An ordinary setting such as a quiet control room can makes the scene feel like everyday life, even when the action is unusual.",WRONG,"After “can,” use the base verb “make.”"
+repr_rw_a2_023,A2,"The a silver cape makes Mara look ready for the task, although the image shows only one moment.",RIGHT,"“Clothing makes” agrees, and “although” correctly introduces a contrast."
+repr_rw_a2_024,A2,A close-up of Eli can makes a small facial expression easier to notice.,WRONG,"After “can,” use “make,” not “makes.”"
+repr_rw_a2_025,A2,"An ordinary setting such as a bright garage can makes the scene feel like everyday life, even when the action is unusual.",WRONG,"After “can,” use the base verb “make.”"
+repr_rw_a2_026,A2,"The image feels modern in a busy workshop, and its yellow colour is attractive without proving that Eli is wealthy or successful.",RIGHT,"The clauses are correctly joined, and “attractive” describes the colour rather than making a claim about a person."
+repr_rw_a2_027,A2,"When the camera looks up at Sam, the character may seemed powerful.",WRONG,"After “may,” use the base verb “seem.”"
+repr_rw_a2_028,A2,"Because Jules listens to the team, the picture may present Jules as thoughtful.",RIGHT,The clause beginning with “because” is correctly joined to the main clause.
+repr_rw_a2_029,A2,A close-up of Mara can make a small facial expression easier to notice.,RIGHT,The modal “can” is correctly followed by the base verb “make.”
+repr_rw_a2_030,A2,A close-up of Sam can make a small facial expression easier to notice.,RIGHT,The modal “can” is correctly followed by the base verb “make.”
+repr_rw_a2_031,A2,A close-up of Jules can makes a small facial expression easier to notice.,WRONG,"After “can,” use “make,” not “makes.”"
+repr_rw_a2_032,A2,The caption explains one reason why Jules’s choice matters in the scene.,RIGHT,The singular subject “caption” correctly takes “explains.”
+repr_rw_a2_033,A2,"One details is a careful hand, which helps the audience notice Jules.",WRONG,Use singular “detail” after “one.”
+repr_rw_a2_034,A2,The caption explain one reason why Eli’s choice matters in the scene.,WRONG,The singular subject “caption” needs “explains.”
+repr_rw_a2_035,A2,"One detail is a careful hand, which helps the audience notice Jules.",RIGHT,"“One detail is” is singular, and “which helps” refers to that detail."
+repr_rw_a2_036,A2,"An ordinary setting such as an empty sports hall can makes the scene feel like everyday life, even when the action is unusual.",WRONG,"After “can,” use the base verb “make.”"
+repr_rw_a2_037,A2,"The a white flight suit makes Sam look ready for the task, although the image shows only one moment.",RIGHT,"“Clothing makes” agrees, and “although” correctly introduces a contrast."
+repr_rw_a2_038,A2,"When the camera looks up at Eli, the character may seemed powerful.",WRONG,"After “may,” use the base verb “seem.”"
+repr_rw_a2_039,A2,"One detail is a calm expression, which helps the audience notice Sam.",RIGHT,"“One detail is” is singular, and “which helps” refers to that detail."
+repr_rw_a2_040,A2,"One detail is an open stance, which helps the audience notice Ari.",RIGHT,"“One detail is” is singular, and “which helps” refers to that detail."
+repr_rw_a2_041,A2,A close-up of Eli can make a small facial expression easier to notice.,RIGHT,The modal “can” is correctly followed by the base verb “make.”
+repr_rw_a2_042,A2,This are one example of how a picture can present Ari.,WRONG,The singular subject “this” needs “is.”
+repr_rw_a2_043,A2,"When the camera looks up at Mara, the character may seem powerful.",RIGHT,The present-tense verbs agree with their subjects.
+repr_rw_a2_044,A2,"One details is a steady gaze, which helps the audience notice Mara.",WRONG,Use singular “detail” after “one.”
+repr_rw_a2_045,A2,The caption explains one reason why Sam’s choice matters in the scene.,RIGHT,The singular subject “caption” correctly takes “explains.”
+repr_rw_a2_046,A2,"An ordinary setting such as a stormy city can make the scene feel like everyday life, even when the action is unusual.",RIGHT,The modal “can” is correctly followed by “make.”
+repr_rw_a2_047,A2,This is one example of how a picture can present Mara.,RIGHT,The singular subject “this” correctly takes “is.”
+repr_rw_a2_048,A2,A close-up of Ari can make a small facial expression easier to notice.,RIGHT,The modal “can” is correctly followed by the base verb “make.”
+repr_rw_a2_049,A2,The caption explain one reason why Jules’s choice matters in the scene.,WRONG,The singular subject “caption” needs “explains.”
+repr_rw_a2_050,A2,A close-up of Mara can makes a small facial expression easier to notice.,WRONG,"After “can,” use “make,” not “makes.”"
+repr_rw_a2_051,A2,"The image feels modern in a stormy city, and its blue colour is attractive without proving that Mara is wealthy or successful.",RIGHT,"The clauses are correctly joined, and “attractive” describes the colour rather than making a claim about a person."
+repr_rw_a2_052,A2,These choices help create a clear meaning for the audience in a stormy city.,RIGHT,The plural subject “choices” correctly takes “help.”
+repr_rw_a2_053,A2,A close-up of Sam can makes a small facial expression easier to notice.,WRONG,"After “can,” use “make,” not “makes.”"
+repr_rw_a2_054,A2,"An ordinary setting such as a busy workshop can makes the scene feel like everyday life, even when the action is unusual.",WRONG,"After “can,” use the base verb “make.”"
+repr_rw_a2_055,A2,These choices helps create a clear meaning for the audience in a stormy city.,WRONG,The plural subject “choices” takes “help.”
+repr_rw_a2_056,A2,"Because Eli listen to the team, the picture may present Eli as thoughtful.",WRONG,The singular subject “Eli” needs “listens.”
+repr_rw_a2_057,A2,"Because Mara listens to the team, the picture may present Mara as thoughtful.",RIGHT,The clause beginning with “because” is correctly joined to the main clause.
+repr_rw_a2_058,A2,"The a striped shirt makes Ari look ready for the task, although the image shows only one moment.",RIGHT,"“Clothing makes” agrees, and “although” correctly introduces a contrast."
+repr_rw_a2_059,A2,This are one example of how a picture can present Eli.,WRONG,The singular subject “this” needs “is.”
+repr_rw_a2_060,A2,This are one example of how a picture can present Mara.,WRONG,The singular subject “this” needs “is.”
+repr_rw_a2_061,A2,"When the camera looks up at Mara, the character may seemed powerful.",WRONG,"After “may,” use the base verb “seem.”"
+repr_rw_a2_062,A2,"One details is a focused expression, which helps the audience notice Eli.",WRONG,Use singular “detail” after “one.”
+repr_rw_a2_063,A2,"The image feels modern in a bright garage, and its orange colour is attractive without proving that Jules is wealthy or successful.",RIGHT,"The clauses are correctly joined, and “attractive” describes the colour rather than making a claim about a person."
+repr_rw_a2_064,A2,"The image feels modern in an empty sports hall, and its green colour is attractive without proving that Ari is wealthy or successful.",RIGHT,"The clauses are correctly joined, and “attractive” describes the colour rather than making a claim about a person."
+repr_rw_a2_065,A2,The caption explains one reason why Mara’s choice matters in the scene.,RIGHT,The singular subject “caption” correctly takes “explains.”
+repr_rw_a2_066,A2,"The image feel modern in a quiet control room, and its purple colour is attractive without proving that Sam is wealthy or successful.",WRONG,The singular subject “image” needs “feels.”
+repr_rw_a2_067,A2,"Because Sam listen to the team, the picture may present Sam as thoughtful.",WRONG,The singular subject “Sam” needs “listens.”
+repr_rw_a2_068,A2,This is one example of how a picture can present Sam.,RIGHT,The singular subject “this” correctly takes “is.”
+repr_rw_a2_069,A2,"Because Eli listens to the team, the picture may present Eli as thoughtful.",RIGHT,The clause beginning with “because” is correctly joined to the main clause.
+repr_rw_a2_070,A2,The caption explain one reason why Ari’s choice matters in the scene.,WRONG,The singular subject “caption” needs “explains.”
+repr_rw_a2_071,A2,The caption explain one reason why Sam’s choice matters in the scene.,WRONG,The singular subject “caption” needs “explains.”
+repr_rw_a2_072,A2,"The a work apron make Jules look ready for the task, although the image shows only one moment.",WRONG,The singular subject “clothing” takes “makes.”
+repr_rw_a2_073,A2,"When the camera looks up at Jules, the character may seem powerful.",RIGHT,The present-tense verbs agree with their subjects.
+repr_rw_a2_074,A2,"When the camera looks up at Ari, the character may seem powerful.",RIGHT,The present-tense verbs agree with their subjects.
+repr_rw_a2_075,A2,"One details is an open stance, which helps the audience notice Ari.",WRONG,Use singular “detail” after “one.”
+repr_rw_a2_076,A2,These choices help create a clear meaning for the audience in a quiet control room.,RIGHT,The plural subject “choices” correctly takes “help.”
+repr_rw_a2_077,A2,"The a white flight suit make Sam look ready for the task, although the image shows only one moment.",WRONG,The singular subject “clothing” takes “makes.”
+repr_rw_a2_078,A2,"The a work apron makes Jules look ready for the task, although the image shows only one moment.",RIGHT,"“Clothing makes” agrees, and “although” correctly introduces a contrast."
+repr_rw_a2_079,A2,"When the camera looks up at Ari, the character may seemed powerful.",WRONG,"After “may,” use the base verb “seem.”"
+repr_rw_a2_080,A2,"When the camera looks up at Eli, the character may seem powerful.",RIGHT,The present-tense verbs agree with their subjects.
+repr_rw_a2_081,A2,"The a striped shirt make Ari look ready for the task, although the image shows only one moment.",WRONG,The singular subject “clothing” takes “makes.”
+repr_rw_a2_082,A2,These choices help create a clear meaning for the audience in a bright garage.,RIGHT,The plural subject “choices” correctly takes “help.”
+repr_rw_a2_083,A2,"An ordinary setting such as an empty sports hall can make the scene feel like everyday life, even when the action is unusual.",RIGHT,The modal “can” is correctly followed by “make.”
+repr_rw_a2_084,A2,"Because Ari listens to the team, the picture may present Ari as thoughtful.",RIGHT,The clause beginning with “because” is correctly joined to the main clause.
+repr_rw_a2_085,A2,The caption explains one reason why Ari’s choice matters in the scene.,RIGHT,The singular subject “caption” correctly takes “explains.”
+repr_rw_a2_086,A2,"When the camera looks up at Sam, the character may seem powerful.",RIGHT,The present-tense verbs agree with their subjects.
+repr_rw_a2_087,A2,"An ordinary setting such as a stormy city can makes the scene feel like everyday life, even when the action is unusual.",WRONG,"After “can,” use the base verb “make.”"
+repr_rw_a2_088,A2,"The a green jacket makes Eli look ready for the task, although the image shows only one moment.",RIGHT,"“Clothing makes” agrees, and “although” correctly introduces a contrast."
+repr_rw_a2_089,A2,"The image feel modern in a busy workshop, and its yellow colour is attractive without proving that Eli is wealthy or successful.",WRONG,The singular subject “image” needs “feels.”
+repr_rw_a2_090,A2,This are one example of how a picture can present Jules.,WRONG,The singular subject “this” needs “is.”
+repr_rw_a2_091,A2,"One details is a calm expression, which helps the audience notice Sam.",WRONG,Use singular “detail” after “one.”
+repr_rw_a2_092,A2,"One detail is a focused expression, which helps the audience notice Eli.",RIGHT,"“One detail is” is singular, and “which helps” refers to that detail."
+repr_rw_a2_093,A2,"Because Mara listen to the team, the picture may present Mara as thoughtful.",WRONG,The singular subject “Mara” needs “listens.”
+repr_rw_a2_094,A2,"The image feels modern in a quiet control room, and its purple colour is attractive without proving that Sam is wealthy or successful.",RIGHT,"The clauses are correctly joined, and “attractive” describes the colour rather than making a claim about a person."
+repr_rw_a2_095,A2,This are one example of how a picture can present Sam.,WRONG,The singular subject “this” needs “is.”
+repr_rw_a2_096,A2,These choices helps create a clear meaning for the audience in a quiet control room.,WRONG,The plural subject “choices” takes “help.”
+repr_rw_a2_097,A2,These choices help create a clear meaning for the audience in an empty sports hall.,RIGHT,The plural subject “choices” correctly takes “help.”
+repr_rw_a2_098,A2,"Because Jules listen to the team, the picture may present Jules as thoughtful.",WRONG,The singular subject “Jules” needs “listens.”
+repr_rw_a2_099,A2,"An ordinary setting such as a busy workshop can make the scene feel like everyday life, even when the action is unusual.",RIGHT,The modal “can” is correctly followed by “make.”
+repr_rw_a2_100,A2,"The image feel modern in a stormy city, and its blue colour is attractive without proving that Mara is wealthy or successful.",WRONG,The singular subject “image” needs “feels.”
+repr_rw_b1_001,B1,"Although Mara appears confident, a steady gaze also suggests careful attention.",RIGHT,"The contrast clause is complete, and the verbs agree with their subjects."
+repr_rw_b1_002,B1,"The headline describe Eli as a leader, while the background places the team nearby.",WRONG,The singular subject “headline” needs “describes.”
+repr_rw_b1_003,B1,"The headline describes Jules as a leader, while the background places the team nearby.",RIGHT,The singular subject “headline” correctly takes “describes.”
+repr_rw_b1_004,B1,"Compared with a crowded scene, this image make a steady gaze easier to notice.",WRONG,The singular subject “image” needs “makes.”
+repr_rw_b1_005,B1,"Compared with a crowded scene, this image make a careful hand easier to notice.",WRONG,The singular subject “image” needs “makes.”
+repr_rw_b1_006,B1,"Although Jules appears confident, a careful hand also suggests careful attention.",RIGHT,"The contrast clause is complete, and the verbs agree with their subjects."
+repr_rw_b1_007,B1,The image may have a positive or negative effect on viewers because it gives Eli a clear goal.,RIGHT,The modal “may” is followed by the base verb “have.”
+repr_rw_b1_008,B1,"Compared with a crowded scene, this image makes a focused expression easier to notice.",RIGHT,The comparison is complete and “image makes” agrees.
+repr_rw_b1_009,B1,"Students can compares this image with a traditional advert; here, Ari shares the decision with the team.",WRONG,"After “can,” use the base verb “compare.”"
+repr_rw_b1_010,B1,"In an empty sports hall, Ari makes an independent choice that seems practical rather than mysterious.",RIGHT,The sentence has a clear subject and the verbs agree.
+repr_rw_b1_011,B1,"Compared with a crowded scene, this image makes a calm expression easier to notice.",RIGHT,The comparison is complete and “image makes” agrees.
+repr_rw_b1_012,B1,"In a stormy city, Mara makes an independent choice that seems practical rather than mysterious.",RIGHT,The sentence has a clear subject and the verbs agree.
+repr_rw_b1_013,B1,The lighting supports this reading because it keeps Eli in clear view.,RIGHT,The singular subject “lighting” correctly takes “supports.”
+repr_rw_b1_014,B1,"Although Ari appears confident, an open stance also suggests careful attention.",RIGHT,"The contrast clause is complete, and the verbs agree with their subjects."
+repr_rw_b1_015,B1,"The headline describe Mara as a leader, while the background places the team nearby.",WRONG,The singular subject “headline” needs “describes.”
+repr_rw_b1_016,B1,"The professional costume suggest that Ari has a defined role, but it does not prove what every viewer will think.",WRONG,The singular subject “costume” needs “suggests.”
+repr_rw_b1_017,B1,"In a bright garage, Jules makes an independent choice that seems practical rather than mysterious.",RIGHT,The sentence has a clear subject and the verbs agree.
+repr_rw_b1_018,B1,"In a bright garage, the character’s role seem practical rather than mysterious.",WRONG,The singular subject “role” needs “seems.”
+repr_rw_b1_019,B1,"Because Eli checks the plan, the image may present Eli as responsible.",RIGHT,The singular subject “Eli” correctly takes “checks.”
+repr_rw_b1_020,B1,The image may have a positive or negative effect on viewers because it gives Jules a clear goal.,RIGHT,The modal “may” is followed by the base verb “have.”
+repr_rw_b1_021,B1,"The scene in a bright garage looks realistic in some details, but the dramatic lighting reminds us that it was constructed.",RIGHT,"The clauses are correctly joined, and the verbs agree."
+repr_rw_b1_022,B1,"Because Ari check the plan, the image may present Ari as responsible.",WRONG,The singular subject “Ari” needs “checks.”
+repr_rw_b1_023,B1,"The professional costume suggests that Eli has a defined role, but it does not prove what every viewer will think.",RIGHT,The singular subject “costume” correctly takes “suggests.”
+repr_rw_b1_024,B1,The lighting support this reading because it keeps Ari in clear view.,WRONG,The singular subject “lighting” needs “supports.”
+repr_rw_b1_025,B1,The lighting support this reading because it keeps Mara in clear view.,WRONG,The singular subject “lighting” needs “supports.”
+repr_rw_b1_026,B1,"The scene in a bright garage look realistic in some details, but the dramatic lighting reminds us that it was constructed.",WRONG,The singular subject “scene” needs “looks.”
+repr_rw_b1_027,B1,"Students can compare this image with a traditional advert; here, Mara shares the decision with the team.",RIGHT,"The modal “can” is correctly followed by “compare,” and the semicolon joins related clauses."
+repr_rw_b1_028,B1,"Compared with a crowded scene, this image makes a steady gaze easier to notice.",RIGHT,The comparison is complete and “image makes” agrees.
+repr_rw_b1_029,B1,"The scene in a stormy city looks realistic in some details, but the dramatic lighting reminds us that it was constructed.",RIGHT,"The clauses are correctly joined, and the verbs agree."
+repr_rw_b1_030,B1,The image may have a positive or negative effect on viewers because it gives Mara a clear goal.,RIGHT,The modal “may” is followed by the base verb “have.”
+repr_rw_b1_031,B1,"The scene in an empty sports hall looks realistic in some details, but the dramatic lighting reminds us that it was constructed.",RIGHT,"The clauses are correctly joined, and the verbs agree."
+repr_rw_b1_032,B1,"Compared with a crowded scene, this image make a focused expression easier to notice.",WRONG,The singular subject “image” needs “makes.”
+repr_rw_b1_033,B1,"The professional costume suggests that Sam has a defined role, but it does not prove what every viewer will think.",RIGHT,The singular subject “costume” correctly takes “suggests.”
+repr_rw_b1_034,B1,"Because Ari checks the plan, the image may present Ari as responsible.",RIGHT,The singular subject “Ari” correctly takes “checks.”
+repr_rw_b1_035,B1,"The professional costume suggest that Sam has a defined role, but it does not prove what every viewer will think.",WRONG,The singular subject “costume” needs “suggests.”
+repr_rw_b1_036,B1,"Students can compares this image with a traditional advert; here, Eli shares the decision with the team.",WRONG,"After “can,” use the base verb “compare.”"
+repr_rw_b1_037,B1,The image may have a positive or negative effect on viewers because it gives Sam a clear goal.,RIGHT,The modal “may” is followed by the base verb “have.”
+repr_rw_b1_038,B1,"The professional costume suggest that Eli has a defined role, but it does not prove what every viewer will think.",WRONG,The singular subject “costume” needs “suggests.”
+repr_rw_b1_039,B1,"The scene in a quiet control room look realistic in some details, but the dramatic lighting reminds us that it was constructed.",WRONG,The singular subject “scene” needs “looks.”
+repr_rw_b1_040,B1,"The scene in a stormy city look realistic in some details, but the dramatic lighting reminds us that it was constructed.",WRONG,The singular subject “scene” needs “looks.”
+repr_rw_b1_041,B1,The lighting supports this reading because it keeps Jules in clear view.,RIGHT,The singular subject “lighting” correctly takes “supports.”
+repr_rw_b1_042,B1,"Although Ari appear confident, an open stance also suggests careful attention.",WRONG,The singular subject “Ari” needs “appears.”
+repr_rw_b1_043,B1,"The professional costume suggests that Mara has a defined role, but it does not prove what every viewer will think.",RIGHT,The singular subject “costume” correctly takes “suggests.”
+repr_rw_b1_044,B1,"Students can compare this image with a traditional advert; here, Sam shares the decision with the team.",RIGHT,"The modal “can” is correctly followed by “compare,” and the semicolon joins related clauses."
+repr_rw_b1_045,B1,"In a busy workshop, the character’s role seem practical rather than mysterious.",WRONG,The singular subject “role” needs “seems.”
+repr_rw_b1_046,B1,"Because Jules checks the plan, the image may present Jules as responsible.",RIGHT,The singular subject “Jules” correctly takes “checks.”
+repr_rw_b1_047,B1,"The headline describes Mara as a leader, while the background places the team nearby.",RIGHT,The singular subject “headline” correctly takes “describes.”
+repr_rw_b1_048,B1,"In an empty sports hall, the character’s role seem practical rather than mysterious.",WRONG,The singular subject “role” needs “seems.”
+repr_rw_b1_049,B1,"The scene in a busy workshop look realistic in some details, but the dramatic lighting reminds us that it was constructed.",WRONG,The singular subject “scene” needs “looks.”
+repr_rw_b1_050,B1,"In a quiet control room, Sam makes an independent choice that seems practical rather than mysterious.",RIGHT,The sentence has a clear subject and the verbs agree.
+repr_rw_b1_051,B1,The image may has a positive effect on viewers because it gives Sam a clear goal.,WRONG,"After “may,” use the base verb “have.”"
+repr_rw_b1_052,B1,"Compared with a crowded scene, this image makes a careful hand easier to notice.",RIGHT,The comparison is complete and “image makes” agrees.
+repr_rw_b1_053,B1,"The headline describe Jules as a leader, while the background places the team nearby.",WRONG,The singular subject “headline” needs “describes.”
+repr_rw_b1_054,B1,"In a quiet control room, the character’s role seem practical rather than mysterious.",WRONG,The singular subject “role” needs “seems.”
+repr_rw_b1_055,B1,"The professional costume suggests that Ari has a defined role, but it does not prove what every viewer will think.",RIGHT,The singular subject “costume” correctly takes “suggests.”
+repr_rw_b1_056,B1,"Although Eli appears confident, a focused expression also suggests careful attention.",RIGHT,"The contrast clause is complete, and the verbs agree with their subjects."
+repr_rw_b1_057,B1,"Although Sam appear confident, a calm expression also suggests careful attention.",WRONG,The singular subject “Sam” needs “appears.”
+repr_rw_b1_058,B1,"The headline describes Ari as a leader, while the background places the team nearby.",RIGHT,The singular subject “headline” correctly takes “describes.”
+repr_rw_b1_059,B1,"Students can compare this image with a traditional advert; here, Eli shares the decision with the team.",RIGHT,"The modal “can” is correctly followed by “compare,” and the semicolon joins related clauses."
+repr_rw_b1_060,B1,"Because Sam check the plan, the image may present Sam as responsible.",WRONG,The singular subject “Sam” needs “checks.”
+repr_rw_b1_061,B1,"Students can compare this image with a traditional advert; here, Jules shares the decision with the team.",RIGHT,"The modal “can” is correctly followed by “compare,” and the semicolon joins related clauses."
+repr_rw_b1_062,B1,"Although Eli appear confident, a focused expression also suggests careful attention.",WRONG,The singular subject “Eli” needs “appears.”
+repr_rw_b1_063,B1,The lighting support this reading because it keeps Eli in clear view.,WRONG,The singular subject “lighting” needs “supports.”
+repr_rw_b1_064,B1,The lighting support this reading because it keeps Sam in clear view.,WRONG,The singular subject “lighting” needs “supports.”
+repr_rw_b1_065,B1,"The professional costume suggest that Jules has a defined role, but it does not prove what every viewer will think.",WRONG,The singular subject “costume” needs “suggests.”
+repr_rw_b1_066,B1,"The headline describe Ari as a leader, while the background places the team nearby.",WRONG,The singular subject “headline” needs “describes.”
+repr_rw_b1_067,B1,The image may has a positive effect on viewers because it gives Jules a clear goal.,WRONG,"After “may,” use the base verb “have.”"
+repr_rw_b1_068,B1,"The headline describe Sam as a leader, while the background places the team nearby.",WRONG,The singular subject “headline” needs “describes.”
+repr_rw_b1_069,B1,"Students can compares this image with a traditional advert; here, Sam shares the decision with the team.",WRONG,"After “can,” use the base verb “compare.”"
+repr_rw_b1_070,B1,"The scene in an empty sports hall look realistic in some details, but the dramatic lighting reminds us that it was constructed.",WRONG,The singular subject “scene” needs “looks.”
+repr_rw_b1_071,B1,"The scene in a quiet control room looks realistic in some details, but the dramatic lighting reminds us that it was constructed.",RIGHT,"The clauses are correctly joined, and the verbs agree."
+repr_rw_b1_072,B1,"Because Jules check the plan, the image may present Jules as responsible.",WRONG,The singular subject “Jules” needs “checks.”
+repr_rw_b1_073,B1,"Compared with a crowded scene, this image make a calm expression easier to notice.",WRONG,The singular subject “image” needs “makes.”
+repr_rw_b1_074,B1,The image may has a positive effect on viewers because it gives Ari a clear goal.,WRONG,"After “may,” use the base verb “have.”"
+repr_rw_b1_075,B1,"Compared with a crowded scene, this image makes an open stance easier to notice.",RIGHT,The comparison is complete and “image makes” agrees.
+repr_rw_b1_076,B1,"In a stormy city, the character’s role seem practical rather than mysterious.",WRONG,The singular subject “role” needs “seems.”
+repr_rw_b1_077,B1,The lighting supports this reading because it keeps Ari in clear view.,RIGHT,The singular subject “lighting” correctly takes “supports.”
+repr_rw_b1_078,B1,"The headline describes Sam as a leader, while the background places the team nearby.",RIGHT,The singular subject “headline” correctly takes “describes.”
+repr_rw_b1_079,B1,"Students can compares this image with a traditional advert; here, Jules shares the decision with the team.",WRONG,"After “can,” use the base verb “compare.”"
+repr_rw_b1_080,B1,"Because Mara check the plan, the image may present Mara as responsible.",WRONG,The singular subject “Mara” needs “checks.”
+repr_rw_b1_081,B1,"Although Sam appears confident, a calm expression also suggests careful attention.",RIGHT,"The contrast clause is complete, and the verbs agree with their subjects."
+repr_rw_b1_082,B1,"Compared with a crowded scene, this image make an open stance easier to notice.",WRONG,The singular subject “image” needs “makes.”
+repr_rw_b1_083,B1,"Although Mara appear confident, a steady gaze also suggests careful attention.",WRONG,The singular subject “Mara” needs “appears.”
+repr_rw_b1_084,B1,"The professional costume suggests that Jules has a defined role, but it does not prove what every viewer will think.",RIGHT,The singular subject “costume” correctly takes “suggests.”
+repr_rw_b1_085,B1,The lighting supports this reading because it keeps Mara in clear view.,RIGHT,The singular subject “lighting” correctly takes “supports.”
+repr_rw_b1_086,B1,"Students can compares this image with a traditional advert; here, Mara shares the decision with the team.",WRONG,"After “can,” use the base verb “compare.”"
+repr_rw_b1_087,B1,The image may has a positive effect on viewers because it gives Eli a clear goal.,WRONG,"After “may,” use the base verb “have.”"
+repr_rw_b1_088,B1,"The professional costume suggest that Mara has a defined role, but it does not prove what every viewer will think.",WRONG,The singular subject “costume” needs “suggests.”
+repr_rw_b1_089,B1,The image may has a positive effect on viewers because it gives Mara a clear goal.,WRONG,"After “may,” use the base verb “have.”"
+repr_rw_b1_090,B1,The lighting support this reading because it keeps Jules in clear view.,WRONG,The singular subject “lighting” needs “supports.”
+repr_rw_b1_091,B1,"Because Eli check the plan, the image may present Eli as responsible.",WRONG,The singular subject “Eli” needs “checks.”
+repr_rw_b1_092,B1,The image may have a positive or negative effect on viewers because it gives Ari a clear goal.,RIGHT,The modal “may” is followed by the base verb “have.”
+repr_rw_b1_093,B1,"The scene in a busy workshop looks realistic in some details, but the dramatic lighting reminds us that it was constructed.",RIGHT,"The clauses are correctly joined, and the verbs agree."
+repr_rw_b1_094,B1,"The headline describes Eli as a leader, while the background places the team nearby.",RIGHT,The singular subject “headline” correctly takes “describes.”
+repr_rw_b1_095,B1,"In a busy workshop, Eli makes an independent choice that seems practical rather than mysterious.",RIGHT,The sentence has a clear subject and the verbs agree.
+repr_rw_b1_096,B1,"Because Sam checks the plan, the image may present Sam as responsible.",RIGHT,The singular subject “Sam” correctly takes “checks.”
+repr_rw_b1_097,B1,The lighting supports this reading because it keeps Sam in clear view.,RIGHT,The singular subject “lighting” correctly takes “supports.”
+repr_rw_b1_098,B1,"Students can compare this image with a traditional advert; here, Ari shares the decision with the team.",RIGHT,"The modal “can” is correctly followed by “compare,” and the semicolon joins related clauses."
+repr_rw_b1_099,B1,"Because Mara checks the plan, the image may present Mara as responsible.",RIGHT,The singular subject “Mara” correctly takes “checks.”
+repr_rw_b1_100,B1,"Although Jules appear confident, a careful hand also suggests careful attention.",WRONG,The singular subject “Jules” needs “appears.”
+repr_rw_b2_001,B2,"The sequence communicate a clear question, but it also suggests another reading of a careful hand.",WRONG,The singular subject “sequence” needs “communicates.”
+repr_rw_b2_002,B2,"Rather than reducing Jules to a single trait, the pose give the character a goal and a choice.",WRONG,The singular subject “pose” needs “gives.”
+repr_rw_b2_003,B2,The composition connects Eli’s action with the slogan without claiming that one detail explains everything.,RIGHT,The “without” phrase correctly modifies the act of connecting.
+repr_rw_b2_004,B2,"Rather than reducing Sam to a single trait, the pose gives the character a goal and a choice.",RIGHT,The introductory phrase correctly refers to “the pose.”
+repr_rw_b2_005,B2,"Rather than reducing Eli to a single trait, the pose give the character a goal and a choice.",WRONG,The singular subject “pose” needs “gives.”
+repr_rw_b2_006,B2,"A close-up of Eli can humanise the character, whereas a wide shot lets the audience read the character’s body language.",RIGHT,"The paired clauses are complete, and “lets” correctly agrees with “shot.”"
+repr_rw_b2_007,B2,"The expression in an empty sports hall is deliberately ambiguous, which allow viewers to consider more than one possible response.",WRONG,The singular subject “which” refers to the expression and takes “allows.”
+repr_rw_b2_008,B2,"The sequence communicates a clear question, but it also suggests another reading of a steady gaze.",RIGHT,The singular subject “sequence” correctly takes “communicates” and “suggests.”
+repr_rw_b2_009,B2,"Because the earlier scene in a busy workshop is omitted, viewers may infer that the character has faced a difficult choice.",RIGHT,"The passive clause is complete, and “may infer” is correctly formed."
+repr_rw_b2_010,B2,The target audience may respond differently to the garage advert depending on its experience of the topic.,RIGHT,“Depending on” correctly introduces the condition for the response.
+repr_rw_b2_011,B2,"Rather than reducing Eli to a single trait, the pose gives the character a goal and a choice.",RIGHT,The introductory phrase correctly refers to “the pose.”
+repr_rw_b2_012,B2,Although the slogan is brief it communicates a complex idea through the contrast between text and image in a stormy city.,WRONG,A comma is needed after the introductory “although” clause.
+repr_rw_b2_013,B2,"The composition connects Sam’s action with the slogan, it does not claim that one detail explains everything.",WRONG,This is a comma splice; join the clauses with a semicolon or a conjunction.
+repr_rw_b2_014,B2,"Rather than reducing Mara to a single trait, the pose gives the character a goal and a choice.",RIGHT,The introductory phrase correctly refers to “the pose.”
+repr_rw_b2_015,B2,Although the slogan is brief it communicates a complex idea through the contrast between text and image in an empty sports hall.,WRONG,A comma is needed after the introductory “although” clause.
+repr_rw_b2_016,B2,"The expression in a bright garage is deliberately ambiguous, which allow viewers to consider more than one possible response.",WRONG,The singular subject “which” refers to the expression and takes “allows.”
+repr_rw_b2_017,B2,"The sequence communicates a clear question, but it also suggests another reading of a calm expression.",RIGHT,The singular subject “sequence” correctly takes “communicates” and “suggests.”
+repr_rw_b2_018,B2,The target audience may respond differently to the workshop photograph depending on its experience of the topic.,RIGHT,“Depending on” correctly introduces the condition for the response.
+repr_rw_b2_019,B2,"Because the earlier scene in an empty sports hall was omitted, viewers may inferred that the character has faced a difficult choice.",WRONG,"After “may,” use the base verb “infer.”"
+repr_rw_b2_020,B2,"The sequence communicate a clear question, but it also suggests another reading of a steady gaze.",WRONG,The singular subject “sequence” needs “communicates.”
+repr_rw_b2_021,B2,"The camera angle, together with the lighting, make Eli appear more prominent than the setting.",WRONG,"The main subject is singular “angle,” so use “makes.”"
+repr_rw_b2_022,B2,"The camera angle, together with the lighting, make Jules appear more prominent than the setting.",WRONG,"The main subject is singular “angle,” so use “makes.”"
+repr_rw_b2_023,B2,"Although the slogan is brief, it communicates a complex idea through the contrast between text and image in a stormy city.",RIGHT,The “although” clause and main clause are correctly punctuated.
+repr_rw_b2_024,B2,"The camera angle, together with the lighting, make Mara appear more prominent than the setting.",WRONG,"The main subject is singular “angle,” so use “makes.”"
+repr_rw_b2_025,B2,The composition connects Jules’s action with the slogan without claiming that one detail explains everything.,RIGHT,The “without” phrase correctly modifies the act of connecting.
+repr_rw_b2_026,B2,Although the slogan is brief it communicates a complex idea through the contrast between text and image in a busy workshop.,WRONG,A comma is needed after the introductory “although” clause.
+repr_rw_b2_027,B2,"Because the earlier scene in a quiet control room is omitted, viewers may infer that the character has faced a difficult choice.",RIGHT,"The passive clause is complete, and “may infer” is correctly formed."
+repr_rw_b2_028,B2,"The camera angle, together with the lighting, makes Sam appear more prominent than the setting.",RIGHT,"The main subject is singular “angle,” so “makes” is correct."
+repr_rw_b2_029,B2,"The sequence communicates a clear question, but it also suggests another reading of an open stance.",RIGHT,The singular subject “sequence” correctly takes “communicates” and “suggests.”
+repr_rw_b2_030,B2,"Rather than reducing Sam to a single trait, the pose give the character a goal and a choice.",WRONG,The singular subject “pose” needs “gives.”
+repr_rw_b2_031,B2,Although the slogan is brief it communicates a complex idea through the contrast between text and image in a bright garage.,WRONG,A comma is needed after the introductory “although” clause.
+repr_rw_b2_032,B2,"Although the slogan is brief, it communicates a complex idea through the contrast between text and image in a bright garage.",RIGHT,The “although” clause and main clause are correctly punctuated.
+repr_rw_b2_033,B2,The target audience may respond differently to the rescue poster depending on its experience of the topic.,RIGHT,“Depending on” correctly introduces the condition for the response.
+repr_rw_b2_034,B2,"To identify the advert’s purpose, notice how placing Jules in the foreground guide the audience towards the character’s decision.",WRONG,The singular gerund phrase “placing Jules” needs “guides.”
+repr_rw_b2_035,B2,"To identify the advert’s purpose, notice how placing Ari in the foreground guide the audience towards the character’s decision.",WRONG,The singular gerund phrase “placing Ari” needs “guides.”
+repr_rw_b2_036,B2,"The expression in an empty sports hall is deliberately ambiguous, which allows viewers to consider more than one possible response.",RIGHT,The relative clause correctly refers to the preceding idea.
+repr_rw_b2_037,B2,"A close-up of Eli can humanise the character, whereas a wide shot lets the audience reads the character’s body language.",WRONG,"After “lets,” use the base verb “read.”"
+repr_rw_b2_038,B2,The composition connects Mara’s action with the slogan without claiming that one detail explains everything.,RIGHT,The “without” phrase correctly modifies the act of connecting.
+repr_rw_b2_039,B2,"To identify the advert’s purpose, notice how placing Eli in the foreground guide the audience towards the character’s decision.",WRONG,The singular gerund phrase “placing Eli” needs “guides.”
+repr_rw_b2_040,B2,"Rather than reducing Ari to a single trait, the pose gives the character a goal and a choice.",RIGHT,The introductory phrase correctly refers to “the pose.”
+repr_rw_b2_041,B2,The target audience may respond differently to the workshop photograph depend on its experience of the topic.,WRONG,Use “depending” after “differently” to introduce the condition.
+repr_rw_b2_042,B2,"The composition connects Jules’s action with the slogan, it does not claim that one detail explains everything.",WRONG,This is a comma splice; join the clauses with a semicolon or a conjunction.
+repr_rw_b2_043,B2,"To identify the advert’s purpose, notice how placing Sam in the foreground guides the audience towards the character’s decision.",RIGHT,The gerund phrase “placing Sam” is singular and correctly takes “guides.”
+repr_rw_b2_044,B2,The target audience may respond differently to the space story cover depend on its experience of the topic.,WRONG,Use “depending” after “differently” to introduce the condition.
+repr_rw_b2_045,B2,"To identify the advert’s purpose, notice how placing Ari in the foreground guides the audience towards the character’s decision.",RIGHT,The gerund phrase “placing Ari” is singular and correctly takes “guides.”
+repr_rw_b2_046,B2,"A close-up of Sam can humanise the character, whereas a wide shot lets the audience read the character’s body language.",RIGHT,"The paired clauses are complete, and “lets” correctly agrees with “shot.”"
+repr_rw_b2_047,B2,"The camera angle, together with the lighting, makes Eli appear more prominent than the setting.",RIGHT,"The main subject is singular “angle,” so “makes” is correct."
+repr_rw_b2_048,B2,"Because the earlier scene in an empty sports hall is omitted, viewers may infer that the character has faced a difficult choice.",RIGHT,"The passive clause is complete, and “may infer” is correctly formed."
+repr_rw_b2_049,B2,"The composition connects Eli’s action with the slogan, it does not claim that one detail explains everything.",WRONG,This is a comma splice; join the clauses with a semicolon or a conjunction.
+repr_rw_b2_050,B2,"To identify the advert’s purpose, notice how placing Mara in the foreground guide the audience towards the character’s decision.",WRONG,The singular gerund phrase “placing Mara” needs “guides.”
+repr_rw_b2_051,B2,"The sequence communicate a clear question, but it also suggests another reading of a calm expression.",WRONG,The singular subject “sequence” needs “communicates.”
+repr_rw_b2_052,B2,The target audience may respond differently to the garage advert depend on its experience of the topic.,WRONG,Use “depending” after “differently” to introduce the condition.
+repr_rw_b2_053,B2,The target audience may respond differently to the space story cover depending on its experience of the topic.,RIGHT,“Depending on” correctly introduces the condition for the response.
+repr_rw_b2_054,B2,"To identify the advert’s purpose, notice how placing Jules in the foreground guides the audience towards the character’s decision.",RIGHT,The gerund phrase “placing Jules” is singular and correctly takes “guides.”
+repr_rw_b2_055,B2,"Because the earlier scene in a stormy city was omitted, viewers may inferred that the character has faced a difficult choice.",WRONG,"After “may,” use the base verb “infer.”"
+repr_rw_b2_056,B2,"Because the earlier scene in a stormy city is omitted, viewers may infer that the character has faced a difficult choice.",RIGHT,"The passive clause is complete, and “may infer” is correctly formed."
+repr_rw_b2_057,B2,"The camera angle, together with the lighting, makes Jules appear more prominent than the setting.",RIGHT,"The main subject is singular “angle,” so “makes” is correct."
+repr_rw_b2_058,B2,"Rather than reducing Ari to a single trait, the pose give the character a goal and a choice.",WRONG,The singular subject “pose” needs “gives.”
+repr_rw_b2_059,B2,"The expression in a stormy city is deliberately ambiguous, which allows viewers to consider more than one possible response.",RIGHT,The relative clause correctly refers to the preceding idea.
+repr_rw_b2_060,B2,"Because the earlier scene in a quiet control room was omitted, viewers may inferred that the character has faced a difficult choice.",WRONG,"After “may,” use the base verb “infer.”"
+repr_rw_b2_061,B2,"Rather than reducing Mara to a single trait, the pose give the character a goal and a choice.",WRONG,The singular subject “pose” needs “gives.”
+repr_rw_b2_062,B2,"To identify the advert’s purpose, notice how placing Sam in the foreground guide the audience towards the character’s decision.",WRONG,The singular gerund phrase “placing Sam” needs “guides.”
+repr_rw_b2_063,B2,"The camera angle, together with the lighting, makes Ari appear more prominent than the setting.",RIGHT,"The main subject is singular “angle,” so “makes” is correct."
+repr_rw_b2_064,B2,The composition connects Ari’s action with the slogan without claiming that one detail explains everything.,RIGHT,The “without” phrase correctly modifies the act of connecting.
+repr_rw_b2_065,B2,"The expression in a bright garage is deliberately ambiguous, which allows viewers to consider more than one possible response.",RIGHT,The relative clause correctly refers to the preceding idea.
+repr_rw_b2_066,B2,"To identify the advert’s purpose, notice how placing Eli in the foreground guides the audience towards the character’s decision.",RIGHT,The gerund phrase “placing Eli” is singular and correctly takes “guides.”
+repr_rw_b2_067,B2,"The camera angle, together with the lighting, make Sam appear more prominent than the setting.",WRONG,"The main subject is singular “angle,” so use “makes.”"
+repr_rw_b2_068,B2,"The camera angle, together with the lighting, makes Mara appear more prominent than the setting.",RIGHT,"The main subject is singular “angle,” so “makes” is correct."
+repr_rw_b2_069,B2,"The expression in a busy workshop is deliberately ambiguous, which allow viewers to consider more than one possible response.",WRONG,The singular subject “which” refers to the expression and takes “allows.”
+repr_rw_b2_070,B2,"Because the earlier scene in a bright garage was omitted, viewers may inferred that the character has faced a difficult choice.",WRONG,"After “may,” use the base verb “infer.”"
+repr_rw_b2_071,B2,"Although the slogan is brief, it communicates a complex idea through the contrast between text and image in an empty sports hall.",RIGHT,The “although” clause and main clause are correctly punctuated.
+repr_rw_b2_072,B2,"Because the earlier scene in a bright garage is omitted, viewers may infer that the character has faced a difficult choice.",RIGHT,"The passive clause is complete, and “may infer” is correctly formed."
+repr_rw_b2_073,B2,"A close-up of Mara can humanise the character, whereas a wide shot lets the audience read the character’s body language.",RIGHT,"The paired clauses are complete, and “lets” correctly agrees with “shot.”"
+repr_rw_b2_074,B2,"The camera angle, together with the lighting, make Ari appear more prominent than the setting.",WRONG,"The main subject is singular “angle,” so use “makes.”"
+repr_rw_b2_075,B2,The composition connects Sam’s action with the slogan without claiming that one detail explains everything.,RIGHT,The “without” phrase correctly modifies the act of connecting.
+repr_rw_b2_076,B2,"Rather than reducing Jules to a single trait, the pose gives the character a goal and a choice.",RIGHT,The introductory phrase correctly refers to “the pose.”
+repr_rw_b2_077,B2,"A close-up of Jules can humanise the character, whereas a wide shot lets the audience read the character’s body language.",RIGHT,"The paired clauses are complete, and “lets” correctly agrees with “shot.”"
+repr_rw_b2_078,B2,"A close-up of Jules can humanise the character, whereas a wide shot lets the audience reads the character’s body language.",WRONG,"After “lets,” use the base verb “read.”"
+repr_rw_b2_079,B2,"The sequence communicate a clear question, but it also suggests another reading of an open stance.",WRONG,The singular subject “sequence” needs “communicates.”
+repr_rw_b2_080,B2,"The expression in a busy workshop is deliberately ambiguous, which allows viewers to consider more than one possible response.",RIGHT,The relative clause correctly refers to the preceding idea.
+repr_rw_b2_081,B2,"The composition connects Ari’s action with the slogan, it does not claim that one detail explains everything.",WRONG,This is a comma splice; join the clauses with a semicolon or a conjunction.
+repr_rw_b2_082,B2,The target audience may respond differently to the rescue poster depend on its experience of the topic.,WRONG,Use “depending” after “differently” to introduce the condition.
+repr_rw_b2_083,B2,"The sequence communicates a clear question, but it also suggests another reading of a focused expression.",RIGHT,The singular subject “sequence” correctly takes “communicates” and “suggests.”
+repr_rw_b2_084,B2,Although the slogan is brief it communicates a complex idea through the contrast between text and image in a quiet control room.,WRONG,A comma is needed after the introductory “although” clause.
+repr_rw_b2_085,B2,"Although the slogan is brief, it communicates a complex idea through the contrast between text and image in a quiet control room.",RIGHT,The “although” clause and main clause are correctly punctuated.
+repr_rw_b2_086,B2,"The expression in a stormy city is deliberately ambiguous, which allow viewers to consider more than one possible response.",WRONG,The singular subject “which” refers to the expression and takes “allows.”
+repr_rw_b2_087,B2,"The composition connects Mara’s action with the slogan, it does not claim that one detail explains everything.",WRONG,This is a comma splice; join the clauses with a semicolon or a conjunction.
+repr_rw_b2_088,B2,"A close-up of Ari can humanise the character, whereas a wide shot lets the audience read the character’s body language.",RIGHT,"The paired clauses are complete, and “lets” correctly agrees with “shot.”"
+repr_rw_b2_089,B2,"To identify the advert’s purpose, notice how placing Mara in the foreground guides the audience towards the character’s decision.",RIGHT,The gerund phrase “placing Mara” is singular and correctly takes “guides.”
+repr_rw_b2_090,B2,"Because the earlier scene in a busy workshop was omitted, viewers may inferred that the character has faced a difficult choice.",WRONG,"After “may,” use the base verb “infer.”"
+repr_rw_b2_091,B2,"A close-up of Mara can humanise the character, whereas a wide shot lets the audience reads the character’s body language.",WRONG,"After “lets,” use the base verb “read.”"
+repr_rw_b2_092,B2,The target audience may respond differently to the team portrait depend on its experience of the topic.,WRONG,Use “depending” after “differently” to introduce the condition.
+repr_rw_b2_093,B2,"The sequence communicates a clear question, but it also suggests another reading of a careful hand.",RIGHT,The singular subject “sequence” correctly takes “communicates” and “suggests.”
+repr_rw_b2_094,B2,"A close-up of Ari can humanise the character, whereas a wide shot lets the audience reads the character’s body language.",WRONG,"After “lets,” use the base verb “read.”"
+repr_rw_b2_095,B2,The target audience may respond differently to the team portrait depending on its experience of the topic.,RIGHT,“Depending on” correctly introduces the condition for the response.
+repr_rw_b2_096,B2,"The expression in a quiet control room is deliberately ambiguous, which allow viewers to consider more than one possible response.",WRONG,The singular subject “which” refers to the expression and takes “allows.”
+repr_rw_b2_097,B2,"A close-up of Sam can humanise the character, whereas a wide shot lets the audience reads the character’s body language.",WRONG,"After “lets,” use the base verb “read.”"
+repr_rw_b2_098,B2,"Although the slogan is brief, it communicates a complex idea through the contrast between text and image in a busy workshop.",RIGHT,The “although” clause and main clause are correctly punctuated.
+repr_rw_b2_099,B2,"The sequence communicate a clear question, but it also suggests another reading of a focused expression.",WRONG,The singular subject “sequence” needs “communicates.”
+repr_rw_b2_100,B2,"The expression in a quiet control room is deliberately ambiguous, which allows viewers to consider more than one possible response.",RIGHT,The relative clause correctly refers to the preceding idea.
+repr_rw_c1_001,C1,"To analyse the space story cover, a defensible analysis distinguishes how the text represents Sam from what an individual viewer may infer.",RIGHT,The infinitive phrase and the singular subject “analysis” are correctly formed.
+repr_rw_c1_002,C1,"The representation may present Eli as vulnerable, but a focused expression also suggests agency and choice.",RIGHT,"The modal “may” is followed by the base verb “present,” and the clauses are joined correctly."
+repr_rw_c1_003,C1,"Although a stereotypical portrayal may reinforces a familiar idea, the composition complicates that reading through its use of a stormy city.",WRONG,"After “may,” use the base verb “reinforce.”"
+repr_rw_c1_004,C1,"Foregrounding Sam invites the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer or imply.",RIGHT,"The singular gerund phrase “foregrounding Sam” correctly takes “invites,” and “yet” joins the clauses."
+repr_rw_c1_005,C1,"Foregrounding Eli invites the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer or imply.",RIGHT,"The singular gerund phrase “foregrounding Eli” correctly takes “invites,” and “yet” joins the clauses."
+repr_rw_c1_006,C1,"The representation may presents Ari as vulnerable, but an open stance also suggests agency and choice.",WRONG,"After “may,” use the base verb “present.”"
+repr_rw_c1_007,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforces part of that assumption; the contrast between the central figure and the passive crowd in a bright garage is the relevant evidence.",WRONG,"After the modal “may,” use the base verb “reinforce.”"
+repr_rw_c1_008,C1,"Although a stereotypical portrayal may reinforce a familiar idea, the composition complicates that reading through its use of a bright garage.",RIGHT,"After “may,” the base verb “reinforce” is correct; the contrast clause is complete."
+repr_rw_c1_009,C1,"Although a stereotypical portrayal may reinforce a familiar idea, the composition complicates that reading through its use of a stormy city.",RIGHT,"After “may,” the base verb “reinforce” is correct; the contrast clause is complete."
+repr_rw_c1_010,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforces part of that assumption; the contrast between the central figure and the passive crowd in a stormy city is the relevant evidence.",WRONG,"After the modal “may,” use the base verb “reinforce.”"
+repr_rw_c1_011,C1,"To analyse the rescue poster, a defensible analysis distinguishes how the text represents Mara from what an individual viewer may infer.",RIGHT,The infinitive phrase and the singular subject “analysis” are correctly formed.
+repr_rw_c1_012,C1,"Although a stereotypical portrayal may reinforce a familiar idea, the composition complicates that reading through its use of a busy workshop.",RIGHT,"After “may,” the base verb “reinforce” is correct; the contrast clause is complete."
+repr_rw_c1_013,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforce part of that assumption; the contrast between the central figure and the passive crowd in a bright garage is the relevant evidence.",RIGHT,"The “although” clause, modal phrase and semicolon are all correctly formed."
+repr_rw_c1_014,C1,"Foregrounding Mara invite the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer.",WRONG,The singular gerund phrase “foregrounding Mara” needs “invites.”
+repr_rw_c1_015,C1,"The representation may present Ari as vulnerable, but an open stance also suggests agency and choice.",RIGHT,"The modal “may” is followed by the base verb “present,” and the clauses are joined correctly."
+repr_rw_c1_016,C1,"To analyse the workshop photograph, a defensible analysis distinguishes how the text represents Eli from what an individual viewer may infer.",RIGHT,The infinitive phrase and the singular subject “analysis” are correctly formed.
+repr_rw_c1_017,C1,"Foregrounding Eli invite the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer.",WRONG,The singular gerund phrase “foregrounding Eli” needs “invites.”
+repr_rw_c1_018,C1,"To analyse the team portrait, a defensible analysis distinguishes how the text represents Ari from what an individual viewer may infer.",RIGHT,The infinitive phrase and the singular subject “analysis” are correctly formed.
+repr_rw_c1_019,C1,"The representation may presents Eli as vulnerable, but a focused expression also suggests agency and choice.",WRONG,"After “may,” use the base verb “present.”"
+repr_rw_c1_020,C1,"Although a stereotypical portrayal may reinforce a familiar idea, the composition complicates that reading through its use of an empty sports hall.",RIGHT,"After “may,” the base verb “reinforce” is correct; the contrast clause is complete."
+repr_rw_c1_021,C1,"Foregrounding Jules invites the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer or imply.",RIGHT,"The singular gerund phrase “foregrounding Jules” correctly takes “invites,” and “yet” joins the clauses."
+repr_rw_c1_022,C1,"Foregrounding Ari invite the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer.",WRONG,The singular gerund phrase “foregrounding Ari” needs “invites.”
+repr_rw_c1_023,C1,"To analyse the workshop photograph, a defensible analysis distinguish how the text represents Eli from what an individual viewer may infer.",WRONG,The singular subject “analysis” needs “distinguishes.”
+repr_rw_c1_024,C1,"To analyse the team portrait, a defensible analysis distinguish how the text represents Ari from what an individual viewer may infer.",WRONG,The singular subject “analysis” needs “distinguishes.”
+repr_rw_c1_025,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforce part of that assumption; the contrast between the central figure and the passive crowd in a busy workshop is the relevant evidence.",RIGHT,"The “although” clause, modal phrase and semicolon are all correctly formed."
+repr_rw_c1_026,C1,"To analyse the rescue poster, a defensible analysis distinguish how the text represents Mara from what an individual viewer may infer.",WRONG,The singular subject “analysis” needs “distinguishes.”
+repr_rw_c1_027,C1,"The representation may present Sam as vulnerable, but a calm expression also suggests agency and choice.",RIGHT,"The modal “may” is followed by the base verb “present,” and the clauses are joined correctly."
+repr_rw_c1_028,C1,"To analyse the space story cover, a defensible analysis distinguish how the text represents Sam from what an individual viewer may infer.",WRONG,The singular subject “analysis” needs “distinguishes.”
+repr_rw_c1_029,C1,"The representation may presents Sam as vulnerable, but a calm expression also suggests agency and choice.",WRONG,"After “may,” use the base verb “present.”"
+repr_rw_c1_030,C1,"Foregrounding Jules invite the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer.",WRONG,The singular gerund phrase “foregrounding Jules” needs “invites.”
+repr_rw_c1_031,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforce part of that assumption; the contrast between the central figure and the passive crowd in an empty sports hall is the relevant evidence.",RIGHT,"The “although” clause, modal phrase and semicolon are all correctly formed."
+repr_rw_c1_032,C1,"The representation may presents Mara as vulnerable, but a steady gaze also suggests agency and choice.",WRONG,"After “may,” use the base verb “present.”"
+repr_rw_c1_033,C1,"The representation may presents Jules as vulnerable, but a careful hand also suggests agency and choice.",WRONG,"After “may,” use the base verb “present.”"
+repr_rw_c1_034,C1,"Although a stereotypical portrayal may reinforce a familiar idea, the composition complicates that reading through its use of a quiet control room.",RIGHT,"After “may,” the base verb “reinforce” is correct; the contrast clause is complete."
+repr_rw_c1_035,C1,"Although a stereotypical portrayal may reinforces a familiar idea, the composition complicates that reading through its use of a quiet control room.",WRONG,"After “may,” use the base verb “reinforce.”"
+repr_rw_c1_036,C1,"Although a stereotypical portrayal may reinforces a familiar idea, the composition complicates that reading through its use of a bright garage.",WRONG,"After “may,” use the base verb “reinforce.”"
+repr_rw_c1_037,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforce part of that assumption; the contrast between the central figure and the passive crowd in a stormy city is the relevant evidence.",RIGHT,"The “although” clause, modal phrase and semicolon are all correctly formed."
+repr_rw_c1_038,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforces part of that assumption; the contrast between the central figure and the passive crowd in a quiet control room is the relevant evidence.",WRONG,"After the modal “may,” use the base verb “reinforce.”"
+repr_rw_c1_039,C1,"Foregrounding Ari invites the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer or imply.",RIGHT,"The singular gerund phrase “foregrounding Ari” correctly takes “invites,” and “yet” joins the clauses."
+repr_rw_c1_040,C1,"Although a stereotypical portrayal may reinforces a familiar idea, the composition complicates that reading through its use of an empty sports hall.",WRONG,"After “may,” use the base verb “reinforce.”"
+repr_rw_c1_041,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforces part of that assumption; the contrast between the central figure and the passive crowd in a busy workshop is the relevant evidence.",WRONG,"After the modal “may,” use the base verb “reinforce.”"
+repr_rw_c1_042,C1,"The representation may present Jules as vulnerable, but a careful hand also suggests agency and choice.",RIGHT,"The modal “may” is followed by the base verb “present,” and the clauses are joined correctly."
+repr_rw_c1_043,C1,"Foregrounding Mara invites the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer or imply.",RIGHT,"The singular gerund phrase “foregrounding Mara” correctly takes “invites,” and “yet” joins the clauses."
+repr_rw_c1_044,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforces part of that assumption; the contrast between the central figure and the passive crowd in an empty sports hall is the relevant evidence.",WRONG,"After the modal “may,” use the base verb “reinforce.”"
+repr_rw_c1_045,C1,"To analyse the garage advert, a defensible analysis distinguishes how the text represents Jules from what an individual viewer may infer.",RIGHT,The infinitive phrase and the singular subject “analysis” are correctly formed.
+repr_rw_c1_046,C1,"Foregrounding Sam invite the audience to consider the character’s identity, yet the image alone cannot establish what every viewer will infer.",WRONG,The singular gerund phrase “foregrounding Sam” needs “invites.”
+repr_rw_c1_047,C1,"To analyse the garage advert, a defensible analysis distinguish how the text represents Jules from what an individual viewer may infer.",WRONG,The singular subject “analysis” needs “distinguishes.”
+repr_rw_c1_048,C1,"The representation may present Mara as vulnerable, but a steady gaze also suggests agency and choice.",RIGHT,"The modal “may” is followed by the base verb “present,” and the clauses are joined correctly."
+repr_rw_c1_049,C1,"Although the poster appears to challenge a familiar stereotype, its framing may still reinforce part of that assumption; the contrast between the central figure and the passive crowd in a quiet control room is the relevant evidence.",RIGHT,"The “although” clause, modal phrase and semicolon are all correctly formed."
+repr_rw_c1_050,C1,"Although a stereotypical portrayal may reinforces a familiar idea, the composition complicates that reading through its use of a busy workshop.",WRONG,"After “may,” use the base verb “reinforce.”"

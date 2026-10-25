@@ -13,7 +13,8 @@ Homepage → **English** or **Chinese version 中文版**
   Reading is greyed out on phones ("Only available on desktop devices"); the split is automatic.
 - **Chinese version** (`zh/`): vocabulary games with Chinese support. Topics are listed by subject:
   All subjects → Academic English Essentials; Media → Web design, Representation; English Language → Descriptive language.
-  Every topic has 8 games: 中文 → English, Match the meaning, Choose the meaning, Type it, True or false, Odd one out, Speed round (60 s), Survival (3 lives).
+  Every topic has 8 word games: 中文 → English, Match the meaning, Choose the meaning, Type it, True or false, Odd one out, Speed round (60 s), Survival (3 lives),
+  plus Build the sentence 连词成句 (see the sentence in Chinese, build it in English: `builds.csv`, its `zh` column) where a topic has sentences with Chinese.
 - **My progress** (`progress/`): linked at the top of both topic lists. Shows the student's level, their topics and the words they have learned (see *Levels and progress* below).
 
 ## Layout
@@ -43,7 +44,7 @@ Homepage → **English** or **Chinese version 中文版**
 | Category | Games (shown only when the subject has content for them) |
 |---|---|
 | Vocabulary | Match the meaning, Synonym groups, Word or meaning |
-| Grammar | Fill the gap, Build the sentence, Spot the error, True or false, Right or wrong (`right-wrong.csv`) |
+| Grammar | Fill the gap, Spot the error, True or false, Right or wrong (`right-wrong.csv`). Build the sentence moved to the Chinese version (25 Oct) |
 | Reading (desktop only) | Read and answer (`reading.csv`), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`) |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.

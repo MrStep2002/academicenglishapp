@@ -101,7 +101,7 @@ function buildSubject(T){
     if(tiles.length<2) return warn('builds',r,'skipped: it needs at least two pieces');
     const alt=String(r.also_right||'').split('||').map(a=>a.split('|').map(s=>s.trim()).filter(Boolean)).filter(a=>a.length);
     alt.forEach(a=>{ if(a.length!==tiles.length || a.some(t=>!tiles.some(x=>x[0]===t))) warn('builds',r,'also_right should use exactly the same pieces'); });
-    S.builds.push({id:r.id, level:lv('builds',r), goal:r.goal||'', tiles, decoys:pieces(r,r.decoys), alt, why:r.explanation||''}); });
+    S.builds.push({id:r.id, level:lv('builds',r), goal:r.goal||'', zh:r.zh||'', tiles, decoys:pieces(r,r.decoys), alt, why:r.explanation||''}); });
   (T.errors||[]).forEach(r=>{ if(!/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/.test(r.text||'')) return warn('errors',r,'skipped: the text needs at least one [wrong|right|why]');
     S.errors.push({id:r.id, level:lv('errors',r), title:r.title||'', text:r.text}); });
   (T.tf||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), t=/^(true|t|yes|y)$/.test(a);
@@ -134,12 +134,12 @@ function buildSubject(T){
   }
   return S;
 }
-// Load the page's files, then start. The Chinese version only needs the words.
+// Load the page's files, then start. The Chinese version only needs the words, and builds.csv for Build the sentence.
 const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','reading'];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
-  const jobs=(dir ? (SIDE==='zh' ? ['words'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  const jobs=(dir ? (SIDE==='zh' ? ['words','builds'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
   if(CFG.reading) jobs.push(['reading', CFG.reading]);
   if(jobs.some(j=>j[0]==='reading')) readingState='loading';
   if(jobs.length) $app.innerHTML='<p class="notice loading">Loading…</p>';
@@ -177,10 +177,10 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word',
+const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence, Spot the error, In your own words'],
+  ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking, Read and answer']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -193,7 +193,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
+  const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -272,7 +272,7 @@ function toastLevel(msg){ const t=document.createElement('div'); t.className='lv
 // The games use the student's own level for this topic. A student can choose another level to push themselves;
 // that choice is saved for this topic until they press "Use my level" (or their level reaches it).
 const MIN_LEVEL = 6;
-const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
 const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
 const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
 let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
@@ -335,7 +335,6 @@ const GAMES = [
   {key:'syn',      cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
   {key:'meaning',  cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
   {key:'gap',      cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'build',    cat:'grammar', name:'Build the sentence',blurb:'Put the coloured pieces in order. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'error',    cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   {key:'tf',       cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
   {key:'rw',       cat:'grammar', name:'Right or wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
@@ -595,17 +594,21 @@ function playGap(){
 
 // ---------- GRAMMAR: Build the sentence ----------
 const ROLES={topic:'Who or what',verb:'Verb',detail:'Detail',link:'Linking word',judge:'Judgement',hedge:'Hedge'};
+// Build the sentence: on the Chinese version since 25 Oct (off the English side). The Chinese sentence (builds.csv, zh column)
+// is shown at the top; students build it in English from the coloured pieces, avoiding the trap pieces.
+const ROLES_ZH={topic:'主语',verb:'动词',detail:'细节',link:'连接词',judge:'评价',hedge:'委婉语'};
 function playBuild(){
-  const game=GAMES.find(g=>g.key==='build'), items=game.items(), deck=Deck(items), st=Stats('build');
-  shell(game,'Tap the pieces in order. Tap a placed piece to send it back.'); st.draw();
+  const game=ZH_GAMES.find(g=>g.key==='zhbuild'), items=zhBuilds(), deck=Deck(items), st=Stats('zhbuild');
+  zhShell(game.name+' <span lang="zh-CN">'+game.zh+'</span>','Tap the pieces in order. Tap a placed piece to send it back. 按顺序点击词块，点击已放好的词块可以退回。'); st.draw();
   const step=()=>{
     const b=deck.next();
     const pieces=shuffle([...b.tiles.map((t,i)=>({t:t[0],r:t[1],k:'t'+i})), ...(b.decoys||[]).map((t,i)=>({t:t[0],r:t[1],k:'d'+i,decoy:true}))]);
     const usedRoles=[...new Set(b.tiles.map(t=>t[1]))];
-    const card=showCard(`<p class="instr">${esc(b.goal||'Build the sentence')}</p>
+    const card=showCard(`<p class="instr">Build this sentence in English 用英文组成这个句子</p>
+      <p class="zh-sentence" lang="zh-CN">${esc(b.zh)}</p>
       <div class="answer" id="ans" aria-label="Your sentence"></div>
       <div class="pool" id="pool">${pieces.map(p=>`<button class="piece r-${p.r}" data-k="${p.k}">${esc(p.t)}</button>`).join('')}</div>
-      <div class="rolekey">${usedRoles.map(r=>`<span class="r-${r}">${ROLES[r]||r}</span>`).join('')}</div>
+      <div class="rolekey">${usedRoles.map(r=>`<span class="r-${r}">${ROLES[r]||r} <span lang="zh-CN">${ROLES_ZH[r]||''}</span></span>`).join('')}</div>
       <div class="next-row check-row"><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>`);
     const ans=card.querySelector('#ans'), pool=card.querySelector('#pool'), check=card.querySelector('#check');
     let placed=[], done=false;
@@ -669,13 +672,22 @@ function playErr(){
     const check=()=>{
       if(checked) return; checked=true;
       const errIdx=toks.map((t,i)=>t.err?i:-1).filter(i=>i>=0);
-      const found=errIdx.filter(i=>marked.has(i)).length, falseMarks=[...marked].filter(i=>!toks[i].err).length;
+      // A missing word written only on the word after the gap ([stay|to stay|…]) also counts when the student taps the word
+      // before it (and the other way round), since either word marks the gap. New content puts both words in the brackets.
+      const near=i=>{ const t=toks[i], w=t.text.toLowerCase().trim(), r=t.err.right.toLowerCase().trim(), step=r.endsWith(' '+w) ? -1 : r.startsWith(w+' ') ? 1 : 0;
+        if(!step) return -1;
+        for(let j=i+step; j>=0 && j<toks.length; j+=step){ if(toks[j].punct) continue; return toks[j].err ? -1 : j; }
+        return -1; };
+      const viaNear=new Set(), hit=i=>{ if(marked.has(i)) return true; const j=near(i); if(j>=0 && marked.has(j)){ viaNear.add(j); return true; } return false; };
+      const got=new Set(errIdx.filter(hit));
+      const found=got.size, falseMarks=[...marked].filter(i=>!toks[i].err && !viaNear.has(i)).length;
       const ok=found===errIdx.length && falseMarks===0;
       card.querySelectorAll('.tok').forEach(b=>{ const i=+b.dataset.i, t=toks[i]; b.disabled=true; b.classList.remove('t-marked');
-        if(t.err){ b.classList.add(marked.has(i)?'t-found':'t-missed'); b.innerHTML=`<s>${esc(t.text)}</s> <ins>${esc(t.err.right)}</ins>`; }
+        if(t.err){ b.classList.add(got.has(i)?'t-found':'t-missed'); b.innerHTML=`<s>${esc(t.text)}</s> <ins>${esc(t.err.right)}</ins>`; }
+        else if(viaNear.has(i)) b.classList.add('t-near');
         else if(marked.has(i)) b.classList.add('t-false'); });
       card.querySelector('.check-row').remove();
-      const list=errIdx.map(i=>{ const t=toks[i]; return `<li class="${marked.has(i)?'got':'miss'}"><span><s>${esc(t.text)}</s> → <b>${esc(t.err.right)}</b></span><span class="why">${esc(t.err.why)}</span></li>`; }).join('');
+      const list=errIdx.map(i=>{ const t=toks[i]; return `<li class="${got.has(i)?'got':'miss'}"><span><s>${esc(t.text)}</s> → <b>${esc(t.err.right)}</b></span><span class="why">${esc(t.err.why)}</span></li>`; }).join('');
       const summary=`You found ${found} of ${errIdx.length}${falseMarks?` and marked ${falseMarks} correct word${falseMarks>1?'s':''} as wrong`:''}.`;
       card.querySelector('.fb').innerHTML=`<div class="feedback ${ok?'ok':'no'}"><span class="verdict">${ok?'All found.':summary}</span><ul class="errlist">${list}</ul></div>`;
       settle(ok,card,st,deck,it,step);
@@ -941,6 +953,7 @@ const ZH_GAMES = [
   {key:'zhmean',   type:'practice',  name:'Choose the meaning', zh:'选出释义',       blurb:'See the word and its Chinese, then choose the English meaning.', run:()=>playZhMeaning()},
   {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', run:()=>playType()},
   {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'See the word and its Chinese. Does the English meaning match? Decide quickly.', run:()=>playZhTF()},
+  {key:'zhbuild',  type:'practice',  name:'Build the sentence', zh:'连词成句',       blurb:'See the sentence in Chinese, then build it in English from the coloured pieces.', run:()=>playBuild(), ready:()=>zhBuilds().length>0, lock:'No sentences at this level yet 本级别还没有句子'},
   {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', run:()=>playOdd(), needs:()=>oddReady()},
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', min:8, run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', min:8, run:()=>playSurvival()}
@@ -948,11 +961,13 @@ const ZH_GAMES = [
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
 // or every word when the level has fewer), and Odd one out needs word groups
 const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
-const zhReady = g => zhLevelWords().length>=4 && zhWords().length>=zhNeed(g) && !(g.needs && !g.needs());
+const zhReady = g => g.ready ? g.ready() : zhLevelWords().length>=4 && zhWords().length>=zhNeed(g) && !(g.needs && !g.needs());
+// Build the sentence (Chinese version): the sentences at the chosen level that have their Chinese (builds.csv, zh column)
+const zhBuilds = () => pick(S.builds).filter(b=>b.zh);
 function zhMenu(){
   tidyChoice(); P.refresh(); const n=zhLevelWords().length, have=zhWords().length;
   const lock=g=>{ const need=zhNeed(g)-have;
-    return n<4 ? 'Not enough words at this level yet 本级别单词不够'
+    return g.lock ? g.lock : n<4 ? 'Not enough words at this level yet 本级别单词不够'
       : need>0 ? `Learn ${need} more word${need===1?'':'s'} to unlock 再学 ${need} 个单词即可解锁`
       : 'Learn words from more groups to unlock 学习更多类别的单词即可解锁'; };
   const card=g=>{ const off=!zhReady(g);
