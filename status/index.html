@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<title>Site content · Academic English App</title>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../en/engine/fonts.css">
+<link rel="stylesheet" href="../en/engine/styles.css">
+<style>
+/* Site content: a page for the teacher, not linked from anywhere. Everything on it is counted from the content files
+   each time it loads, so refreshing it shows the content as it is now. */
+.st h1{font-family:var(--f-display);font-weight:400;font-size:clamp(32px,5vw,44px);margin:6px 0 4px}
+.st .sub{color:var(--ink-2);margin:0 0 6px;font-size:15px}
+.st .when{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+.st h2{font-family:var(--f-display);font-weight:400;font-size:26px;margin:34px 0 4px}
+.st .meta{color:var(--ink-2);font-size:14px;margin:0 0 10px}
+.st table{width:100%;border-collapse:collapse;font-size:14px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.st th,.st td{border-bottom:1px solid var(--rule);padding:6px 8px;text-align:left;vertical-align:top}
+.st thead th{background:var(--blue-soft);font-weight:700;font-size:13px}
+.st td.n,.st th.n{text-align:center;font-variant-numeric:tabular-nums;width:46px}
+.st td.tot{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);min-width:140px}
+.st tr.sect td{background:var(--paper);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);padding:5px 8px}
+.st td.gap{background:var(--mark);background:color-mix(in srgb, var(--mark) 35%, var(--sheet));color:var(--ink-2)}
+.st tr.off td{color:var(--ink-2)}
+.st tr.off td.gap{background:none}
+.st .k{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);white-space:nowrap}
+.st .s{font-weight:700;white-space:nowrap}
+.st .s-all{color:var(--good)} .st .s-some{color:#9a6700} .st .s-none{color:var(--bad)} .st .s-off{color:var(--ink-2)}
+@media (prefers-color-scheme: dark){.st .s-some{color:#e3b341}}
+.st .notes{color:var(--ink-2);font-size:14px;margin-top:10px;padding-left:20px}
+.st .notes li{margin:3px 0}
+.st .err{color:var(--bad)}
+.st .scroll{overflow-x:auto}
+@media (max-width:640px){.st td.n,.st th.n{width:auto;padding:6px 4px}.st .k{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap st" id="st">
+  <p class="mono">Academic English App · not linked from the site</p>
+  <h1>Site content</h1>
+  <p class="sub">Every subject, every game it could have, and how many questions each game has at each level. Counted from the content files each time this page loads: refresh to see the latest.</p>
+  <div class="when"><span id="when">Counting…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
+  <div id="out"><p class="notice loading">Reading the content files…</p></div>
+</div>
+<script>
+(function(){
+'use strict';
+const ROOT = new URL('../', location.href).href;   // the site's top folder
+const LEVELS = [['A1','F','Foundation'], ['A2','F+','Foundation+'], ['B1','I','Intermediate'], ['B2','I+','Intermediate+'], ['C1','A','Advanced']];
+const BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts'];
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => Number(n).toLocaleString('en-GB');
+
+// The same CSV reading and level rules as the games (en/engine/app.js)
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false; text=text.replace(/^﻿/,'');
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c; }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
+  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+}
+// 1-5 for a level (A1…C1, "+" = the same level; or a name), null if it has none
+function band(v){ v=String(v||'').trim(); if(!v) return null; const n=BY_NAME[v.toLowerCase().replace(/\s+/g,'')]; if(n) return n;
+  const m=v.toUpperCase().match(/^([ABC])([12])\+?$/); return m ? Math.min(5, {A:0,B:2,C:4}[m[1]] + (+m[2])) : null; }
+const get = url => fetch(url, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); });
+const getCSV = url => get(url).then(parseCSV, ()=>null);   // null: the file is missing
+const getDoc = url => get(url).then(t=>new DOMParser().parseFromString(t, 'text/html'));
+
+// Rows per level: [F, F+, I, I+, A, no level]. An item without a level of its own takes its word's level, as in the games.
+function perLevel(rows, wordLevel){ const c=[0,0,0,0,0,0];
+  (rows||[]).forEach(r=>{ let b=band(r.level); if(b==null && wordLevel){ const w=(r.word||r.wid||'').toLowerCase(); b=wordLevel[w]||null; } c[b==null?5:b-1]++; });
+  return c; }
+
+// ---- the games, as the site has them (keep in step with GAMES, ARCADE and ZH_GAMES in en/engine/app.js) ----
+// min: how many items a level needs before the game plays there
+const SECTIONS = [
+  ['Vocabulary', [
+    {key:'match', name:'Match the meaning', src:'words', min:6, circuit:'short'},
+    {key:'syn', name:'Synonym groups', src:'syn', min:6, circuit:'short'},
+    {key:'meaning', name:'Word or meaning', src:'words', min:4, circuit:'short'}]],
+  ['Grammar', [
+    {key:'gap', name:'Fill the gap', src:'gaps', min:1, circuit:'short'},
+    {key:'error', name:'Spot the error', src:'errors', min:1, circuit:'long'},
+    {key:'tf', name:'True or false', src:'tf', min:1, circuit:'short'},
+    {key:'rw', name:'Right or wrong', src:'right-wrong', min:1, circuit:'short'}]],
+  ['Reading (computers only)', [
+    {key:'read', name:'Complete the text', src:'reads', min:1, circuit:'long'},
+    {key:'own', name:'In your own words', src:'extracts', min:1, circuit:'long'},
+    {key:'question', name:'Answer the question', src:'questions', min:1, circuit:'long'}]],
+  ['Arcade (not on the menus: open with #play-…)', [
+    {key:'whack', name:'Whack-a-word', src:'words', min:6, circuit:'arcade', link:'whack'},
+    {key:'invaders', name:'Word Invaders', src:'words', min:6, circuit:'arcade', link:'invaders'},
+    {key:'snake', name:'Word Snake', src:'words', min:6, circuit:'', link:'snake'}]],
+  ['Chinese side', [
+    {key:'zhwords', name:'Word games (9)', src:'zhwords', min:4, circuit:'', zh:true},
+    {key:'zhbuild', name:'Build the sentence', src:'zhbuilds', min:1, circuit:'', zh:true}]],
+];
+const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
+  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences'};
+
+async function loadSubject(href){
+  const pageUrl=new URL(href, ROOT+'en/').href, doc=await getDoc(pageUrl), app=doc.getElementById('app');
+  if(!app || !app.dataset.content) return null;
+  const d=app.dataset, dir=new URL(d.content.replace(/\/*$/,'/'), pageUrl).href;
+  const T={}; await Promise.all(FILES.map(f=>getCSV(dir+f+'.csv').then(rows=>{ T[f]=rows; })));
+  return {name:d.name||href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T};
+}
+
+// Counts for one subject: per source, the items per level and a line saying what they are
+function count(s, zhFolders){
+  const T=s.T, words=(T.words||[]).filter(w=>w.word && w.meaning);
+  const wordLevel={}; words.forEach(w=>{ const b=band(w.level); if(b){ wordLevel[w.word.toLowerCase()]=b; wordLevel[(w.id||'').toLowerCase()]=b; } });
+  const known=v=>{ v=String(v||'').trim().toLowerCase(); return !!wordLevel[v] || words.some(w=>w.word.toLowerCase()===v || (w.id||'').toLowerCase()===v); };
+  const err=/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/g, key=/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
+  const reads=(T.reads||[]).filter(r=>{ let n=0; (r.text||'').replace(key,(m,a,b)=>{ if(known((b||a))) n++; return m; }); return n>=2; });
+  const builds=T.builds||[], zhb=builds.filter(b=>b.zh);
+  const C={
+    words:{lv:perLevel(words), total:words.length},
+    syn:{lv:perLevel(words.filter(w=>w.synonyms)), total:words.filter(w=>w.synonyms).length},
+    gaps:{lv:perLevel(T.gaps, wordLevel), total:(T.gaps||[]).length},
+    errors:{lv:perLevel(T.errors), total:(T.errors||[]).length, extra:`${(T.errors||[]).reduce((n,r)=>n+((r.text||'').match(err)||[]).length,0)} mistakes`},
+    tf:{lv:perLevel(T.tf, wordLevel), total:(T.tf||[]).length},
+    'right-wrong':{lv:perLevel(T['right-wrong'], wordLevel), total:(T['right-wrong']||[]).length},
+    reads:{lv:perLevel(reads), total:reads.length, extra:`${reads.reduce((n,r)=>n+((r.text||'').match(key)||[]).length,0)} gaps, ${reads.filter(r=>r.extra1||r.extra2||r.extra3).length} with extra words`
+      + ((T.reads||[]).length>reads.length ? `; not played (fewer than 2 key words from words.csv): ${(T.reads||[]).filter(r=>!reads.includes(r)).map(r=>r.id).join(', ')}` : '')},
+    extracts:{lv:perLevel(T.extracts, wordLevel), total:(T.extracts||[]).length, extra:`${(T.extracts||[]).reduce((n,r)=>n+((r.extract||'').match(/\[[^\]]+\]/g)||[]).length,0)} underlined words`},
+    questions:{lv:perLevel(T.questions), total:(T.questions||[]).length},
+    zhwords:{lv:perLevel(words.filter(w=>w.zh)), total:words.filter(w=>w.zh).length},
+    zhbuilds:{lv:perLevel(zhb, wordLevel), total:zhb.length, written:builds.length},
+  };
+  const hasZh=zhFolders.has(s.folder);
+  const rows=[], tally={all:0, some:0, none:0, off:0};
+  SECTIONS.forEach(([sect, games])=>{
+    rows.push({sect});
+    games.forEach(g=>{
+      const c=C[g.src], ok=c.lv.slice(0,5).map(x=>x>=g.min);
+      let status, cls;
+      if(s.hide.includes(g.key)){ status='Switched off'; cls='off'; }
+      else if(g.zh && !hasZh){ status='No Chinese page'; cls='off'; }
+      else if(g.src==='zhbuilds' && !c.total){ status=c.written ? `Needs Chinese (${fmt(c.written)} written)` : 'None yet'; cls=c.written ? 'some' : 'none'; }
+      else if(ok.every(Boolean)){ status='All levels'; cls='all'; }
+      else if(ok.some(Boolean)){ status='Some levels'; cls='some'; }
+      else { status='None yet'; cls='none'; }
+      if(sect.startsWith('Vocabulary')||sect.startsWith('Grammar')||sect.startsWith('Reading')) tally[cls]++;
+      rows.push({g, c, ok, status, cls});
+    });
+  });
+  return {rows, tally, words:words.length,
+    items:words.length+(T.gaps||[]).length+(T.errors||[]).length+(T.tf||[]).length+(T['right-wrong']||[]).length+(T.reads||[]).length+(T.questions||[]).length+(T.extracts||[]).length+builds.length};
+}
+
+function subjectTable(s, k){
+  const cells=(r)=>r.c.lv.slice(0,5).map((x,i)=>`<td class="n${!r.ok[i] && r.cls!=='off' ? ' gap' : ''}">${x||'–'}</td>`).join('');
+  const body=k.rows.map(r=>{
+    if(r.sect) return `<tr class="sect"><td colspan="9">${esc(r.sect)}</td></tr>`;
+    const what=r.c.total ? `${fmt(r.c.total)} ${NOUN[r.g.src]}${r.c.extra?` · ${esc(r.c.extra)}`:''}` : '';
+    const noLevel=r.c.lv[5] ? ` · ${r.c.lv[5]} with no level` : '';
+    const circ=r.g.circuit ? `circuit: ${r.g.circuit}` : r.g.link==='snake' ? 'not in circuit' : '';
+    return `<tr class="${r.cls==='off'?'off':''}"><td><b>${esc(r.g.name)}</b><br><span class="k">${circ}</span></td>${cells(r)}
+      <td class="tot">${what}${noLevel}</td><td class="s s-${r.cls}">${esc(r.status)}</td></tr>`; }).join('');
+  return `<div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+async function readingComp(){
+  const hub=new URL('en/reading-comprehension/index.html', ROOT).href, doc=await getDoc(hub);
+  const links=[...doc.querySelectorAll('a.topic')].map(a=>new URL(a.getAttribute('href'), hub).href);
+  const out=[];
+  for(const url of links){ const d=(await getDoc(url)).getElementById('app'); if(!d || !d.dataset.reading) continue;
+    const rows=await getCSV(new URL(d.dataset.reading, url).href)||[];
+    const qs=rows.reduce((n,r)=>n+['question','question2','question3'].filter(k=>r[k]).length,0);
+    out.push({name:d.dataset.name||url, lv:perLevel(rows), total:rows.length, qs, notes:d.dataset.format==='notes'}); }
+  return out;
+}
+
+async function main(){
+  const enUrl=ROOT+'en/index.html', zhUrl=ROOT+'zh/index.html';
+  const [en, zh]=await Promise.all([getDoc(enUrl), getDoc(zhUrl).catch(()=>null)]);
+  const hrefs=[...en.querySelectorAll('a.topic-link')].map(a=>a.getAttribute('href'));
+  const zhFolders=new Set();
+  if(zh) await Promise.all([...zh.querySelectorAll('a.topic-link')].map(async a=>{ try{ const u=new URL(a.getAttribute('href'), zhUrl).href, d=(await getDoc(u)).getElementById('app');
+    if(d && d.dataset.content) zhFolders.add(new URL(d.dataset.content.replace(/\/*$/,'/'), u).href.slice(ROOT.length)); }catch(e){} }));
+  const subjects=(await Promise.all(hrefs.map(h=>loadSubject(h).catch(()=>null)))).filter(Boolean);
+  const counted=subjects.map(s=>({s, k:count(s, zhFolders)}));
+  const rc=await readingComp().catch(()=>[]);
+
+  const total=counted.reduce((n,x)=>n+x.k.items,0), totalWords=counted.reduce((n,x)=>n+x.k.words,0);
+  let html=`<h2>Summary</h2><div class="scroll"><table><thead><tr><th>Subject</th><th class="n">Words</th><th class="n">Items</th>
+    <th class="n" title="English games playable at every level">All levels</th><th class="n">Some levels</th><th class="n">None yet</th></tr></thead><tbody>
+    ${counted.map(({s,k})=>`<tr><td><a href="#${esc(s.folder)}">${esc(s.name)}</a></td><td class="n">${fmt(k.words)}</td><td class="n">${fmt(k.items)}</td>
+      <td class="n s s-all">${k.tally.all}</td><td class="n s s-some">${k.tally.some}</td><td class="n s s-none">${k.tally.none}${k.tally.off?` <span class="k">(+${k.tally.off} off)</span>`:''}</td></tr>`).join('')}
+    <tr><td><b>Total</b></td><td class="n"><b>${fmt(totalWords)}</b></td><td class="n"><b>${fmt(total)}</b></td><td></td><td></td><td></td></tr></tbody></table></div>
+    <ul class="notes"><li>All levels / Some levels / None yet count the ${SECTIONS.slice(0,3).reduce((n,x)=>n+x[1].length,0)} games on the English topic pages (Vocabulary, Grammar, Reading).</li>
+    <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately below.</li>
+    <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning, Synonym groups and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>`;
+  counted.forEach(({s,k})=>{
+    html+=`<h2 id="${esc(s.folder)}">${esc(s.name)}</h2><p class="meta">${fmt(k.words)} words · ${fmt(k.items)} items · <span class="k">${esc(s.folder)}</span>${s.hide.length?` · switched off on its page: ${esc(s.hide.join(', '))}`:''}${zhFolders.has(s.folder)?'':' · no Chinese page'}</p>${subjectTable(s,k)}`;
+  });
+  if(rc.length){
+    html+=`<h2>Reading Comprehension</h2><p class="meta">English side only, computers only.</p><div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>
+      ${rc.map(r=>{ const ok=r.lv.slice(0,5).map(x=>x>0), all=ok.every(Boolean), some=ok.some(Boolean);
+        return `<tr><td><b>${esc(r.name)}</b></td>${r.lv.slice(0,5).map((x,i)=>`<td class="n${ok[i]?'':' gap'}">${x||'–'}</td>`).join('')}
+        <td class="tot">${fmt(r.total)} passages${r.notes?'':` · ${fmt(r.qs)} questions`}</td><td class="s s-${all?'all':some?'some':'none'}">${all?'All levels':some?'Some levels':'None yet'}</td></tr>`; }).join('')}
+      </tbody></table></div>`;
+  }
+  html+=`<ul class="notes"><li>Subjects are found from the English topic list (<span class="k">en/index.html</span>); a new topic appears here once it is on that list.</li>
+    <li>This page counts rows; it does not check them. Run <span class="k">python3 tools/check_content.py</span> to find mistakes in the files.</li></ul>`;
+  document.getElementById('out').innerHTML=html;
+  document.getElementById('when').textContent='Counted '+new Date().toLocaleString('en-GB', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+}
+main().catch(e=>{ document.getElementById('out').innerHTML=`<p class="notice err">The content files could not be read (${esc(e.message||e)}). They load when the site is online.</p>`; });
+})();
+</script>
+</body>
+</html>
