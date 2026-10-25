@@ -121,7 +121,17 @@ function count(s, zhFolders){
   const wordLevel={}; words.forEach(w=>{ const b=band(w.level); if(b){ wordLevel[w.word.toLowerCase()]=b; wordLevel[(w.id||'').toLowerCase()]=b; } });
   const known=v=>{ v=String(v||'').trim().toLowerCase(); return !!wordLevel[v] || words.some(w=>w.word.toLowerCase()===v || (w.id||'').toLowerCase()===v); };
   const err=/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/g, key=/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
-  const reads=(T.reads||[]).filter(r=>{ let n=0; (r.text||'').replace(key,(m,a,b)=>{ if(known((b||a))) n++; return m; }); return n>=2; });
+  // Complete the text: any word or form can be a gap; it is linked to words.csv when it is a word there or a simple form of one
+  const byWord={}; words.forEach(w=>{ byWord[w.word.toLowerCase()]=(w.pos||'').toLowerCase(); });
+  const NEED={s:['noun','verb'], ed:['verb'], ing:['verb']};
+  const linked=v=>{ const t=String(v||'').trim().toLowerCase(); if(t in byWord) return true; const tries=[], add=(b,k)=>{ if(b.length>=2) tries.push([b,k]); };
+    if(/ies$/.test(t)) add(t.slice(0,-3)+'y','s'); if(/es$/.test(t)) add(t.slice(0,-2),'s'); if(/[^s]s$/.test(t)) add(t.slice(0,-1),'s');
+    if(/ied$/.test(t)) add(t.slice(0,-3)+'y','ed');
+    if(/ed$/.test(t)){ add(t.slice(0,-2),'ed'); add(t.slice(0,-1),'ed'); if(/(.)\1ed$/.test(t)) add(t.slice(0,-3),'ed'); }
+    if(/ing$/.test(t)){ add(t.slice(0,-3),'ing'); add(t.slice(0,-3)+'e','ing'); if(/(.)\1ing$/.test(t)) add(t.slice(0,-4),'ing'); }
+    return tries.some(([b,k])=>(b in byWord) && (!byWord[b] || NEED[k].some(x=>byWord[b].includes(x)))); };
+  let gapsAll=0, gapsLinked=0;
+  const reads=(T.reads||[]).filter(r=>{ let n=0; (r.text||'').replace(key,(m,a,b)=>{ n++; gapsAll++; if(b ? known(b) : linked(a)) gapsLinked++; return m; }); return n>=2; });
   const builds=T.builds||[], zhb=builds.filter(b=>b.zh);
   const C={
     words:{lv:perLevel(words), total:words.length},
@@ -130,8 +140,8 @@ function count(s, zhFolders){
     errors:{lv:perLevel(T.errors), total:(T.errors||[]).length, extra:`${(T.errors||[]).reduce((n,r)=>n+((r.text||'').match(err)||[]).length,0)} mistakes`},
     tf:{lv:perLevel(T.tf, wordLevel), total:(T.tf||[]).length},
     'right-wrong':{lv:perLevel(T['right-wrong'], wordLevel), total:(T['right-wrong']||[]).length},
-    reads:{lv:perLevel(reads), total:reads.length, extra:`${reads.reduce((n,r)=>n+((r.text||'').match(key)||[]).length,0)} gaps, ${reads.filter(r=>r.extra1||r.extra2||r.extra3).length} with extra words`
-      + ((T.reads||[]).length>reads.length ? `; not played (fewer than 2 key words from words.csv): ${(T.reads||[]).filter(r=>!reads.includes(r)).map(r=>r.id).join(', ')}` : '')},
+    reads:{lv:perLevel(reads), total:reads.length, extra:`${fmt(gapsAll)} gaps (${fmt(gapsLinked)} from the word list), ${reads.filter(r=>r.extra1||r.extra2||r.extra3).length} with extra words`
+      + ((T.reads||[]).length>reads.length ? `; not played (fewer than 2 gaps): ${(T.reads||[]).filter(r=>!reads.includes(r)).map(r=>r.id).join(', ')}` : '')},
     extracts:{lv:perLevel(T.extracts, wordLevel), total:(T.extracts||[]).length, extra:`${(T.extracts||[]).reduce((n,r)=>n+((r.extract||'').match(/\[[^\]]+\]/g)||[]).length,0)} underlined words`},
     questions:{lv:perLevel(T.questions), total:(T.questions||[]).length},
     zhwords:{lv:perLevel(words.filter(w=>w.zh)), total:words.filter(w=>w.zh).length},

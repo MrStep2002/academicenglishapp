@@ -146,9 +146,12 @@ Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chi
 
 `id,level,title,text,extra1,extra2,extra3`
 
-- **text**: a short text. Every `[[word]]` becomes a gap, and the word goes into the word bank under the text;
-  `[[shown text|word]]` when the text uses another form of the word: `[[suggests|suggest]]` (the gap needs "suggests").
-  At least 2 key words per text; 3–6 works best. The word must be in the same folder's `words.csv` (its meaning is shown after checking).
+- **text**: a short text. Every `[[word]]` becomes a gap, and the word goes into the word bank under the text, exactly as written.
+  A gap can be any word or form: `[[drifts]]`, `[[suggests]]`, `[[board]]`. When it is a word from the same folder's `words.csv`,
+  or a simple form of one (drifts → drift, carried → carry, grabbed → grab, making → make), the game links it to that word:
+  its meaning is shown after checking and the student's progress with the word is kept. Other words play as gaps without a meaning.
+  `[[shown text|word]]` links a form to its word when the game cannot work it out (`[[took|take]]`).
+  At least 2 gaps per text; 3–6 works best.
 - **extra1**, **extra2**, **extra3** (optional): extra words for the word bank that do not fit any gap, so the last gap is never a giveaway.
   They can be any words, not only words from `words.csv`; write them as they should appear (lower case unless they are names).
   Use as many as suit the level: none, one, two or three. The game never adds extra words of its own, so a text with

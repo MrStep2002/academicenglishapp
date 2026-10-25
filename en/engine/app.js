@@ -111,13 +111,27 @@ function buildSubject(T){
   (T['right-wrong']||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), ok=/^(right|r|correct|true|t|yes|y)$/.test(a);
     if(!r.statement||(!ok && !/^(wrong|w|incorrect|false|f|no|n)$/.test(a))) return warn('right-wrong',r,'skipped: it needs a statement and an answer of RIGHT or WRONG');
     S.rw.push({id:r.id, level:lv('right-wrong',r), s:r.statement, ok, fix:r.correction||'', why:r.explanation||''}); });
-  // Read it: [[word]] or [[shown text|word]] makes a word tappable (its meaning comes from words.csv)
-  // Complete the text (reads.csv): every [[key word]] in the text becomes a gap. Optional extra1–extra3: the text's own extra
-  // words for the word bank (they need not be in words.csv); without them the bank has only the text's key words.
+  // Complete the text (reads.csv): every [[word]] in the text becomes a gap, and the gap can be any word or form (25 Oct).
+  // When it is a word in words.csv, or a simple form of one (drifts → drift, carried → carry, grabbed → grab, making → make),
+  // the gap is linked to that word: its meaning is shown after Check and the student's progress with it is kept.
+  // [[shown text|word]] names the word directly. Any other word still makes a gap, just without a meaning behind it.
+  // A text needs at least 2 gaps. Optional extra1–extra3: the text's own extra words for the word bank (any words);
+  // without them the bank has only the text's own gap words.
+  const FORM_POS={s:['noun','verb'], ed:['verb'], ing:['verb']};   // a form's base word must be one of these (when its pos is given)
+  const formOf=v=>{ const t=String(v||'').trim().toLowerCase(); if(!t) return null; if(byText[t]) return byText[t][0];
+    const tries=[], add=(b,k)=>{ if(b.length>=2) tries.push([b,k]); };
+    if(/ies$/.test(t)) add(t.slice(0,-3)+'y','s');
+    if(/es$/.test(t)) add(t.slice(0,-2),'s');
+    if(/[^s]s$/.test(t)) add(t.slice(0,-1),'s');
+    if(/ied$/.test(t)) add(t.slice(0,-3)+'y','ed');
+    if(/ed$/.test(t)){ add(t.slice(0,-2),'ed'); add(t.slice(0,-1),'ed'); if(/(.)\1ed$/.test(t)) add(t.slice(0,-3),'ed'); }
+    if(/ing$/.test(t)){ add(t.slice(0,-3),'ing'); add(t.slice(0,-3)+'e','ing'); if(/(.)\1ing$/.test(t)) add(t.slice(0,-4),'ing'); }
+    for(const [b,k] of tries){ const id=(byText[b]||[]).find(id=>{ const p=(byId[id].pos||'').toLowerCase(); return !p || FORM_POS[k].some(x=>p.includes(x)); }); if(id) return id; }
+    return null; };
   (T.reads||[]).forEach(r=>{
     if(!r.text) return warn('reads',r,'skipped: it needs a text');
-    const text=r.text.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g,(m,shown,w)=>{ const id=ref1('reads',r,(w||shown).trim()); return id?`[[${shown}|${id}]]`:shown; });
-    if((text.match(/\[\[[^\]]+\]\]/g)||[]).length<2) return warn('reads',r,'skipped: the text needs at least 2 [[key words]] from words.csv');
+    const text=r.text.replace(/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g,(m,shown,w)=>`[[${shown}|${(w ? ref1('reads',r,w.trim()) : formOf(shown)) || ''}]]`);
+    if((text.match(/\[\[[^\]]+\]\]/g)||[]).length<2) return warn('reads',r,'skipped: the text needs at least 2 [[gaps]]');
     const extras=['extra1','extra2','extra3'].map(k=>(r[k]||'').trim()).filter(Boolean);
     S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text, extras}); });
   (T.questions||[]).forEach(r=>{ const wrong=wrongs(r);
@@ -792,7 +806,7 @@ function playRead(){
   shell(game,'Tap a word to put it in the next gap. Tap a filled gap to take the word out. Then press Check.'); st.draw();
   const step=()=>{
     const r=deck.next(), gaps=[], parts=[];
-    let last=0; const re=/\[\[([^|\]]+)\|([^\]]+)\]\]/g, m0=r.text; let m;
+    let last=0; const re=/\[\[([^|\]]+)\|([^\]]*)\]\]/g, m0=r.text; let m;   // [[shown|word id]]: the id is empty for a word not in words.csv
     while((m=re.exec(m0))){ const before=m0.slice(0, m.index), cap=/(^|[.!?]["”’)]?\s+)$/.test(before) && /^[A-Z][a-z]/.test(m[1]);
       parts.push(esc(m0.slice(last, m.index))); parts.push({i:gaps.length}); gaps.push({ans:m[1], show:cap ? m[1][0].toLowerCase()+m[1].slice(1) : m[1], cap, id:m[2]}); last=re.lastIndex; }
     const inGap=(i,t)=>gaps[i].cap ? t[0].toUpperCase()+t.slice(1) : t;
@@ -824,7 +838,7 @@ function playRead(){
     const takeOut=i=>{ if(checked) return; const f=filled[i]; if(f!=null){ bank[f].used=false; filled[i]=null; } sel=i; draw(); };
     chips.forEach(c=>c.onclick=()=>put(+c.dataset.b));
     slots.forEach(s=>s.onclick=()=>{ const i=+s.dataset.i;
-      if(checked){ const w=byId[gaps[i].id]; card.querySelector('#peek').innerHTML=w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:''; return; }
+      if(checked){ const w=byId[gaps[i].id]; card.querySelector('#peek').innerHTML=w?`<b>${esc(w.w)}</b>: ${esc(w.def)}`:`<b>${esc(gaps[i].ans)}</b>`; return; }
       takeOut(i); });
     // partial: the Daily Circuit's time is up. The gaps the student has filled are marked (each is one answer, as usual);
     // empty gaps just show their word and are not counted

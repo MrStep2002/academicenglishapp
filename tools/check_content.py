@@ -73,6 +73,30 @@ def check_folder(folder, all_word_ids):
     for w in words: by_text.setdefault(w.get('word', '').lower(), []).append(w.get('id'))
     ids = {w.get('id') for w in words}
     known = lambda v: v in ids or v.lower() in by_text
+    pos_of = {w.get('word', '').lower(): (w.get('pos') or '').lower() for w in words}
+
+    def form_of(v):
+        """Complete the text: the words.csv word a gap stands for (the word itself, or a simple form of it: drifts -> drift,
+        carried -> carry, grabbed -> grab, making -> make), as in en/engine/app.js. None: the gap plays without a meaning."""
+        t = v.strip().lower()
+        if t in by_text: return t
+        tries = []
+        add = lambda b, k: tries.append((b, k)) if len(b) >= 2 else None
+        if t.endswith('ies'): add(t[:-3] + 'y', 's')
+        if t.endswith('es'): add(t[:-2], 's')
+        if re.search(r'[^s]s$', t): add(t[:-1], 's')
+        if t.endswith('ied'): add(t[:-3] + 'y', 'ed')
+        if t.endswith('ed'):
+            add(t[:-2], 'ed'); add(t[:-1], 'ed')
+            if re.search(r'(.)\1ed$', t): add(t[:-3], 'ed')
+        if t.endswith('ing'):
+            add(t[:-3], 'ing'); add(t[:-3] + 'e', 'ing')
+            if re.search(r'(.)\1ing$', t): add(t[:-4], 'ing')
+        need = {'s': ('noun', 'verb'), 'ed': ('verb',), 'ing': ('verb',)}
+        for b, k in tries:
+            if b in by_text and (not pos_of.get(b) or any(x in pos_of[b] for x in need[k])): return b
+        return None
+    gap_links = [0, 0]   # Complete the text: [gaps linked to a word in words.csv, all gaps]
 
     for kind, rows in data.items():
         seen = set()
@@ -124,13 +148,16 @@ def check_folder(folder, all_word_ids):
                     say(kind, r, 'needs a statement and an answer of RIGHT or WRONG (skipped)'); ok = False
                 elif r.get('correction') and r.get('answer', '').strip().upper() in ('RIGHT', 'R', 'CORRECT', 'TRUE', 'YES'):
                     say(kind, r, 'has a correction but the answer is RIGHT')
-            elif kind == 'reads':   # Complete the text: the [[key words]] become the gaps; question columns are not used
-                found = 0
-                for shown, w in re.findall(r'\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', r.get('text', '')):
-                    if known((w or shown).strip()): found += 1
-                    else: say(kind, r, f'[[{shown}{"|" + w if w else ""}]]: "{(w or shown).strip()}" is not in words.csv')
-                if not r.get('text') or found < 2:
-                    say(kind, r, 'needs a text with at least 2 [[key words]] from words.csv (skipped)'); ok = False
+            elif kind == 'reads':   # Complete the text: every [[word]] is a gap; any word or form may be a gap (25 Oct)
+                gaps = re.findall(r'\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', r.get('text', ''))
+                for shown, w in gaps:
+                    gap_links[1] += 1
+                    if w:   # [[shown|word]] names its word: it should be in words.csv
+                        if known(w.strip()): gap_links[0] += 1
+                        else: say(kind, r, f'[[{shown}|{w}]]: "{w.strip()}" is not in words.csv (the gap still plays, without a meaning)')
+                    elif form_of(shown): gap_links[0] += 1
+                if not r.get('text') or len(gaps) < 2:
+                    say(kind, r, 'needs a text with at least 2 [[gaps]] (skipped)'); ok = False
                 keys = {x.strip().lower() for pair in re.findall(r'\[\[([^|\]]+)(?:\|([^\]]+))?\]\]', r.get('text', '')) for x in pair if x}
                 for k in ('extra1', 'extra2', 'extra3'):   # the text's own extra words must not also be gaps
                     if r.get(k) and r[k].strip().lower() in keys: say(kind, r, f'{k} "{r[k]}" is also a [[key word]] in the text, so it would be in the word bank twice')
@@ -187,6 +214,7 @@ def check_folder(folder, all_word_ids):
     if reads:   # Complete the text: the word bank has only the key words and the text's own extra words
         with_extra = sum(1 for r in reads if any(r.get(k) for k in ('extra1', 'extra2', 'extra3')))
         print(f'  reads.csv: {with_extra} of {len(reads)} texts have extra words (extra1-3). The others show only their own key words in the word bank.')
+        print(f'  reads.csv: {gap_links[0]} of {gap_links[1]} gaps are words from words.csv (their meaning is shown after Check); the others play without a meaning.')
     for p in problems: print('  - ' + p)
     n = len(problems)
     for f in reading:
