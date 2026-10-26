@@ -365,20 +365,24 @@ const CATS = {
 };
 // form: short (one quick answer at a time) or long (read something, then several answers): the Daily Circuit's
 // short and long stations choose from these. A game with no form (Read and answer) is never in the circuit.
+// Columns (26 Oct, teacher): True or false moved from Grammar to Vocabulary, Spot the error from Grammar to Reading.
+// Reading games are for computers only, except the ones marked phone:true (Spot the error, which always worked on phones).
 const GAMES = [
   {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair words with their meanings. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch('def')},
   {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
+  {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'error',    form:'long', cat:'grammar', name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
-  {key:'tf',       form:'short', cat:'grammar', name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
   {key:'rw',       form:'short', cat:'grammar', name:'Right or wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'error',    form:'long', cat:'reading', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     form:'long', cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   {key:'question', form:'long', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
+// A game that can't be played on this device: a Reading game on a phone (unless it is marked phone:true)
+const phoneOff = g => PHONE && !!CATS[g.cat].desktop && !g.phone;
 // Games switched off on this page: data-hide="syn" (a game's key; several with spaces or commas). Its content stays in the files.
 const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Only games this subject has content for (and has not switched off)
@@ -414,7 +418,7 @@ function menu(){
   </section>
   <div class="cats">
     ${Object.entries(CATS).map(([k,c])=>{
-      const off = c.desktop && PHONE, games = gamesIn(k), here = games.filter(g=>g.items().length>=g.min);
+      const games = gamesIn(k), off = c.desktop && PHONE && games.every(phoneOff), here = games.filter(g=>!phoneOff(g) && g.items().length>=g.min);
       const none = !here.length;
       return `<a class="cat cat-${k}${off||none?' off':''}" ${off||none?'aria-disabled="true"':`href="#${k}"`}>
         <span class="cat-name">${c.name}</span>
@@ -437,12 +441,14 @@ function menuCompact(){
   </section>
   <div class="cols">
     ${Object.entries(CATS).map(([k,c])=>{
-      const games=gamesIn(k), off=c.desktop && PHONE;
+      const all=gamesIn(k), games=all.filter(g=>!phoneOff(g)), off=c.desktop && PHONE && !games.length;
       const note = off ? 'Only available on desktop devices'
         : k==='reading' && readingState==='failed' ? 'The reading passages could not be loaded. They load when the site is online.'
-        : !games.length ? 'Coming soon' : '';
+        : !all.length ? 'Coming soon' : '';
+      // On a phone, a column with some computer-only games shows the others and says so underneath
+      const rest = !off && games.length<all.length ? `<p class="col-note">The other ${c.name.toLowerCase()} games are only available on desktop devices.</p>` : '';
       return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
-        ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}</section>`; }).join('')}
+        ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}${rest}</section>`; }).join('')}
   </div>
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
   wireLevels(menu);
@@ -469,7 +475,7 @@ function gameCard(g){
 function category(cat){
   if(COMPACT) return menu();
   const c=CATS[cat];
-  if(c.desktop && PHONE){
+  if(c.desktop && PHONE && gamesIn(cat).every(phoneOff)){
     frame({href:'#', label:CFG.name||'Back'}, `<section class="hero"><p class="eyebrow">${esc(CFG.name||'')}</p><h1>${c.name}</h1>
       <p class="notice">Reading games are only available on desktop devices. Open this page on a computer to play them.</p></section>`);
     return;
@@ -477,7 +483,7 @@ function category(cat){
   const note = cat==='reading' && readingState==='loading' ? '<p class="notice">Loading reading passages…</p>' : cat==='reading' && readingState==='failed' ? '<p class="notice">The reading passages could not be loaded. They load when the site is online.</p>' : '';
   frame({href:'#', label:CFG.name||'Back'}, `
   <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}${chosenBand()!=null?' · '+esc(bandName(chosenBand())):''}</p><h1>${c.name}</h1><p>${c.blurb}</p>${note}</section>
-  <div class="games">${gamesIn(cat).map(gameCard).join('')}</div>`);
+  <div class="games">${gamesIn(cat).filter(g=>!phoneOff(g)).map(gameCard).join('')}</div>`);
 }
 
 // ---------- game shell ----------
@@ -2047,7 +2053,7 @@ function circuitGames(kind){
     return list;
   }
   if(kind==='arcade') return ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run}));
-  return GAMES.filter(g=>g.form && (!kind || g.form===kind) && !(CATS[g.cat].desktop && PHONE) && gamesIn(g.cat).includes(g) && g.items().length>=g.min)
+  return GAMES.filter(g=>g.form && (!kind || g.form===kind) && !phoneOff(g) && gamesIn(g.cat).includes(g) && g.items().length>=g.min)
     .map(g=>({key:g.key, name:g.name, run:g.run}));
 }
 function circuitStation(){
@@ -2157,7 +2163,7 @@ function route(){
     const a=ARCADE.find(x=>x.key===h.slice(5));   // arcade games (not on the menu yet)
     if(a) return a.items().length>=a.min ? a.run() : menu();
     const g=GAMES.find(x=>x.key===h.slice(5));
-    if(g && !HIDE.has(g.key) && !(CATS[g.cat].desktop && PHONE) && g.items().length>=g.min) return g.run();
+    if(g && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min) return g.run();
     return category(g?g.cat:'vocab');
   }
   menu();

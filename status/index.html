@@ -86,13 +86,13 @@ const SECTIONS = [
   ['Vocabulary', [
     {key:'match', name:'Match the meaning', src:'words', min:6, circuit:'short'},
     {key:'syn', name:'Synonym groups', src:'syn', min:6, circuit:'short'},
-    {key:'meaning', name:'Word or meaning', src:'words', min:4, circuit:'short'}]],
+    {key:'meaning', name:'Word or meaning', src:'words', min:4, circuit:'short'},
+    {key:'tf', name:'True or false', src:'tf', min:1, circuit:'short'}]],
   ['Grammar', [
     {key:'gap', name:'Fill the gap', src:'gaps', min:1, circuit:'short'},
-    {key:'error', name:'Spot the error', src:'errors', min:1, circuit:'long'},
-    {key:'tf', name:'True or false', src:'tf', min:1, circuit:'short'},
     {key:'rw', name:'Right or wrong', src:'right-wrong', min:1, circuit:'short'}]],
-  ['Reading (computers only)', [
+  ['Reading (computers only, except Spot the error)', [
+    {key:'error', name:'Spot the error', src:'errors', min:1, circuit:'long'},
     {key:'read', name:'Complete the text', src:'reads', min:1, circuit:'long'},
     {key:'own', name:'In your own words', src:'extracts', min:1, circuit:'long'},
     {key:'question', name:'Answer the question', src:'questions', min:1, circuit:'long'}]],
@@ -101,7 +101,7 @@ const SECTIONS = [
     {key:'invaders', name:'Word Invaders', src:'words', min:6, circuit:'arcade', link:'invaders'},
     {key:'snake', name:'Word Snake', src:'words', min:6, circuit:'', link:'snake'}]],
   ['Chinese side', [
-    {key:'zhwords', name:'Word games (9)', src:'zhwords', min:4, circuit:'', zh:true},
+    {key:'zhwords', name:'Word games (7)', src:'zhwords', min:4, circuit:'', zh:true},
     {key:'zhbuild', name:'Build the sentence', src:'zhbuilds', min:1, circuit:'', zh:true}]],
 ];
 const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
