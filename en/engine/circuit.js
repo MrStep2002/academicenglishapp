@@ -1,7 +1,7 @@
 // DAILY CIRCUIT: five stations, each a game from one of the student's subjects, at their level.
-// English side (25 Oct): short game 45 s → longer game 45 s → arcade game 60 s → longer game 45 s → short game 45 s (4 minutes).
-// Each English game is tagged short or long in GAMES (en/engine/app.js); the arcade station takes turns between the arcade
-// games listed in CIRCUIT_ARCADE there. Chinese side: unchanged, five one-minute stations of any practice game.
+// Short game 45 s → longer game 45 s → arcade game 60 s → longer game 45 s → short game 45 s (4 minutes): the English side
+// since 25 Oct, the Chinese side since 26 Oct. Each English game is tagged short or long in GAMES (en/engine/app.js), the
+// Chinese ones are listed in ZH_CIRCUIT there; the arcade station takes turns between the arcade games in CIRCUIT_ARCADE.
 // This file does: the "I study this" switches and the Circuit card on en/index.html and zh/index.html,
 // the Circuit page (en/circuit/, zh/circuit/: start and results) and the saved state.
 // The stations themselves run on the topic pages (en/engine/app.js, address ending #circuit): the page chooses a game
@@ -11,8 +11,8 @@
 const SRC = (document.currentScript && document.currentScript.src) || '';
 const ROOT = SRC ? SRC.replace(/en\/engine\/circuit\.js([?#].*)?$/, '') : location.origin + '/';
 const KEY = 'aea:circuit:v1', STUDY = 'aea:studying:v1';
-const STATIONS = 5, SECS = 60;          // the Chinese side: five stations of one minute each
-const EN_PLAN = [['short',45], ['long',45], ['arcade',60], ['long',45], ['short',45]];   // the English side: [kind, seconds]
+const STATIONS = 5, SECS = 60;
+const PLAN = [['short',45], ['long',45], ['arcade',60], ['long',45], ['short',45]];   // both sides: [kind, seconds]
 const STALE = 30*60*1000;               // a circuit left alone for 30 minutes is dropped
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read = (k,d) => { try{ const v=JSON.parse(localStorage.getItem(k)); return v==null ? d : v; }catch(e){ return d; } };
@@ -29,17 +29,17 @@ const setStudying = (side, path, name, on) => { const s=read(STUDY, {}); s[side]
 
 // ----- The circuit in progress -----
 // {side, started, touched, n, arcade, plan:[{path, kind, secs, tried}], i, cur:{path, topic, game, name, zh, secs, right, answered, pts, ends, left}, results:[…], skip:[…]}
-// kind: 'short', 'long' or 'arcade' on the English side (null on the Chinese side); arcade: which arcade game's turn it is
+// kind: 'short', 'long' or 'arcade'; arcade: which arcade game's turn it is
 function active(side){ const r=load().run;
   if(!r || r.done || (side && r.side!==side)) return null;
-  if(!r.plan || typeof r.plan[0]==='string') return null;   // a circuit saved before 25 Oct: start a new one
+  if(!r.plan || !r.plan[0] || !r.plan[0].kind) return null;   // a circuit saved in an old format (English before 25 Oct, Chinese before 26 Oct): start a new one
   if(Date.now()-(r.touched||r.started) > STALE) return null;
   return r; }
 // One topic per station, mixed, never the same topic twice in a row when there is a choice
 function makePlan(topics, side){ const out=[]; let last=null;
   while(out.length<STATIONS){ const round=shuffle(topics); if(round.length>1 && round[0]===last) round.push(round.shift());
     for(const t of round) if(out.length<STATIONS){ out.push(t); last=t; } }
-  return out.map((path,i)=>side==='en' ? {path, kind:EN_PLAN[i][0], secs:EN_PLAN[i][1]} : {path, kind:null, secs:SECS}); }
+  return out.map((path,i)=>({path, kind:PLAN[i][0], secs:PLAN[i][1]})); }
 const go = path => { location.href = ROOT + path + '#circuit'; };
 const resultsUrl = side => ROOT + side + '/circuit/index.html#done';
 function start(side){ const topics=Object.keys(studying(side)); if(!topics.length) return false;
@@ -86,7 +86,7 @@ function retryStation(path){
   return mutate(r=>{ const st=r.plan[r.i]; st.tried=st.tried||[]; if(!st.tried.includes(norm(path))) st.tried.push(norm(path));
     const pool=Object.keys(studying(r.side)).filter(p=>!st.tried.includes(norm(p)) && !r.skip.includes(norm(p)));
     if(pool.length){ st.path=pool[Math.floor(Math.random()*pool.length)]; return st.path; }
-    st.kind='short'; st.secs=EN_PLAN[0][1]; st.path=path; return path; });
+    st.kind='short'; st.secs=PLAN[0][1]; st.path=path; return path; });
 }
 const today = side => (load().days[dayKey()]||{})[side] || null;
 function streak(side){ const d=load(), x=new Date(); let n=0;
@@ -152,9 +152,9 @@ function circuitPage(box){
         <p class="cc-actions"><a class="cc-btn" href="${esc(back)}">${T(zh, 'Choose your subjects', '选择科目')} →</a></p>`;
     } else {
       main = `<p class="cc-k">${t && t.runs ? `✓ ${T(zh, 'Done today. You can play again', '今天已完成，可以再玩')}` : T(zh, 'Today', '今天')}</p>
-        <h2>${zh ? T(zh, `${STATIONS} stations · 1 minute each`, `${STATIONS} 站 · 每站 1 分钟`) : `${STATIONS} stations · 4 minutes`}</h2>
-        <p>${zh ? T(zh, 'Each station is a game from one of your subjects, at your level. When the minute is up, you move on to the next one.', '每一站是你某个科目里的一个游戏，难度适合你。一分钟到了就进入下一站。')
-               : 'A quick game, a longer one, an arcade game, another longer one and a quick one to finish, each from one of your subjects at your level. When the time is up, you move on to the next one.'}</p>${streakLine}
+        <h2>${T(zh, `${STATIONS} stations · 4 minutes`, `${STATIONS} 站 · 4 分钟`)}</h2>
+        <p>${T(zh, 'A quick game, a longer one, an arcade game, another longer one and a quick one to finish, each from one of your subjects at your level. When the time is up, you move on to the next one.',
+               '先玩一个快速游戏，再玩一个长一点的游戏、一个街机游戏、又一个长一点的游戏，最后用一个快速游戏结束。每个游戏都来自你的科目，难度适合你。时间到了就进入下一站。')}</p>${streakLine}
         <p class="cc-actions"><button class="cc-btn big" data-start>${T(zh, 'Start the circuit', '开始挑战')} →</button></p>`;
     }
     box.innerHTML = `<section class="cc-panel">${main}</section>${subjects?`<section class="cc-subjects">${subjects}</section>`:''}`;

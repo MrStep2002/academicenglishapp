@@ -544,6 +544,7 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .phone .arcade-card{padding:14px 12px}
 .phone .arcade-def{font-size:17px;min-height:4.35em;margin-bottom:8px}
 .arcade-toast{min-height:2.9em;margin:10px 0 0}
+.arcade-zh{display:block;font-family:var(--f-zh);font-size:.95em;color:var(--blue);margin-top:2px}   /* Chinese side: the meaning's Chinese */
 .arcade-msg{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;border-radius:12px;background:color-mix(in srgb, var(--paper) 70%, transparent)}
 .arcade-msg[hidden]{display:none}
 

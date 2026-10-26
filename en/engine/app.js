@@ -1154,15 +1154,20 @@ function partialCredit(game, item, right, wrong, parts){
 // points, not the game. Not on the topic menus yet: open one by adding #play-snake, #play-whack or #play-invaders to an English topic page's address.
 const ARCADE = [
   {key:'snake', name:'Word Snake', blurb:'Steer the snake into the word that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
-  {key:'whack', name:'Whack-a-word', blurb:'Words pop up and drop again. Tap the one that matches the meaning before it goes.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
-  {key:'invaders', name:'Word Invaders', blurb:'The words come down in formation. Fire at the one that matches the meaning before they land.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
+  {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up and drop again. Tap the one that matches the meaning before it goes.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
+  {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'The words come down in formation. Fire at the one that matches the meaning before they land.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];
 // The shared question: the word to find, and the words on the board with it (the same part of speech where possible,
 // never two that are alike). Same choice of wrong answers as Word or meaning.
+// Chinese side (Daily Circuit, 26 Oct): the word to find comes from the student's word bank, like the other Chinese games,
+// and the meaning at the top has its Chinese under it (arcadeDef).
 function arcadeQuestions(n){
-  const p=pick(S.words), deck=Deck(p), pool=p.length>=8 ? p : S.words;
+  const zh=SIDE==='zh', p=zh ? zhWords() : pick(S.words), deck=Deck(p), pool=zh ? zhPool(p) : p.length>=8 ? p : S.words;
   return ()=>{ const w=deck.next(); return {w, words:[w, ...distractors(w, pool, n-1)], retry:()=>deck.retry(w)}; };
 }
+const arcadeName = g => SIDE==='zh' && g.zh ? T(g.name, g.zh) : g.name;
+function arcadeDef(el, w){ if(!el) return; el.textContent=w.def;
+  if(SIDE==='zh' && ZH[w.id]){ const z=document.createElement('span'); z.className='arcade-zh'; z.lang='zh-CN'; z.textContent=ZH[w.id]; el.appendChild(z); } }
 // A long word or phrase gets smaller type so it fits on its card (the word cards in Whack-a-word and Word Invaders)
 function fitLabel(box, span){ span.style.fontSize=''; let px=parseFloat(getComputedStyle(span).fontSize)||16;
   while(px>11 && (span.scrollWidth>box.clientWidth-10 || span.scrollHeight>box.clientHeight-6)){ px--; span.style.fontSize=px+'px'; } }
@@ -1367,11 +1372,11 @@ function playWhack(){
   const touch=PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
   const nextQ=arcadeQuestions(N), best=store.get('best:whack',0);
   let score=0; const missed=[];
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning while it is up. A wrong word stops your hammer for a second.</p>
+  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+    <p class="hint">${T(`${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning while it is up. A wrong word stops your hammer for a second.`, '单词冒出来时，点击意思对的那个。点错了，锤子会停一秒。')}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
-  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>Found <b>${score}</b></span>${inCircuit?'':`<span><b id="wkSecs">${SECS}</b>s</span>`}<span>Best <b>${Math.max(best,score)}</b></span>`; };
-  const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="wkDef"></p>
+  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="wkSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
+  const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="wkDef"></p>
     <div class="whack" id="wkBoard">${[...Array(9)].map((_,i)=>`<div class="hole"><div class="well"><button type="button" class="mole" tabindex="-1" disabled><span></span></button></div>${touch?'':`<kbd>${i+1}</kbd>`}</div>`).join('')}
       <div class="arcade-msg" id="wkMsg"${inCircuit?' hidden':''}><button type="button" class="btn" id="wkGo">Start</button></div></div>
     <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
@@ -1396,7 +1401,7 @@ function playWhack(){
   }
   function newQuestion(){
     q=nextQ(); firstTry=true; between=false; pops=0; sinceT=0;
-    const def=card.querySelector('#wkDef'); if(def) def.textContent=q.w.def;
+    arcadeDef(card.querySelector('#wkDef'), q.w);
   }
   // Every so often a word comes up in an empty hole: never more than three up at once, never the same word twice at once.
   // The right word is the second to come up for each meaning, and after that comes up at least every third time.
@@ -1429,7 +1434,7 @@ function playWhack(){
   }
   function start(){ if(started) return; started=true; msg.hidden=true; if(!inCircuit) end=Date.now()+SECS*1000; run(); clock(); }
   function pause(){ if(!started || paused || over) return; paused=true; if(!inCircuit) left=Math.max(0, end-Date.now());
-    holes.forEach(h=>{ if(h.up) down(h); }); goBtn.textContent='Carry on'; msg.hidden=false; }
+    holes.forEach(h=>{ if(h.up) down(h); }); goBtn.textContent=TX('Carry on','继续'); msg.hidden=false; }
   function resume(){ if(!paused || over) return; paused=false; if(!inCircuit) end=Date.now()+left; msg.hidden=true; run(); }
   function clock(){ if(over || inCircuit || !alive()) return;
     const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('wkSecs');
@@ -1462,11 +1467,11 @@ function playInvaders(){
   const calm=!!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const nextQ=arcadeQuestions(N), best=store.get('best:invaders',0);
   let score=0; const missed=[];
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning before the words reach the line at the bottom. After a wrong word, the highlighter needs a second to cool down.</p>
+  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+    <p class="hint">${T(`${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning before the words reach the line at the bottom. After a wrong word, the highlighter needs a second to cool down.`, '在单词落到底线之前，点击意思对的那个。点错了，荧光笔要等一秒才能再用。')}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
-  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>Found <b>${score}</b></span>${inCircuit?'':`<span><b id="ivSecs">${SECS}</b>s</span>`}<span>Best <b>${Math.max(best,score)}</b></span>`; };
-  const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="ivDef"></p>
+  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="ivSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
+  const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="ivDef"></p>
     <div class="invaders" id="ivBoard"><div class="iv-ground"></div><div class="iv-gun" id="ivGun"></div>
       <div class="arcade-msg" id="ivMsg"${inCircuit?' hidden':''}><button type="button" class="btn" id="ivGo">Start</button></div></div>
     <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
@@ -1482,12 +1487,12 @@ function playInvaders(){
   const measure=()=>{ W=board.clientWidth; H=board.clientHeight; formW=W*(PHONE?0.8:0.68); amp=calm ? 0 : (W-formW)/2-6;
     cw=formW/COLS; rh=CH+14; groundY=H-58; if(wave) wave.words.forEach(sizeWord); };
 
-  let q=null, firstTry=true, wave=null, T=PHONE?10000:9000, coolTill=0, last=0;
+  let q=null, firstTry=true, wave=null, fall=PHONE?10000:9000, coolTill=0, last=0;   // fall: how long a wave takes to come down
   let started=false, paused=false, over=false, end=0, left=SECS*1000;
   function newWave(){
     if(!alive() || over) return;
     q=nextQ(); firstTry=true;
-    const def=card.querySelector('#ivDef'); if(def) def.textContent=q.w.def;
+    arcadeDef(card.querySelector('#ivDef'), q.w);
     board.querySelectorAll('.iv-word').forEach(e=>e.remove());
     const words=shuffle(q.words).map((w,i)=>{
       const el=document.createElement('button'); el.type='button'; el.className='iv-word'; el.tabIndex=-1;
@@ -1495,7 +1500,7 @@ function playInvaders(){
       const x={w, el, col:i%COLS, row:Math.floor(i/COLS), state:''};
       el.addEventListener('pointerdown', e=>{ e.preventDefault(); fire(x); });
       return x; });
-    wave={words, t:0, T, done:false};
+    wave={words, t:0, T:fall, done:false};
     words.forEach(sizeWord); place();
   }
   // Where the formation is now: p = how far down (0 at the top, 1 when its bottom row reaches the line)
@@ -1527,7 +1532,7 @@ function playInvaders(){
     if(x.w===q.w){
       x.state='hit'; x.el.classList.add('hit'); wave.done=true;
       score++; stats(); if(firstTry) P.record('invaders', q.w, true); say('✓ '+q.w.w);
-      T=Math.max(PHONE?6000:5500, T-350);
+      fall=Math.max(PHONE?6000:5500, fall-350);
       wave.words.forEach(o=>{ if(o!==x) o.el.classList.add('gone'); });
       later(newWave, 650);
     } else {
@@ -1542,11 +1547,11 @@ function playInvaders(){
     if(firstTry){ firstTry=false; P.record('invaders', q.w, false); missed.push(q.w); q.retry(); }
     const right=wave.words.find(o=>o.w===q.w); if(right) right.el.classList.add('reveal');
     wave.words.forEach(o=>{ if(o!==right) o.el.classList.add('gone'); });
-    say(`Too late! It was ${q.w.w}.`, true); later(newWave, 1200);
+    say(TX(`Too late! It was ${q.w.w}.`, `太晚了！答案是 ${q.w.w}。`), true); later(newWave, 1200);
   }
   function start(){ if(started) return; started=true; msg.hidden=true; last=0; if(!inCircuit) end=Date.now()+SECS*1000; clock();
     if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8, behavior:'smooth'}); } }
-  function pause(){ if(!started || paused || over) return; paused=true; if(!inCircuit) left=Math.max(0, end-Date.now()); goBtn.textContent='Carry on'; msg.hidden=false; }
+  function pause(){ if(!started || paused || over) return; paused=true; if(!inCircuit) left=Math.max(0, end-Date.now()); goBtn.textContent=TX('Carry on','继续'); msg.hidden=false; }
   function resume(){ if(!paused || over) return; paused=false; last=0; if(!inCircuit) end=Date.now()+left; msg.hidden=true; }
   function clock(){ if(over || inCircuit || !alive()) return;
     const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('ivSecs');
@@ -2022,16 +2027,23 @@ function wordList(){
 // English side: the station's kind says which games it can use: short or long (the form in GAMES), or arcade (the games
 // in CIRCUIT_ARCADE take turns, one circuit each). No long game here at the student's level: another subject is tried,
 // then a short game is used. Time up in the middle of a long task: what the student has done is marked (circuitFinish).
-// Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival.
+// Chinese side (26 Oct, teacher: the same format as the English one): the same five stations and times; short = True or
+// false, long = Type it, Build the sentence, Match the meaning or Choose the meaning (ZH_CIRCUIT), arcade = the same
+// arcade games, with the Chinese under each meaning and the words from the student's word bank. A new student whose word
+// bank is too small for True or false gets Learn the words at a short station instead.
+// Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival; on the Chinese side
+// also 中文 → English.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
 const CIRCUIT_ARCADE = ['invaders', 'whack'];   // Word Snake is left out for now (teacher, 25 Oct)
+const ZH_CIRCUIT = {short:['zhtf'], long:['zhtype','zhbuild','zhmatch','zhmean']};
 let ccTick = null;
 function circuitGames(kind){
   if(SIDE==='zh'){
-    const list=ZH_GAMES.filter(g=>g.type==='practice' && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
-    const lw=zhLevelWords();
-    // Learn the words is a station too while there are new words (and the only one until the word bank has 4 words)
-    if(lw.length>=4 && (!list.length || lw.some(w=>stageOf(w)==='new'))) list.push({key:'learn', name:'Learn the words', zh:'学习单词', run:playLearn});
+    if(kind==='arcade') return zhWords().length>=4 ? ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run})) : [];
+    const keys=ZH_CIRCUIT[kind]||ZH_CIRCUIT.short;
+    const list=ZH_GAMES.filter(g=>keys.includes(g.key) && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
+    // Learn the words: at a short station while the word bank is too small for True or false
+    if(kind==='short' && !list.length && zhLevelWords().length>=4) list.push({key:'learn', name:'Learn the words', zh:'学习单词', run:playLearn});
     return list;
   }
   if(kind==='arcade') return ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run}));
@@ -2042,7 +2054,7 @@ function circuitStation(){
   const C=window.AEA_CIRCUIT, run=C && C.active(SIDE);
   if(!run){ leaveCircuit(); history.replaceState(null, '', location.pathname+location.search); return route(); }
   inCircuit=true;
-  const st=(SIDE==='en' && C.station && C.station()) || {}, kind=st.kind||null;
+  const st=(C.station && C.station()) || {}, kind=st.kind||null;
   const games=circuitGames(kind);
   let cur=run.cur;
   if(cur && C.norm(cur.path)===C.norm(PAGE) && games.some(g=>g.key===cur.game)) cur=C.resume();
