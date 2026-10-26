@@ -1585,12 +1585,14 @@ const ZH_GAMES = [
   {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', zhBlurb:'看释义和中文，拼写出英文单词。', run:()=>playType()},
   {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'See the word and its Chinese. Does the English meaning match? Decide quickly.', zhBlurb:'看单词和中文，判断英文释义对不对，要快！', run:()=>playZhTF()},
   {key:'zhbuild',  type:'practice',  name:'Build the sentence', zh:'连词成句',       blurb:'See the sentence in Chinese, then build it in English from the coloured pieces.', zhBlurb:'看中文句子，用彩色词块拼出英文句子。', run:()=>playBuild(), ready:()=>zhBuilds().length>0, lock:'No sentences at this level yet 本级别还没有句子'},
-  {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
+  // Odd one out was taken off the Chinese side on 26 Oct (teacher: replace it with Build the sentence). playOdd() is still
+  // below; to bring it back, remove the // from the next line.
+  // {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', zhBlurb:'60 秒内看中文选英文，看你能答对多少个！', min:8, run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', zhBlurb:'三条命。看单词和中文，在时间用完前选出英文释义，会越来越快。', min:8, run:()=>playSurvival()}
 ];
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
-// or every word when the level has fewer), and Odd one out needs word groups
+// or every word when the level has fewer). Build the sentence needs sentences with their Chinese at the level instead.
 const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
 const zhReady = g => g.ready ? g.ready() : zhLevelWords().length>=4 && zhWords().length>=zhNeed(g) && !(g.needs && !g.needs());
 // Build the sentence (Chinese version): the sentences at the chosen level that have their Chinese (builds.csv, zh column)
@@ -1610,7 +1612,6 @@ function zhMenu(){
     : T('Words from more groups','学习更多类别的单词');
   const shown=ZH_GAMES.filter(g=>!g.ready || g.ready()), open=shown.filter(zhReady), locked=shown.filter(g=>!zhReady(g));
   // What the next words unlock: "Learn 4 words to unlock 4 games"
-  // (Odd one out is left out of the count: it also needs words from more than one group)
   const needs=n>=4 ? locked.filter(g=>need(g)>0).map(need) : [], next=needs.length ? Math.min(...needs) : 0, opens=locked.filter(g=>need(g)===next && !g.needs).length;
   const teaser=next ? T(`Learn ${next}${have?' more':''} word${next===1?'':'s'} to unlock ${opens} game${opens===1?'':'s'}.`, `再学 ${next} 个单词，解锁 ${opens} 个游戏。`) : '';
   const card=g=>{ const best=store.get((g.type==='challenge'?'best:':'streak:')+g.key,0);
@@ -1626,7 +1627,7 @@ function zhMenu(){
   </section>
   ${learnHtml(teaser)}
   <h2 class="zh-games-h">${T('Games','游戏')}</h2>
-  ${open.length ? `<p class="bank-note">${T(`The games use the words you have learned: ${have} of ${n} at this level.`, `游戏只用你学过的单词：本级别 ${have} / ${n} 个。`)}</p>
+  ${open.length ? `${open.some(g=>!g.ready)?`<p class="bank-note">${T(`The games use the words you have learned: ${have} of ${n} at this level.`, `游戏只用你学过的单词：本级别 ${have} / ${n} 个。`)}</p>`:''}
   <div class="games">${open.map(card).join('')}</div>` : ''}
   ${locked.length ? `${open.length?`<p class="instr group-label">${T('Still locked','还没解锁')}</p>`:''}<div class="locks">${locked.map(tile).join('')}</div>` : ''}
   <div class="wl-link"><p>${T('See every word with its Chinese meaning.','查看所有单词和中文释义。')}</p><a class="btn alt" href="#words">${T('Word list','词汇表')}</a></div>`);
