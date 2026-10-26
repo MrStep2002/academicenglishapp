@@ -78,15 +78,27 @@
 </main>
 <script>
 /* Teacher page: make classes and student logins, print login cards, see each student's points, level and last activity.
-   Talks to the login server (server/server.js). The teacher's login is kept in this browser as "aea:account:teacher". */
+   Talks to the login server (server/server.js). The teacher's login is kept in this browser as "aea:account:teacher":
+   {token, name, keep, until}. Since 26 Oct the login doesn't stay for 30 days unless the teacher ticks "Keep me logged in"
+   (for their own computer): otherwise it ends after 2 hours without using this page, so a student on a classroom computer
+   can't open the teacher page later. Logins saved before then (no "until") end the next time the page is opened. */
 (function(){
 'use strict';
 var API = (function(){ var a = ''; try { a = localStorage.getItem('aea:api') || ''; } catch (e) {} return (a || 'https://api.academicenglishapp.com').replace(/\/+$/, ''); })();
 var TKEY = 'aea:account:teacher', SITE = 'academicenglishapp.com/login';
+var IDLE = 2 * 3600e3, KEEP = 30 * 864e5;   // logged out after 2 hours without using the page; "Keep me logged in": 30 days (as the server)
 var view = document.getElementById('view'), title = document.getElementById('title'), me = document.getElementById('me');
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
-var auth = function(){ try { return JSON.parse(localStorage.getItem(TKEY)); } catch (e) { return null; } };
 var setAuth = function(a){ try { if (a) localStorage.setItem(TKEY, JSON.stringify(a)); else localStorage.removeItem(TKEY); } catch (e) {} };
+var auth = function(){
+  var a = null; try { a = JSON.parse(localStorage.getItem(TKEY)); } catch (e) {}
+  if (a && !(a.token && a.until > Date.now())) {   // time is up: forget the login here, and end it on the server too
+    if (a.token) try { fetch(API + '/api/logout', {method: 'POST', headers: {'Content-Type': 'application/json', Authorization: 'Bearer ' + a.token}, body: '{}'}).catch(function(){}); } catch (e) {}
+    setAuth(null); return null;
+  }
+  return a;
+};
+var stillHere = function(){ var a = auth(); if (a && !a.keep) { a.until = Date.now() + IDLE; setAuth(a); } };
 var lastCards = null;   // passwords just made: only kept on this page until it is left
 
 function call(path, body){
@@ -97,6 +109,7 @@ function call(path, body){
     .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(out){
       if (r.status === 401 && path !== '/api/teacher/login') { setAuth(null); route(); throw new Error('Please log in again.'); }
       if (!r.ok) throw new Error(out.error || ('Server error ' + r.status));
+      stillHere();
       return out; }); });
 }
 var fail = function(id){ return function(x){ var e = document.getElementById(id || 'err'); if (e) { e.textContent = x.message; e.hidden = false; } var b = view.querySelector('button[disabled]'); if (b) b.disabled = false; }; };
@@ -120,14 +133,17 @@ function showLogin(msg){
   view.innerHTML = '<form class="card narrow" id="f">' +
     '<div class="field"><label for="u">Username</label><input type="text" id="u" autocomplete="username" autocapitalize="off" spellcheck="false" required></div>' +
     '<div class="field"><label for="p">Password</label><input type="password" id="p" autocomplete="current-password" required></div>' +
+    '<label class="choice"><input type="checkbox" id="keep"><span>Keep me logged in on this computer for 30 days' +
+    '<br><span class="note">Only on your own computer. Otherwise you are logged out after 2 hours without using this page.</span></span></label>' +
     '<p class="err" id="err" role="alert"' + (msg ? '' : ' hidden') + '>' + esc(msg || '') + '</p>' +
     '<div><button class="btn" type="submit">Log in</button></div>' +
     '<p class="note">Teacher logins are made on the server (see server/README.md in the site\'s folder).</p></form>';
   document.getElementById('u').focus();
   document.getElementById('f').onsubmit = function(e){
     e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
+    var keep = document.getElementById('keep').checked;
     call('/api/teacher/login', {username: document.getElementById('u').value, password: document.getElementById('p').value})
-      .then(function(r){ setAuth({token: r.token, name: r.name}); route(); }).catch(fail());
+      .then(function(r){ setAuth({token: r.token, name: r.name, keep: keep, until: Date.now() + (keep ? KEEP : IDLE)}); route(); }).catch(fail());
   };
 }
 function header(){

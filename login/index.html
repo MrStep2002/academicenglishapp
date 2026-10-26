@@ -73,13 +73,30 @@
       '<p class="note">Your teacher gives you your name and password. <span class="zh" lang="zh">老师会给你名字和密码。</span></p>' +
       '<p class="note">You can also play without logging in: your progress then stays on this device only. <span class="zh" lang="zh">不登录也可以玩，但进度只保存在这台设备上。</span></p>';
     var f = document.getElementById('f'), err = document.getElementById('err'), go = document.getElementById('go');
-    document.getElementById('showpw').onchange = function(e){ document.getElementById('pw').type = e.target.checked ? 'text' : 'password'; };
+    var nameBox = document.getElementById('name'), pwBox = document.getElementById('pw');
+    document.getElementById('showpw').onchange = function(e){ pwBox.type = e.target.checked ? 'text' : 'password'; };
     document.getElementById(a ? 'pw' : 'name').focus();
+    // The browser's password manager can fill in a password saved for another login on this site (the teacher's login,
+    // or an old password from before the teacher made a new one). Edge did this on 26 Oct. So: when the student types a
+    // different name over the one the browser filled in, the browser's password is emptied, and if a password the browser
+    // filled in is wrong, the student is told to type the one from their card.
+    var byBrowser = function(el){ try { return el.matches(':autofill'); } catch (x) {} try { return el.matches(':-webkit-autofill'); } catch (x) { return false; } };
+    nameBox.addEventListener('input', function(){ if (!byBrowser(nameBox) && byBrowser(pwBox)) pwBox.value = ''; });
     f.onsubmit = function(e){
       e.preventDefault(); err.hidden = true; go.disabled = true;
-      A.login(document.getElementById('name').value, document.getElementById('pw').value).then(function(r){
+      var filled = byBrowser(pwBox);
+      // Passwords are always a word and three numbers in small letters ("river472"), so capitals and spaces don't matter
+      var pw = pwBox.value.replace(/\s+/g, '').toLowerCase();
+      A.login(nameBox.value, pw).then(function(r){
         if (r.needsChoice) showChoice(r); else done();
-      }).catch(function(x){ err.textContent = x.message; err.hidden = false; go.disabled = false; });
+      }).catch(function(x){
+        var msg = x.message;
+        if (x.status === 401) {
+          if (filled) msg += ' Your browser filled in a saved password: type the password from your card instead. 浏览器自动填入了保存的密码，请输入卡片上的密码。';
+          pwBox.value = ''; pwBox.focus();
+        }
+        err.textContent = msg; err.hidden = false; go.disabled = false;
+      });
     };
   }
 
