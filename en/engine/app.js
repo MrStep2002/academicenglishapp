@@ -63,7 +63,7 @@ function parseCSV(text){
 // Reading passages. Question 1 uses the plain column names; question n uses questionN, correctN, wrong1_N, wrong2_N, wrong3_N, explanationN.
 function questionsOf(r){ const qs=[];
   for(let n=1;n<=9;n++){ const a=n===1?'':String(n), b=n===1?'':'_'+n;
-    const q={q:r['question'+a], opts:[r['correct'+a], r['wrong1'+b], r['wrong2'+b], r['wrong3'+b]], why:r['explanation'+a]||''};
+    const q={q:r['question'+a], opts:[r['correct'+a], r['wrong1'+b], r['wrong2'+b], r['wrong3'+b]], why:r['explanation'+a]||'', quote:r['quote'+a]||''};
     if(!q.q) continue;
     if(q.opts.every(Boolean)) qs.push(q); else console.warn('Reading row '+r.id+': question '+n+' skipped (an answer is missing)'); }
   return qs; }
@@ -208,10 +208,10 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
-  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
-  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage: Close reading, Big idea, Note taking']];
+  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
 // For the big serif headings: the serif font's + is tiny, so it is set in the body font
@@ -387,6 +387,7 @@ const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{
 // ---------- page frame ----------
 function frame(back, inner){
   clearTimers(); keyHandler=null; circuitFinish=null; circuitStop=null; document.body.classList.remove('reading-wide');
+  if(ttsStop){ ttsStop(); ttsStop=null; }   // Listening: stop the voice when the page moves on
   const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
   $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${back.html||esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
@@ -971,6 +972,167 @@ function playNotes(){
       passageDone(fb, ok?1:0, 1, ok?'You found all three notes.':''); manualNext(card,step,'Next passage →'); };
     btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
     keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) toggle(btns[n-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
+  };
+  step();
+}
+
+// ---------- LISTENING (en/listening/, data-format="listening", built 26 Oct) ----------
+// A test is a script the student never sees while answering. The browser's own voice reads it aloud (speechSynthesis:
+// no audio files, nothing to upload) and the student answers multiple-choice questions on what they heard.
+// File (data-reading): the reading columns, id, level, title, passage (= the script), question, correct, wrong1-3,
+// explanation, source, then question2, correct2, wrong1_2… for more questions. Optional quote, quote2…: the words in the
+// script that give each answer; they are marked when the script is shown after Check.
+// Speakers: a line that starts with a name and a colon ("Anna: …") is spoken by that person, and each person gets a
+// different voice when the device has more than one English voice. Voices take turns: the first speaker a woman's voice,
+// the next a man's, and so on, unless the name starts with Mr / Ms / Mrs / Miss (then it follows the title). Lines
+// without a name are read in the main voice (the first speaker's). Blank line = new paragraph.
+// The student can play the recording as often as they like (teacher, 26 Oct), pause, start again, slow it down and choose
+// the voice (kept in aea:voice and aea:voice-rate). Levels: a row of level buttons at the top (aea:listen-level).
+// Works on phones too (unlike the reading games). Browsers only allow speech after the student has tapped the page:
+// the Play button is that tap.
+const TTS_OK = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+let ttsStop = null;   // stops the voice when the page moves on (called by frame())
+const ttsVoices = () => TTS_OK ? speechSynthesis.getVoices().filter(v=>/^en([-_]|$)/i.test(v.lang||'')) : [];
+const ttsLoad = (()=>{ let p=null; return ()=> p || (p=new Promise(res=>{
+  if(!TTS_OK) return res([]); if(ttsVoices().length) return res(ttsVoices());
+  let done=false; const fin=()=>{ if(!done){ done=true; res(ttsVoices()); } };
+  speechSynthesis.addEventListener('voiceschanged', fin); setTimeout(fin, 2000); })); })();
+if(TTS_OK && CFG.format==='listening') ttsLoad();   // the voices load in the background while the page opens
+const V_FEMALE=/\b(sonia|libby|maisie|hollie|bella|abbi|olivia|mia|aria|jenny|michelle|emma|ava|natasha|clara|serena|kate|stephanie|martha|hazel|susan|moira|karen|samantha|tessa|fiona|zira|catherine|emily|female)\b/i;
+const V_MALE=/\b(ryan|thomas|alfie|elliot|ethan|noah|oliver|guy|davis|andrew|brian|christopher|eric|roger|steffan|william|daniel|arthur|george|james|david|mark|aaron|fred|gordon|lee|alex|rishi|tom|male)\b/i;
+const vSex = v => V_FEMALE.test(v.name) ? 'f' : V_MALE.test(v.name) ? 'm' : '';
+// Best first: the natural / neural / premium voices, British English, then other English
+const vScore = v => (/natural|neural|online|premium|enhanced/i.test(v.name)?6:0) + (/^en[-_]gb/i.test(v.lang)?3:/^en[-_](ie|au|nz)/i.test(v.lang)?1.5:/^en[-_]us/i.test(v.lang)?1:0)
+  + (/google/i.test(v.name)?1:0) + (vSex(v)?.5:0);
+const vRanked = () => ttsVoices().sort((a,b)=>vScore(b)-vScore(a));
+// The script as a list of spoken pieces: one sentence each, with who says it and the pause after it
+function ttsScript(text){
+  const segs=[], speakers=[], paras=String(text||'').split(/\n\s*\n|\s*\|\|\s*/);
+  paras.forEach((para, pi)=>{ let who=null;
+    para.split(/\n/).map(l=>l.trim()).filter(Boolean).forEach(line=>{
+      const m=line.match(/^([A-Z][A-Za-z.'’ -]{0,24}):\s+(.+)$/);
+      if(m){ who=m[1].trim(); line=m[2]; if(!speakers.includes(who)) speakers.push(who); }
+      const safe=line.replace(/\b(Mr|Mrs|Ms|Dr|St|Prof)\./g, '$1․');
+      const sents=(safe.match(/[^.!?]+[.!?]+["”’)]*\s*|[^.!?]+$/g)||[safe]).map(s=>s.replace(/․/g,'.').trim()).filter(Boolean);
+      sents.forEach((s,k)=>segs.push({who, text:s, line:segs.length && k===0, para:pi, gap:k===sents.length-1 ? 650 : 280})); });
+    if(segs.length) segs[segs.length-1].gap=900; });
+  return {segs, speakers};
+}
+// A voice for each speaker. The student's chosen voice (if any) goes to the first speaker; otherwise the best voice of the
+// sex wanted. Wanted: the title (Mr → man; Ms, Mrs, Miss → woman), otherwise turn about, starting with a woman.
+const spkSex = n => /^(mr|sir)\b/i.test(n) ? 'm' : /^(ms|mrs|miss|madam|lady)\b/i.test(n) ? 'f' : '';
+function ttsCast(speakers, chosenName){
+  const list=vRanked(); if(!list.length) return ()=>null;
+  const chosen=list.find(v=>v.name===chosenName), cast=[], want=[], n=Math.max(1, speakers.length);
+  for(let i=0;i<n;i++){
+    want[i]=spkSex(speakers[i]||'') || (i===0 ? (chosen && vSex(chosen)) || 'f' : want[i-1]==='f' ? 'm' : 'f');
+    const pick=(i===0 && chosen) || list.find(v=>!cast.includes(v) && vSex(v)===want[i]) || list.find(v=>!cast.includes(v)) || cast[0] || list[0];
+    cast.push(pick); }
+  return who=>{ const i=speakers.indexOf(who); return cast[i<0 ? 0 : i]; };
+}
+const lNorm = s => String(s||'').toLowerCase().replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim();
+const LISTEN_LV='aea:listen-level';
+function playListening(){
+  const st=Stats('listen'), game={key:'listen', name:CFG.name||'Listening', cat:'reading'};
+  const all=S.passages||[], names=Object.values(LEVEL_NAMES), have=names.filter(n=>all.some(r=>levelName(r.level)===n));
+  let choice=null; try{ choice=localStorage.getItem(LISTEN_LV); }catch(e){}
+  if(choice!==ALL_LEVELS && !have.includes(choice)){ const r=P.overall(), mine=r==null ? null : levelName(Math.max(1,Math.min(5,Math.floor(r)))); choice=have.includes(mine) ? mine : ALL_LEVELS; }
+  shell(game, '');
+  const items=choice===ALL_LEVELS ? all : all.filter(r=>levelName(r.level)===choice), feed=document.getElementById('feed');
+  feed.insertAdjacentHTML('beforebegin', `${have.length>1 ? `<div class="sets levels listen-levels" role="group" aria-label="Level">${[ALL_LEVELS, ...have].map(n=>`<button class="chip" data-lv="${esc(n)}" aria-pressed="${n===choice}">${esc(n)}</button>`).join('')}</div>` : ''}
+    <p class="hint">${items.length} test${items.length===1?'':'s'}${choice!==ALL_LEVELS?` at ${esc(choice)}`:''}. Read the questions, then press Play. You can listen as many times as you like.</p>`);
+  document.querySelectorAll('.listen-levels .chip').forEach(b=>b.onclick=()=>{ try{ localStorage.setItem(LISTEN_LV, b.dataset.lv); }catch(e){} playListening(); });
+  st.draw();
+  if(!TTS_OK){ feed.innerHTML='<p class="notice">This browser can’t read text aloud. Try Microsoft Edge, Google Chrome or Safari.</p>'; return; }
+  if(!items.length){ feed.innerHTML=`<p class="notice">There are no ${esc(choice)} listening tests yet. Choose another level above.</p>`; return; }
+  const deck=Deck(items);
+  let rate=1; try{ rate=+localStorage.getItem('aea:voice-rate')||1; }catch(e){}
+  const step=()=>{
+    if(ttsStop){ ttsStop(); ttsStop=null; }
+    const r=deck.next(), {segs, speakers}=ttsScript(r.text), n=r.qs.length;
+    const qs=r.qs.map(q=>({...q, order:shuffle([0,1,2,3])})), picked=qs.map(()=>null);
+    const card=showCard(`<p class="instr">${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}${speakers.length>1?` · ${speakers.length} speakers`:''}</p>
+      <div class="lp" role="group" aria-label="Recording">
+        <button class="btn lp-play" id="lpPlay" type="button"><span class="lp-ico" aria-hidden="true">▶</span> <span id="lpLabel">Play</span></button>
+        <button class="btn alt lp-restart" id="lpRestart" type="button" disabled>↺ Start again</button>
+        <span class="lp-bar" aria-hidden="true"><i id="lpFill"></i></span>
+        <span class="lp-n" id="lpN">Not played yet</span>
+      </div>
+      <div class="lp-opts"><span class="lp-k">Speed</span><span class="lp-seg" role="group" aria-label="Speed"><button type="button" data-rate="1" aria-pressed="${rate>=1}">Normal</button><button type="button" data-rate="0.85" aria-pressed="${rate<1}">Slower</button></span>
+        <label class="lp-k" for="lpVoice">Voice</label><select id="lpVoice"><option value="">Best available</option></select></div>
+      <ol class="lq">${qs.map((q,i)=>`<li class="lq-item" data-i="${i}"><p class="question">${esc(q.q)}</p>
+        <div class="opts long">${q.order.map((k,j)=>`<button class="opt" type="button" data-k="${k}" aria-pressed="false"><kbd>${'ABCD'[j]}</kbd><span>${esc(q.opts[k])}</span></button>`).join('')}</div><div class="lq-why"></div></li>`).join('')}</ol>
+      <div class="next-row check-row"><span class="pick-n" id="pickN">0 of ${n} answered</span><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>
+      <div class="lscript" id="lScript" hidden></div>`);
+    card.classList.add('listen-card');
+    // ----- the player -----
+    const playB=card.querySelector('#lpPlay'), label=card.querySelector('#lpLabel'), ico=card.querySelector('.lp-ico'), again=card.querySelector('#lpRestart');
+    const fill=card.querySelector('#lpFill'), count=card.querySelector('#lpN'), vsel=card.querySelector('#lpVoice');
+    let idx=0, playing=false, run=0, plays=0, cur=null, chosen=''; try{ chosen=localStorage.getItem('aea:voice')||''; }catch(e){}
+    let voiceOf=ttsCast(speakers, chosen);
+    const fillVoices=()=>{ const list=vRanked(); if(!list.length) return;
+      vsel.innerHTML='<option value="">Best available</option>'+list.map(v=>`<option value="${esc(v.name)}"${v.name===chosen?' selected':''}>${esc(v.name.replace(/^Microsoft\s+|\s*-\s*English.*$|\s*\(.*?\)\s*$/g,''))} (${esc((v.lang||'').replace('_','-'))})</option>`).join('');
+      voiceOf=ttsCast(speakers, chosen); };
+    ttsLoad().then(()=>{ if(document.body.contains(card)) fillVoices(); });
+    const show=()=>{ label.textContent=playing ? 'Pause' : idx>0 ? 'Carry on' : plays ? 'Play again' : 'Play'; ico.textContent=playing ? '❚❚' : '▶';
+      playB.setAttribute('aria-pressed', playing); again.disabled=!plays && !idx && !playing;
+      fill.style.width=(segs.length ? 100*idx/segs.length : 0)+'%';
+      count.textContent=playing ? 'Playing…' : plays ? `Played ${plays} time${plays===1?'':'s'}` : idx ? 'Paused' : 'Not played yet';
+      card.querySelectorAll('.lscript .seg.now').forEach(s=>s.classList.remove('now'));
+      if(playing){ const s=card.querySelector(`.lscript .seg[data-s="${idx}"]`); if(s) s.classList.add('now'); } };
+    const sayFrom=i=>{ const my=run;
+      if(i>=segs.length){ playing=false; idx=0; plays++; show(); return; }
+      idx=i; show();
+      const s=segs[i], u=new SpeechSynthesisUtterance(s.text), v=voiceOf(s.who);
+      if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-GB';
+      u.rate=rate; cur=u;   // kept, so the browser doesn't drop the utterance before it ends
+      const next=()=>{ if(my!==run || !playing) return; later(()=>{ if(my===run && playing) sayFrom(i+1); }, s.gap); };
+      u.onend=next; u.onerror=e=>{ if(e && (e.error==='interrupted' || e.error==='canceled')) return; next(); };
+      speechSynthesis.speak(u); };
+    const stop=()=>{ run++; playing=false; try{ speechSynthesis.cancel(); }catch(e){} };
+    const play=()=>{ if(playing){ stop(); show(); return; }   // Pause: the sentence it stopped in is read again on Carry on
+      stop(); playing=true; sayFrom(idx); };
+    playB.onclick=play;
+    again.onclick=()=>{ stop(); idx=0; playing=true; later(()=>sayFrom(0), 60); };
+    card.querySelectorAll('.lp-seg button').forEach(b=>b.onclick=()=>{ rate=+b.dataset.rate; try{ localStorage.setItem('aea:voice-rate', String(rate)); }catch(e){}
+      card.querySelectorAll('.lp-seg button').forEach(x=>x.setAttribute('aria-pressed', x===b)); if(playing){ stop(); playing=true; sayFrom(idx); } });
+    vsel.onchange=()=>{ chosen=vsel.value; try{ localStorage.setItem('aea:voice', chosen); }catch(e){} voiceOf=ttsCast(speakers, chosen); if(playing){ stop(); playing=true; sayFrom(idx); } };
+    ttsStop=()=>{ stop(); };
+    const onHide=()=>{ if(!document.body.contains(card)){ document.removeEventListener('visibilitychange', onHide); return; } if(document.hidden && playing){ stop(); show(); } };
+    document.addEventListener('visibilitychange', onHide);
+    // ----- the questions -----
+    const chk=card.querySelector('#check'), pn=card.querySelector('#pickN'); let done=false;
+    card.querySelectorAll('.lq-item').forEach(li=>{ const i=+li.dataset.i;
+      li.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ if(done) return; picked[i]=+b.dataset.k;
+        li.querySelectorAll('.opt').forEach(x=>x.setAttribute('aria-pressed', x===b));
+        const k=picked.filter(x=>x!=null).length; pn.textContent=`${k} of ${n} answered`; chk.disabled=k<n; }); });
+    const check=()=>{ if(done || picked.some(x=>x==null)) return; done=true; card.querySelector('.check-row').remove();
+      let got=0;
+      qs.forEach((q,i)=>{ const li=card.querySelector(`.lq-item[data-i="${i}"]`), ok=picked[i]===0, item={id:r.id+(i?'#'+(i+1):''), level:r.level, qs:n};
+        li.querySelectorAll('.opt').forEach(b=>{ const k=+b.dataset.k; b.disabled=true; b.classList.add(k===0 ? 'ok' : k===picked[i] ? 'no' : 'dim'); });
+        li.classList.add(ok?'lq-ok':'lq-no');
+        li.querySelector('.lq-why').innerHTML=(ok?'':`<p><b>The answer is:</b> ${esc(q.opts[0])}</p>`)+(q.why?`<p>${rich(q.why)}</p>`:'')+(q.quote?`<p class="lq-q"><span>${i+1}</span> is marked in the script below.</p>`:'');
+        if(ok){ got++; st.hit(item); } else st.miss(item); });
+      if(got<n) deck.retry(r);
+      const fb=card.querySelector('.fb');
+      fb.innerHTML=`<div class="done-msg${got===n?' all':''}">${got===n ? `<b>Well done!</b> ${n===2?'You got both questions right.':n>2?`You got all ${n} questions right.`:'You got it right.'}`
+        : `You got ${got} of ${n} right. Read the script below and listen again. This test will come back later.`}</div>`;
+      // The script: each sentence in its own span (so the one being read is lit up during playback), answers marked
+      const marks=segs.map(()=>[]);
+      qs.forEach((q,i)=>{ const Q=lNorm(q.quote); if(!Q) return;
+        segs.forEach((s,k)=>{ const T2=lNorm(s.text); if(T2 && (T2.includes(Q) || Q.includes(T2))) marks[k].push(i+1); }); });
+      let html='', lastPara=-1;
+      segs.forEach((s,k)=>{ if(s.para!==lastPara){ if(lastPara>=0) html+='</p>'; html+='<p>'; lastPara=s.para; }
+        else if(s.line) html+='<br>';
+        if((s.line || k===0 || segs[k-1].para!==s.para) && s.who) html+=`<b class="spk">${esc(s.who)}:</b> `;
+        html+=`<span class="seg${marks[k].length?' q-mark':''}" data-s="${k}">${marks[k].map(m=>`<sup class="q-n">${m}</sup>`).join('')}${esc(s.text)}</span> `; });
+      if(lastPara>=0) html+='</p>';
+      const box=card.querySelector('#lScript'); box.innerHTML=`<p class="instr">The script</p><p class="lscript-note">Press Play to listen again and follow the words.</p><div class="passage">${html}</div>`; box.hidden=false;
+      manualNext(card, step, 'Next test →'); };
+    chk.onclick=check;
+    keyHandler=e=>{ if(e.target && /^(SELECT|INPUT|TEXTAREA)$/.test(e.target.tagName)) return;
+      if(e.key==='p' || e.key==='P'){ e.preventDefault(); play(); } else if(e.key==='Enter' && !done){ e.preventDefault(); check(); } };
+    show();
   };
   step();
 }
@@ -1958,12 +2120,14 @@ function route(){
   if(CFG.only==='progress') return progressPage();
   if(CFG.only==='passage'){   // a page that is just one reading game (e.g. Close reading)
     const back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
-    const msg = PHONE ? 'Reading games are only available on desktop devices. Open this page on a computer to play.'
-      : readingState==='loading' ? 'Loading passages…'
-      : readingState==='failed' ? 'The passages could not be loaded. They load when the site is online.'
-      : !(S.passages||[]).length ? 'No passages yet. Check back soon.' : '';
+    const listen=CFG.format==='listening', what=listen ? 'listening tests' : 'passages';   // Listening also works on phones
+    const msg = PHONE && !listen ? 'Reading games are only available on desktop devices. Open this page on a computer to play.'
+      : readingState==='loading' ? `Loading ${what}…`
+      : readingState==='failed' ? `The ${what} could not be loaded. They load when the site is online.`
+      : !(S.passages||[]).length ? `No ${what} yet. Check back soon.` : '';
     if(msg) return frame(back, `<section class="hero"><p class="eyebrow">${esc(CFG.eyebrow||'Reading')}</p><h1>${esc(CFG.name||'')}</h1>${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}<p class="notice">${msg}</p></section>`);
     if(CFG.format==='notes') return playNotes();
+    if(listen) return playListening();
     GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
     return playPassage();
   }

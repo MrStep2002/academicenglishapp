@@ -15,6 +15,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `web-design/` | English → Web design, and Chinese version → Web design |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
+| `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
 | `templates/` | The headings and one example row for every kind of file |
 
 Every topic folder has the same nine files. A file with only its heading row is simply empty for now.
@@ -182,6 +183,24 @@ and, for a second question on the same passage, `question2,correct2,wrong1_2,wro
 
 - **passage**: paragraphs separated by a blank line inside the cell, or by ` || `.
 - source: never shown.
+
+### listening.csv (Listening; template: `templates/listening.csv`)
+
+The same columns as the reading passages, plus an optional `quote` for each question:
+`id,level,title,passage,question,correct,wrong1,wrong2,wrong3,explanation,source,quote`
+and for more questions `question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanation2,quote2` (then `…3`, `…4`, as many as you like).
+
+- **passage**: the script. Students never see it while they answer: the browser reads it aloud when they press Play
+  (they can listen as often as they like, slow it down and choose the voice). After Check the script is shown.
+- **Speakers**: start a line with the speaker's name and a colon: `Anna: Have you seen the timetable?`. Each speaker
+  gets a different voice when the device has more than one English voice: the first a woman's voice, the next a man's,
+  and so on, unless the name starts with Mr / Ms / Mrs / Miss. Put each speaker's turn on its own line. A talk or
+  announcement with one speaker needs no names. Blank line = new paragraph (a longer pause).
+- **quote** (optional): the exact words in the script that give the answer. They are highlighted in the script after
+  Check, numbered by question. The checker makes sure every quote really is in the script.
+- Write for the ear: short sentences, numbers and times written in words ("half past nine"), no headings or bullet
+  points, no abbreviations the voice might misread. About 150–250 words is two minutes or less.
+- Original scripts only, never copied from real exam papers: the site is public.
 
 ### notes.csv (Note taking)
 

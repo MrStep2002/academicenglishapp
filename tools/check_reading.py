@@ -14,6 +14,10 @@ option1…option6, correct_options (e.g. [1,3,5]), explanation, source.
 A passage can have more than one question. Question 1 uses the plain columns; question 2 adds
 question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanation2 after `source`; question 3 adds
 question3,correct3,wrong1_3,wrong2_3,wrong3_3,explanation3; and so on.
+
+Listening tests (content/listening/listening.csv, 26 Oct) use the same columns: `passage` is the script that is read
+aloud. They may also have quote, quote2, quote3…: the words in the script that give each answer (marked when the
+script is shown after Check). The checker makes sure each quote really is in the script.
 """
 import csv, sys, os, glob, re
 
@@ -21,6 +25,8 @@ HEAD = ['id', 'level', 'title', 'passage', 'question', 'correct', 'wrong1', 'wro
 NEED = ['id', 'title', 'passage', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3']
 LEVEL = re.compile(r'^((A1|A2|B1|B2|C1)\+?|FOUNDATION\+?|INTERMEDIATE\+?|ADVANCED)$')
 EXTRA = re.compile(r'^(?:question|correct|explanation)([2-9])$|^wrong[123]_([2-9])$')
+QUOTE = re.compile(r'^quote([2-9]?)$')   # listening: the words in the script that give the answer (optional)
+norm = lambda t: re.sub(r'\s+', ' ', re.sub(r"[^a-z0-9' ]+", ' ', (t or '').lower().replace('’', "'").replace('‘', "'"))).strip()
 
 def columns(n):
     """The question and the four answer columns of question n (1 = the plain names)."""
@@ -75,7 +81,7 @@ def check_file(path):
     if 'option1' in head:
         return check_notes(path, head, rows)
     problems, seen, longest, shortest, asked, lengths = [], set(), 0, 0, 0, []
-    base = [h for h in head if not EXTRA.match(h)]
+    base = [h for h in head if not EXTRA.match(h) and not QUOTE.match(h)]
     extra = sorted({int(m.group(1) or m.group(2)) for m in map(EXTRA.match, head) if m})
     if base != HEAD and base != HEAD[:-1]:
         problems.append('Headings should start: ' + ','.join(HEAD))
@@ -104,6 +110,8 @@ def check_file(path):
                 continue
             asked += 1
             if len(set(a.lower() for a in answers)) < 4: problems.append(f'{rid}: two answers are the same (question {n})')
+            quote = (r.get('quote' + ('' if n == 1 else str(n))) or '').strip()
+            if quote and norm(quote) not in norm(r.get('passage')): problems.append(f'{rid}: the quote for question {n} is not in the passage/script word for word')
             right, wrong = len(answers[0]), [len(a) for a in answers[1:]]
             if right > max(wrong): longest += 1
             if right < min(wrong): shortest += 1

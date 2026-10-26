@@ -635,3 +635,48 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 [data-ui="zh"] h1 .t-zh,[data-ui="zh"] h2 .t-zh,[data-ui="zh"] h3 .t-zh{font-weight:600}
 [data-ui="zh"] .hero-zhc h1{font-size:clamp(32px,5.5vw,46px);line-height:1.2}
 [data-ui="zh"] .game h3,[data-ui="zh"] .gl-name{letter-spacing:0}
+
+/* Listening (en/listening/, 26 Oct 2026): a player (Play / Pause, Start again, progress, speed, voice), every question
+   on the card at once, Check, then the script with the answers marked and the sentence being read lit up */
+.listen-levels{margin:4px 0 14px}
+.listen-card{gap:0}
+.lp{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;background:var(--paper);border:1.5px solid var(--rule);border-radius:12px;padding:12px 14px;margin:6px 0 10px}
+.lp .btn{display:inline-flex;align-items:center;gap:8px}
+.lp-play{min-width:150px;justify-content:center;font-size:17px}
+.lp-play[aria-pressed="true"]{background:var(--blue);color:#fff}
+.lp-ico{font-size:13px;line-height:1}
+.lp-restart{padding:10px 16px;font-size:15px}
+.lp-restart:disabled{opacity:.4;cursor:default}
+.lp-bar{flex:1 1 140px;height:8px;border-radius:4px;background:var(--rule);overflow:hidden;min-width:100px}
+.lp-bar i{display:block;height:100%;width:0;background:var(--blue);transition:width .3s}
+.lp-n{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);min-width:9em}
+.lp-opts{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin:0 0 18px;font-size:14px;color:var(--ink-2)}
+.lp-k{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase}
+.lp-seg{display:inline-flex;border:1.5px solid var(--rule);border-radius:99px;overflow:hidden}
+.lp-seg button{border:0;background:none;padding:5px 12px;font-size:14px;color:var(--ink-2)}
+.lp-seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.lp-opts select{font:inherit;font-size:14px;padding:5px 8px;border:1.5px solid var(--rule);border-radius:8px;background:var(--sheet);color:var(--ink);max-width:100%}
+.lq{list-style:none;margin:0;padding:0;display:grid;gap:18px;counter-reset:lq}
+.lq-item{counter-increment:lq}
+.lq-item .question{display:flex;gap:10px}
+.lq-item .question::before{content:counter(lq);flex:none;width:26px;height:26px;border-radius:50%;background:var(--ink);color:var(--paper);font-size:14px;display:grid;place-items:center;margin-top:-1px}
+.lq-item .opt[aria-pressed="true"]:not(:disabled){border-color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);background:var(--sheet)}
+.lq-item .opt kbd{font-family:var(--f-mono)}
+.lq-why:empty{display:none}
+.lq-why{margin-top:8px;font-size:15px;color:var(--ink-2)}
+.lq-why p{margin:4px 0 0}
+.lq-q span,.q-n{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--mark);color:var(--mark-ink);font-size:11px;font-weight:700;font-family:var(--f-body);vertical-align:2px}
+.lq-ok .question::before{background:var(--good)}
+.lq-no .question::before{background:var(--bad)}
+.listen-card .check-row{margin-top:18px}
+.lscript{margin-top:24px;border-top:1px solid var(--rule);padding-top:16px}
+.lscript .passage{max-width:none}
+.lscript-note{margin:-4px 0 12px;font-size:14px;color:var(--ink-2)}
+.lscript .spk{font-weight:700}
+.lscript .seg{border-radius:4px;transition:background .2s}
+.lscript .q-mark{background:var(--mark);color:var(--mark-ink);padding:0 2px}
+.lscript .q-n{margin-right:4px;background:var(--ink);color:var(--paper)}
+.lscript .seg.now{background:var(--blue-soft);box-shadow:0 0 0 2px var(--blue-soft)}
+.lscript .q-mark.now{box-shadow:0 0 0 2px var(--blue)}
+@media (max-width:640px){.lp{padding:10px}.lp-play{flex:1 1 100%}.lp-n{min-width:0}}
+@media (prefers-reduced-motion:reduce){.lp-bar i,.lscript .seg{transition:none}}
