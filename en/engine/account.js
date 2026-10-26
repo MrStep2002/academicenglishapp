@@ -130,8 +130,8 @@ function chip(side){
   const a = account(), zh = side === 'zh';
   const from = encodeURIComponent(location.pathname + location.search + location.hash);
   const href = ROOT + 'login/index.html?from=' + from;
-  if(!a) return `<a class="acct-chip" href="${href}">${zh ? 'Log in 登录' : 'Log in'}</a>`;
-  if(!a.token) return `<a class="acct-chip warn" href="${href}">${zh ? 'Log in again 重新登录' : 'Log in again'}</a>`;
+  if(!a) return `<a class="acct-chip" href="${href}">${zh ? '<span class="t-en">Log in</span><span class="t-zh" lang="zh">登录</span>' : 'Log in'}</a>`;
+  if(!a.token) return `<a class="acct-chip warn" href="${href}">${zh ? '<span class="t-en">Log in again</span><span class="t-zh" lang="zh">重新登录</span>' : 'Log in again'}</a>`;
   // Logged in: the name opens My progress, which also has the Log out button
   const tip = (state === 'offline' ? 'Offline: your progress is saved on this device and goes to your account when you are back online.'
     : 'Logged in as ' + a.name + '. Your progress is saved to your account.') + ' Open My progress (log out there).';
@@ -158,6 +158,11 @@ function style(){
   const st = document.createElement('style'); st.id = 'acct-style';
   st.textContent =
     '.acct-wrap{display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;max-width:100%}' +
+    '.ui-sw{display:inline-flex;align-items:stretch;border:1.5px solid currentColor;border-radius:99px;overflow:hidden;opacity:.85;flex:none}' +
+    '.ui-sw button{font:inherit;font-size:12.5px;font-weight:700;line-height:1;padding:5px 10px;margin:0;border:0;background:none;color:inherit;cursor:pointer;opacity:.6}' +
+    '.ui-sw button[lang="zh"]{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;font-weight:600}' +
+    '.ui-sw button[aria-pressed="true"]{background:rgba(127,127,127,.2);opacity:1}' +
+    '.ui-sw button:focus-visible{outline:2px solid currentColor;outline-offset:-3px}' +
     '.acct-chip{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;line-height:1;padding:6px 10px;border-radius:99px;' +
       'border:1.5px solid currentColor;color:inherit;text-decoration:none;opacity:.85;white-space:nowrap;max-width:14em}' +
     '.acct-chip:hover{opacity:1}.acct-chip:focus-visible{outline:2px solid currentColor;outline-offset:2px}' +
@@ -188,6 +193,7 @@ function render(){
     }
     const side = bar.getAttribute('data-points-bar') || 'en', html = chip(side);
     put(wrap, html);
+    if(side === 'zh') uiSwitch(wrap);
   });
   if(!bars.length){
     const top = document.querySelector('.topline');
@@ -204,6 +210,28 @@ function render(){
       if(out) out.onclick = () => { out.disabled = true; logout().then(()=>location.reload(), ()=>location.reload()); };
     }
   }
+}
+// ----- Chinese side: the English / 中文 switch (26 Oct). Instructions show in one language at a time: the pages put each
+// language in its own span (class t-en / t-zh) and the CSS hides the one not chosen, using <html data-ui="en|zh">.
+// The choice is kept in aea:ui-lang (so it is saved to the account too); Chinese until the student picks English.
+// Each Chinese page also sets data-ui in its <head>, so the page never shows both languages while it loads.
+const UI = 'aea:ui-lang';
+const uiGet = () => { try{ return localStorage.getItem(UI) === 'en' ? 'en' : 'zh'; }catch(e){ return 'zh'; } };
+function uiApply(l){
+  document.documentElement.setAttribute('data-ui', l);
+  document.querySelectorAll('.ui-sw button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.l === l ? 'true' : 'false'));
+}
+function uiSwitch(box){
+  let sw = box.querySelector(':scope > .ui-sw');
+  if(!sw){
+    sw = document.createElement('span'); sw.className = 'ui-sw'; sw.setAttribute('role', 'group'); sw.setAttribute('aria-label', 'Instructions in English or Chinese 说明语言');
+    sw.innerHTML = '<button type="button" data-l="en" lang="en" aria-pressed="false">EN</button><button type="button" data-l="zh" lang="zh" aria-pressed="false">中文</button>';
+    sw.addEventListener('click', e=>{ const b = e.target.closest('button'); if(!b) return;
+      try{ localStorage.setItem(UI, b.dataset.l); }catch(err){} uiApply(b.dataset.l); });
+    box.insertBefore(sw, box.firstChild);
+  }
+  const l = uiGet(), on = sw.querySelector(`[data-l="${l}"]`);
+  if(on.getAttribute('aria-pressed') !== 'true' || document.documentElement.getAttribute('data-ui') !== l) uiApply(l);
 }
 // Add or update the button inside box (only when it has changed, so watching the page doesn't loop)
 function put(box, html){
@@ -227,7 +255,7 @@ const leaving = () => { if((account() || {}).token && changedSince()) sync({keep
 document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState === 'hidden') leaving(); });
 addEventListener('pagehide', leaving);
 // Another tab logged in or out: show it here too
-addEventListener('storage', e=>{ if(e.key === ACCT) render(); });
+addEventListener('storage', e=>{ if(e.key === ACCT) render(); if(e.key === UI && document.querySelector('.ui-sw')) uiApply(uiGet()); });
 
 window.AEA_ACCOUNT = {account, login, finishLogin, logout, sync, guestProgress, api, ROOT};
 })();

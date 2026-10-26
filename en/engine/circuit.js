@@ -97,7 +97,10 @@ function streak(side){ const d=load(), x=new Date(); let n=0;
 window.AEA_CIRCUIT = {ROOT, STATIONS, SECS, norm, active, station, begin, resume, pause, count, endStation, skipTopic, retryStation, resultsUrl, studying, today, streak};
 
 // ---------- the topic list pages (en/index.html, zh/index.html): switches and the Circuit card ----------
-const T = (zh, en, z) => zh ? `${en} <span lang="zh">${z}</span>` : en;
+// Chinese side: both languages in their own spans; the page shows one (the English / 中文 switch, 26 Oct; see app.js T)
+const T = (zh, en, z) => zh ? `<span class="t-en">${en}</span><span class="t-zh" lang="zh">${z}</span>` : en;
+// A bilingual name ("Web design 网页设计") as T() on the Chinese side
+const NT = (zh, s) => { s=String(s||''); const i=s.search(/[\u3400-\u9fff]/); return zh && i>0 ? T(zh, esc(s.slice(0,i).trim()), esc(s.slice(i).trim())) : esc(s); };
 function indexPage(card){
   const side=card.dataset.side, zh=side==='zh', status=card.querySelector('[data-circuit-status]');
   const drawCard=()=>{ const subs=Object.keys(studying(side)).length, run=active(side), t=today(side), st=streak(side);
@@ -126,19 +129,19 @@ function circuitPage(box){
     const subs=Object.values(studying(side)), run=active(side), d=load(), last=d.last && d.last.side===side ? d.last : null;
     const t=today(side), st=streak(side);
     const streakLine = st ? `<p class="cc-streak">${T(zh, `${st} day${st===1?'':'s'} in a row`, `连续 ${st} 天`)}</p>` : '';
-    const subjects = subs.length ? `<p class="cc-k">${T(zh, 'Your subjects', '你的科目')}</p><p class="cc-chips">${subs.map(n=>`<span class="cc-chip">${esc(n)}</span>`).join('')}</p>
+    const subjects = subs.length ? `<p class="cc-k">${T(zh, 'Your subjects', '你的科目')}</p><p class="cc-chips">${subs.map(n=>`<span class="cc-chip">${NT(zh, n)}</span>`).join('')}</p>
       <p class="cc-small"><a href="${esc(back)}">${T(zh, 'Change your subjects', '修改科目')}</a></p>` : '';
     let main;
     if(location.hash==='#done' && last){
       const R=last.results, right=R.reduce((s,x)=>s+x.right,0), ans=R.reduce((s,x)=>s+x.answered,0), pts=R.reduce((s,x)=>s+x.pts,0);
       main = !R.length ? `<p class="cc-k">${T(zh, 'Circuit', '每日挑战')}</p><h2>${T(zh, 'Nothing to play yet', '还没有可玩的游戏')}</h2>
-          <p>${zh ? 'None of your subjects has a game ready at your level yet. Open a subject and use Learn the words first. 你的科目还没有适合你水平的游戏，先去“学习单词”吧。'
+          <p>${zh ? T(zh, 'None of your subjects has a game ready at your level yet. Open a subject and use Learn the words first.', '你的科目还没有适合你水平的游戏，先去“学习单词”吧。')
                   : 'None of your subjects has a game ready at your level yet. Try switching on another subject.'}</p>
           <p class="cc-actions"><a class="cc-btn alt" href="${esc(back)}">${T(zh, 'Back to topics', '返回主题')}</a></p>`
         : `<p class="cc-k">${T(zh, 'Circuit complete!', '挑战完成！')}</p>
           <div class="cc-big">${right}<small> ${T(zh, `right of ${ans}`, `共 ${ans} 题`)}</small></div>
           <p>${T(zh, `+${pts} points`, `+${pts} 积分`)}</p>${streakLine}
-          <ol class="cc-list">${R.map(x=>`<li><span><b>${esc(x.topic)}</b> · ${esc(x.name)}${zh&&x.zh?` <span lang="zh">${esc(x.zh)}</span>`:''}</span><span class="cc-score">${x.right}/${x.answered}</span></li>`).join('')}</ol>
+          <ol class="cc-list">${R.map(x=>`<li><span><b>${NT(zh, x.topic)}</b> · ${zh&&x.zh ? T(zh, esc(x.name), esc(x.zh)) : esc(x.name)}</span><span class="cc-score">${x.right}/${x.answered}</span></li>`).join('')}</ol>
           <p class="cc-actions"><button class="cc-btn" data-start>${T(zh, 'Play again', '再玩一次')}</button><a class="cc-btn alt" href="${esc(back)}">${T(zh, 'Back to topics', '返回主题')}</a></p>`;
     } else if(run){
       main = `<p class="cc-k">${T(zh, 'In progress', '进行中')}</p><h2>${T(zh, `Station ${Math.min(run.i+1, run.n)} of ${run.n}`, `第 ${Math.min(run.i+1, run.n)} 站，共 ${run.n} 站`)}</h2>

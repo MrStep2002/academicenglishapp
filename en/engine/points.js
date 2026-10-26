@@ -54,10 +54,12 @@
   var fmt = function(n){ return Number(n).toLocaleString('en-GB'); };
   function barHtml(side){
     var t = totals(side), zh = side === 'zh';
+    // Chinese side: each label in both languages, one shown (the English / 中文 switch, 26 Oct)
+    var L = function(en, z){ return zh ? '<span class="t-en">' + en + '</span><span class="t-zh" lang="zh">' + z + '</span>' : en; };
     var v = function(label, n, title){ return '<span class="pts-v" title="' + title + '"><i>' + label + '</i><b>' + fmt(n) + '</b></span>'; };
-    return v('Day', t.d, zh ? 'Points today 今天的积分' : 'Points today') +
-      '<span class="pts-v' + (t.w >= WEEKLY_TARGET ? ' pts-hit' : '') + '" title="' + (zh ? 'Points this week 本周积分' : 'Points this week') + ' (target ' + WEEKLY_TARGET + ')"><i>Week</i><b>' + fmt(t.w) + '</b><small>/' + WEEKLY_TARGET + '</small></span>' +
-      v('Total', t.t, zh ? 'All points 总积分' : 'All points');
+    return v(L('Day', '今天'), t.d, zh ? 'Points today 今天的积分' : 'Points today') +
+      '<span class="pts-v' + (t.w >= WEEKLY_TARGET ? ' pts-hit' : '') + '" title="' + (zh ? 'Points this week 本周积分' : 'Points this week') + ' (target ' + WEEKLY_TARGET + ')"><i>' + L('Week', '本周') + '</i><b>' + fmt(t.w) + '</b><small>/' + WEEKLY_TARGET + '</small></span>' +
+      v(L('Total', '总计'), t.t, zh ? 'All points 总积分' : 'All points');
   }
   // Fill every points bar on the page; show +n or -1 for a moment
   function render(side, change){

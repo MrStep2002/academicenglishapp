@@ -440,7 +440,7 @@ a.btn{text-decoration:none;display:inline-block}
 .learn{background:var(--sheet);border:1.5px solid var(--good);border-radius:14px;padding:clamp(18px,3.5vw,26px);display:grid;gap:10px;margin:0 0 6px}
 .learn-k{margin:0;font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--good)}
 .learn h2{font-family:var(--f-display);font-weight:400;font-size:clamp(30px,5vw,40px);line-height:1.08;margin:0}
-.learn h2 span{font-family:var(--f-zh);font-size:.72em;margin-left:6px}
+.learn h2 [lang]{font-family:var(--f-zh);font-size:.72em;margin-left:6px}
 .learn > p{margin:0;max-width:64ch;color:var(--ink-2);font-size:16px}
 .wb{display:grid;gap:6px;margin-top:4px}
 .wb-k{margin:0;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
@@ -594,3 +594,44 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .iv-beam{position:absolute;z-index:0;width:8px;margin-left:-4px;border-radius:4px;background:var(--mark);pointer-events:none;animation:ivbeam .25s ease-out forwards}
 @keyframes ivbeam{from{opacity:.95}to{opacity:0}}
 @media (prefers-reduced-motion:reduce){.iv-word.hit{animation:none}.iv-gun{transition:background .15s}}
+
+/* Chinese topic menu, cleaned up (26 Oct 2026): title with the Chinese on its own line, level buttons and "Your level"
+   as on the English compact layout, ONE start card (Learn the words), then the games: open ones as cards, locked ones
+   as small tiles saying what opens them. Replaces the 23 Oct layout (.hero-zh / .hero-side, still in this file). */
+.hero-zhc h1 .h1-zh{display:block;font-family:var(--f-zh);font-size:.52em;font-weight:400;letter-spacing:0;color:var(--ink-2);margin-top:6px;line-height:1.3}
+.hero-zhc .chip-zh{font-family:var(--f-zh);opacity:.8}
+@media (min-width:641px){.hero-zhc .sets.levels{gap:6px}.hero-zhc .sets.levels .chip{padding:7px 9px 7px 11px;gap:5px;font-size:13.5px}}
+.hero-zhc .lvl-k{max-width:none}
+.learn h2 [lang]{white-space:nowrap}
+.learn{border-width:2px;gap:12px}
+.learn .learn-how{margin:0;font-size:17px;color:var(--ink);max-width:62ch}
+.learn .learn-how [lang]{display:block;font-family:var(--f-zh);color:var(--ink-2);font-size:16px;margin-top:2px}
+.wb-count{margin:0;font-size:15px;color:var(--ink-2)}
+.wb-count b{font-size:20px;color:var(--ink);font-variant-numeric:tabular-nums}
+.wb-count [lang]{font-family:var(--f-zh);margin-left:6px}
+.learn .btn.big{background:var(--good);color:var(--paper)}
+.learn .btn.big.off{background:var(--rule);color:var(--ink-2)}
+.learn-status{font-size:15px;color:var(--ink)}
+.zh-games-h{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;margin:36px 0 0}
+.zh-games-h [lang]{font-family:var(--f-zh);font-size:.62em;color:var(--ink-2);margin-left:6px}
+.zh-games-h + .bank-note{margin-top:6px}
+.game-tag{align-self:flex-start;font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mark-ink);background:var(--mark);border-radius:5px;padding:2px 7px;margin-bottom:-2px}
+.locks{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;margin-top:14px}
+.game-lock{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:1px;align-items:center;padding:11px 14px;border:1.5px dashed var(--rule);border-radius:12px;color:var(--ink-2)}
+.game-lock svg{grid-row:span 3;width:18px;height:18px;opacity:.75}
+.gl-name{font-size:15px;font-weight:700;color:var(--ink);opacity:.8;line-height:1.3}
+.gl-zh{font-family:var(--f-zh);font-size:14px;line-height:1.35}
+.gl-need{font-size:12.5px;margin-top:3px}
+@media (max-width:640px){.locks{grid-template-columns:1fr 1fr;gap:8px}.game-lock{padding:10px 11px;column-gap:8px}.game-lock svg{width:16px;height:16px}.gl-name{font-size:14px}}
+.locks + .wl-link,.games + .wl-link{margin-top:30px}
+
+/* Chinese side, one language at a time (26 Oct 2026): <html data-ui="en|zh"> is set by the English / 中文 switch
+   (account.js); text written in both languages has each in its own span (.t-en / .t-zh). The words being learned are
+   not in these spans, so they always show. With no data-ui (English pages) nothing changes. */
+[data-ui="zh"] .t-en,[data-ui="en"] .t-zh{display:none !important}
+[data-ui] .t-zh,[data-ui] .t-en{margin-left:0 !important}
+[data-ui="zh"] .t-zh{display:inline !important;font-size:inherit !important;color:inherit !important;font-weight:inherit;letter-spacing:0;white-space:normal;text-transform:none}
+.t-zh{font-family:var(--f-zh)}
+[data-ui="zh"] h1 .t-zh,[data-ui="zh"] h2 .t-zh,[data-ui="zh"] h3 .t-zh{font-weight:600}
+[data-ui="zh"] .hero-zhc h1{font-size:clamp(32px,5.5vw,46px);line-height:1.2}
+[data-ui="zh"] .game h3,[data-ui="zh"] .gl-name{letter-spacing:0}

@@ -169,3 +169,13 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
   .cc-box-actions { grid-column: 1 / -1; flex-direction: column; min-width: 0; }
   .cc-box-actions .cc-btn { width: 100%; white-space: normal; text-align: center; }
 }
+
+/* Chinese side, one language at a time (26 Oct 2026): <html data-ui="en|zh"> is set by the English / 中文 switch
+   (account.js); text written in both languages has each in its own span (.t-en / .t-zh). The words being learned are
+   not in these spans, so they always show. With no data-ui (English pages) nothing changes. */
+[data-ui="zh"] .t-en,[data-ui="en"] .t-zh{display:none !important}
+[data-ui] .t-zh,[data-ui] .t-en{margin-left:0 !important}
+[data-ui="zh"] .t-zh{display:inline !important;font-size:inherit !important;color:inherit !important;font-weight:inherit;letter-spacing:0;white-space:normal;text-transform:none}
+[data-ui="zh"] h1 .t-zh{font-weight:700;letter-spacing:0}
+[data-ui="zh"] .topic-name .t-zh,[data-ui="zh"] .cc-name .t-zh,[data-ui="zh"] .topic-group h2 .t-zh{font-weight:700}
+[data-ui="zh"] .cc-panel h2 .t-zh{font-weight:700}

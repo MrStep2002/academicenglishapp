@@ -9,6 +9,18 @@ const $app = document.getElementById('app');
 const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd, data-hide
 const KEY = CFG.store || (CFG.content||'').replace(/\/+$/,'').split('/').pop() || 'topic';   // where this page's progress is saved
 const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
+// Chinese side: instructions in ONE language at a time (26 Oct; teacher: both languages together "look super messy").
+// The English / 中文 switch next to the points bar (account.js) saves 'en' or 'zh' in aea:ui-lang and sets
+// <html data-ui="en|zh">; the CSS then hides the other language. Chinese is the default. The words being learned
+// (English words, their Chinese, meanings, examples) are content: they always show, whatever the switch says.
+// T(en, zh): both, each in its own span, for HTML (the English side just gets the English).
+// TX(en, zh): only the chosen one, for text that can't hold HTML (textContent, placeholders, aria-labels).
+function uiLang(){ try{ return localStorage.getItem('aea:ui-lang')==='en' ? 'en' : 'zh'; }catch(e){ return 'zh'; } }
+function T(en, zh){ return SIDE==='zh' ? `<span class="t-en">${en}</span><span class="t-zh" lang="zh-CN">${zh}</span>` : en; }
+function TX(en, zh){ return SIDE==='zh' && uiLang()==='zh' ? zh : en; }
+// A bilingual name from the page ("Web design 网页设计"): the English, the Chinese, and both as T()
+function splitName(s){ s=String(s||''); const i=s.search(/[\u3400-\u9fff]/); return i>0 ? {en:s.slice(0,i).trim(), zh:s.slice(i).trim()} : {en:s, zh:''}; }
+function nameT(s){ const n=splitName(s); return n.zh ? T(esc(n.en), esc(n.zh)) : esc(n.en); }
 const PAGE = location.href.split('#')[0].split('?')[0].slice(ROOT.length);   // this page, from the site's top folder (e.g. zh/web-design/index.html)
 // The logo's mouse, top left of every page: a link to the homepage
 const HOME_MARK = '<svg viewBox="0 0 290 240" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M143.1 233.8C141.4 233.7 138.2 232.7 136.3 231.8C130.2 228.9 126.4 223.1 126.1 216.1C126.0 213.8 126.0 213.0 126.5 211.3C127.8 205.8 131.2 201.7 136.3 199.1C138.9 197.8 140.7 197.4 144.5 197.4C148.4 197.4 150.2 197.7 153.4 199.3C160.6 202.7 164.8 211.0 163.1 218.6C162.3 222.0 159.5 227.3 157.4 229.2C155.5 230.9 152.6 232.6 150.0 233.4C148.6 233.8 144.9 234.0 143.1 233.8ZM167.9 212.3C167.5 212.2 167.4 211.9 167.1 210.2C167.0 209.5 166.7 208.4 166.4 207.9L165.9 206.8L166.8 205.1C167.3 204.1 167.8 203.1 167.9 202.8C168.3 201.4 171.6 195.0 173.2 192.6C173.6 191.8 174.0 191.2 174.0 191.1C174.0 190.7 177.1 185.8 178.5 183.9C183.0 177.7 184.9 175.4 187.4 172.7C189.1 171.0 191.0 168.8 191.9 167.9C194.1 165.3 196.2 163.2 200.1 159.9C209.5 151.8 217.1 143.0 219.4 137.2C221.3 132.2 221.8 130.1 221.9 124.4C222.0 120.2 222.0 119.3 221.5 116.6C220.8 112.7 220.0 110.4 218.4 107.4C215.5 101.8 212.3 97.8 207.9 93.8C202.3 88.9 199.4 86.9 192.9 83.7C184.1 79.3 177.5 77.2 164.0 74.6C155.8 73.0 154.1 72.9 144.6 72.9C137.6 72.9 135.7 73.0 132.0 73.5C124.9 74.4 117.5 76.0 109.0 78.6C98.4 81.7 88.7 86.9 81.4 93.4C79.5 95.0 74.4 101.2 73.0 103.6C72.5 104.4 71.9 105.5 71.5 106.0C70.6 107.3 69.2 110.4 68.6 112.1C66.8 117.4 66.4 125.9 67.7 131.5C69.0 136.8 70.5 140.0 73.9 144.6C78.8 151.1 81.9 154.3 87.6 158.9C89.9 160.7 92.5 163.1 94.6 165.3C96.4 167.3 99.5 170.6 101.5 172.7C105.7 176.9 107.3 179.0 110.5 184.1C111.8 186.0 113.8 189.1 115.0 190.9C116.2 192.8 117.8 195.5 118.5 196.9C122.2 204.5 122.7 205.8 122.7 206.7C122.7 207.8 121.2 211.8 120.7 212.1C120.2 212.4 111.3 211.1 107.1 210.1C102.5 209.1 91.7 205.2 86.3 202.6C80.4 199.8 69.0 191.3 63.7 185.8C58.3 180.2 52.7 172.4 50.5 167.2C50.1 166.2 49.5 164.9 49.3 164.4C48.0 161.7 46.0 155.6 45.5 153.4C44.3 147.4 43.9 143.2 44.1 137.1C44.2 132.8 44.3 130.7 44.7 128.5C45.6 123.7 46.7 119.4 47.7 116.6C48.4 114.3 48.4 114.2 45.9 113.5C43.4 112.7 38.6 110.7 35.9 109.4C30.9 107.0 25.2 102.5 20.6 97.5C16.4 92.8 15.7 92.1 14.1 89.4C12.2 86.1 11.2 84.1 9.7 79.9C7.0 72.7 6.2 68.2 6.2 60.6C6.1 53.7 6.8 49.6 9.0 43.5C11.8 35.7 14.2 31.5 19.0 25.9C24.9 19.1 30.1 15.1 37.7 11.5C42.3 9.4 46.0 8.2 53.1 6.6C57.2 5.7 67.2 5.6 70.4 6.4C71.1 6.6 72.1 6.8 72.8 6.9C73.9 7.0 76.6 7.8 79.2 8.6C82.1 9.6 88.8 12.6 90.5 13.7C90.8 14.0 91.8 14.6 92.6 15.1C96.2 17.4 102.4 23.1 105.1 26.6C109.5 32.3 111.2 35.5 113.9 43.4C115.2 47.3 115.7 49.2 115.9 51.9C116.2 55.1 116.3 55.2 119.2 54.0C120.5 53.6 122.7 53.0 128.4 51.6C129.2 51.4 131.4 51.0 133.4 50.7C136.5 50.2 137.7 50.1 144.6 50.1C151.5 50.1 152.8 50.2 155.9 50.7C161.4 51.6 167.7 53.1 171.3 54.3C174.1 55.2 174.1 55.2 174.4 52.3C175.0 44.8 178.2 35.8 182.2 30.0C186.0 24.6 192.2 18.2 196.5 15.5C202.7 11.4 210.5 8.2 217.5 6.7C222.9 5.6 233.1 5.5 237.6 6.7C246.6 8.9 254.0 11.9 259.4 15.6C264.8 19.3 267.9 22.3 272.0 27.6C275.7 32.5 276.6 33.8 278.1 37.0C281.9 44.9 283.5 52.1 283.5 60.8C283.5 67.2 282.8 72.0 281.4 76.4C278.8 84.1 277.1 87.4 272.6 93.4C270.4 96.3 264.9 101.9 262.4 103.7C257.7 107.1 256.5 107.9 254.6 109.0C252.1 110.4 249.3 111.6 244.9 113.0C243.2 113.6 241.6 114.2 241.3 114.4C240.6 114.9 240.6 114.7 241.9 120.0C244.1 128.4 244.8 132.6 244.8 139.3C244.8 145.9 244.2 149.8 242.2 156.4C241.8 157.8 241.3 159.5 241.1 160.2C240.2 163.5 236.9 170.5 234.8 173.4C231.1 178.9 229.2 181.3 225.8 184.9C219.5 191.7 216.1 194.3 206.1 200.5C202.4 202.8 192.2 207.3 188.0 208.6C183.3 210.0 175.4 211.6 171.3 212.0C169.9 212.1 168.6 212.3 168.5 212.3C168.5 212.4 168.2 212.4 167.9 212.3ZM107.6 152.2C104.2 151.2 102.4 150.1 100.7 147.7C97.5 143.6 96.6 138.9 98.1 134.9C99.8 130.3 103.0 127.3 107.4 126.1C109.3 125.6 113.2 125.6 115.1 126.1C119.9 127.4 123.3 130.7 124.5 135.4C125.4 138.8 125.0 142.5 123.5 145.7C122.7 147.2 119.8 150.2 118.1 151.1C115.3 152.7 110.7 153.2 107.6 152.2ZM175.6 152.2C172.6 151.8 168.8 149.2 167.0 146.2C165.9 144.3 165.0 141.1 165.0 139.0C165.0 134.7 168.3 129.1 171.8 127.5C175.2 125.8 174.9 125.9 178.6 125.9C181.7 125.9 182.3 125.9 183.6 126.5C186.4 127.6 187.8 128.6 189.7 130.9C192.4 134.2 193.2 141.0 191.2 145.4C190.2 147.7 187.1 150.5 184.5 151.5C182.1 152.4 178.7 152.7 175.6 152.2ZM234.9 95.0C240.8 93.7 246.5 91.0 250.7 87.4C253.5 85.0 254.6 83.8 256.6 81.2C259.8 76.8 262.2 70.9 262.8 65.9C263.3 61.2 262.8 54.9 261.5 50.6C260.1 46.1 255.7 39.2 251.8 35.4C248.2 32.0 243.6 29.5 237.8 27.6C231.9 25.8 224.3 25.7 218.1 27.5C216.0 28.1 211.5 30.3 208.9 32.0C206.1 33.8 202.3 37.8 200.1 41.0C197.0 45.6 196.4 47.2 195.1 54.0C194.5 57.2 194.7 63.0 195.6 65.3C197.3 70.0 199.7 73.0 208.4 81.3C212.1 84.8 216.7 89.2 218.7 91.0C220.7 92.9 222.7 94.6 223.1 94.9C225.2 95.8 230.7 95.9 234.9 95.0ZM62.6 95.1C66.5 94.5 68.2 93.6 72.2 89.5C73.7 88.1 77.5 84.5 80.7 81.5C87.9 74.9 91.6 70.8 93.3 67.5C93.5 66.9 94.1 65.5 94.4 64.4C95.0 62.5 95.1 62.0 95.1 57.8C95.1 53.7 95.1 52.8 94.5 50.9C93.4 46.3 91.5 42.5 88.6 39.0C83.2 32.3 76.1 28.1 68.1 26.8C64.1 26.2 60.8 26.1 57.3 26.6C48.7 27.8 43.2 30.5 37.4 36.4C33.9 39.9 32.6 41.8 30.5 46.1C27.8 51.8 27.1 54.9 27.1 61.6C27.1 67.9 27.5 69.9 29.9 75.5C31.5 79.2 33.3 81.9 35.8 84.7C39.0 88.4 42.7 91.0 47.1 92.8C53.0 95.2 57.4 95.9 62.6 95.1Z"/></svg>';   // English and Chinese points are kept apart
@@ -240,8 +252,8 @@ const P = (function(){
         const k=Math.max(.12, .8/Math.sqrt(before+(t.h||0)+1)), oldBand=Math.floor(t.r);
         t.r=Math.max(1, Math.min(5.99, t.r + k*((ok?1:0)-p)));
         const L=label(t.r);
-        if(t.n===CAL) msg=`We've found your level: ${L.name}`+(zhSide?` · 你的水平：${L.zh}`:'');
-        else if(t.n>CAL && Math.floor(t.r)>oldBand) msg=`Level up! You've reached ${L.name}`+(zhSide?` · 升级到${L.zh}！`:'');
+        if(t.n===CAL) msg=zhSide && uiLang()==='zh' ? `你的水平：${L.zh}` : `We've found your level: ${L.name}`;
+        else if(t.n>CAL && Math.floor(t.r)>oldBand) msg=zhSide && uiLang()==='zh' ? `升级到${L.zh}！` : `Level up! You've reached ${L.name}`;
       }
       const words = item && item.ids ? item.ids.map(id=>byId[id]).filter(Boolean) : [wordOf(item)].filter(Boolean);
       words.forEach(w=>{ const rec=data.words[w.id] || (data.words[w.id]={s:0, due:0});
@@ -341,7 +353,7 @@ function Stats(game){
   s.hit=(item)=>{ s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); };
   s.miss=(item)=>{ s.answered++; s.streak=0; s.draw(); P.record(game,item,false); };
   s.draw=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    el.innerHTML=`<span>Correct <b>${s.correct}</b>/${s.answered}</span><span class="streak">Streak <b>${s.streak}</b></span><span>Best <b>${s.best}</b></span>`; };
+    el.innerHTML=`<span>${T('Correct','答对')} <b>${s.correct}</b>/${s.answered}</span><span class="streak">${T('Streak','连对')} <b>${s.streak}</b></span><span>${T('Best','最佳')} <b>${s.best}</b></span>`; };
   return s;
 }
 
@@ -376,7 +388,7 @@ const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{
 function frame(back, inner){
   clearTimers(); keyHandler=null; circuitFinish=null; circuitStop=null; document.body.classList.remove('reading-wide');
   const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
-  $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
+  $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${back.html||esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
   window.scrollTo(0,0);
 }
@@ -436,12 +448,12 @@ function menuCompact(){
 }
 // "Your level: Advanced" in small type, then the level bar, which is also the line between the levels and the games
 function levelLine(){
-  const t=P.topic(), n=t?t.n:0;
+  const t=P.topic(), n=t?t.n:0, zh=SIDE==='zh';   // the Chinese topic menus use it too (26 Oct), with the Chinese added
   if(n<P.CAL){ const left=P.CAL-n;
-    return `<div class="lvl-line"><p class="lvl-k">Your level: <span class="lvl-now">finding it</span> <span class="lvl-more">(${left} more answer${left===1?'':'s'})</span></p>
+    return `<div class="lvl-line"><p class="lvl-k">${T('Your level','你的水平')}: <span class="lvl-now">${T('finding it','正在评估')}</span> <span class="lvl-more">(${T(`${left} more answer${left===1?'':'s'}`, `还需 ${left} 题`)})</span></p>
       <span class="lvl-bar lvl-divider" role="img" aria-label="Finding your level: ${n} of ${P.CAL} answers"><i style="width:${n*100/P.CAL}%"></i></span></div>`; }
   const L=P.label(t.r), tip=L.next?`${L.pct}% of the way to ${L.next}`:'Top level';
-  return `<div class="lvl-line"><p class="lvl-k">Your level: <span class="lvl-now">${esc(L.name)}</span></p>
+  return `<div class="lvl-line"><p class="lvl-k">${T('Your level','你的水平')}: <span class="lvl-now">${zh&&L.zh ? T(esc(L.name), L.zh) : esc(L.name)}</span></p>
     <span class="lvl-bar lvl-divider" role="img" aria-label="${esc(tip)}" title="${esc(tip)}"><i style="width:${L.pct}%"></i></span></div>`;
 }
 // One game on a menu: its name, what it is, and the student's best streak (greyed when the level has too few items)
@@ -492,7 +504,7 @@ function autoNext(card, next){
 }
 function manualNext(card, next, label){
   const row=document.createElement('div'); row.className='next-row';
-  row.innerHTML=`<button class="btn">${label||'Next →'}</button>`; card.appendChild(row);
+  row.innerHTML=`<button class="btn">${label||T('Next','下一个')+' →'}</button>`; card.appendChild(row);
   const b=row.querySelector('button'); b.onclick=next; b.focus({preventScroll:true});
   keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); next(); } };
 }
@@ -514,8 +526,8 @@ function mcCard({instr, promptHtml, options, answer, onResult, optClass, cardCla
   btns.forEach(b=>b.onclick=()=>choose(b));
   keyHandler = e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) choose(btns[n-1]); };
 }
-const fbOk = (fb, html) => fb.innerHTML=`<div class="feedback ok"><span class="verdict">Correct.</span>${html||''}</div>`;
-const fbNo = (fb, answer, html) => fb.innerHTML=`<div class="feedback no"><span class="verdict">Not quite.${answer?` The answer is ${esc(answer)}.`:''}</span>${html||''}</div>`;
+const fbOk = (fb, html) => fb.innerHTML=`<div class="feedback ok"><span class="verdict">${T('Correct.','答对了！')}</span>${html||''}</div>`;
+const fbNo = (fb, answer, html) => fb.innerHTML=`<div class="feedback no"><span class="verdict">${T(`Not quite.${answer?` The answer is ${esc(answer)}.`:''}`, `不对。${answer?`答案是 ${esc(answer)}。`:''}`)}</span>${html||''}</div>`;
 // After an answer: right → move on by itself; wrong → explain, wait, and bring the item back later.
 function settle(ok, card, st, deck, item, next){
   if(ok){ st.hit(item); autoNext(card, next); } else { st.miss(item); deck.retry(item); manualNext(card, next); }
@@ -526,7 +538,7 @@ function playMatch(mode, withZh){
   const game=withZh ? {key:'zhmatch', name:'Match the meaning', items:zhWords} : GAMES.find(g=>g.key===(mode==='def'?'match':'syn'));
   const PER=5, REFILL_AT=3;
   const p=game.items(), deck=Deck(p), st=Stats(game.key);
-  if(withZh) zhShell(game.name,'Tap a word, then its English meaning. Matched pairs turn grey; after three, new pairs appear. 点击单词，再点击它的英文释义。');
+  if(withZh) zhShell(T('Match the meaning','单词配释义'), T('Tap a word, then its English meaning. Matched pairs turn grey; after three, new pairs appear.','点击单词，再点击它的英文释义。配好的会变灰，配好三对后会出现新的单词。'));
   else shell(game, mode==='def'?'Tap a word, then its meaning. Matched pairs turn grey; after three, new pairs take their place.':'Tap a word, then the group that means something similar. Matched pairs turn grey; after three, new pairs take their place.');
   st.draw();
   const clash=(w,on)=>on.some(o=>o.id===w.id || areAlike(o.id,w.id) || o.w===w.w || (mode==='syn' && o.syn.some(s=>w.syn.includes(s))));
@@ -625,17 +637,17 @@ const ROLES={topic:'Who or what',verb:'Verb',detail:'Detail',link:'Linking word'
 const ROLES_ZH={topic:'主语',verb:'动词',detail:'细节',link:'连接词',judge:'评价',hedge:'委婉语'};
 function playBuild(){
   const game=ZH_GAMES.find(g=>g.key==='zhbuild'), items=zhBuilds(), deck=Deck(items), st=Stats('zhbuild');
-  zhShell(game.name+' <span lang="zh-CN">'+game.zh+'</span>','Tap the pieces in order. Tap a placed piece to send it back. 按顺序点击词块，点击已放好的词块可以退回。'); st.draw();
+  zhShell(T(game.name, game.zh), T('Tap the pieces in order. Tap a placed piece to send it back.','按顺序点击词块，点击已放好的词块可以退回。')); st.draw();
   const step=()=>{
     const b=deck.next();
     const pieces=shuffle([...b.tiles.map((t,i)=>({t:t[0],r:t[1],k:'t'+i})), ...(b.decoys||[]).map((t,i)=>({t:t[0],r:t[1],k:'d'+i,decoy:true}))]);
     const usedRoles=[...new Set(b.tiles.map(t=>t[1]))];
-    const card=showCard(`<p class="instr">Build this sentence in English 用英文组成这个句子</p>
+    const card=showCard(`<p class="instr">${T('Build this sentence in English','用英文组成这个句子')}</p>
       <p class="zh-sentence" lang="zh-CN">${esc(b.zh)}</p>
       <div class="answer" id="ans" aria-label="Your sentence"></div>
       <div class="pool" id="pool">${pieces.map(p=>`<button class="piece r-${p.r}" data-k="${p.k}">${esc(p.t)}</button>`).join('')}</div>
-      <div class="rolekey">${usedRoles.map(r=>`<span class="r-${r}">${ROLES[r]||r} <span lang="zh-CN">${ROLES_ZH[r]||''}</span></span>`).join('')}</div>
-      <div class="next-row check-row"><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>`);
+      <div class="rolekey">${usedRoles.map(r=>`<span class="r-${r}">${T(ROLES[r]||r, ROLES_ZH[r]||'')}</span>`).join('')}</div>
+      <div class="next-row check-row"><button class="btn" id="check" disabled>${T('Check','检查')}</button></div><div class="fb"></div>`);
     const ans=card.querySelector('#ans'), pool=card.querySelector('#pool'), check=card.querySelector('#check');
     let placed=[], done=false;
     const sync=()=>{ check.disabled=!placed.length; };
@@ -1405,15 +1417,15 @@ const zhBankAll = () => S.words.filter(w=>ZH[w.id] && inBank(w));   // the word 
 // Wrong answers come from the word bank when it is big enough, otherwise from all the words at the level
 const zhPool = p => { if(p.length>=8) return p; const l=zhLevelWords(); return l.length>=8 ? l : S.words.filter(w=>ZH[w.id]); };
 const ZH_GAMES = [
-  {key:'zh',       type:'practice',  name:'中文 → English',     zh:'看中文，选英文', blurb:'See the Chinese meaning and choose the English word.', run:()=>playZh()},
-  {key:'zhmatch',  type:'practice',  name:'Match the meaning',  zh:'单词配释义',     blurb:'Match each word to its English meaning. The Chinese is shown under the word.', min:6, run:()=>playMatch('def', true)},
-  {key:'zhmean',   type:'practice',  name:'Choose the meaning', zh:'选出释义',       blurb:'See the word and its Chinese, then choose the English meaning.', run:()=>playZhMeaning()},
-  {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', run:()=>playType()},
-  {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'See the word and its Chinese. Does the English meaning match? Decide quickly.', run:()=>playZhTF()},
-  {key:'zhbuild',  type:'practice',  name:'Build the sentence', zh:'连词成句',       blurb:'See the sentence in Chinese, then build it in English from the coloured pieces.', run:()=>playBuild(), ready:()=>zhBuilds().length>0, lock:'No sentences at this level yet 本级别还没有句子'},
-  {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', run:()=>playOdd(), needs:()=>oddReady()},
-  {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', min:8, run:()=>playSpeed()},
-  {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', min:8, run:()=>playSurvival()}
+  {key:'zh',       type:'practice',  name:'中文 → English',     zh:'看中文，选英文', blurb:'See the Chinese meaning and choose the English word.', zhBlurb:'看中文意思，选出英文单词。', run:()=>playZh()},
+  {key:'zhmatch',  type:'practice',  name:'Match the meaning',  zh:'单词配释义',     blurb:'Match each word to its English meaning. The Chinese is shown under the word.', zhBlurb:'把每个单词和它的英文释义配对，单词下面有中文。', min:6, run:()=>playMatch('def', true)},
+  {key:'zhmean',   type:'practice',  name:'Choose the meaning', zh:'选出释义',       blurb:'See the word and its Chinese, then choose the English meaning.', zhBlurb:'看单词和中文，选出正确的英文释义。', run:()=>playZhMeaning()},
+  {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', zhBlurb:'看释义和中文，拼写出英文单词。', run:()=>playType()},
+  {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'See the word and its Chinese. Does the English meaning match? Decide quickly.', zhBlurb:'看单词和中文，判断英文释义对不对，要快！', run:()=>playZhTF()},
+  {key:'zhbuild',  type:'practice',  name:'Build the sentence', zh:'连词成句',       blurb:'See the sentence in Chinese, then build it in English from the coloured pieces.', zhBlurb:'看中文句子，用彩色词块拼出英文句子。', run:()=>playBuild(), ready:()=>zhBuilds().length>0, lock:'No sentences at this level yet 本级别还没有句子'},
+  {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
+  {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', zhBlurb:'60 秒内看中文选英文，看你能答对多少个！', min:8, run:()=>playSpeed()},
+  {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', zhBlurb:'三条命。看单词和中文，在时间用完前选出英文释义，会越来越快。', min:8, run:()=>playSurvival()}
 ];
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
 // or every word when the level has fewer), and Odd one out needs word groups
@@ -1421,41 +1433,45 @@ const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
 const zhReady = g => g.ready ? g.ready() : zhLevelWords().length>=4 && zhWords().length>=zhNeed(g) && !(g.needs && !g.needs());
 // Build the sentence (Chinese version): the sentences at the chosen level that have their Chinese (builds.csv, zh column)
 const zhBuilds = () => pick(S.builds).filter(b=>b.zh);
+// The Chinese topic menu (cleaned up 26 Oct; teacher: a student landing here should want to join in and know how).
+// Title (Chinese on its own line), one row of level buttons and "Your level" as on the English compact layout, then ONE
+// start card (Learn the words) and the games. Games that are open are full cards; locked ones shrink to small tiles that
+// say what opens them; a game that learning can't open at this level (Build the sentence before any sentence has its
+// Chinese) is left out. The old layout (level panel on the right, two paragraphs of instructions, every game a grey
+// card) was replaced; levelCard(true) and levelNote() are no longer used here.
+const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 11V8a3.5 3.5 0 0 1 7 0v3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
 function zhMenu(){
   tidyChoice(); P.refresh(); const n=zhLevelWords().length, have=zhWords().length;
-  const lock=g=>{ const need=zhNeed(g)-have;
-    return g.lock ? g.lock : n<4 ? 'Not enough words at this level yet 本级别单词不够'
-      : need>0 ? `Learn ${need} more word${need===1?'':'s'} to unlock 再学 ${need} 个单词即可解锁`
-      : 'Learn words from more groups to unlock 学习更多类别的单词即可解锁'; };
-  const card=g=>{ const off=!zhReady(g);
-    const best=store.get((g.type==='challenge'?'best:':'streak:')+g.key,0);
-    return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}><h3>${g.name}</h3><p lang="zh-CN" class="zh-sub">${g.zh}</p><p>${g.blurb}</p>
-      <span class="best">${off?lock(g):best?(g.type==='challenge'?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`; };
-  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version'}, `
-  <section class="hero hero-zh">
-    <div class="hero-main">
-      <p class="eyebrow">Chinese version 中文版</p>
-      <h1>${esc(CFG.name||'')}</h1>
-      ${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}
-    </div>
-    <aside class="hero-side" aria-label="Level 级别">
-      ${levelsHtml()}
-      <p class="setnote">${levelNote(n)}</p>
-      ${levelCard(true)}
-    </aside>
+  const need=g=>zhNeed(g)-have;
+  const lockText=g=> n<4 ? T('Not enough words at this level yet','本级别单词不够')
+    : need(g)>0 ? T(`${need(g)} more word${need(g)===1?'':'s'}`, `再学 ${need(g)} 个单词`)
+    : T('Words from more groups','学习更多类别的单词');
+  const shown=ZH_GAMES.filter(g=>!g.ready || g.ready()), open=shown.filter(zhReady), locked=shown.filter(g=>!zhReady(g));
+  // What the next words unlock: "Learn 4 words to unlock 4 games"
+  // (Odd one out is left out of the count: it also needs words from more than one group)
+  const needs=n>=4 ? locked.filter(g=>need(g)>0).map(need) : [], next=needs.length ? Math.min(...needs) : 0, opens=locked.filter(g=>need(g)===next && !g.needs).length;
+  const teaser=next ? T(`Learn ${next}${have?' more':''} word${next===1?'':'s'} to unlock ${opens} game${opens===1?'':'s'}.`, `再学 ${next} 个单词，解锁 ${opens} 个游戏。`) : '';
+  const card=g=>{ const best=store.get((g.type==='challenge'?'best:':'streak:')+g.key,0);
+    return `<a class="game" href="#play-${g.key}">${g.type==='challenge'?`<span class="game-tag">${T('Challenge','挑战')}</span>`:''}<h3>${T(g.name, g.zh)}</h3><p>${T(g.blurb, g.zhBlurb)}</p>
+      <span class="best">${best?(g.type==='challenge'?T('Best score','最高分'):T('Best streak','最佳连对'))+': '+best:T('Not played yet','还没玩过')}</span></a>`; };
+  const tile=g=>`<div class="game-lock" aria-disabled="true">${LOCK_SVG}<span class="gl-name">${T(g.name, g.zh)}</span><span class="gl-need">${lockText(g)}</span></div>`;
+  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version', html:T('Chinese version','中文版')}, `
+  <section class="hero hero-compact hero-zhc">
+    <p class="eyebrow">${T('Chinese version','中文版')}</p>
+    <h1>${nameT(CFG.name)}</h1>
+    ${levelsHtml()}
+    ${levelLine()}
   </section>
-  ${learnHtml()}
-  ${n>=4 ? `<p class="bank-note">${have ? `The games use the words in your word bank: ${have} of ${n} words at this level. 游戏只使用你学过的单词：本级别 ${have} / ${n} 个。`
-    : 'The games use the words you have learned. Learn some words first and the games will open. 游戏只使用你学过的单词。先学习单词，游戏就会解锁。'}</p>` : ''}
-  <p class="instr group-label">Practice 练习</p>
-  <div class="games">${ZH_GAMES.filter(g=>g.type==='practice').map(card).join('')}</div>
-  <p class="instr group-label">Challenge 挑战</p>
-  <div class="games">${ZH_GAMES.filter(g=>g.type==='challenge').map(card).join('')}</div>
-  <div class="wl-link"><p>See every word with its Chinese meaning. 查看所有单词和中文释义。</p><a class="btn alt" href="#words">Word list 词汇表</a></div>`);
+  ${learnHtml(teaser)}
+  <h2 class="zh-games-h">${T('Games','游戏')}</h2>
+  ${open.length ? `<p class="bank-note">${T(`The games use the words you have learned: ${have} of ${n} at this level.`, `游戏只用你学过的单词：本级别 ${have} / ${n} 个。`)}</p>
+  <div class="games">${open.map(card).join('')}</div>` : ''}
+  ${locked.length ? `${open.length?`<p class="instr group-label">${T('Still locked','还没解锁')}</p>`:''}<div class="locks">${locked.map(tile).join('')}</div>` : ''}
+  <div class="wl-link"><p>${T('See every word with its Chinese meaning.','查看所有单词和中文释义。')}</p><a class="btn alt" href="#words">${T('Word list','词汇表')}</a></div>`);
   wireLevels(zhMenu);
 }
 function zhShell(title, note){
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+  frame({href:'#', label:CFG.name||'Back', html:CFG.name?nameT(CFG.name):''}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
 }
 // ----- Chinese side: LEARN THE WORDS (where every topic starts) -----
@@ -1467,25 +1483,27 @@ function zhShell(title, note){
 const LEARN_N = 4, LEARN_EXTRA = 2, LEARN_REVIEW = 8;
 const stageOf = w => { const r=P.wordRec(w.id); return !r ? 'new' : r.s>=4 ? 'known' : r.s>=2 ? 'fam' : 'learn'; };
 const STAGES = [['known','Known','掌握'], ['fam','Familiar','熟悉'], ['learn','Learning','学习中'], ['new','New','新']];
-function learnHtml(){
+// The start card on a Chinese topic menu. teaser: what the next words unlock ("Learn 4 words to unlock 4 games"), from zhMenu.
+function learnHtml(teaser){
   P.refresh();
   const p=zhLevelWords(), c={known:0, fam:0, learn:0, new:0}; p.forEach(w=>c[stageOf(w)]++);
   const total=p.length, met=total-c.new, ready=total>=4, next=Math.min(LEARN_N, c.new), b=chosenBand();
   const pct=k=>total ? (100*c[k]/total).toFixed(2) : 0;
-  const status = !ready ? 'Not enough words at this level yet. 本级别单词不够。'
-    : c.new ? (met ? `${met} of ${total} words learned. Next: ${next} new word${next===1?'':'s'}. 已学 ${met} / ${total} 个单词，下一组：${next} 个新单词。`
-                   : `${total} words to learn. Start with the first ${next}. 共 ${total} 个单词，先学 ${next} 个。`)
-    : `You have met all ${total} words at this level. Review them to make them Known. 本级别的单词你都学过了，复习一下吧。`;
+  const status = !ready ? T('Not enough words at this level yet.','本级别单词不够。')
+    : !c.new ? T(`You have met all ${total} words. Review them to make them Known.`, '都学过了，复习一下吧。')
+    : teaser || '';
+  const go = !ready ? `<span class="btn big off" aria-disabled="true">${T('Learn the words','学习单词')}</span>`
+    : !c.new ? `<a class="btn big" href="#learn">${T('Review the words','复习单词')} →</a>`
+    : met ? `<a class="btn big" href="#learn">${T(`Learn ${next} more`, `再学 ${next} 个`)} →</a>`
+    : `<a class="btn big" href="#learn">${T('Start','开始')} →</a>`;
   return `<section class="learn" aria-labelledby="learnH">
-    <p class="learn-k">Start here 从这里开始${b!=null && LEVELS.length>1 ? ' · '+esc(bandName(b, true)) : ''}</p>
-    <h2 id="learnH">Learn the words <span lang="zh-CN">学习单词</span></h2>
-    <p>Meet ${LEARN_N} new words at a time, then match each Chinese word to its English word. They go into your word bank, and the games below help you remember them.</p>
-    <p lang="zh-CN">每次认识 ${LEARN_N} 个新单词，然后把中文和英文配对。学过的单词会进入你的词库，下面的游戏帮你记住它们。</p>
-    ${total ? `<div class="wb"><p class="wb-k">Your words at this level 本级别的单词</p>
+    <p class="learn-k">${met ? T('Your words','你的单词') : T('Start here','从这里开始')}${b!=null && LEVELS.length>1 ? ' · '+T(esc(bandName(b)), LEVEL_ZH[LEVEL_CODES[b]]) : ''}</p>
+    <h2 id="learnH">${T('Learn the words','学习单词')}</h2>
+    ${met ? '' : `<p class="learn-how">${T(`${LEARN_N} new words at a time: look at them, then match them.`, `每次 ${LEARN_N} 个新单词：先看一看，再配一配。`)}</p>`}
+    ${total ? `<div class="wb"><p class="wb-count">${T(`<b>${met}</b> / ${total} words learned`, `已学 <b>${met}</b> / ${total} 个单词`)}</p>
       <span class="wb-bar" role="img" aria-label="${c.known} known, ${c.fam} familiar, ${c.learn} learning, ${c.new} new">${STAGES.filter(x=>x[0]!=='new').map(([k])=>`<i class="wb-${k}" style="width:${pct(k)}%"></i>`).join('')}</span>
-      <p class="wb-legend">${STAGES.map(([k,en,zh])=>`<span><i class="sw wb-${k}"></i>${en} <span lang="zh-CN">${zh}</span> <b>${c[k]}</b></span>`).join('')}</p></div>` : ''}
-    <div class="learn-row">${ready ? `<a class="btn big" href="#learn">${c.new ? 'Learn the words 学习单词' : 'Review the words 复习单词'} →</a>`
-      : `<span class="btn big off" aria-disabled="true">Learn the words 学习单词</span>`}<p class="learn-status">${status}</p></div>
+      ${met ? `<p class="wb-legend">${STAGES.map(([k,en,zh])=>`<span><i class="sw wb-${k}"></i>${T(en, zh)} <b>${c[k]}</b></span>`).join('')}</p>` : ''}</div>` : ''}
+    <div class="learn-row">${go}${status?`<p class="learn-status">${status}</p>`:''}</div>
   </section>`;
 }
 function playLearn(){
@@ -1497,9 +1515,9 @@ function playLearn(){
     : shuffle([...batch, ...rankForLevel(p.filter(w=>!batch.includes(w) && stageOf(w)!=='new')).filter(isDue).slice(0, LEARN_EXTRA)]);
   let total=batch.length+quiz.length, done=0, answered=0, right=0;
   const firstTry=new Set(), again=new Set(), queue=quiz.slice();
-  zhShell(review ? 'Review the words 复习单词' : 'Learn the words 学习单词',
-    review ? 'See the Chinese, choose the English word. 看中文，选出英文单词。'
-           : 'Meet the new words, then match each Chinese word to its English word. 先认识新单词，再把中文和英文配对。');
+  zhShell(review ? T('Review the words','复习单词') : T('Learn the words','学习单词'),
+    review ? T('See the Chinese, choose the English word.','看中文，选出英文单词。')
+           : T('Meet the new words, then match each Chinese word to its English word.','先认识新单词，再把中文和英文配对。'));
   const sp=document.querySelector('.bar .spacer'); if(sp) sp.outerHTML='<span class="progress learn-progress" aria-hidden="true"><i id="learnFill"></i></span>';
   const statsEl=document.getElementById('stats');
   const tick=()=>{ const f=document.getElementById('learnFill'); if(f) f.style.width=(100*done/total)+'%'; };
@@ -1510,23 +1528,23 @@ function playLearn(){
   const intro=i=>{
     if(i>=batch.length) return quizStep();
     const w=batch[i];
-    statsEl.innerHTML=`<span>New word <b>${i+1}</b>/${batch.length}</span>`;
-    const card=showCard(`<p class="instr">New word 新单词 · ${i+1} of ${batch.length}</p>
+    statsEl.innerHTML=`<span>${T('New word','新单词')} <b>${i+1}</b>/${batch.length}</span>`;
+    const card=showCard(`<p class="instr">${T(`New word · ${i+1} of ${batch.length}`, `新单词 · 第 ${i+1} 个，共 ${batch.length} 个`)}</p>
       <div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>
       <p class="prompt-word learn-en">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p>
       <p class="learn-def">${esc(w.def)}</p>${w.ex?`<p class="learn-ex"><i>${esc(w.ex)}</i></p>`:''}`);
     card.classList.add('learn-card');
-    manualNext(card, ()=>{ done++; tick(); intro(i+1); }, i+1<batch.length ? 'Next word 下一个 →' : 'Now match them 开始配对 →');
+    manualNext(card, ()=>{ done++; tick(); intro(i+1); }, i+1<batch.length ? T('Next word','下一个')+' →' : T('Now match them','开始配对')+' →');
   };
   const quizStep=()=>{
     const w=queue.shift(); if(!w) return finish();
-    statsEl.innerHTML=`<span>Right <b>${right}</b>/${answered}</span>`;
+    statsEl.innerHTML=`<span>${T('Right','答对')} <b>${right}</b>/${answered}</span>`;
     const old=!review && !batch.includes(w);
-    mcCard({instr:'Choose the English word 选出英文单词', promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>${old?'<p class="learn-tag">Review 复习</p>':''}`,
+    mcCard({instr:T('Choose the English word','选出英文单词'), promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>${old?`<p class="learn-tag">${T('Review','复习')}</p>`:''}`,
       options:[w.w, ...wrongFor(w).map(x=>x.w)], answer:w.w,
       onResult:(ok,card,fb)=>{ P.record('learn', w, ok, {noRate:true}); answered++;
         const note=`<span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span>`;
-        statsEl.innerHTML=`<span>Right <b>${right+(ok?1:0)}</b>/${answered}</span>`;
+        statsEl.innerHTML=`<span>${T('Right','答对')} <b>${right+(ok?1:0)}</b>/${answered}</span>`;
         if(ok){ right++; if(!again.has(w)) firstTry.add(w); done++; tick(); fbOk(fb, note); autoNext(card, quizStep); }
         else { fbNo(fb, w.w, note);
           // A missed word comes back once, two cards later (or at the end)
@@ -1537,15 +1555,14 @@ function playLearn(){
   const finish=()=>{
     done=total; tick(); P.refresh();
     const left=zhLevelWords().filter(x=>stageOf(x)==='new').length, more=Math.min(LEARN_N, left), shown=review ? quiz : batch;
-    statsEl.innerHTML=`<span>Right <b>${right}</b>/${answered}</span>`;
-    const card=showCard(`<div class="end"><p class="instr">${review?'Review the words':'Learn the words'} · finished 完成</p>
-      <h2>${review ? 'Review done! 复习完成！' : `${batch.length} new word${batch.length===1?'':'s'} in your word bank`}</h2>
-      ${review ? '' : `<p class="end-zh" lang="zh-CN">${batch.length} 个新单词已加入你的词库。</p>`}
-      <p class="end-sub">${firstTry.size} of ${quiz.length} right first time. 第一次就答对 ${firstTry.size} / ${quiz.length}。</p>
+    statsEl.innerHTML=`<span>${T('Right','答对')} <b>${right}</b>/${answered}</span>`;
+    const card=showCard(`<div class="end"><p class="instr">${review?T('Review the words','复习单词'):T('Learn the words','学习单词')} · ${T('finished','完成')}</p>
+      <h2>${review ? T('Review done!','复习完成！') : T(`${batch.length} new word${batch.length===1?'':'s'} in your word bank`, `${batch.length} 个新单词已加入你的词库`)}</h2>
+      <p class="end-sub">${T(`${firstTry.size} of ${quiz.length} right first time.`, `第一次就答对 ${firstTry.size} / ${quiz.length}。`)}</p>
       <ul class="review">${shown.map(w=>`<li><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span> – ${esc(w.def)}</li>`).join('')}</ul>
-      ${!left && !review ? '<p class="end-sub">You have met every word at this level! 本级别的单词你都学过了！</p>' : ''}
-      <div class="end-actions"><button class="btn" id="more">${left ? `Learn ${more} more 再学 ${more} 个` : 'Review the words 复习单词'}</button>
-        <a class="btn alt" href="#play-zh">Practise: 中文 → English 练习</a><a class="btn alt" href="#">All games 所有游戏</a></div></div>`);
+      ${!left && !review ? `<p class="end-sub">${T('You have met every word at this level!','本级别的单词你都学过了！')}</p>` : ''}
+      <div class="end-actions"><button class="btn" id="more">${left ? T(`Learn ${more} more`, `再学 ${more} 个`) : T('Review the words','复习单词')}</button>
+        <a class="btn alt" href="#play-zh">${T('Practise: 中文 → English','练习：看中文，选英文')}</a><a class="btn alt" href="#">${T('All games','所有游戏')}</a></div></div>`);
     card.querySelector('#more').onclick=playLearn;
     keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); playLearn(); } };
   };
@@ -1553,10 +1570,10 @@ function playLearn(){
 }
 function playZh(){
   const p=zhWords(), deck=Deck(p), st=Stats('zh');
-  zhShell('中文 → English','See the Chinese meaning and choose the English word. 看中文，选出英文单词。'); st.draw();
+  zhShell(T('中文 → English','看中文，选英文'), T('See the Chinese meaning and choose the English word.','看中文意思，选出英文单词。')); st.draw();
   const step=()=>{
     const w=deck.next(), ds=distractors(w,zhPool(p),3);
-    mcCard({instr:'Choose the English word 选出英文单词', promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div><div class="pos">${esc(w.pos||'')}</div>`,
+    mcCard({instr:T('Choose the English word','选出英文单词'), promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div><div class="pos">${esc(w.pos||'')}</div>`,
       options:[w.w,...ds.map(x=>x.w)], answer:w.w,
       onResult:(ok,card,fb)=>{ ok?fbOk(fb,w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''):fbNo(fb,w.w,`${wordNote(w)}${w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''}`); settle(ok,card,st,deck,w,step); }});
   };
@@ -1564,10 +1581,10 @@ function playZh(){
 }
 function playZhMeaning(){
   const p=zhWords(), deck=Deck(p), st=Stats('zhmean');
-  zhShell('Choose the meaning','Read the word and its Chinese, then choose the English meaning. 选出正确的英文释义。'); st.draw();
+  zhShell(T('Choose the meaning','选出释义'), T('Read the word and its Chinese, then choose the English meaning.','看单词和中文，选出正确的英文释义。')); st.draw();
   const step=()=>{
     const w=deck.next(), ds=distractors(w,zhPool(p),3);
-    mcCard({instr:'Choose the meaning 选出释义', promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
+    mcCard({instr:T('Choose the meaning','选出释义'), promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
       options:[w.def,...ds.map(x=>x.def)], answer:w.def, optClass:'long',
       onResult:(ok,card,fb)=>{ ok?fbOk(fb,w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''):fbNo(fb,'',`${wordNote(w)}${w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''}`); settle(ok,card,st,deck,w,step); }});
   };
@@ -1582,26 +1599,26 @@ const acceptOf = {}; (S.accept||[]).forEach(g=>g.forEach(id=>{ (acceptOf[id]=acc
 const altsFor = w => [...(acceptOf[w.id]||[])].map(id=>byId[id]).filter(Boolean);
 function playType(){
   const p=zhWords(), deck=Deck(p), st=Stats('zhtype');
-  zhShell('Type it','Read the meaning, then type the English word. 看释义，拼写英文单词。'); st.draw();
+  zhShell(T('Type it','拼写单词'), T('Read the meaning, then type the English word.','看释义，拼写出英文单词。')); st.draw();
   const step=()=>{
     const w=deck.next(), target=normAns(w.w).split(/\s*\/\s*/)[0];
-    const card=showCard(`<p class="instr">Type the English word 拼写英文单词</p>
+    const card=showCard(`<p class="instr">${T('Type the English word','拼写英文单词')}</p>
       <p class="prompt-def">${esc(w.def)}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>
-      <form class="typeform" autocomplete="off"><input id="typeIn" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Type the word" placeholder="Type here 在此输入">
-      <button class="btn" type="submit">Check</button><button class="btn alt" type="button" id="hint">Hint 提示</button></form>
+      <form class="typeform" autocomplete="off"><input id="typeIn" type="text" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="${TX('Type the word','输入单词')}" placeholder="${TX('Type here','在此输入')}">
+      <button class="btn" type="submit">${T('Check','检查')}</button><button class="btn alt" type="button" id="hint">${T('Hint','提示')}</button></form>
       <p class="hint-line" id="hintLine"></p><div class="fb"></div>`);
     const input=card.querySelector('#typeIn'), form=card.querySelector('form'); let hints=0, done=false;
     setTimeout(()=>input.focus({preventScroll:true}),50);
     card.querySelector('#hint').onclick=()=>{ hints=Math.min(hints+1,target.length);
-      card.querySelector('#hintLine').textContent='Starts with 开头是: '+target.slice(0,hints)+'…'; input.focus(); };
+      card.querySelector('#hintLine').textContent=TX('Starts with','开头是')+': '+target.slice(0,hints)+'…'; input.focus(); };
     form.onsubmit=e=>{ e.preventDefault(); if(done) return; const v=normAns(input.value); if(!v) return; done=true;
       const alt=altsFor(w).find(x=>answersFor(x).includes(v));
       const ok=answersFor(w).includes(v) || !!alt; input.disabled=true; form.querySelectorAll('button').forEach(b=>b.disabled=true);
       input.classList.add(ok?'ok':'no');
       const fb=card.querySelector('.fb'), ex=w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:'';
       const others=altsFor(w);
-      if(alt) fbOk(fb, `<span><b>${esc(alt.w)}</b> also fits this meaning. Another word for it is <b>${esc(w.w)}</b>. <span lang="zh-CN">${esc(alt.w)} 也对；另一个词是 ${esc(w.w)}。</span></span>${ex}`);
-      else if(ok) fbOk(fb, (others.length?`<span>Also correct 也对: ${others.map(x=>esc(x.w)).join(', ')}</span>`:'')+ex);
+      if(alt) fbOk(fb, `<span>${T(`<b>${esc(alt.w)}</b> also fits this meaning. Another word for it is <b>${esc(w.w)}</b>.`, `<b>${esc(alt.w)}</b> 也对；另一个词是 <b>${esc(w.w)}</b>。`)}</span>${ex}`);
+      else if(ok) fbOk(fb, (others.length?`<span>${T('Also correct','也对')}: ${others.map(x=>esc(x.w)).join(', ')}</span>`:'')+ex);
       else fbNo(fb, w.w+(others.length?' (or '+others.map(x=>x.w).join(', ')+')':''), ex);
       settle(ok,card,st,deck,w,step); };
     keyHandler=null;
@@ -1612,18 +1629,18 @@ function playType(){
 // ----- Chinese side: True or false (does this meaning match the word?) -----
 function playZhTF(){
   const p=zhWords(), deck=Deck(p), st=Stats('zhtf');
-  zhShell('True or false','Does the meaning match the word? Press T or F, or tap. 释义和单词是否匹配？'); st.draw();
+  zhShell(T('True or false','判断对错'), T('Does the meaning match the word? Press T or F, or tap.','释义和单词匹配吗？按 T 或 F，或点击按钮。')); st.draw();
   const step=()=>{
     const w=deck.next(), truth=Math.random()<.5, other=truth?w:(distractors(w,zhPool(p),1)[0]||w), real=truth||other===w;
-    const card=showCard(`<p class="instr">True or false? 对还是错？</p>
+    const card=showCard(`<p class="instr">${T('True or false?','对还是错？')}</p>
       <p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>
-      <p class="statement">means: ${esc(other.def)}</p>
-      <div class="tf-btns"><button class="tfb yes" data-v="1">True 对</button><button class="tfb no" data-v="0">False 错</button></div><div class="fb"></div>`);
+      <p class="statement">${T('means','意思是')}: ${esc(other.def)}</p>
+      <div class="tf-btns"><button class="tfb yes" data-v="1">${T('True','对')}</button><button class="tfb no" data-v="0">${T('False','错')}</button></div><div class="fb"></div>`);
     let done=false;
     const choose=v=>{ if(done) return; done=true; const ok=(v===1)===real;
       card.querySelectorAll('.tfb').forEach(b=>{ b.disabled=true; if(+b.dataset.v===(real?1:0)) b.classList.add('ok'); else b.classList.add('dim'); });
       const fb=card.querySelector('.fb'), note=`<span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span>`;
-      ok?fbOk(fb,note):fbNo(fb,real?'True':'False',note);
+      ok?fbOk(fb,note):fbNo(fb,real?TX('True','对'):TX('False','错'),note);
       settle(ok,card,st,deck,w,step); };
     card.querySelectorAll('.tfb').forEach(b=>b.onclick=()=>choose(+b.dataset.v));
     keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='t'||e.key==='ArrowRight'||k==='1') choose(1); if(k==='f'||e.key==='ArrowLeft'||k==='2') choose(0); };
@@ -1643,7 +1660,7 @@ function oddReady(){ const g=oddGroups(), big=Object.keys(g).filter(k=>distinctW
   return big.length>0 && (Object.keys(g).length>=2 || Object.keys(groupsOf(zhBankAll())).length>=2); }
 function playOdd(){
   const st=Stats('zhodd');
-  zhShell('Odd one out','Three words belong together. Tap the odd one out. 三个词属于同一类，找出不同的那个。'); st.draw();
+  zhShell(T('Odd one out','找出不同类'), T('Three words belong together. Tap the odd one out.','三个词属于同一类，找出不同的那个。')); st.draw();
   const step=()=>{
     const g=oddGroups(), big=Object.keys(g).filter(k=>distinctWords(g[k]).length>=3);
     const main=big[Math.floor(Math.random()*big.length)];
@@ -1653,7 +1670,7 @@ function playOdd(){
     const oddK=others[Math.floor(Math.random()*others.length)], cands=shuffle(pool[oddK]);
     const odd=cands.find(w=>!three.some(t=>t.w===w.w)) || cands[0];
     const words=shuffle([...three,odd]);
-    const card=showCard(`<p class="instr">Which word is the odd one out? 哪个词不同类？</p>
+    const card=showCard(`<p class="instr">${T('Which word is the odd one out?','哪个词不同类？')}</p>
       <div class="opts">${words.map((w,i)=>`<button class="opt" data-id="${esc(w.id)}"><kbd>${i+1}</kbd><span>${esc(w.w)}</span></button>`).join('')}</div><div class="fb"></div>`);
     const btns=[...card.querySelectorAll('.opt')]; let done=false;
     const choose=b=>{ if(done) return; done=true; const ok=b.dataset.id===odd.id;
@@ -1661,8 +1678,8 @@ function playOdd(){
         x.innerHTML+=`<small class="opt-zh" lang="zh-CN">${esc(ZH[w.id]||'')}</small>`;
         if(x.dataset.id===odd.id) x.classList.add('ok'); else if(x===b) x.classList.add('no'); else x.classList.add('dim'); });
       const why = CFG.odd==='pos'
-        ? `<span><b>${esc(odd.w)}</b> is ${/^[aeiou]/i.test(oddK)?'an':'a'} ${esc(oddK)}. The others are ${esc(main)}s.</span>`
-        : `<span><b>${esc(odd.w)}</b> belongs to <i>${esc(oddLabel(oddK))}</i>. The others belong to <i>${esc(oddLabel(main))}</i>.</span>`;
+        ? `<span>${T(`<b>${esc(odd.w)}</b> is ${/^[aeiou]/i.test(oddK)?'an':'a'} ${esc(oddK)}. The others are ${esc(main)}s.`, `<b>${esc(odd.w)}</b> 是 ${esc(oddK)}，其他三个是 ${esc(main)}。`)}</span>`
+        : `<span>${T(`<b>${esc(odd.w)}</b> belongs to <i>${esc(oddLabel(oddK))}</i>. The others belong to <i>${esc(oddLabel(main))}</i>.`, `<b>${esc(odd.w)}</b> 属于 <i>${esc(oddLabel(oddK))}</i>，其他三个属于 <i>${esc(oddLabel(main))}</i>。`)}</span>`;
       const fb=card.querySelector('.fb'); ok?fbOk(fb,why):fbNo(fb,odd.w,why);
       if(ok){ st.hit(odd); autoNext(card,step); } else { st.miss(odd); manualNext(card,step); } };
     btns.forEach(b=>b.onclick=()=>choose(b));
@@ -1675,26 +1692,26 @@ function playOdd(){
 function challengeEnd(key, title, score, missed, again){
   clearTimers();
   const prev=store.get('best:'+key,0), isBest=score>prev; if(isBest) store.set('best:'+key,score);
-  const card=showCard(`<div class="end"><p class="instr">${esc(title)} · finished 结束</p>
-    <div class="big">${score}</div><h2>${isBest?'New best score! 新纪录！':'Best score 最高分: '+Math.max(prev,score)}</h2>
-    ${missed.length?`<p class="instr" style="margin-top:22px">Words to practise 需要练习的单词</p><ul class="review">${[...new Map(missed.map(w=>[w.id,w])).values()].map(w=>`<li><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id]||'')}</span> – ${esc(w.def)}</li>`).join('')}</ul>`:''}
-    <div class="end-actions"><button class="btn" id="again">Play again 再玩一次</button><a class="btn alt" href="#">All games 所有游戏</a></div></div>`);
+  const card=showCard(`<div class="end"><p class="instr">${title} · ${T('finished','结束')}</p>
+    <div class="big">${score}</div><h2>${isBest?T('New best score!','新纪录！'):T('Best score','最高分')+': '+Math.max(prev,score)}</h2>
+    ${missed.length?`<p class="instr" style="margin-top:22px">${T('Words to practise','需要练习的单词')}</p><ul class="review">${[...new Map(missed.map(w=>[w.id,w])).values()].map(w=>`<li><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id]||'')}</span> – ${esc(w.def)}</li>`).join('')}</ul>`:''}
+    <div class="end-actions"><button class="btn" id="again">${T('Play again','再玩一次')}</button><a class="btn alt" href="#">${T('All games','所有游戏')}</a></div></div>`);
   card.querySelector('#again').onclick=again;
   keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); again(); } };
 }
 function timerBar(){ return `<div class="timer"><i id="timeFill"></i></div>`; }
 function playSpeed(){
   const p=zhWords(), deck=Deck(p), SECS=60; let score=0, missed=[], end=Date.now()+SECS*1000, over=false;
-  zhShell('Speed round','60 seconds: see the Chinese, choose the English word. 60秒内尽量多答对。');
-  document.getElementById('stats').innerHTML=`<span>Score <b id="sc">0</b></span><span><b id="secs">${SECS}</b>s</span>`;
+  zhShell(T('Speed round','限时挑战'), T('60 seconds: see the Chinese, choose the English word.','60 秒内看中文选英文，尽量多答对。'));
+  document.getElementById('stats').innerHTML=`<span>${T('Score','得分')} <b id="sc">0</b></span><span><b id="secs">${SECS}</b>s</span>`;
   const feed=document.getElementById('feed'); feed.insertAdjacentHTML('beforebegin', timerBar());
   const tick=()=>{ if(over) return; const left=Math.max(0,end-Date.now());
     const f=document.getElementById('timeFill'); if(!f) return; f.style.width=(100*left/(SECS*1000))+'%';
     document.getElementById('secs').textContent=Math.ceil(left/1000);
-    if(left<=0){ over=true; document.querySelector('.timer')?.remove(); challengeEnd('zhspeed','Speed round',score,missed,playSpeed); } else later(tick,100); };
+    if(left<=0){ over=true; document.querySelector('.timer')?.remove(); challengeEnd('zhspeed',T('Speed round','限时挑战'),score,missed,playSpeed); } else later(tick,100); };
   const step=()=>{ if(over) return;
     const w=deck.next(), ds=distractors(w,zhPool(p),3);
-    mcCard({instr:'Choose the English word 选出英文单词', promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>`,
+    mcCard({instr:T('Choose the English word','选出英文单词'), promptHtml:`<div class="zh-prompt" lang="zh-CN">${esc(ZH[w.id])}</div>`,
       options:[w.w,...ds.map(x=>x.w)], answer:w.w,
       onResult:(ok)=>{ P.record('zhspeed',w,ok); if(ok){ score++; document.getElementById('sc').textContent=score; later(step,250); } else { missed.push(w); later(step,900); } }});
   };
@@ -1702,14 +1719,14 @@ function playSpeed(){
 }
 function playSurvival(){
   const p=zhWords(), deck=Deck(p); let lives=3, score=0, missed=[], limit=10000, over=false;
-  zhShell('Survival','Three lives. Choose the meaning before time runs out. 三条命，在时间用完前选出释义。');
-  const draw=()=>{ document.getElementById('stats').innerHTML=`<span>Score <b>${score}</b></span><span class="lives" aria-label="${lives} lives left">${'♥'.repeat(lives)}<span class="lost">${'♥'.repeat(3-lives)}</span></span>`; };
+  zhShell(T('Survival','生存挑战'), T('Three lives. Choose the meaning before time runs out.','三条命，在时间用完前选出释义。'));
+  const draw=()=>{ document.getElementById('stats').innerHTML=`<span>${T('Score','得分')} <b>${score}</b></span><span class="lives" aria-label="${lives} lives left">${'♥'.repeat(lives)}<span class="lost">${'♥'.repeat(3-lives)}</span></span>`; };
   draw();
   const feed=document.getElementById('feed'); feed.insertAdjacentHTML('beforebegin', timerBar());
-  const lose=(w)=>{ lives--; missed.push(w); draw(); if(lives<=0){ over=true; document.querySelector('.timer')?.remove(); later(()=>challengeEnd('zhsurvive','Survival',score,missed,playSurvival),1100); return false; } return true; };
+  const lose=(w)=>{ lives--; missed.push(w); draw(); if(lives<=0){ over=true; document.querySelector('.timer')?.remove(); later(()=>challengeEnd('zhsurvive',T('Survival','生存挑战'),score,missed,playSurvival),1100); return false; } return true; };
   const step=()=>{ if(over) return;
     const w=deck.next(), ds=distractors(w,zhPool(p),3), start=Date.now(), my=limit; let answered=false;
-    mcCard({instr:'Choose the meaning 选出释义', promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
+    mcCard({instr:T('Choose the meaning','选出释义'), promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
       options:[w.def,...ds.map(x=>x.def)], answer:w.def, optClass:'long',
       onResult:(ok,card,fb)=>{ answered=true; P.record('zhsurvive',w,ok);
         if(ok){ score++; limit=Math.max(4000,limit-300); draw(); later(step,300); }
@@ -1718,7 +1735,7 @@ function playSurvival(){
     const tick=()=>{ if(answered||over) return; const left=Math.max(0,my-(Date.now()-start));
       const f=document.getElementById('timeFill'); if(f) f.style.width=(100*left/my)+'%';
       if(left<=0){ answered=true; P.record('zhsurvive',w,false); card.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; if(b.dataset.v===w.def) b.classList.add('ok'); else b.classList.add('dim'); });
-        card.querySelector('.fb').innerHTML=`<div class="feedback no"><span class="verdict">Time's up! 时间到！</span><span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span></div>`;
+        card.querySelector('.fb').innerHTML=`<div class="feedback no"><span class="verdict">${T("Time's up!",'时间到！')}</span><span class="wd"><b>${esc(w.w)}</b> <span lang="zh-CN">${esc(ZH[w.id])}</span>: ${esc(w.def)}</span></div>`;
         keyHandler=null; if(lose(w)) later(step,1400); }
       else later(tick,100); };
     tick();
@@ -1746,8 +1763,8 @@ function levelCard(compact){
 function levelsHtml(){
   if(LEVELS.length<2) return '';
   const zh=SIDE==='zh', mine=P.known()?myBand():null, cb=chosenBand(), list=zh?S.words.filter(w=>ZH[w.id]):S.words;
-  return `<p class="set-head levels-head">Level${zh?' 级别':''}</p><div class="sets levels" role="group" aria-label="Level${zh?' 级别':''}">${LEVELS.map(b=>{ const c=LEVEL_CODES[b], n=list.filter(w=>playBand(w)===b).length;
-    return `<button class="chip${b===mine?' chip-good':''}" data-band="${b}" aria-pressed="${b===cb}"><span class="chip-label"><span class="chip-en">${esc(LEVEL_NAMES[c])}</span>${zh?` <span class="chip-zh" lang="zh-CN">${LEVEL_ZH[c]}</span>`:''}</span>${n?` <span class="chip-n" title="${n} words">${n}</span>`:''}</button>`; }).join('')}</div>`;
+  return `<p class="set-head levels-head">${T('Level','级别')}</p><div class="sets levels" role="group" aria-label="${TX('Level','级别')}">${LEVELS.map(b=>{ const c=LEVEL_CODES[b], n=list.filter(w=>playBand(w)===b).length;
+    return `<button class="chip${b===mine?' chip-good':''}" data-band="${b}" aria-pressed="${b===cb}"><span class="chip-label">${zh?`<span class="chip-en t-en">${esc(LEVEL_NAMES[c])}</span><span class="chip-zh t-zh" lang="zh-CN">${LEVEL_ZH[c]}</span>`:`<span class="chip-en">${esc(LEVEL_NAMES[c])}</span>`}</span>${n?` <span class="chip-n" title="${n} words">${n}</span>`:''}</button>`; }).join('')}</div>`;
 }
 // The line under the level buttons: how many words there are at this level
 function levelNote(n){
@@ -1819,19 +1836,20 @@ const loggedIn = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(
 
 // ---------- WORD LIST ----------
 function wordList(){
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">Word list</span></div>
-    <input class="search" id="q" type="search" placeholder="Search words or meanings" aria-label="Search the word list"><div id="list"></div>`);
+  frame({href:'#', label:CFG.name||'Back', html:SIDE==='zh'&&CFG.name?nameT(CFG.name):''}, `<div class="bar"><span class="title">${T('Word list','词汇表')}</span></div>
+    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`);
   let q='';
   const draw=()=>{ const t=q.trim().toLowerCase(); let html='';
     // One heading per level, the chosen level first
     const order=[chosenBand(), ...LEVELS.filter(b=>b!==chosenBand()), null].filter((b,i,a)=>a.indexOf(b)===i);
     for(const lb of order){ const ws=S.words.filter(w=>(playBand(w)??null)===lb && (!t||w.w.toLowerCase().includes(t)||w.def.toLowerCase().includes(t)||(w.syn||[]).some(x=>x.includes(t))||(ZH[w.id]||'').includes(t)));
       if(!ws.length) continue;
-      const head=lb==null ? (LEVELS.length?'Other words':'') : bandName(lb, CFG.only==='zh')+(lb===chosenBand()&&LEVELS.length>1?(CFG.only==='zh'?' · chosen level 当前级别':' · chosen level'):'');
-      html+=`${head?`<p class="instr" style="margin:22px 0 8px">${esc(head)}</p>`:''}<div class="wl">${ws.map(w=>`<div class="wl-row">
+      const chosen=lb===chosenBand()&&LEVELS.length>1;
+      const head=lb==null ? (LEVELS.length?T('Other words','其他单词'):'') : T(esc(bandName(lb))+(chosen?' · chosen level':''), LEVEL_ZH[LEVEL_CODES[lb]]+(chosen?' · 当前级别':''));
+      html+=`${head?`<p class="instr" style="margin:22px 0 8px">${head}</p>`:''}<div class="wl">${ws.map(w=>`<div class="wl-row">
         <div class="w">${esc(w.w)}${w.pos?`<small>${esc(w.pos)}</small>`:''}${ZH[w.id]&&CFG.only==='zh'?`<span class="zh" lang="zh-CN">${esc(ZH[w.id])}</span>`:''}</div>
         <div class="d">${esc(w.def)}${w.ex?`<br><i>${esc(w.ex)}</i>`:''}${w.syn&&w.syn.length?`<div class="syns">≈ ${esc(w.syn.join(' · '))}</div>`:''}</div></div>`).join('')}</div>`; }
-    document.getElementById('list').innerHTML=html||'<p>No words match that search.</p>'; };
+    document.getElementById('list').innerHTML=html||`<p>${T('No words match that search.','没有找到匹配的单词。')}</p>`; };
   document.getElementById('q').oninput=e=>{q=e.target.value; draw();}; draw();
 }
 
@@ -1892,10 +1910,10 @@ function circuitBar(cur){
   const C=window.AEA_CIRCUIT, zh=SIDE==='zh', run=C.active(SIDE); stopCircuitBar(); if(!run) return;
   document.body.classList.add('in-circuit');
   const bar=document.createElement('div'); bar.id='ccBar'; bar.className='cc-bar';
-  bar.innerHTML=`<div class="cc-in"><span class="cc-st">Daily Circuit${zh?' 每日挑战':''} · <b>${Math.min(run.i+1, run.n)}</b>/${run.n}</span>
-    <span class="cc-game">${esc(cur.topic)} · ${esc(cur.name)}${zh&&cur.zh?` <span lang="zh-CN">${esc(cur.zh)}</span>`:''}</span>
+  bar.innerHTML=`<div class="cc-in"><span class="cc-st">${T('Daily Circuit','每日挑战')} · <b>${Math.min(run.i+1, run.n)}</b>/${run.n}</span>
+    <span class="cc-game">${zh ? nameT(cur.topic) : esc(cur.topic)} · ${zh&&cur.zh ? T(esc(cur.name), esc(cur.zh)) : esc(cur.name)}</span>
     <span class="cc-time" aria-hidden="true"><i id="ccFill"></i></span><b class="cc-secs" id="ccSecs" aria-label="seconds left"></b>
-    <button class="cc-stop" type="button">Stop${zh?' 暂停':''}</button></div>`;
+    <button class="cc-stop" type="button">${T('Stop','暂停')}</button></div>`;
   document.body.appendChild(bar);
   bar.querySelector('.cc-stop').onclick=()=>{ leaveCircuit(); location.href=ROOT+SIDE+'/circuit/index.html'; };
   const total=(cur.secs||run.secs||60)*1000;
@@ -1914,17 +1932,17 @@ function stationOver(){
   const C=window.AEA_CIRCUIT, zh=SIDE==='zh', out=C.endStation(); if(!out) return leaveCircuit();
   const r=out.res || {right:0, answered:0, pts:0};
   const over=document.createElement('div'); over.className='cc-over'; over.id='ccOver';
-  over.innerHTML=`<div class="cc-box" role="dialog" aria-modal="true" aria-labelledby="ccH"><p class="instr">Station ${out.i} of ${out.n} done${zh?` · 第 ${out.i} 站完成`:''}</p>
-    <h2 id="ccH">${r.right} right${zh?` <span lang="zh-CN">答对 ${r.right}</span>`:''}</h2>
-    <p class="cc-sub">${r.answered} answer${r.answered===1?'':'s'}${r.pts?` · +${r.pts} point${r.pts===1?'':'s'}`:''}</p>
-    <button class="btn" id="ccNext">${out.next ? `Next station${zh?' 下一站':''} →` : `See your results${zh?' 查看结果':''} →`}</button><p class="cc-auto" id="ccAuto"></p></div>`;
+  over.innerHTML=`<div class="cc-box" role="dialog" aria-modal="true" aria-labelledby="ccH"><p class="instr">${T(`Station ${out.i} of ${out.n} done`, `第 ${out.i} 站完成（共 ${out.n} 站）`)}</p>
+    <h2 id="ccH">${T(`${r.right} right`, `答对 ${r.right} 题`)}</h2>
+    <p class="cc-sub">${T(`${r.answered} answer${r.answered===1?'':'s'}${r.pts?` · +${r.pts} point${r.pts===1?'':'s'}`:''}`, `作答 ${r.answered} 次${r.pts?` · +${r.pts} 积分`:''}`)}</p>
+    <button class="btn" id="ccNext">${out.next ? T('Next station','下一站')+' →' : T('See your results','查看结果')+' →'}</button><p class="cc-auto" id="ccAuto"></p></div>`;
   document.body.appendChild(over);
   let n=4, gone=false, cd=null;
   const go=()=>{ if(gone) return; gone=true; clearInterval(cd);
     if(!out.next){ inCircuit=false; location.href=C.resultsUrl(SIDE); return; }
     if(C.norm(out.next)===C.norm(PAGE)){ over.remove(); circuitStation(); }
     else { inCircuit=false; location.href=ROOT+out.next+'#circuit'; } };
-  const say=()=>{ const a=document.getElementById('ccAuto'); if(a) a.textContent=n>0 ? `Next in ${n}…` : ''; };
+  const say=()=>{ const a=document.getElementById('ccAuto'); if(a) a.textContent=n>0 ? TX(`Next in ${n}…`, `${n} 秒后继续…`) : ''; };
   say(); cd=setInterval(()=>{ n--; say(); if(n<=0) go(); }, 1000);
   const b=document.getElementById('ccNext'); b.onclick=go; b.focus({preventScroll:true});
   keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } };
