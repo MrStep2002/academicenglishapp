@@ -12,7 +12,19 @@
 <meta name="theme-color" content="#151935">
 <title>Maths · Academic English App</title>
 <link rel="stylesheet" href="../css/fonts.css">
-<link rel="stylesheet" href="../css/home.css?v=2026-10-27b">
+<link rel="stylesheet" href="../css/home.css?v=2026-10-27c">
+<style>
+  /* Your exam: board and tier (27 Oct) */
+  .exam { display: flex; flex-direction: column; gap: 10px; }
+  .exam h2 { margin: 6px 0 0; font-family: var(--display); font-weight: 800; font-size: 1.05rem; color: var(--muted); }
+  .exam p { margin: 0; color: var(--muted); font-size: .92rem; }
+  .ex-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ex-chip { font: inherit; font-size: .95rem; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 8px 16px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+  .ex-chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .ex-chip:disabled { opacity: .5; cursor: not-allowed; }
+  .ex-chip small { font-size: .78rem; opacity: .8; }
+  .topic-n { font-family: var(--display); font-weight: 800; color: var(--muted); margin-right: 6px; }
+</style>
 </head>
 <body>
 <!-- Maths tester (27 Oct 2026): not linked from the rest of the site yet. Open it at academicenglishapp.com/maths/ -->
@@ -24,17 +36,46 @@
     <p class="sub"><span class="t-en">Quick practice of the basics. Every question is new, at your level.</span> <span class="t-zh" lang="zh">快速练习基础知识。每道题都是新的，难度适合你。</span></p>
   </header>
 
+  <section class="exam" aria-labelledby="t-exam">
+    <h2 id="t-exam"><span class="t-en">Your exam</span> <span class="t-zh" lang="zh">你的考试</span></h2>
+    <div class="ex-chips" id="boards" role="group" aria-label="Exam board"></div>
+    <div class="ex-chips" id="tiers" role="group" aria-label="Core or Extended"></div>
+    <p id="examNote"></p>
+  </section>
+
   <section class="topic-group" aria-labelledby="t-maths">
     <h2 id="t-maths"><span class="t-en">Topics</span> <span class="t-zh" lang="zh">主题</span></h2>
-    <div class="topics">
-      <a class="topic" href="number/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Number</span> <span class="t-zh" lang="zh">数与计算</span></span><span class="topic-sub"><span class="t-en">Times tables, negatives, order of operations, rounding, percentages, powers…</span> <span class="t-zh" lang="zh">乘法表、负数、运算顺序、取近似值、百分数、乘方……</span></span></span><span class="topic-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>
-      <div class="topic topic-off" aria-disabled="true"><span class="topic-text"><span class="topic-name"><span class="t-en">Fractions, decimals and percentages</span> <span class="t-zh" lang="zh">分数、小数和百分数</span></span><span class="topic-sub"><span class="t-en">Equivalents, ordering, the four operations with fractions</span> <span class="t-zh" lang="zh">等值、比较大小、分数的四则运算</span></span></span><span class="topic-soon"><span class="t-en">Coming soon</span><span class="t-zh" lang="zh">即将推出</span></span></div>
-      <div class="topic topic-off" aria-disabled="true"><span class="topic-text"><span class="topic-name"><span class="t-en">Algebra</span> <span class="t-zh" lang="zh">代数</span></span><span class="topic-sub"><span class="t-en">Substitution, simplifying, solving equations</span> <span class="t-zh" lang="zh">代入、化简、解方程</span></span></span><span class="topic-soon"><span class="t-en">Coming soon</span><span class="t-zh" lang="zh">即将推出</span></span></div>
-      <div class="topic topic-off" aria-disabled="true"><span class="topic-text"><span class="topic-name"><span class="t-en">Shape and measure</span> <span class="t-zh" lang="zh">图形与测量</span></span><span class="topic-sub"><span class="t-en">Perimeter, area, angles, units</span> <span class="t-zh" lang="zh">周长、面积、角度、单位</span></span></span><span class="topic-soon"><span class="t-en">Coming soon</span><span class="t-zh" lang="zh">即将推出</span></span></div>
-    </div>
+    <div class="topics" id="topics"><noscript>Please turn on JavaScript.</noscript></div>
   </section>
 </main>
-<script src="../en/engine/points.js?v=2026-10-27b" data-side="maths"></script>
-<script src="../en/engine/account.js?v=2026-10-27b"></script>
+<script src="engine/boards.js?v=2026-10-27c"></script>
+<script>
+/* The exam picker and the board's topics (from engine/boards.js). The choice is saved as aea:maths:board. */
+(function(){
+  var B = window.AEA_MATHS_BOARDS, esc = function(s){ return String(s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); };
+  var T = function(en, zh){ return '<span class="t-en">' + en + '</span> <span class="t-zh" lang="zh">' + zh + '</span>'; };
+  var go = '<span class="topic-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>';
+  function draw(){
+    var c = B.choice(), board = B[c.board];
+    document.getElementById('boards').innerHTML = B.order.map(function(k){ var b = B[k];
+      return '<button class="ex-chip" data-board="' + k + '" aria-pressed="' + (k === c.board) + '"' + (b.live ? '' : ' disabled') + '>' + T(esc(b.short), esc(b.zh)) + (b.live ? '' : ' <small>' + T('coming soon', '即将推出') + '</small>') + '</button>'; }).join('');
+    document.getElementById('tiers').innerHTML = (board.tiers || []).map(function(t){
+      return '<button class="ex-chip" data-tier="' + t[0] + '" aria-pressed="' + (t[0] === c.tier) + '">' + T(t[1], t[2]) + '</button>'; }).join('');
+    document.getElementById('examNote').innerHTML = c.board === 'cie0580' ? (c.tier === 'core' ? T('Core: Papers 1 and 3, grades C to G.', '核心：试卷 1 和 3，等级 C 到 G。') : T('Extended: Papers 2 and 4, grades A* to E. Includes everything in Core.', '扩展：试卷 2 和 4，等级 A* 到 E。包括核心的全部内容。')) : '';
+    var code = (board.codes || {})[c.tier] || '';
+    document.getElementById('topics').innerHTML = board.topics.map(function(t){
+      var subs = (t.subs || []).filter(function(s){ return !(s.ext && c.tier === 'core') && !s.calc; }), ready = subs.filter(function(s){ return s.skills.length; });
+      var name = '<span class="topic-name"><span class="topic-n">' + esc(t.n) + '</span>' + T(esc(t.name), esc(t.zh)) + '</span>';
+      if (t.live) return '<a class="topic" href="' + t.key + '/index.html"><span class="topic-text">' + name + '<span class="topic-sub">' +
+        T(ready.length + ' of ' + subs.length + ' syllabus topics so far: ' + ready.map(function(s){ return code + s.n + ' ' + esc(s.name); }).join(', '), '考纲 ' + subs.length + ' 项内容中已有 ' + ready.length + ' 项：' + ready.map(function(s){ return code + s.n + ' ' + esc(s.zh); }).join('、')) + '</span></span>' + go + '</a>';
+      return '<div class="topic topic-off" aria-disabled="true"><span class="topic-text">' + name + '</span><span class="topic-soon">' + T('Coming soon', '即将推出') + '</span></div>'; }).join('');
+    document.querySelectorAll('[data-board]').forEach(function(b){ b.onclick = function(){ var k = b.getAttribute('data-board'), t = (B[k].tiers || [])[1] || (B[k].tiers || [])[0]; B.choose(k, t ? t[0] : ''); draw(); }; });
+    document.querySelectorAll('[data-tier]').forEach(function(b){ b.onclick = function(){ B.choose(c.board, b.getAttribute('data-tier')); draw(); }; });
+  }
+  draw();
+})();
+</script>
+<script src="../en/engine/points.js?v=2026-10-27c" data-side="maths"></script>
+<script src="../en/engine/account.js?v=2026-10-27c"></script>
 </body>
 </html>

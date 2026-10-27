@@ -3,6 +3,8 @@
    then this file. Nothing is read from CSV: every question is made fresh by the topic's skills, at the chosen level.
    Same look, levels (Foundation … Advanced), points bar and login as the English pages; instructions follow the
    EN / 中文 switch (English unless the student chose 中文). Points are kept as their own side, "maths".
+   Exam boards (boards.js): the student's board and tier decide which syllabus points this topic shows (27 Oct: Cambridge 0580).
+   Chinese: questions with words carry their Chinese (q.zh), shown on hover or press-and-hold (wireZh).
    Games: Quick (Choose the answer, True or false), Work it out (Type the answer, Which calculation?), Check the working
    (Spot the mistake) and two arcade games (Whack-a-number, Speed round).
    Saved in the browser (and so to the student's account when logged in): progress in aea:maths:v1, settings and best
@@ -81,10 +83,43 @@ const chosenBand = () => pickedBand || myBand();
 const chooseBand = b => { pickedBand=b; store.set('level', b); };
 const tidyChoice = () => { if(pickedBand!=null && P.known() && pickedBand===myBand()) chooseBand(null); };
 
-// ---------- skills: all of them, or the ones the student picked ----------
-const skillsAt = L => TOPIC.skills.filter(s=>s.from<=L && L<=s.to);
-let picked = store.get('skills', []);
-const activeSkills = L => { const at=skillsAt(L), mine=at.filter(s=>picked.includes(s.key)); return mine.length ? mine : at; };
+// ---------- the student's exam board: this topic's syllabus points (boards.js), all of them or the ones they picked ----------
+// Each point lists the skills (recipes in the topic file) that practise it. Extended-only points are hidden for Core.
+const BOARDS = window.AEA_MATHS_BOARDS || null, CHOICE = BOARDS ? BOARDS.choice() : {board:'', tier:'extended'};
+const BOARD = BOARDS ? BOARDS[CHOICE.board] : null, TIER = CHOICE.tier;
+const BTOPIC = BOARD && (BOARD.topics||[]).find(t=>t.key===TOPIC.key);
+const PREFIX = BOARD && BOARD.codes ? (BOARD.codes[TIER]||'') : '';
+const recipe = k => TOPIC.skills.find(s=>s.key===k);
+const okAt = (r, L) => !!r && r.from<=L && L<=r.to;
+const SUBS = BTOPIC ? BTOPIC.subs.filter(s=>!(s.ext && TIER==='core')) : TOPIC.skills.map(r=>({n:'', name:r.name, zh:r.zh, skills:[r.key]}));
+const subKey = s => s.n || s.name;
+const subsAt = L => SUBS.filter(s=>s.skills.some(k=>okAt(recipe(k), L)));
+const skillsOf = (subs, L) => [...new Set(subs.flatMap(s=>s.skills))].map(recipe).filter(r=>okAt(r, L));
+let picked = store.get('subs', []);
+const pickedAt = L => subsAt(L).filter(s=>picked.includes(subKey(s)));
+const skillsAt = L => skillsOf(subsAt(L), L);
+const activeSkills = L => { const mine=pickedAt(L); return skillsOf(mine.length ? mine : subsAt(L), L); };
+const subT = s => `${s.n?`<span class="m-code">${PREFIX}${s.n}</span> `:''}${T(esc(s.name), esc(s.zh))}`;
+const tierT = () => { const t=BOARD && (BOARD.tiers||[]).find(x=>x[0]===TIER); return t ? T(t[1], t[2]) : ''; };
+
+// ---------- Chinese for a question: hover over it (computer), press and hold it (phone), or Tab to it ----------
+// Only questions with words have Chinese (q.zh); a small 中 marks them. The Chinese shows in a bubble under the question.
+const zhBox = zh => `<span class="m-zh-tag" aria-hidden="true" title="${TX('Hover, or press and hold, for Chinese','悬停或长按显示中文')}">中</span><span class="m-zh" lang="zh-CN" role="tooltip" hidden>${zh}</span>`;
+const qBox = (cls, inner, zh, tag) => { tag=tag||'div'; return `<${tag} class="${cls}${zh?' m-q':''}"${zh?' tabindex="0"':''}>${inner}${zh?zhBox(zh):''}</${tag}>`; };
+function wireZh(el){
+  if(!el || el._zh) return; el._zh=true;
+  let t=null, x=0, y=0, touched=0;
+  const show=on=>{ const z=el.querySelector('.m-zh'); if(!z) return; z.hidden=!on; el.classList.toggle('zh-on', on); };
+  el.addEventListener('pointerenter', e=>{ if(e.pointerType==='mouse') show(true); });
+  el.addEventListener('pointerleave', e=>{ if(e.pointerType==='mouse') show(false); });
+  el.addEventListener('focus', ()=>{ if(Date.now()-touched>1000 && el.matches(':focus-visible')) show(true); });
+  el.addEventListener('blur', ()=>show(false));
+  el.addEventListener('touchstart', e=>{ const p=e.touches[0]; touched=Date.now(); x=p.clientX; y=p.clientY; clearTimeout(t); t=setTimeout(()=>show(true), 300); }, {passive:true});
+  el.addEventListener('touchmove', e=>{ const p=e.touches[0]; if(Math.abs(p.clientX-x)>10 || Math.abs(p.clientY-y)>10){ clearTimeout(t); show(false); } }, {passive:true});
+  const end=()=>{ clearTimeout(t); show(false); };
+  el.addEventListener('touchend', end); el.addEventListener('touchcancel', end);
+  el.addEventListener('contextmenu', e=>{ if(el.classList.contains('m-q')) e.preventDefault(); });
+}
 
 // The answer as it is shown (¥12, 25%) and the four choices: the answer and wrong answers from real mistakes
 const show = (q, v) => (q.pre||'')+fmt(v)+(q.suf||'');
@@ -129,12 +164,13 @@ function frame(back, inner){
 }
 function shell(title, note){
   frame({href:'#', html:T(esc(TOPIC.name), esc(TOPIC.zh))}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    ${note?`<p class="hint">${note}</p>`:''}<p class="m-level">${levelT(chosenBand())}${picked.length && activeSkills(chosenBand()).length<skillsAt(chosenBand()).length ? ' · '+activeSkills(chosenBand()).map(s=>T(esc(s.name), esc(s.zh))).join(', ') : ''}</p><div class="feed" id="feed"></div>`);
+    ${note?`<p class="hint">${note} ${T(`Questions marked 中 can be shown in Chinese: ${touch()?'press and hold the question':'hover over the question'}.`, `带“中”的题目可以显示中文：${touch()?'长按题目':'把鼠标放在题目上'}。`)}</p>`:''}<p class="m-level">${levelT(chosenBand())}${(()=>{ const L=chosenBand(), mine=pickedAt(L); return mine.length && mine.length<subsAt(L).length ? ' · '+mine.map(subT).join(', ') : ''; })()}</p><div class="feed" id="feed"></div>`);
 }
 function showCard(html){
   const feed=document.getElementById('feed'), old=feed.querySelector('.card'); if(old) old.remove();
   const card=document.createElement('div'); card.className='card enter'; card.innerHTML=html; feed.appendChild(card);
   card._q=current;   // the question on this card (handy when testing)
+  card.querySelectorAll('.m-q').forEach(wireZh);
   const top=feed.getBoundingClientRect().top; if(top<0) window.scrollBy(0, top-16);
   return card;
 }
@@ -161,8 +197,8 @@ function manualNext(card, next){
   const b=row.querySelector('button'); b.onclick=next; b.focus({preventScroll:true});
   keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); next(); } };
 }
-const promptHtml = q => `<div class="m-prompt${q.long?' long':''}">${q.prompt}${q.long?'':' <span class="m-eq">= ?</span>'}</div>`;
-const nothing = () => showCard(`<p>${T('There are no questions for these skills at this level. Go back and choose other skills, or another level.','这个级别没有这些技能的题目。请返回选择其他技能或级别。')}</p><p><a class="btn" href="#">${T('Back','返回')}</a></p>`);
+const promptHtml = q => qBox(`m-prompt${q.long?' long':''}`, `${q.prompt}${q.long?'':' <span class="m-eq">= ?</span>'}`, q.zh);
+const nothing = () => showCard(`<p>${T('There are no questions for this choice at this level yet. Go back and choose other topics, or another level.','这个级别暂时没有这些内容的题目。请返回选择其他内容或级别。')}</p><p><a class="btn" href="#">${T('Back','返回')}</a></p>`);
 
 let current=null;   // the question being asked
 // ================================ GAMES ================================
@@ -207,7 +243,8 @@ function playTF(){
     const plain=q.mistakes.filter(o=>o.txt===show(q,o.v)), pool=plain.length ? plain : q.opts.slice(1).filter(o=>o.txt===show(q,o.v));
     const truth=Math.random()<.5 || !pool.length, o=truth ? q.opts[0] : pick(pool), val=truth ? q.ans : o.v, txt=show(q,val);
     const sentence = q.stmt ? q.stmt(val) : `${q.prompt} = ${esc(txt)}`;
-    const card=showCard(`<p class="instr">${T('True or false?','对还是错？')}</p><div class="m-prompt m-statement${q.long?' long':''}">${sentence}</div>
+    const zs = q.zstmt ? q.zstmt(val) : q.zh && !q.long ? `${q.zh} = ${esc(txt)}` : '';
+    const card=showCard(`<p class="instr">${T('True or false?','对还是错？')}</p>${qBox(`m-prompt m-statement${q.long?' long':''}`, sentence, zs)}
       <div class="tf-btns"><button class="tfb yes" data-v="1">${T('True','对')}</button><button class="tfb no" data-v="0">${T('False','错')}</button></div><div class="fb"></div>`);
     let done=false;
     const choose=v=>{ if(done) return; done=true; const ok=(v===1)===truth;
@@ -271,7 +308,7 @@ function playWhich(){
     return null; };
   const step=()=>{ const q=nextQ(); if(!q) return nothing(); current=q;
     const opts=shuffle([{e:q.right, ok:true}, ...q.wrongs]);
-    const card=showCard(`<p class="instr">${T('Which calculation answers the question?','哪个算式能解答这个问题？')}</p><p class="m-problem">${esc(q.text)}</p>
+    const card=showCard(`<p class="instr">${T('Which calculation answers the question?','哪个算式能解答这个问题？')}</p>${qBox('m-problem', esc(q.text), q.zh, 'p')}
       <div class="opts m-opts m-exprs">${opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd><span>${esc(o.e)}</span></button>`).join('')}</div><div class="fb"></div>`);
     const btns=[...card.querySelectorAll('.opt')]; let done=false;
     const choose=b=>{ if(done) return; done=true; const o=opts[+b.dataset.i];
@@ -294,7 +331,7 @@ function playSpot(){
     for(let t=0;t<40;t++){ const i=Math.floor(Math.random()*list.length); if(i===last && list.length>1 && t<8) continue; const q=list[i](); if(q){ last=i; q.level=L; q.skill='spot'; return q; } }
     return null; };
   const step=()=>{ const q=nextQ(); if(!q) return nothing(); current=q;
-    const card=showCard(`<p class="instr">${T('Spot the mistake','找出错误')}</p><p class="m-task">${q.task}</p>
+    const card=showCard(`<p class="instr">${T('Spot the mistake','找出错误')}</p>${qBox('m-task', q.task, q.zh, 'p')}
       <div class="m-lines">${q.lines.map((l,i)=>`<button class="m-line" data-i="${i}"><kbd>${i+1}</kbd><span>${l}</span></button>`).join('')}</div><div class="fb"></div>`);
     const btns=[...card.querySelectorAll('.m-line')]; let done=false;
     const choose=b=>{ if(done) return; done=true; const i=+b.dataset.i, ok=i===q.errAt;
@@ -345,7 +382,8 @@ function playWhack(){
   function newQuestion(){
     q=src.next(); if(!q){ over=true; return nothing(); } card._q=q; firstTry=true; between=false; pops=0; sinceT=0;
     choices=q.opts.slice(0, N); target=choices[0];
-    card.querySelector('#wkQ').innerHTML = q.long ? `<span class="long">${q.prompt}</span>` : `${q.prompt} <span class="m-eq">= ?</span>`;
+    const wq=card.querySelector('#wkQ'), zb=q.zh ? zhBox(q.zh) : ''; wq.innerHTML = q.long ? `<span class="long">${q.prompt}${zb}</span>` : `${q.prompt} <span class="m-eq">= ?</span>${zb}`;
+    wq.classList.toggle('m-q', !!q.zh); wireZh(wq);
   }
   function up(h,o){ h.o=o; h.up=true; const my=++h.token, span=h.mole.querySelector('span'); span.textContent=o.txt; h.mole.className='mole'; h.mole.disabled=false;
     requestAnimationFrame(()=>{ if(h.token===my) h.mole.classList.add('up'); }); later(()=>{ if(h.token===my) down(h); }, upMs); }
@@ -420,10 +458,12 @@ function levelLine(){
     <span class="lvl-bar lvl-divider" role="img" aria-label="${pct}%"><i style="width:${pct}%"></i></span></div>`;
 }
 function skillsHtml(){
-  const L=chosenBand(), at=skillsAt(L), on=new Set(activeSkills(L).map(s=>s.key)), all=on.size===at.length;
-  return `<section class="m-skills" aria-labelledby="mSkillsH"><p class="set-head" id="mSkillsH">${T('Skills at this level','本级别的技能')}</p>
-    <div class="sets m-skill-chips"><button class="chip chip-all" data-skill="*" aria-pressed="${all}">${T('All skills','全部技能')}</button>${at.map(s=>`<button class="chip" data-skill="${s.key}" aria-pressed="${!all && on.has(s.key)}">${T(esc(s.name), esc(s.zh))}</button>`).join('')}</div>
-    <p class="setnote">${T('Choose one or more to practise just those. Which calculation? and Spot the mistake use the whole level.','可以只选一个或几个技能来练习。“哪个算式？”和“找出错误”使用整个级别的题目。')}</p></section>`;
+  const L=chosenBand(), at=subsAt(L), mine=new Set(pickedAt(L).map(subKey)), all=!mine.size || mine.size===at.length;
+  const soon=SUBS.filter(s=>!s.skills.length && !s.calc);
+  return `<section class="m-skills" aria-labelledby="mSkillsH"><p class="set-head" id="mSkillsH">${BTOPIC ? T('Syllabus topics at this level','本级别的考纲内容') : T('Skills at this level','本级别的技能')}</p>
+    <div class="sets m-skill-chips"><button class="chip chip-all" data-skill="*" aria-pressed="${all}">${T('All','全部')}</button>${at.map(s=>`<button class="chip" data-skill="${esc(subKey(s))}" aria-pressed="${!all && mine.has(subKey(s))}">${subT(s)}</button>`).join('')}</div>
+    <p class="setnote">${T('Choose one or more to practise just those. Which calculation? and Spot the mistake use the whole level.','可以只选一个或几个内容来练习。“哪个算式？”和“找出错误”使用整个级别的题目。')}</p>
+    ${soon.length ? `<p class="setnote m-soon">${T('Still to come','即将推出')}: ${soon.map(s=>`${PREFIX}${s.n} ${T(esc(s.name), esc(s.zh))}`).join(', ')}</p>` : ''}</section>`;
 }
 function gameCard(g){
   const best=store.get((g.challenge?'best:':'streak:')+g.key, 0);
@@ -434,8 +474,8 @@ function menu(){
   tidyChoice();
   frame({href:CFG.back||'../index.html', html:T('Maths','数学')}, `
   <section class="hero hero-compact m-hero">
-    <p class="eyebrow">${T('Maths · tester','数学 · 测试版')}</p>
-    <h1>${T(esc(TOPIC.name), esc(TOPIC.zh))}</h1>
+    <p class="eyebrow">${BOARD ? `${T(esc(BOARD.short), esc(BOARD.zh))} · ${tierT()} · <a href="${esc(CFG.back||'../index.html')}">${T('change','更改')}</a>` : T('Maths · tester','数学 · 测试版')}</p>
+    <h1>${BTOPIC ? `<span class="m-topic-n">${esc(BTOPIC.n)}</span> ` : ''}${T(esc(BTOPIC ? BTOPIC.name : TOPIC.name), esc(BTOPIC ? BTOPIC.zh : TOPIC.zh))}</h1>
     ${levelsHtml()}
     ${levelLine()}
   </section>
@@ -444,10 +484,10 @@ function menu(){
   <section class="m-arcade" aria-labelledby="mc-arcade"><h2 id="mc-arcade">${T('Arcade','街机游戏')}</h2><div class="m-arcade-games">${GAMES.filter(g=>g.col==='arcade').map(gameCard).join('')}</div></section>`);
   $app.querySelectorAll('.levels .chip').forEach(c=>c.onclick=()=>{ const y=window.scrollY; chooseBand(+c.dataset.band); menu(); window.scrollTo(0,y); });
   $app.querySelectorAll('.m-skill-chips .chip').forEach(c=>c.onclick=()=>{
-    const y=window.scrollY, k=c.dataset.skill, L=chosenBand(), at=skillsAt(L).map(s=>s.key);
+    const y=window.scrollY, k=c.dataset.skill, L=chosenBand(), at=subsAt(L).map(subKey);
     if(k==='*') picked=[];
-    else { const cur=new Set(activeSkills(L).length===at.length ? [] : picked.filter(x=>at.includes(x))); cur.has(k) ? cur.delete(k) : cur.add(k); picked=[...cur]; if(picked.length===at.length) picked=[]; }
-    store.set('skills', picked); menu(); window.scrollTo(0,y); });
+    else { const cur=new Set(pickedAt(L).map(subKey)); cur.has(k) ? cur.delete(k) : cur.add(k); picked=[...cur]; if(picked.length===at.length) picked=[]; }
+    store.set('subs', picked); menu(); window.scrollTo(0,y); });
 }
 
 // ---------- router ----------
