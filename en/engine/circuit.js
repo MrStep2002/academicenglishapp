@@ -80,13 +80,15 @@ function skipTopic(path){
     return r.plan[r.i].path; });
   if(next) go(next); else location.href=resultsUrl(side||'en');
 }
-// A topic page with no game of this station's kind (a long game or an arcade game) at the student's level: try another of
-// their subjects for this station; when none has one, the station becomes a short game. Says where to go next.
+// A topic page with no game of this station's kind (a long game or an arcade game; on the Chinese side also a short game)
+// at the student's level: try another of their subjects for this station; when none has one, the station becomes a short
+// game (and its subjects can be tried again for that). Says where to go next: null when a short station has none anywhere.
 function retryStation(path){
   return mutate(r=>{ const st=r.plan[r.i]; st.tried=st.tried||[]; if(!st.tried.includes(norm(path))) st.tried.push(norm(path));
     const pool=Object.keys(studying(r.side)).filter(p=>!st.tried.includes(norm(p)) && !r.skip.includes(norm(p)));
     if(pool.length){ st.path=pool[Math.floor(Math.random()*pool.length)]; return st.path; }
-    st.kind='short'; st.secs=PLAN[0][1]; st.path=path; return path; });
+    if(st.kind==='short') return null;
+    st.kind='short'; st.secs=PLAN[0][1]; st.path=path; st.tried=[]; return path; });
 }
 const today = side => (load().days[dayKey()]||{})[side] || null;
 function streak(side){ const d=load(), x=new Date(); let n=0;

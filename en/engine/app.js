@@ -311,8 +311,10 @@ const nearestLevel = b => LEVELS.length ? LEVELS.reduce((best,x)=>Math.abs(x-b)<
 const playBand = x => { const b=bandOf(x); return b==null ? null : nearestLevel(b); };
 const myBand = () => nearestLevel(Math.max(1, Math.min(5, Math.floor(P.rating()))));
 let pickedBand = (()=>{ const n=levelNum(store.get('level', null)); return n==null ? null : Math.floor(n); })();
-let inCircuit = false;   // playing a station of the Daily Circuit: always the student's own level
-const chosenBand = () => !inCircuit && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
+let inCircuit = false;   // playing a station of the Daily Circuit: the student's own level on the English side
+// Chinese side: the circuit uses the level the student chose on that topic, because that is where their word bank is
+// (Learn the words teaches at the chosen level and doesn't move their level; 27 Oct). No level chosen: their own level.
+const chosenBand = () => (!inCircuit || SIDE==='zh') && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
 const chooseBand = b => { pickedBand = b; store.set('level', b==null ? null : LEVEL_CODES[b]); };
 // A choice that has become the student's own level is dropped, so from then on the page follows their level again
 const tidyChoice = () => { if(pickedBand!=null && P.known() && pickedBand===myBand()) chooseBand(null); };
@@ -2035,8 +2037,9 @@ function wordList(){
 // then a short game is used. Time up in the middle of a long task: what the student has done is marked (circuitFinish).
 // Chinese side (26 Oct, teacher: the same format as the English one): the same five stations and times; short = True or
 // false, long = Type it, Build the sentence, Match the meaning or Choose the meaning (ZH_CIRCUIT), arcade = the same
-// arcade games, with the Chinese under each meaning and the words from the student's word bank. A new student whose word
-// bank is too small for True or false gets Learn the words at a short station instead.
+// arcade games, with the Chinese under each meaning and the words from the student's word bank. Only these games (27 Oct:
+// Learn the words is no longer a station). A subject with no game ready for a station: another subject is tried for it;
+// none has one: the subject is dropped from the circuit; nothing anywhere: the circuit says to learn some words first.
 // Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival; on the Chinese side
 // also 中文 → English.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
@@ -2047,10 +2050,7 @@ function circuitGames(kind){
   if(SIDE==='zh'){
     if(kind==='arcade') return zhWords().length>=4 ? ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run})) : [];
     const keys=ZH_CIRCUIT[kind]||ZH_CIRCUIT.short;
-    const list=ZH_GAMES.filter(g=>keys.includes(g.key) && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
-    // Learn the words: at a short station while the word bank is too small for True or false
-    if(kind==='short' && !list.length && zhLevelWords().length>=4) list.push({key:'learn', name:'Learn the words', zh:'学习单词', run:playLearn});
-    return list;
+    return ZH_GAMES.filter(g=>keys.includes(g.key) && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
   }
   if(kind==='arcade') return ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run}));
   return GAMES.filter(g=>g.form && (!kind || g.form===kind) && !phoneOff(g) && gamesIn(g.cat).includes(g) && g.items().length>=g.min)
@@ -2066,8 +2066,10 @@ function circuitStation(){
   if(cur && C.norm(cur.path)===C.norm(PAGE) && games.some(g=>g.key===cur.game)) cur=C.resume();
   else {
     if(!games.length){ inCircuit=false;
-      if(kind==='long' || kind==='arcade'){   // try another of their subjects for this station, or make it a short game
-        const next=C.retryStation(PAGE); if(!next) return;
+      if(kind==='long' || kind==='arcade' || SIDE==='zh' && kind==='short'){   // try another of their subjects for this station, or make it a short game
+        const next=C.retryStation(PAGE);
+        if(next===null && kind==='short') return C.skipTopic(PAGE);   // Chinese side: no True or false in any subject
+        if(!next) return;
         if(C.norm(next)===C.norm(PAGE)) return circuitStation();
         location.href=ROOT+next+'#circuit'; return; }
       return C.skipTopic(PAGE); }   // nothing ready here: another of their subjects instead
