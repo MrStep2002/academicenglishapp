@@ -127,7 +127,7 @@ async function logout(){
 // ----- the button next to the points bar -----
 function setState(s){ state = s; render(); }
 function chip(side){
-  const a = account(), zh = side === 'zh';
+  const a = account(), zh = side === 'zh' || side === 'maths';   // maths pages have the language switch too (27 Oct)
   const from = encodeURIComponent(location.pathname + location.search + location.hash);
   const href = ROOT + 'login/index.html?from=' + from;
   if(!a) return `<a class="acct-chip" href="${href}">${zh ? '<span class="t-en">Log in</span><span class="t-zh" lang="zh">登录</span>' : 'Log in'}</a>`;
@@ -193,7 +193,7 @@ function render(){
     }
     const side = bar.getAttribute('data-points-bar') || 'en', html = chip(side);
     put(wrap, html);
-    if(side === 'zh') uiSwitch(wrap);
+    if(side === 'zh' || side === 'maths') uiSwitch(wrap);
   });
   if(!bars.length){
     const top = document.querySelector('.topline');
@@ -214,9 +214,11 @@ function render(){
 // ----- Chinese side: the English / 中文 switch (26 Oct). Instructions show in one language at a time: the pages put each
 // language in its own span (class t-en / t-zh) and the CSS hides the one not chosen, using <html data-ui="en|zh">.
 // The choice is kept in aea:ui-lang (so it is saved to the account too); Chinese until the student picks English.
+// A page can choose its own starting language: <html data-ui-default="en"> (the maths pages: English until the student picks 中文).
 // Each Chinese page also sets data-ui in its <head>, so the page never shows both languages while it loads.
 const UI = 'aea:ui-lang';
-const uiGet = () => { try{ return localStorage.getItem(UI) === 'en' ? 'en' : 'zh'; }catch(e){ return 'zh'; } };
+const uiDefault = () => document.documentElement.getAttribute('data-ui-default') === 'en' ? 'en' : 'zh';
+const uiGet = () => { try{ const v=localStorage.getItem(UI); return v === 'en' || v === 'zh' ? v : uiDefault(); }catch(e){ return uiDefault(); } };
 function uiApply(l){
   document.documentElement.setAttribute('data-ui', l);
   document.querySelectorAll('.ui-sw button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.l === l ? 'true' : 'false'));

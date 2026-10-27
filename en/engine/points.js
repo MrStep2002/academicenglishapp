@@ -1,4 +1,4 @@
-/* Points. English and Chinese points are kept apart ("en" and "zh").
+/* Points. English, Chinese and maths points are kept apart ("en", "zh" and, since the maths tester of 27 Oct, "maths").
    Saved in this browser only: localStorage "aea:points:v1" = {en:{days:{"2026-10-21":{p,r,w}}, wrong}, zh:{…}}
      p = points that day, r = right answers, w = wrong answers; wrong = wrong answers since the last point was taken off.
    The session total is in sessionStorage, so it starts again in a new tab or browser window (shown on My progress only).
@@ -16,7 +16,7 @@
   var dayKey = function(d){ return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
   function load(){
     var d; try { d = JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { d = {}; }
-    ['en', 'zh'].forEach(function(s){ d[s] = d[s] || {}; d[s].days = d[s].days || {}; d[s].wrong = d[s].wrong || 0; });
+    ['en', 'zh', 'maths'].forEach(function(s){ d[s] = d[s] || {}; d[s].days = d[s].days || {}; d[s].wrong = d[s].wrong || 0; });
     return d;
   }
   function save(d){ try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) {} }
@@ -53,8 +53,8 @@
   }
   var fmt = function(n){ return Number(n).toLocaleString('en-GB'); };
   function barHtml(side){
-    var t = totals(side), zh = side === 'zh';
-    // Chinese side: each label in both languages, one shown (the English / 中文 switch, 26 Oct)
+    var t = totals(side), zh = side === 'zh' || side === 'maths';
+    // Chinese side (and maths): each label in both languages, one shown (the English / 中文 switch, 26 Oct)
     var L = function(en, z){ return zh ? '<span class="t-en">' + en + '</span><span class="t-zh" lang="zh">' + z + '</span>' : en; };
     var v = function(label, n, title){ return '<span class="pts-v" title="' + title + '"><i>' + label + '</i><b>' + fmt(n) + '</b></span>'; };
     return v(L('Day', '今天'), t.d, zh ? 'Points today 今天的积分' : 'Points today') +
@@ -67,7 +67,7 @@
     Array.prototype.forEach.call(bars, function(el){
       var s = el.getAttribute('data-points-bar') || side; if (s !== side && change) return;
       el.innerHTML = barHtml(s);
-      el.setAttribute('aria-label', (s === 'zh' ? 'Chinese version points' : 'English points') + ': ' + el.textContent.replace(/\s+/g, ' '));
+      el.setAttribute('aria-label', (s === 'zh' ? 'Chinese version points' : s === 'maths' ? 'Maths points' : 'English points') + ': ' + el.textContent.replace(/\s+/g, ' '));
       if (change && s === side) { var pop = document.createElement('span'); pop.className = 'pts-pop ' + (change > 0 ? 'up' : 'down');
         pop.textContent = (change > 0 ? '+' : '−') + Math.abs(change); el.appendChild(pop); setTimeout(function(){ pop.remove(); }, 1300); }
     });

@@ -1,0 +1,82 @@
+/* Maths pages (tester, 27 Oct 2026): on top of en/engine/styles.css, which gives the cards, buttons, levels and columns. */
+
+/* The menu: three columns (Quick, Work it out, Check the working), then the arcade games */
+.m-col-quick h2::before{background:var(--blue)}
+.m-col-work h2::before{background:var(--good)}
+.m-col-check h2::before{background:var(--mark)}
+.m-skills{margin:-6px 0 26px}
+.m-skills .set-head{margin-top:0}
+.m-skill-chips .chip{font-size:13.5px;padding:6px 12px}
+.m-arcade{margin-top:30px;border-top:1px solid var(--rule);padding-top:22px}
+.m-arcade h2{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;margin:0 0 12px}
+.m-arcade h2::before{content:"";display:block;width:36px;height:4px;border-radius:2px;background:var(--bad);margin-bottom:10px}
+.m-arcade-games{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:620px){.m-arcade-games{grid-template-columns:1fr}}
+.m-arcade .game{padding:14px 16px 12px;gap:6px;border-radius:10px}
+.m-arcade .game h3{font-size:20px}
+.m-arcade .game p{font-size:14px;line-height:1.4}
+.m-level{margin:-6px 0 14px;font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
+
+/* The question */
+.m-prompt{font-size:clamp(34px,7vw,50px);line-height:1.2;font-weight:700;font-variant-numeric:tabular-nums;margin:2px 0 22px;letter-spacing:-.01em;overflow-wrap:anywhere}
+.m-prompt .m-eq{color:var(--ink-2);font-weight:400}
+.m-prompt.long,.m-prompt .long{display:block;font-size:clamp(20px,3.4vw,26px);line-height:1.4;letter-spacing:0}
+.m-prompt.m-statement{font-size:clamp(28px,5.5vw,42px)}
+.m-prompt.m-statement.long{font-size:clamp(20px,3.4vw,25px)}
+.m-prompt sup,.m-work sup,.m-why sup,.m-line sup,.m-fix sup,.m-task sup,.review sup{font-size:.6em;line-height:0}
+/* A fraction: one number over another */
+.fr{display:inline-flex;flex-direction:column;align-items:stretch;vertical-align:middle;text-align:center;font-size:.72em;line-height:1.05;margin:0 .08em;font-weight:inherit}
+.fr>span{padding:0 .18em}
+.fr>span:first-child{border-bottom:.09em solid currentColor}
+.m-opts .opt{font-size:21px;font-weight:700;font-variant-numeric:tabular-nums}
+.m-opts .opt.no{text-decoration:line-through}
+.m-exprs .opt{font-size:19px}
+.m-problem{font-size:clamp(18px,2.8vw,21px);line-height:1.5;margin:0 0 20px}
+.m-why{color:var(--ink)}
+.m-why b{font-variant-numeric:tabular-nums}
+.m-work{font-variant-numeric:tabular-nums}
+
+/* Type the answer: the answer box and the number pad */
+.m-ans{display:flex;align-items:center;justify-content:center;gap:4px;min-height:64px;margin:0 auto 14px;max-width:360px;padding:10px 16px;border:2px solid var(--rule);border-radius:12px;background:var(--paper);font-size:32px;font-weight:700;font-variant-numeric:tabular-nums}
+.m-ans .m-unit{color:var(--ink-2);font-weight:400}
+.m-caret{display:inline-block;width:2px;height:1em;background:var(--blue);animation:mBlink 1s steps(1) infinite}
+.m-ans.ok{border-color:var(--good);background:var(--good-soft);color:var(--good)}
+.m-ans.no{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.m-ans.ok .m-caret,.m-ans.no .m-caret{display:none}
+.m-ans.shake{animation:shake .35s}
+@keyframes mBlink{50%{opacity:0}}
+.m-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:360px;margin:0 auto}
+.m-key{min-height:56px;border:1.5px solid var(--rule);border-radius:12px;background:var(--sheet);font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none}
+.m-key:hover:not(:disabled){border-color:var(--blue)}
+.m-key:active:not(:disabled){transform:translateY(1px);background:var(--blue-soft)}
+.m-key:disabled{opacity:.5;cursor:default}
+.m-key.m-del{font-size:22px}
+.m-key.m-check{grid-column:span 2;background:var(--ink);color:var(--paper);border-color:var(--ink);font-size:18px}
+.m-msg{text-align:center;min-height:22px;margin:8px 0 0;font-size:15px;color:var(--bad);font-weight:700}
+.phone .m-key{min-height:58px}
+
+/* Spot the mistake: the working, one line per button */
+.m-task{font-weight:700;font-size:18px;margin:0 0 14px}
+.m-lines{display:grid;gap:8px}
+.m-line{display:flex;align-items:center;gap:12px;text-align:left;background:var(--paper);border:1.5px solid var(--rule);border-radius:10px;padding:12px 14px;font-size:clamp(18px,3vw,22px);font-variant-numeric:tabular-nums;min-height:52px}
+.m-line kbd{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);border:1px solid var(--rule);border-radius:4px;padding:1px 6px;background:var(--sheet)}
+.m-line:hover:not(:disabled){border-color:var(--blue)}
+.m-line:disabled{cursor:default}
+.m-line.ok{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:700}
+.m-line.err{background:color-mix(in srgb, var(--mark) 45%, var(--sheet));border-color:var(--mark);color:var(--mark-ink);font-weight:700}
+.m-line.no{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.m-line.dim{opacity:.6}
+.m-fix{margin:-2px 0 4px 14px;font-size:16px;color:var(--good)}
+
+/* Whack-a-number: bigger numbers on the moles */
+.m-arcade-q{margin-bottom:12px}
+.m-whack .mole span{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums}
+.phone .m-whack .mole span{font-size:20px}
+.review sup{line-height:0}
+
+/* Numbers: Bricolage Grotesque (the site's heading font, in /fonts), whose 0 has no slash through it (the body font's does) */
+.m-prompt,.m-opts .opt span,.m-ans,.m-key,.m-line span,.m-fix b,.m-whack .mole span,.m-why b{font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif}
+.m-prompt.long,.m-prompt .long{font-weight:600}
+.m-opts .opt span,.m-line span{font-weight:600}
+.m-opts .opt.ok span{font-weight:700}
+@media (max-width:520px){ .m-skill-chips .chip{width:auto} }
