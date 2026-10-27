@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<title>Maths status · Academic English App</title>
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="../../en/engine/fonts.css">
+<link rel="stylesheet" href="../../en/engine/styles.css?v=2026-10-27d">
+<link rel="stylesheet" href="../engine/maths.css?v=2026-10-27d">
+<style>
+/* Maths status (27 Oct 2026): a page for the teacher, not linked from anywhere. What the maths section has for
+   Cambridge IGCSE 0580 and what it still needs. The syllabus topics come from maths/engine/boards.js and the questions
+   from the topic files (maths/engine/number.js …), read each time the page loads. The list of question kinds each
+   syllabus topic needs (NEEDS, below) is written by hand: when a new recipe is added to a topic file, put its key on
+   the kinds it covers here, and on the syllabus topic in boards.js. */
+.st h1{font-family:var(--f-display);font-weight:400;font-size:clamp(32px,5vw,44px);margin:6px 0 4px}
+.st .sub{color:var(--ink-2);margin:0 0 6px;font-size:15px}
+.st .when{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+.st h2{font-family:var(--f-display);font-weight:400;font-size:28px;margin:40px 0 4px}
+.st h3{font-family:var(--f-display);font-weight:400;font-size:22px;margin:28px 0 4px}
+.st .meta{color:var(--ink-2);font-size:14px;margin:0 0 10px}
+.st p.body{font-size:15px;line-height:1.55;margin:0 0 10px}
+.st table{width:100%;border-collapse:collapse;font-size:14px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.st th,.st td{border-bottom:1px solid var(--rule);padding:7px 8px;text-align:left;vertical-align:top}
+.st thead th{background:var(--blue-soft);font-weight:700;font-size:13px}
+.st td.n,.st th.n{text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.st td.n{font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif}
+.st tr.off td{color:var(--ink-2)}
+.st .k{font-family:var(--f-mono);font-size:11px;color:var(--ink-2)}
+.st .code{font-family:var(--f-mono);font-size:12.5px;white-space:nowrap;font-weight:700}
+.st .s{font-weight:700;white-space:nowrap}
+.st .s-done{color:var(--good)} .st .s-some{color:#9a6700} .st .s-none{color:var(--bad)} .st .s-off{color:var(--ink-2)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .st .s-some{color:#e3b341}}
+:root[data-theme="dark"] .st .s-some{color:#e3b341}
+.st .notes{color:var(--ink-2);font-size:14px;margin-top:10px;padding-left:20px}
+.st .notes li{margin:4px 0}
+.st .err{color:var(--bad)}
+.st .scroll{overflow-x:auto}
+.st a{color:var(--blue)}
+
+/* Tier switch */
+.tier{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 22px}
+.tier .lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin-right:4px}
+
+/* Summary tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:620px){.tiles{grid-template-columns:1fr}}
+.tile{background:var(--sheet);border:1px solid var(--rule);border-radius:12px;padding:14px 16px}
+.tile .lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);margin:0 0 4px}
+.tile .big{font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;font-size:34px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums}
+.tile .big small{font-size:17px;font-weight:500;color:var(--ink-2)}
+.tile .txt{font-size:13.5px;color:var(--ink-2);margin:6px 0 0;line-height:1.45}
+.bar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--paper);border:1px solid var(--rule);margin-top:8px;min-width:80px}
+.bar i{display:block;height:100%}
+.bar .b-done{background:var(--good)}
+.bar .b-some{background:color-mix(in srgb, var(--good) 40%, var(--sheet))}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2);margin:8px 0 0}
+.key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* What each syllabus topic needs */
+.kinds{list-style:none;margin:0;padding:0}
+.kinds li{position:relative;padding-left:20px;margin:2px 0;line-height:1.4}
+.kinds li::before{content:"○";position:absolute;left:2px;top:0;color:var(--ink-2)}
+.kinds li.ok::before{content:"✓";color:var(--good);font-weight:700}
+.kinds li.ok{color:var(--ink)}
+td.name .rec .k{white-space:nowrap}
+td.name .rec{display:block;font-size:12.5px;color:var(--good);margin-top:5px;line-height:1.35}
+.kinds sup{font-size:.7em;line-height:0}
+.e{font-family:var(--f-mono);font-size:10.5px;font-weight:700;color:var(--blue);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:4px;vertical-align:1px}
+.tag{display:inline-block;font-family:var(--f-mono);font-size:11px;white-space:nowrap;border-radius:5px;padding:2px 7px;margin:0 4px 4px 0;border:1px solid var(--rule);background:var(--paper);color:var(--ink)}
+.tag.f-now{background:var(--good-soft);border-color:color-mix(in srgb, var(--good) 40%, var(--rule))}
+.tag.f-answers{background:var(--blue-soft);border-color:color-mix(in srgb, var(--blue) 35%, var(--rule))}
+.tag.f-diagram,.tag.f-graph,.tag.f-chart{background:color-mix(in srgb, var(--mark) 30%, var(--sheet));border-color:color-mix(in srgb, var(--mark) 60%, var(--rule))}
+.tag.f-hands,.tag.f-calc{color:var(--ink-2)}
+.needs .nt{font-size:12.5px;color:var(--ink-2);margin:2px 0 0;line-height:1.4}
+td.name b{display:block}
+td.name .zh{font-family:var(--f-zh);font-size:12.5px;color:var(--ink-2)}
+
+/* Recipes and their examples */
+.ex{font-size:13.5px;line-height:1.5;margin:2px 0}
+.ex .lv{font-family:var(--f-mono);font-size:10.5px;color:var(--ink-2);display:inline-block;min-width:22px}
+.ex .q{font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;font-weight:600}
+.ex .a{color:var(--good);font-weight:700;font-family:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif}
+.ex .fr{font-size:.8em}
+.ex sup{font-size:.65em;line-height:0}
+.zh-ok{color:var(--good);font-weight:700} .zh-no{color:var(--bad);font-weight:700} .zh-na{color:var(--ink-2)}
+.list{font-size:15px;line-height:1.55;padding-left:22px;margin:6px 0 10px}
+.list li{margin:6px 0}
+.list .k{font-size:11.5px}
+@media (max-width:640px){.st .hide-sm{display:none}.st th,.st td{padding:6px 5px}}
+</style>
+</head>
+<body>
+<div class="wrap st" id="st">
+  <p class="mono">Academic English App · Maths · not linked from the site</p>
+  <h1>Maths: what we have, what we need</h1>
+  <p class="sub">The maths section against the Cambridge IGCSE Mathematics syllabus (0580, exams in 2025 to 2027). The syllabus list and the questions are read from the maths files each time this page loads: refresh to see the latest. The example questions are made fresh each time, as they are in the games.</p>
+  <div class="when"><span id="when">Reading…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
+  <div class="tier" id="tier" role="group" aria-label="Tier"></div>
+  <div id="out"><p class="notice loading">Reading the maths files…</p></div>
+</div>
+<script>
+(function(){
+'use strict';
+const ENGINE = new URL('../engine/', location.href).href;
+const SYLLABUS = 'https://www.cambridgeinternational.org/Images/662466-2025-2027-syllabus.pdf';
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LV = ['', 'F', 'F+', 'I', 'I+', 'A'];
+const LVN = ['', 'Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced'];
+const pct = (a, b) => b ? Math.round(100*a/b) : 0;
+const load = src => new Promise((ok, no) => { const s=document.createElement('script'); s.src=src+'?t='+Date.now();
+  s.onload=ok; s.onerror=()=>no(new Error(src.split('/').pop()+' could not be read')); document.head.appendChild(s); });
+
+// What a syllabus topic needs before the games can ask it
+const FIT = {
+  now:     ['Fits now', 'Questions with a number for the answer: every game can ask them as the games are now.'],
+  answers: ['New answer type', 'The answer is not one number (a fraction, ratio, time, expression, pair of coordinates…). Choose the answer and True or false can ask these now; Type the answer needs new keys on its number pad.'],
+  diagram: ['Needs a diagram', 'A shape drawn with its lengths and angles marked: triangles, polygons, circles, solids, Venn and tree diagrams.'],
+  graph:   ['Needs a graph', 'A grid with points, lines or curves on it to read.'],
+  chart:   ['Needs a chart', 'A table or a statistical chart to read.'],
+  hands:   ['Hands-on', 'Done with a ruler, protractor and compasses. The site can only check the facts behind it.'],
+  calc:    ['Calculator', 'Calculator papers (3 and 4) only. Not planned for this site.']
+};
+
+/* Every syllabus topic: f = what it needs (FIT), a = the kind of answer when it isn't a number, n = a note, and
+   k = the kinds of question it needs, from the syllabus: [what, recipe key that makes it (if any), 'E' if Extended only,
+   its own FIT if different]. Short versions of the syllabus: the syllabus itself has the exact wording. */
+const NEEDS = {
+  '1.1': {f:'now', k:[['Factors and multiples','factors'], ['Prime numbers','factors'], ['HCF and LCM','factors'], ['Spotting square and cube numbers'], ['Prime factors: 72 = 2<sup>3</sup> × 3<sup>2</sup>','','','answers'], ['Reciprocals'], ['Natural numbers, integers, rational and irrational numbers']]},
+  '1.2': {f:'diagram', a:'sets', k:[['Set language and notation: ∪, ∩, complement, n(A)'], ['Reading a Venn diagram with two sets'], ['Venn diagrams with three sets; ∈, ∉, ∅, ⊆','','E']]},
+  '1.3': {f:'now', k:[['Squares and square roots','powers'], ['Cubes and cube roots','powers'], ['Other powers and roots: 2<sup>5</sup>, ⁴√81']]},
+  '1.4': {f:'answers', a:'fractions', k:[['Simplifying fractions'], ['Improper fractions and mixed numbers'], ['Converting between fractions, decimals and percentages'], ['Recurring decimals and fractions','','E']]},
+  '1.5': {f:'now', k:[['Putting fractions, decimals and percentages in order'], ['Using =, ≠, <, >, ⩽ and ⩾']]},
+  '1.6': {f:'now', a:'fractions (for the fraction questions)', k:[['Times tables and division','times'], ['Adding and subtracting','addsub'], ['Negative numbers','neg'], ['Order of operations and brackets','order'], ['× and ÷ by 10, 100 and 1000','place'], ['Multiplying and dividing decimals'], ['Adding and subtracting fractions and mixed numbers','','','answers'], ['Multiplying and dividing fractions and mixed numbers','','','answers']]},
+  '1.7': {f:'now', k:[['Laws of indices','indices'], ['Zero and negative indices','indices'], ['Fractional indices: 27<sup>2/3</sup>','','E']]},
+  '1.8': {f:'answers', a:'standard form', k:[['Writing numbers in standard form, and back'], ['Multiplying and dividing in standard form'], ['Adding and subtracting in standard form']]},
+  '1.9': {f:'now', k:[['Rounding to the nearest 10, 100 or whole number','round'], ['Decimal places and significant figures','round'], ['Estimating a calculation','round'], ['Rounding sensibly for the situation (buses, boxes, money)']]},
+  '1.10': {f:'now', k:[['Upper and lower bounds of a rounded value'], ['Bounds of a calculation','','E']]},
+  '1.11': {f:'answers', a:'ratios', k:[['Simplifying ratios'], ['Sharing an amount in a ratio','','','now'], ['Recipes, map scales and best value','','','now']]},
+  '1.12': {f:'now', k:[['Pay, exchange rates, flow rates and fuel use'], ['Speed, distance and time'], ['Density, pressure and population density']]},
+  '1.13': {f:'now', k:[['Percentage of an amount','fdp'], ['Percentage increase and decrease','fdp'], ['Percentage change','fdp'], ['One amount as a percentage of another'], ['Simple and compound interest'], ['Reverse percentages','fdp','E'], ['Repeated percentage change','','E']]},
+  '1.14': {f:'calc', k:[['Using a calculator well: entering a calculation, reading the display, rounding only at the end']]},
+  '1.15': {f:'answers', a:'times', k:[['12- and 24-hour clock'], ['Time taken, and reading timetables'], ['Time zones and time differences']]},
+  '1.16': {f:'now', k:[['Working with money'], ['Converting between currencies']]},
+  '1.17': {f:'now', n:'Most of this is calculator work: it needs numbers chosen to come out cleanly.', k:[['Growth and decay by a percentage each time'], ['Depreciation and population problems']]},
+  '1.18': {f:'answers', a:'surds', k:[['Simplifying surds: √12 = 2√3'], ['Adding, subtracting and multiplying surds'], ['Rationalising the denominator']]},
+
+  '2.1': {f:'now', k:[['Substituting numbers into an expression'], ['Substituting into a formula'], ['Writing an expression from words','','','answers']]},
+  '2.2': {f:'answers', a:'expressions', k:[['Collecting like terms'], ['Expanding one bracket'], ['Expanding two brackets'], ['Factorising with a common factor'], ['Factorising quadratics and the difference of two squares','','E'], ['Completing the square','','E']]},
+  '2.3': {f:'answers', a:'expressions', k:[['Simplifying algebraic fractions'], ['Adding, subtracting, multiplying and dividing algebraic fractions']]},
+  '2.4': {f:'answers', a:'expressions', k:[['Laws of indices with letters: x<sup>3</sup> × x<sup>4</sup>'], ['Fractional indices with letters','','E'], ['Solving equations with indices: 2<sup>x</sup> = 32','','E','now']]},
+  '2.5': {f:'now', a:'pairs (x and y) and formulas', k:[['Solving linear equations'], ['Writing an equation from words'], ['Simultaneous linear equations','','','answers'], ['Changing the subject of a formula','','','answers'], ['Quadratic equations: factorising, the formula, completing the square','','E','answers'], ['Equations with fractions','','E'], ['Simultaneous equations where one is not linear','','E','answers']]},
+  '2.6': {f:'answers', a:'inequalities', k:[['Inequalities on a number line','','','graph'], ['Solving linear inequalities','','E'], ['Regions on a graph','','E','graph']]},
+  '2.7': {f:'now', a:'nth terms', k:[['Next terms and term-to-term rules'], ['The nth term of a linear sequence','','','answers'], ['The nth term of simple quadratic and cubic sequences','','','answers'], ['Exponential sequences, and combinations of sequences','','E','answers']]},
+  '2.8': {f:'now', k:[['Direct and inverse proportion'], ['Proportion with squares, cubes and roots']]},
+  '2.9': {f:'graph', k:[['Reading travel and conversion graphs'], ['Speed–time graphs: acceleration, and distance as the area under the graph','','E']]},
+  '2.10': {f:'graph', k:[['Tables of values for a graph','','','now'], ['Solving an equation from its graph'], ['Exponential graphs, and sums of powers of x','','E']]},
+  '2.11': {f:'graph', k:[['Recognising straight-line and quadratic graphs'], ['Roots, turning points and lines of symmetry'], ['Cubic, reciprocal and exponential graphs; asymptotes','','E']]},
+  '2.12': {f:'answers', a:'expressions', k:[['Differentiating ax<sup>n</sup> and sums of these'], ['The gradient at a point','','','now'], ['Stationary points: maximum or minimum','','','now']]},
+  '2.13': {f:'now', a:'expressions', k:[['Function notation: f(3)'], ['Inverse functions','','','answers'], ['Composite functions: gf(x)','','','answers']]},
+
+  '3.1': {f:'graph', a:'coordinates', k:[['Reading and plotting coordinates']]},
+  '3.2': {f:'graph', k:[['A table of values for a straight line','','','now'], ['Lines like 3x + 2y = 5','','E']]},
+  '3.3': {f:'graph', k:[['Gradient from a grid'], ['Gradient from two points','','E','now']]},
+  '3.4': {f:'now', a:'coordinates', k:[['The midpoint of two points','','','answers'], ['The length of a line between two points']]},
+  '3.5': {f:'answers', a:'equations', k:[['Gradient and y-intercept from y = mx + c','','','now'], ['The equation of a line from its graph','','','graph'], ['The form ax + by = c','','E']]},
+  '3.6': {f:'answers', a:'equations', k:[['The equation of a parallel line']]},
+  '3.7': {f:'now', a:'equations', k:[['The gradient of a perpendicular line'], ['Perpendicular bisectors','','','answers']]},
+
+  '4.1': {f:'diagram', k:[['Names of triangles, quadrilaterals and polygons'], ['Parts of a circle; solids and nets'], ['Similar and congruent shapes']]},
+  '4.2': {f:'hands', k:[['Measuring and drawing lines and angles'], ['Constructing triangles with a ruler and compasses'], ['Nets','','','diagram']]},
+  '4.3': {f:'diagram', k:[['Using a scale: 1 : 50 000','','','now'], ['Three-figure bearings']]},
+  '4.4': {f:'diagram', k:[['Lengths in similar shapes'], ['Areas and volumes of similar shapes','','E'], ['Showing two triangles are similar','','E']]},
+  '4.5': {f:'diagram', k:[['Lines of symmetry and rotational symmetry'], ['Symmetry of solids','','E']]},
+  '4.6': {f:'diagram', k:[['Angles on a line, at a point and in a triangle'], ['Angles and parallel lines'], ['Angles in polygons','','','now']]},
+  '4.7': {f:'diagram', k:[['Angle in a semicircle; tangent and radius'], ['Angle at the centre, same segment, cyclic quadrilateral, alternate segment','','E']]},
+  '4.8': {f:'diagram', k:[['Equal chords, chord bisectors and tangents from a point']]},
+
+  '5.1': {f:'now', k:[['Converting units of length, mass and capacity'], ['Converting units of area and volume: cm<sup>2</sup> and m<sup>2</sup>']]},
+  '5.2': {f:'diagram', k:[['Rectangles and triangles'], ['Parallelograms and trapeziums']]},
+  '5.3': {f:'diagram', a:'answers in terms of π', k:[['Circumference and area of a circle'], ['Arc length and sector area']]},
+  '5.4': {f:'diagram', k:[['Cuboids, prisms and cylinders'], ['Spheres, pyramids and cones']]},
+  '5.5': {f:'diagram', k:[['Compound shapes and parts of shapes'], ['Frustums','','E']]},
+
+  '6.1': {f:'diagram', k:[['Finding the longest side'], ['Finding a shorter side']]},
+  '6.2': {f:'diagram', n:'Mostly calculator work: it needs angles and lengths chosen to come out cleanly.', k:[['Finding a side with sin, cos or tan'], ['Finding an angle'], ['Angles of elevation and depression','','E']]},
+  '6.3': {f:'now', a:'surds', k:[['Exact values of sin, cos and tan for 0°, 30°, 45°, 60° and 90°']]},
+  '6.4': {f:'graph', k:[['Graphs of sin, cos and tan'], ['Solving trigonometric equations from 0° to 360°','','','now']]},
+  '6.5': {f:'diagram', n:'Mostly calculator work.', k:[['The sine rule'], ['The cosine rule'], ['Area = ½ab sin C']]},
+  '6.6': {f:'diagram', k:[['Lengths and angles in 3D shapes'], ['The angle between a line and a plane']]},
+
+  '7.1': {f:'graph', k:[['Reflections, rotations and translations'], ['Enlargements'], ['Describing a transformation fully'], ['Negative scale factors and combined transformations','','E']]},
+  '7.2': {f:'answers', a:'column vectors', k:[['Adding, subtracting and multiplying column vectors']]},
+  '7.3': {f:'now', k:[['The magnitude of a column vector']]},
+  '7.4': {f:'diagram', a:'vectors', k:[['Vector paths around a shape'], ['Showing lines are parallel or points are collinear']]},
+
+  '8.1': {f:'now', a:'fractions', k:[['The probability scale, and the words for it'], ['P(not A) = 1 − P(A)']]},
+  '8.2': {f:'now', k:[['Relative frequency'], ['Expected frequency']]},
+  '8.3': {f:'diagram', a:'fractions', k:[['Sample spaces: two dice, two spinners','','','chart'], ['Tree diagrams, with replacement'], ['Without replacement, and Venn diagrams','','E']]},
+  '8.4': {f:'diagram', a:'fractions', k:[['Conditional probability from tables, Venn diagrams and tree diagrams']]},
+
+  '9.1': {f:'chart', k:[['Tally charts and two-way tables']]},
+  '9.2': {f:'chart', k:[['Reading tables and charts'], ['Comparing two sets of data']]},
+  '9.3': {f:'now', k:[['Mean, median, mode and range of a list'], ['From a frequency table','','','chart'], ['Quartiles and the interquartile range','','E'], ['Estimating the mean of grouped data','','E','chart']]},
+  '9.4': {f:'chart', k:[['Bar charts, pictograms and pie charts'], ['Stem-and-leaf diagrams']]},
+  '9.5': {f:'chart', k:[['Correlation and lines of best fit']]},
+  '9.6': {f:'chart', k:[['Median, quartiles and percentiles from a cumulative frequency graph']]},
+  '9.7': {f:'chart', k:[['Frequency density and histograms']]}
+};
+
+// The games on a topic page (maths/engine/maths.js)
+const GAMES = [
+  ['Choose the answer', 'Quick', 'four answers, each wrong one from a real mistake'],
+  ['True or false', 'Quick', 'the question with an answer: right or not?'],
+  ['Type the answer', 'Work it out', 'on a number pad'],
+  ['Which calculation?', 'Work it out', 'a problem in words: choose the calculation that answers it'],
+  ['Spot the mistake', 'Check the working', 'a worked answer with one wrong line'],
+  ['Whack-a-number', 'Arcade', 'tap the right answers as they pop up'],
+  ['Speed round', 'Arcade', 'as many as possible in 60 seconds']
+];
+
+let TIER = 'extended';
+try{ const q=new URLSearchParams(location.search).get('tier'); TIER = q==='core'||q==='extended' ? q : (localStorage.getItem('aea:maths:status-tier')||'extended'); }catch(e){}
+if(TIER!=='core') TIER='extended';
+
+// The model: each topic, each syllabus topic, each kind of question, and whether a recipe makes it yet
+function build(){
+  const B = window.AEA_MATHS_BOARDS, board = B.cie0580, TOP = window.AEA_MATHS_TOPICS || {};
+  return board.topics.map(t => {
+    const file = TOP[t.key] || null, skills = file ? file.skills : [];
+    const recipe = k => skills.find(s=>s.key===k);
+    const subs = (t.subs||[]).map(s => {
+      const need = NEEDS[s.n] || {f:'now', k:[]};
+      const kinds = need.k.map(([text, skill, e, f]) => ({text, skill:skill||'', ext:e==='E' || !!s.ext, fit:f||need.f,
+        done: !!skill && !!recipe(skill) && s.skills.includes(skill)}));
+      // A recipe boards.js puts on this syllabus topic that no kind above names: list it as made
+      s.skills.filter(k => !kinds.some(x=>x.skill===k)).forEach(k => kinds.push({text:esc((recipe(k)||{name:k}).name), skill:k, ext:!!s.ext, fit:need.f, done:!!recipe(k)}));
+      return Object.assign({}, s, {need, kinds});
+    });
+    return {t, file, subs, recipe};
+  });
+}
+
+// What a tier sees
+const inTier = x => !(x.ext && TIER==='core');
+function state(sub){
+  if(sub.calc) return 'off';
+  const ks=sub.kinds.filter(inTier), d=ks.filter(k=>k.done).length;
+  return ks.length && d===ks.length ? 'done' : d ? 'some' : 'none';
+}
+const STATE = {done:'Done', some:'Started', none:'To do', off:'Not for this site'};
+function tally(subs){
+  const live=subs.filter(inTier).filter(s=>!s.calc), ks=live.flatMap(s=>s.kinds.filter(inTier));
+  return {subs:live.length, done:live.filter(s=>state(s)==='done').length, some:live.filter(s=>state(s)==='some').length,
+    kinds:ks.length, made:ks.filter(k=>k.done).length, left:ks.filter(k=>!k.done)};
+}
+const bar = (done, some, of) => `<div class="bar" role="img" aria-label="${done+some} of ${of}"><i class="b-done" style="width:${pct(done,of)}%"></i><i class="b-some" style="width:${pct(some,of)}%"></i></div>`;
+const code = n => (TIER==='core'?'C':'E') + n;
+const subName = s => TIER==='core' && s.core ? s.core : s.name;
+const subZh = s => TIER==='core' && s.corezh ? s.corezh : s.zh;
+
+// Examples, made once when the page loads (so switching tier doesn't change them)
+const strip = h => String(h).replace(/<[^>]+>/g, ' ');
+function make(gen){ for(let i=0;i<60;i++){ try{ const q=gen(); if(q) return q; }catch(e){ return null; } } return null; }
+const EX = {};
+function examples(model){
+  model.forEach(({t, file}) => { if(!file) return;
+    file.skills.forEach(s => {
+      const lv=[...new Set([s.from, s.to])], ex=lv.map(L=>({L, q:make(()=>s.gen(L))}));
+      let words=0, zh=0;   // every question with words should have its Chinese
+      for(let L=s.from; L<=s.to; L++) for(let i=0;i<150;i++){ const q=make(()=>s.gen(L)); if(!q) continue; if(/[A-Za-z]{2,}/.test(strip(q.prompt))){ words++; if(q.zh) zh++; } }
+      EX[t.key+':'+s.key] = {ex, words, zh};
+    });
+    const lvls = o => Object.keys(o||{}).map(Number).sort((a,b)=>a-b);
+    const kit = (o, field) => { const per=lvls(o).map(L=>({L, n:o[L].length})); let n=0, zh=0, one=null;
+      lvls(o).forEach(L=>o[L].forEach(f=>{ const q=make(f); n++; if(q && q.zh) zh++; }));
+      const Ls=lvls(o), L=Ls[Math.floor(Math.random()*Ls.length)]; if(L) one={L, q:make(o[L][Math.floor(Math.random()*o[L].length)])};
+      return {per, n, zh, one}; };
+    EX[t.key+':which'] = kit(file.which); EX[t.key+':spot'] = kit(file.spot);
+  });
+}
+const fmtAns = (file, q) => (q.pre||'') + (file.fmt ? file.fmt(q.ans) : q.ans) + (q.suf||'');
+function exHTML(file, e){ return e.ex.filter(x=>x.q).map(({L,q}) => `<div class="ex"><span class="lv" title="${LVN[L]}">${LV[L]}</span> <span class="q">${q.prompt}</span> <span class="a">→ ${esc(fmtAns(file,q))}</span></div>`).join(''); }
+const zhCell = (words, zh) => !words ? '<span class="zh-na">Numbers only</span>' : zh===words ? '<span class="zh-ok">Yes</span>' : `<span class="zh-no">${words-zh} without</span>`;
+
+function render(model){
+  const all = model.flatMap(m=>m.subs), T = tally(all), live = model.filter(m=>m.file);
+  const nRecipes = live.reduce((n,m)=>n+m.file.skills.length, 0), nSets = live.reduce((n,m)=>n+m.file.skills.reduce((a,s)=>a+s.to-s.from+1,0), 0);
+  const nWhich = live.reduce((n,m)=>n+(EX[m.t.key+':which']||{n:0}).n, 0), nSpot = live.reduce((n,m)=>n+(EX[m.t.key+':spot']||{n:0}).n, 0);
+  const other = TIER==='core' ? 'extended' : 'core';
+  const tierName = TIER==='core' ? 'Core' : 'Extended';
+  let h = '';
+
+  // ---------- Summary ----------
+  h += `<h2>Summary</h2><p class="meta">${tierName} tier${TIER==='core'?' (Papers 1 and 3)':' (Papers 2 and 4: everything in Core and more)'}. Cambridge splits the syllabus into 9 topics and ${all.length} syllabus topics; ${tierName} has ${all.filter(inTier).length} of them, ${T.subs} that this site could practise.</p>
+  <div class="tiles">
+    <div class="tile"><p class="lab">Syllabus topics started</p><div class="big">${T.done+T.some} <small>of ${T.subs}</small></div>${bar(T.done,T.some,T.subs)}
+      <p class="txt">${T.done} done, ${T.some} started${(()=>{ const on=model.filter(m=>{ const k=tally(m.subs); return k.done+k.some; }); return on.length ? ', in '+on.map(m=>esc(m.t.name)).join(', ') : ''; })()}.</p></div>
+    <div class="tile"><p class="lab">Kinds of question made</p><div class="big">${T.made} <small>of ${T.kinds}</small></div>${bar(T.made,0,T.kinds)}
+      <p class="txt">Each syllabus topic needs a few kinds of question (listed topic by topic below). ${T.kinds-T.made} still to make.</p></div>
+    <div class="tile"><p class="lab">Question recipes</p><div class="big">${nRecipes} <small>recipes · ${nSets} recipe-levels</small></div>
+      <p class="txt">A recipe makes a fresh question each time at its levels, with wrong answers that come from real mistakes. Plus ${nWhich} word problems (Which calculation?) and ${nSpot} worked answers (Spot the mistake).</p></div>
+    <div class="tile"><p class="lab">Topics with a page</p><div class="big">${live.length} <small>of ${model.length}</small></div>${bar(live.length,0,model.length)}
+      <p class="txt">${live.map(m=>esc(m.t.name)).join(', ')||'None'} so far, with all seven games. The rest show as “Coming soon” on the Maths page.</p></div>
+  </div>
+  <div class="key"><span><i style="background:var(--good)"></i>Done</span><span><i style="background:color-mix(in srgb, var(--good) 40%, var(--sheet))"></i>Started</span></div>`;
+
+  // ---------- By topic ----------
+  h += `<h3>By topic</h3><div class="scroll"><table><thead><tr><th>Topic</th><th class="n">Syllabus topics</th><th class="n">Kinds made</th><th class="hide-sm" style="width:22%">Progress</th><th>Mostly needs</th></tr></thead><tbody>`;
+  model.forEach(m => { const k=tally(m.subs), left={};
+    k.left.forEach(x=>left[x.fit]=(left[x.fit]||0)+1);
+    const main=Object.entries(left).sort((a,b)=>b[1]-a[1]).slice(0,2).map(([f])=>`<span class="tag f-${f}">${FIT[f][0]}</span>`).join('');
+    h += `<tr><td><a href="#t${esc(m.t.n)}"><b>${esc(m.t.n)} ${esc(m.t.name)}</b></a>${m.file?'':'<br><span class="k">no page yet</span>'}</td><td class="n">${k.done+k.some} / ${k.subs}</td><td class="n">${k.made} / ${k.kinds}</td><td class="hide-sm">${bar(k.done,k.some,k.subs)}</td><td>${main||'<span class="s s-done">Nothing left</span>'}</td></tr>`; });
+  h += `<tr><td><b>All</b></td><td class="n"><b>${T.done+T.some} / ${T.subs}</b></td><td class="n"><b>${T.made} / ${T.kinds}</b></td><td class="hide-sm">${bar(T.done,T.some,T.subs)}</td><td></td></tr></tbody></table></div>`;
+
+  // ---------- What we have ----------
+  h += `<h2>What we have</h2>`;
+  live.forEach(m => {
+    const subsOf = k => m.subs.filter(s=>s.skills.includes(k) && inTier(s)).map(s=>code(s.n)).join(', ');
+    h += `<h3>${esc(m.t.n)} ${esc(m.t.name)}: the recipes</h3><p class="meta">In <span class="k">maths/engine/${esc(m.t.key)}.js</span>. Levels: F Foundation, F+ Foundation+, I Intermediate, I+ Intermediate+, A Advanced. Examples at the lowest and highest level, made just now.</p>
+    <div class="scroll"><table><thead><tr><th>Recipe</th><th class="n">Levels</th><th class="n">Syllabus</th><th>Examples</th><th class="n">Chinese</th></tr></thead><tbody>`;
+    m.file.skills.forEach(s => { const e=EX[m.t.key+':'+s.key]||{ex:[],words:0,zh:0};
+      h += `<tr><td><b>${esc(s.name)}</b><br><span class="k">${esc(s.key)}</span></td><td class="n">${LV[s.from]}–${LV[s.to]}</td><td class="n code">${subsOf(s.key)||'–'}</td><td>${exHTML(m.file,e)}</td><td class="n">${zhCell(e.words,e.zh)}</td></tr>`; });
+    const W=EX[m.t.key+':which']||{per:[],n:0,zh:0}, P=EX[m.t.key+':spot']||{per:[],n:0,zh:0};
+    const per = x => [1,2,3,4,5].map(L=>{ const r=x.per.find(p=>p.L===L); return `${LV[L]} ${r?r.n:0}`; }).join(' · ');
+    h += `<tr><td><b>Which calculation?</b><br><span class="k">word problems</span></td><td class="n">F–A</td><td class="n code">–</td><td><div class="ex">${W.n} templates: ${per(W)}</div>${W.one&&W.one.q?`<div class="ex"><span class="lv">${LV[W.one.L]}</span> ${W.one.q.text} <span class="a">→ ${esc(W.one.q.right)}</span></div>`:''}</td><td class="n">${zhCell(W.n,W.zh)}</td></tr>
+      <tr><td><b>Spot the mistake</b><br><span class="k">worked answers</span></td><td class="n">F–A</td><td class="n code">–</td><td><div class="ex">${P.n} workings: ${per(P)}</div>${P.one&&P.one.q?`<div class="ex"><span class="lv">${LV[P.one.L]}</span> ${P.one.q.task}</div>`:''}</td><td class="n">${zhCell(P.n,P.zh)}</td></tr>`;
+    h += `</tbody></table></div>`;
+  });
+  h += `<h3>The games</h3><p class="body">Every topic page has the same seven games, which take their questions from the topic's recipes. Students choose a level and, if they like, which syllabus topics to practise.</p>
+    <div class="scroll"><table><thead><tr><th>Game</th><th>Column</th><th>What it is</th></tr></thead><tbody>${GAMES.map(g=>`<tr><td><b>${g[0]}</b></td><td>${g[1]}</td><td>${g[2]}</td></tr>`).join('')}</tbody></table></div>
+    <ul class="notes"><li>Questions with words have the same question in Chinese: hover over it on a computer, or press and hold it on a phone. The wrong-answer reasons and the working are in English only.</li>
+    <li>Points go on their own maths bar. Maths isn't in the Daily Circuit, My progress or the teacher page yet.</li></ul>`;
+
+  // ---------- What we need ----------
+  const left = T.left, byFit = {}; left.forEach(k=>(byFit[k.fit]=byFit[k.fit]||[]).push(k));
+  const subsBy = f => all.filter(inTier).filter(s=>!s.calc && state(s)!=='done' && (s.need.f===f || s.kinds.some(k=>inTier(k) && !k.done && k.fit===f)));
+  const codes = ss => ss.map(s=>code(s.n)).join(', ');
+  const ansSubs = all.filter(inTier).filter(s=>!s.calc && state(s)!=='done' && (s.need.a || s.need.f==='answers' || s.kinds.some(k=>inTier(k)&&!k.done&&k.fit==='answers')));
+  const rest = model.filter(m=>!m.file).length;
+  h += `<h2>What we need</h2>
+  <p class="body">For ${tierName}: <b>${left.length} kinds of question</b> still to make, in ${T.subs-T.done} syllabus topics. Each is roughly one recipe, giving questions at two to five levels; some will need two. What they need before the games can ask them:</p>
+  <div class="scroll"><table><thead><tr><th>What it needs</th><th class="n">Kinds</th><th>What that means</th></tr></thead><tbody>
+  ${Object.keys(FIT).filter(f=>byFit[f]).map(f=>`<tr><td><span class="tag f-${f}">${FIT[f][0]}</span></td><td class="n">${byFit[f].length}</td><td>${FIT[f][1]}</td></tr>`).join('')}
+  </tbody></table></div>
+
+  <h3>New parts for the games</h3>
+  <p class="body">Number needed nothing new. Most of the other topics need at least one new part, built once and then shared by every topic that uses it:</p>
+  <ol class="list">
+    <li><b>Answers that aren't one number</b>: fractions, ratios, times, standard form, surds, expressions such as 3x + 6, coordinates, vectors and inequalities. Choose the answer and True or false can show these now; Type the answer needs extra keys (x, brackets, a fraction bar, a colon) and a way to accept answers written in different orders. <span class="k">${codes(ansSubs)}</span></li>
+    <li><b>Drawn diagrams</b>: triangles, polygons and circles with their lengths and angles marked, solids, Venn diagrams and tree diagrams, drawn fresh for each question so the numbers can change. This is the biggest new part. <span class="k">${codes(subsBy('diagram'))}</span></li>
+    <li><b>Graphs and grids</b>: a coordinate grid with points, straight lines and curves to read off. <span class="k">${codes(subsBy('graph'))}</span></li>
+    <li><b>Charts and tables</b>: bar charts, pie charts, stem-and-leaf diagrams, scatter diagrams, cumulative frequency graphs, histograms and frequency tables. <span class="k">${codes(subsBy('chart'))}</span></li>
+    <li><b>Hands-on topics</b>: constructions with a ruler and compasses (${code('4.2')}) can't be done by tapping; the site can only ask about the facts behind them.</li>
+    <li><b>Calculator work</b>: ${code('1.14')} is for the calculator papers only. Exponential growth, trigonometry and the sine and cosine rules are usually done with a calculator: the recipes need numbers chosen to come out cleanly, or the site would need to allow a calculator for those.</li>
+  </ol>
+
+  <h3>More word problems and workings</h3>
+  <p class="body">Number has ${nWhich} word problems for Which calculation? and ${nSpot} worked answers for Spot the mistake. The same again for each of the other ${rest} topics would be about <b>${rest*nWhich} word problems</b> and <b>${rest*nSpot} workings</b>, each with its Chinese. Some topics need fewer: Which calculation? suits Mensuration and Probability well, and Geometry less.</p>
+
+  <h3>And also</h3>
+  <ul class="list">
+    <li><b>A maths teacher's check</b> of the questions, the wrong-answer reasons and the levels.</li>
+    <li><b>A Chinese-speaking teacher's check</b> of the Chinese: all of it is a first draft.</li>
+    <li><b>Chinese for the explanations</b> (why an answer is wrong, and the working), if students need it.</li>
+    <li><b>Maths in the Daily Circuit, My progress and the teacher page</b>, as the English and Chinese sides have.</li>
+    <li><b>Other exam boards</b> (Edexcel International GCSE, GCSE): a list of their syllabus points in <span class="k">maths/engine/boards.js</span>, pointing at the same recipes. Little new maths: percentages are the same everywhere.</li>
+  </ul>
+
+  <h3>A sensible order</h3>
+  <ol class="list">
+    <li><b>Finish Number.</b> Most of what's left fits the games now, and the rest needs only the new answer types.</li>
+    <li><b>Algebra, then the parts of Probability and Statistics without charts</b>: these need the new answer types but no drawing.</li>
+    <li><b>Diagrams</b>, which open up Geometry, Mensuration, Pythagoras and trigonometry, and vector geometry.</li>
+    <li><b>Graphs and charts</b>, for Coordinate geometry, graphs of functions, transformations and the rest of Statistics.</li>
+  </ol>`;
+
+  // ---------- Topic by topic ----------
+  h += `<h2>Topic by topic</h2><p class="meta">Every ${tierName} syllabus topic and the kinds of question it needs: ✓ made, ○ still to make. Under each syllabus topic, in green, the recipes that practise it now${TIER==='extended'?', <span class="e">E</span> Extended only':''}. These are short versions of the syllabus: the <a href="${SYLLABUS}" target="_blank" rel="noopener">syllabus</a> has the exact wording.</p>`;
+  model.forEach(m => { const k=tally(m.subs);
+    h += `<h3 id="t${esc(m.t.n)}">${esc(m.t.n)} ${esc(m.t.name)} <span class="k" lang="zh-CN">${esc(m.t.zh)}</span></h3><p class="meta">${k.done+k.some} of ${k.subs} syllabus topics started · ${k.made} of ${k.kinds} kinds made · ${m.file?`page: <a href="../${esc(m.t.key)}/index.html">maths/${esc(m.t.key)}/</a>`:'no page yet'}</p>
+    <div class="scroll"><table><thead><tr><th>Code</th><th style="width:22%">Syllabus topic</th><th>Questions it needs</th><th class="hide-sm" style="width:22%">Needs</th><th>Status</th></tr></thead><tbody>`;
+    m.subs.filter(inTier).forEach(s => { const st=state(s), ks=s.kinds.filter(inTier);
+      const fits=[...new Set(ks.filter(x=>!x.done).map(x=>x.fit))];
+      const needs = st==='done' ? '' : fits.map(f=>`<span class="tag f-${f}">${FIT[f][0]}</span>`).join('') + (s.need.a?`<p class="nt">Answers: ${esc(s.need.a)}</p>`:'') + (s.need.n?`<p class="nt">${esc(s.need.n)}</p>`:'');
+      h += `<tr class="${st==='off'?'off':''}"><td class="code">${code(s.n)}</td><td class="name"><b>${esc(subName(s))}</b><span class="zh" lang="zh-CN">${esc(subZh(s))}</span>${s.skills.map(k=>m.recipe(k)).filter(Boolean).map(r=>`<span class="rec">✓ ${esc(r.name)} <span class="k">${LV[r.from]}–${LV[r.to]}</span></span>`).join('')}</td>
+        <td><ul class="kinds">${ks.map(x=>`<li class="${x.done?'ok':''}">${x.text}${x.ext&&TIER==='extended'&&!s.ext?'<span class="e">E</span>':''}</li>`).join('')}</ul></td>
+        <td class="hide-sm needs">${needs}</td><td class="s s-${st}">${STATE[st]}${s.ext&&TIER==='extended'?'<br><span class="e" style="margin:0">E only</span>':''}</td></tr>`; });
+    h += `</tbody></table></div>`; });
+
+  // ---------- The exam ----------
+  h += `<h2>The exam</h2><p class="meta">Cambridge IGCSE Mathematics 0580, for exams in 2025, 2026 and 2027. Each paper is 50% of the grade.</p>
+  <div class="scroll"><table><thead><tr><th>Tier</th><th>Paper</th><th>Calculator</th><th class="n">Time</th><th class="n">Marks</th><th>Grades</th></tr></thead><tbody>
+    <tr><td rowspan="2"><b>Core</b></td><td>Paper 1</td><td>No</td><td class="n">1 h 30</td><td class="n">80</td><td rowspan="2">C to G</td></tr>
+    <tr><td>Paper 3</td><td>Yes</td><td class="n">1 h 30</td><td class="n">80</td></tr>
+    <tr><td rowspan="2"><b>Extended</b></td><td>Paper 2</td><td>No</td><td class="n">2 h</td><td class="n">100</td><td rowspan="2">A* to E</td></tr>
+    <tr><td>Paper 4</td><td>Yes</td><td class="n">2 h</td><td class="n">100</td></tr>
+  </tbody></table></div>
+  <ul class="notes"><li>The site's questions are worked out in the head or on paper, so they match the non-calculator papers (1 and 2) best. Those papers cover every syllabus topic except 1.14.</li>
+    <li>Extended includes everything in Core; Extended-only topics and questions are marked <span class="e">E</span>. In the Core view they are left out.</li>
+    <li>Students choose their exam and tier on the Maths page; Core students don't see the Extended-only syllabus topics.</li></ul>`;
+
+  h += `<h2>About this page</h2><ul class="notes">
+    <li>The syllabus topics, and which recipes practise each one, come from <span class="k">maths/engine/boards.js</span>. The recipes and examples come from the topic files (<span class="k">${live.map(m=>'maths/engine/'+esc(m.t.key)+'.js').join(', ')}</span>).</li>
+    <li>The kinds of question each syllabus topic needs are written in this page (<span class="k">maths/status/index.html</span>). A kind counts as made when its recipe is in a topic file and boards.js puts that recipe on the syllabus topic.</li>
+    <li>This page shows what there is; it doesn't check the questions are right.</li>
+    <li>Not linked from the site. <a href="../../status/index.html">Site content</a> is the same kind of page for the English and Chinese sides.</li></ul>`;
+
+  document.getElementById('out').innerHTML = h;
+  document.getElementById('tier').innerHTML = `<span class="lab">Show</span>` + [['extended','Extended'],['core','Core']].map(([k,n])=>`<button class="chip" type="button" data-tier="${k}" aria-pressed="${k===TIER}">${n}</button>`).join('');
+  document.querySelectorAll('[data-tier]').forEach(b => b.onclick = () => { TIER=b.dataset.tier; try{ localStorage.setItem('aea:maths:status-tier', TIER); }catch(e){} render(model); });
+}
+
+async function main(){
+  await load(ENGINE+'boards.js');
+  const B = window.AEA_MATHS_BOARDS; if(!B || !B.cie0580) throw new Error('boards.js has no Cambridge 0580');
+  const bad = [];
+  for(const t of B.cie0580.topics.filter(t=>t.live)){ try{ await load(ENGINE+t.key+'.js'); }catch(e){ bad.push(t.key+'.js'); } }
+  const model = build(); examples(model); render(model);
+  const d = new Date();
+  document.getElementById('when').innerHTML = `Read at ${d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}, ${d.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'})}` + (bad.length?` · <span class="err">could not read ${esc(bad.join(', '))}</span>`:'');
+}
+main().catch(e => { document.getElementById('out').innerHTML = `<p class="notice err">The maths files could not be read (${esc(e.message||e)}). They load when the site is online.</p>`; });
+})();
+</script>
+</body>
+</html>
