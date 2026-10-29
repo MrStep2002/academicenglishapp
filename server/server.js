@@ -121,8 +121,12 @@ async function makeStudents(classId, names, count) {
     made.push({name, password: pw, hash: await hashPassword(pw)});
   }
   const ins = db.prepare('INSERT INTO students (class_id, name, login, pass, created) VALUES (?,?,?,?,?)');
+  const join = db.prepare('INSERT OR IGNORE INTO class_members (class_id, student_id, added) VALUES (?,?,?)');
   db.exec('BEGIN');
-  try { for (const m of made) m.id = Number(ins.run(classId, m.name, loginKey(m.name), m.hash, now()).lastInsertRowid); db.exec('COMMIT'); }
+  try {
+    for (const m of made) { m.id = Number(ins.run(classId, m.name, loginKey(m.name), m.hash, now()).lastInsertRowid); join.run(classId, m.id, now()); }
+    db.exec('COMMIT');
+  }
   catch (e) { db.exec('ROLLBACK'); throw e; }
   return made.map(({id, name, password}) => ({id, name, password}));
 }
@@ -130,6 +134,19 @@ function ownClass(teacherId, classId) {
   const c = db.prepare('SELECT * FROM classes WHERE id = ? AND teacher_id = ?').get(+classId, teacherId);
   if (!c) throw new Oops(404, 'Class not found.');
   return c;
+}
+
+// ---------- students in more than one class (30 Oct 2026) ----------
+// One account can be in several classes (e.g. English and Media): the same name, password, progress, version and lowest
+// level everywhere. The class table and the class games of each class include them.
+const MEMBERS = 'SELECT student_id FROM class_members WHERE class_id = ?';
+const classesOf = studentId => db.prepare('SELECT classes.id, classes.name, classes.teacher_id FROM class_members JOIN classes ON classes.id = class_members.class_id WHERE student_id = ? ORDER BY classes.name COLLATE NOCASE').all(studentId);
+const classNames = studentId => classesOf(studentId).map(c => c.name).join(', ');
+// A student in one of this teacher's classes
+function ownStudent(teacherId, studentId) {
+  const s = db.prepare('SELECT * FROM students WHERE id = ?').get(+studentId);
+  if (!s || !classesOf(s.id).some(c => c.teacher_id === teacherId)) throw new Oops(404, 'Student not found.');
+  return s;
 }
 
 // ---------- saved progress ----------
@@ -165,13 +182,13 @@ route('POST', '/api/login', async (req, body) => {
   const name = String(body.name || '').trim(), key = loginKey(name), ip = ipOf(req);
   if (!key || !body.password) throw new Oops(400, 'Type your name and password. 请输入名字和密码。');
   if (tooMany('s:' + key, 10) || tooMany('ip:' + ip, 100)) throw new Oops(429, 'Too many tries. Wait 15 minutes, or ask your teacher. 尝试次数太多，请15分钟后再试，或问老师。');
-  const s = db.prepare('SELECT students.*, classes.name AS class_name FROM students JOIN classes ON classes.id = students.class_id WHERE login = ?').get(key);
+  const s = db.prepare('SELECT * FROM students WHERE login = ?').get(key);
   if (!s || !(await checkPassword(body.password, s.pass))) {
     failed('s:' + key); failed('ip:' + ip);
     throw new Oops(401, 'That name and password don\'t match. Check them, or ask your teacher. 名字或密码不对。');
   }
   const hasData = !!db.prepare("SELECT 1 FROM saved WHERE student_id = ? AND key IN ('aea:progress:v1','aea:points:v1')").get(s.id);
-  return {token: startSession('student', s.id), role: 'student', name: s.name, className: s.class_name, hasData};
+  return {token: startSession('student', s.id), role: 'student', name: s.name, className: classNames(s.id), hasData};
 });
 
 route('POST', '/api/logout', req => { const u = who(req); db.prepare('DELETE FROM sessions WHERE token = ?').run(u.token); return {ok: true}; });
@@ -179,9 +196,9 @@ route('POST', '/api/logout', req => { const u = who(req); db.prepare('DELETE FRO
 route('GET', '/api/me', req => {
   const u = who(req);
   if (u.role === 'teacher') { const t = db.prepare('SELECT name, login FROM teachers WHERE id = ?').get(u.id); return {role: 'teacher', name: t.name, username: t.login}; }
-  const s = db.prepare('SELECT students.name, classes.name AS class_name FROM students JOIN classes ON classes.id = students.class_id WHERE students.id = ?').get(u.id);
+  const s = db.prepare('SELECT id, name FROM students WHERE id = ?').get(u.id);
   if (!s) throw new Oops(401, 'Please log in again.');
-  return {role: 'student', name: s.name, className: s.class_name};
+  return {role: 'student', name: s.name, className: classNames(s.id)};
 });
 
 route('POST', '/api/sync', (req, body) => {
@@ -211,7 +228,7 @@ route('POST', '/api/teacher/password', async (req, body) => {
 
 route('GET', '/api/teacher/classes', req => {
   const u = who(req, 'teacher');
-  return {classes: db.prepare('SELECT classes.id, classes.name, classes.created, COUNT(students.id) AS students FROM classes LEFT JOIN students ON students.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name COLLATE NOCASE').all(u.id)};
+  return {classes: db.prepare('SELECT classes.id, classes.name, classes.created, COUNT(class_members.student_id) AS students FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name COLLATE NOCASE').all(u.id)};
 });
 
 route('POST', '/api/teacher/classes', async (req, body) => {
@@ -219,15 +236,16 @@ route('POST', '/api/teacher/classes', async (req, body) => {
   if (!name) throw new Oops(400, 'Give the class a name.');
   const id = Number(db.prepare('INSERT INTO classes (teacher_id, name, created) VALUES (?,?,?)').run(u.id, name, now()).lastInsertRowid);
   let students = [];
-  try { students = await makeStudents(id, body.names, body.count); }
+  try { if (!body.none) students = await makeStudents(id, body.names, body.count); }   // none: students come from other classes
   catch (e) { db.prepare('DELETE FROM classes WHERE id = ?').run(id); throw e; }
   return {class: {id, name}, students};
 });
 
 route('GET', '/api/teacher/classes/:id', (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
-  const students = db.prepare('SELECT id, name, created, last_seen, side, min_level FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(c.id)
-    .map(s => Object.assign({id: s.id, name: s.name, created: s.created, side: s.side, minLevel: s.min_level}, summary(s.id, s.last_seen)));
+  const students = db.prepare(`SELECT id, name, created, last_seen, side, min_level FROM students WHERE id IN (${MEMBERS}) ORDER BY name COLLATE NOCASE`).all(c.id)
+    .map(s => Object.assign({id: s.id, name: s.name, created: s.created, side: s.side, minLevel: s.min_level,
+      alsoIn: classesOf(s.id).filter(o => o.id !== c.id).map(o => ({id: o.id, name: o.name, mine: o.teacher_id === u.id}))}, summary(s.id, s.last_seen)));
   return {class: {id: c.id, name: c.name}, students, weekStart: weekStart(now())};
 });
 
@@ -250,14 +268,49 @@ async function resetStudents(list) {
   return out;
 }
 route('POST', '/api/teacher/students/:id/reset', async (req, body, p) => {
-  const u = who(req, 'teacher');
-  const s = db.prepare('SELECT students.id, students.name, classes.name AS class_name FROM students JOIN classes ON classes.id = students.class_id WHERE students.id = ? AND classes.teacher_id = ?').get(+p.id, u.id);
-  if (!s) throw new Oops(404, 'Student not found.');
-  return {class: {name: s.class_name}, students: await resetStudents([s])};
+  const u = who(req, 'teacher'), s = ownStudent(u.id, p.id);
+  return {class: {name: classNames(s.id)}, students: await resetStudents([s])};
 });
 route('POST', '/api/teacher/classes/:id/reset-all', async (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
-  return {class: {id: c.id, name: c.name}, students: await resetStudents(db.prepare('SELECT id, name FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(c.id))};
+  return {class: {id: c.id, name: c.name}, students: await resetStudents(db.prepare(`SELECT id, name FROM students WHERE id IN (${MEMBERS}) ORDER BY name COLLATE NOCASE`).all(c.id))};
+});
+
+// All this teacher's students, with their classes: to choose some to add to another class
+route('GET', '/api/teacher/students', req => {
+  const u = who(req, 'teacher');
+  const students = db.prepare('SELECT DISTINCT students.id, students.name FROM students JOIN class_members ON class_members.student_id = students.id JOIN classes ON classes.id = class_members.class_id WHERE classes.teacher_id = ? ORDER BY students.name COLLATE NOCASE').all(u.id)
+    .map(s => ({id: s.id, name: s.name, classes: classesOf(s.id).filter(c => c.teacher_id === u.id).map(c => ({id: c.id, name: c.name}))}));
+  return {students};
+});
+// Put students who are already in another of this teacher's classes into this class too (same account)
+route('POST', '/api/teacher/classes/:id/members', (req, body, p) => {
+  const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
+  const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map(Number).filter(Number.isInteger))] : [];
+  if (!ids.length) throw new Oops(400, 'Choose at least one student.');
+  if (ids.length > 200) throw new Oops(400, 'At most 200 students at a time.');
+  const list = ids.map(id => ownStudent(u.id, id));
+  const join = db.prepare('INSERT OR IGNORE INTO class_members (class_id, student_id, added) VALUES (?,?,?)');
+  let added = 0;
+  db.exec('BEGIN');
+  try { for (const s of list) added += Number(join.run(c.id, s.id, now()).changes); db.exec('COMMIT'); }
+  catch (e) { db.exec('ROLLBACK'); throw e; }
+  return {added};
+});
+// Take a student out of this class. Only if they are in another class too: the account, its password and progress stay.
+route('POST', '/api/teacher/classes/:id/members/remove', (req, body, p) => {
+  const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
+  const s = db.prepare('SELECT * FROM students WHERE id = ?').get(+body.id);
+  if (!s || !db.prepare('SELECT 1 FROM class_members WHERE class_id = ? AND student_id = ?').get(c.id, s.id)) throw new Oops(404, 'That student is not in this class.');
+  const others = classesOf(s.id).filter(o => o.id !== c.id);
+  if (!others.length) throw new Oops(400, `${s.name} is only in this class, so they can't be taken out of it.`);
+  db.exec('BEGIN');
+  try {
+    db.prepare('DELETE FROM class_members WHERE class_id = ? AND student_id = ?').run(c.id, s.id);
+    if (s.class_id === c.id) db.prepare('UPDATE students SET class_id = ? WHERE id = ?').run(others[0].id, s.id);
+    db.exec('COMMIT');
+  } catch (e) { db.exec('ROLLBACK'); throw e; }
+  return {ok: true};
 });
 
 // ---------- class games (29 Oct 2026) ----------
@@ -299,7 +352,8 @@ function standing(game, list, t) {
 const gameInfo = g => Object.assign({id: g.id, subject: g.subject, minutes: g.minutes, minScore: g.min_score, due: g.due, created: g.created, closed: g.closed},
   {name: subjectOf(g.subject).name, zh: subjectOf(g.subject).zh});
 const attemptsOf = (gameId, studentId) => db.prepare('SELECT * FROM attempts WHERE game_id = ? AND student_id = ? ORDER BY started').all(gameId, studentId);
-const studentRow = id => db.prepare('SELECT students.*, classes.teacher_id FROM students JOIN classes ON classes.id = students.class_id WHERE students.id = ?').get(id);
+const studentRow = id => db.prepare('SELECT * FROM students WHERE id = ?').get(id);
+const MY_CLASSES = 'SELECT class_id FROM class_members WHERE student_id = ?';
 function ownGame(teacherId, gameId) {
   const g = db.prepare('SELECT games.* FROM games JOIN classes ON classes.id = games.class_id WHERE games.id = ? AND classes.teacher_id = ?').get(+gameId, teacherId);
   if (!g) throw new Oops(404, 'Game not found.');
@@ -310,16 +364,17 @@ function ownGame(teacherId, gameId) {
 route('GET', '/api/student/games', req => {
   const u = who(req, 'student'), s = studentRow(u.id), t = now();
   if (!s) throw new Oops(401, 'Please log in again.');
-  const games = db.prepare('SELECT * FROM games WHERE class_id = ? AND closed IS NULL ORDER BY created DESC').all(s.class_id)
-    .map(g => Object.assign(gameInfo(g), {path: pathFor(g.subject, s.side)}, standing(g, attemptsOf(g.id, s.id), t)));
-  return {side: s.side, minLevel: s.min_level, games, now: t};
+  const classes = classesOf(s.id), cname = id => (classes.find(c => c.id === id) || {}).name || '';
+  const games = db.prepare(`SELECT * FROM games WHERE class_id IN (${MY_CLASSES}) AND closed IS NULL ORDER BY created DESC`).all(s.id)
+    .map(g => Object.assign(gameInfo(g), {path: pathFor(g.subject, s.side), className: cname(g.class_id)}, standing(g, attemptsOf(g.id, s.id), t)));
+  return {side: s.side, minLevel: s.min_level, classes: classes.length, games, now: t};
 });
 
 // Start a game, or carry on with a go that still has time left
 route('POST', '/api/student/games/:id/start', (req, body, p) => {
   const u = who(req, 'student'), s = studentRow(u.id), t = now();
   if (!s) throw new Oops(401, 'Please log in again.');
-  const g = db.prepare('SELECT * FROM games WHERE id = ? AND class_id = ?').get(+p.id, s.class_id);
+  const g = db.prepare(`SELECT * FROM games WHERE id = ? AND class_id IN (${MY_CLASSES})`).get(+p.id, s.id);
   if (!g || g.closed) throw new Oops(404, 'This class game has finished. 这个课堂游戏已经结束了。');
   const list = attemptsOf(g.id, s.id), st = standing(g, list, t);
   let a = list.find(x => !x.finished && t < x.ends);
@@ -364,20 +419,19 @@ function settings(where, args, body) {
   return {ok: true};
 }
 route('POST', '/api/teacher/students/:id/settings', (req, body, p) => {
-  const u = who(req, 'teacher'), s = studentRow(+p.id);
-  if (!s || s.teacher_id !== u.id) throw new Oops(404, 'Student not found.');
+  const u = who(req, 'teacher'), s = ownStudent(u.id, p.id);
   return settings('id = ?', [s.id], body);
 });
 route('POST', '/api/teacher/classes/:id/settings', (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
-  return settings('class_id = ?', [c.id], body);
+  return settings(`id IN (${MEMBERS})`, [c.id], body);
 });
 
 route('GET', '/api/teacher/subjects', req => { who(req, 'teacher'); return {subjects: SUBJECTS}; });
 
 route('GET', '/api/teacher/classes/:id/games', (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id), t = now();
-  const students = db.prepare('SELECT id FROM students WHERE class_id = ?').all(c.id);
+  const students = db.prepare(MEMBERS).all(c.id).map(r => ({id: r.student_id}));
   const games = db.prepare('SELECT * FROM games WHERE class_id = ? ORDER BY created DESC').all(c.id).map(g => {
     const n = {new: 0, playing: 0, passed: 0, below: 0, late: 0};
     for (const s of students) { const st = standing(g, attemptsOf(g.id, s.id), t); n[st.status]++; if (st.late && st.status === 'passed') n.late++; }
@@ -401,7 +455,7 @@ route('POST', '/api/teacher/classes/:id/games', (req, body, p) => {
 route('GET', '/api/teacher/games/:id', (req, body, p) => {
   const u = who(req, 'teacher'), g = ownGame(u.id, p.id), t = now();
   const c = db.prepare('SELECT id, name FROM classes WHERE id = ?').get(g.class_id);
-  const students = db.prepare('SELECT id, name, side, min_level FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(g.class_id)
+  const students = db.prepare(`SELECT id, name, side, min_level FROM students WHERE id IN (${MEMBERS}) ORDER BY name COLLATE NOCASE`).all(g.class_id)
     .map(s => Object.assign({id: s.id, name: s.name, setSide: s.side, minLevel: s.min_level}, standing(g, attemptsOf(g.id, s.id), t)));
   return {class: c, game: gameInfo(g), students, now: t};
 });

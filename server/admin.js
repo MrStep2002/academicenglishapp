@@ -41,7 +41,7 @@ async function newPassword() {
   } else if (cmd === 'list') {
     for (const t of db.prepare('SELECT * FROM teachers ORDER BY login').all()) {
       console.log(`Teacher ${t.login} (${t.name})`);
-      for (const c of db.prepare('SELECT classes.name, COUNT(students.id) AS n FROM classes LEFT JOIN students ON students.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name').all(t.id))
+      for (const c of db.prepare('SELECT classes.name, COUNT(class_members.student_id) AS n FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name').all(t.id))
         console.log(`  ${c.name}: ${c.n} students`);
     }
   } else {

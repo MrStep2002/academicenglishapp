@@ -32,6 +32,7 @@ function style(){
   document.head.appendChild(st);
 }
 
+let manyClasses=false;   // in more than one class (e.g. English and Media): each card says which class set it
 function card(g){
   const href=A.ROOT+g.path+'#class-'+g.id, name=L(esc(g.name), esc(g.zh||''));
   const sub=[L(`${g.minutes} minute${g.minutes===1?'':'s'}`, `${g.minutes} 分钟`), g.minScore ? L(`score needed: ${g.minScore}`, `目标分数：${g.minScore}`) : '', dueText(g.due)].filter(Boolean).join(' · ');
@@ -45,7 +46,7 @@ function card(g){
     btn=`<a class="cc-btn" href="${esc(href)}">${L('Start','开始')} →</a>`; }
   return `<div class="circuit-box class-box">
     <span class="cc-badge" aria-hidden="true"><span>${g.minutes}</span><small>min</small></span>
-    <div class="cc-text"><p class="cc-k">${L('Class game','课堂游戏')}</p><p class="cc-name">${name}</p><p class="cc-sub">${sub}</p><p class="cc-status">${status}</p></div>
+    <div class="cc-text"><p class="cc-k">${L('Class game','课堂游戏')}${manyClasses&&g.className?' · '+esc(g.className):''}</p><p class="cc-name">${name}</p><p class="cc-sub">${sub}</p><p class="cc-status">${status}</p></div>
     ${btn?`<div class="cc-box-actions">${btn}</div>`:''}</div>`;
 }
 
@@ -54,7 +55,7 @@ async function draw(){
   clearTimeout(timer);
   const a=A.account(); if(!a || !a.token){ if(box){ box.remove(); box=null; } return; }
   let r; try{ r=await A.request('/api/student/games'); }catch(e){ timer=setTimeout(draw, 60000); return; }
-  side=r.side||'en';
+  side=r.side||'en'; manyClasses=(r.classes||1)>1;
   const list=(r.games||[]).filter(g=>g.status!=='passed' || Date.now()-(g.finished||0) < 3*864e5);   // done ones stay for 3 days
   if(!list.length){ if(box){ box.remove(); box=null; } timer=setTimeout(draw, 60000); return; }
   style();

@@ -39,6 +39,7 @@
   .class-card span { color: var(--muted); font-size: .92rem; }
   .choice { display: flex; gap: 8px; align-items: flex-start; }
   .choice input { margin-top: 5px; }
+  .choice[hidden] { display: none; }
   .tablewrap { overflow-x: auto; border: 2px solid var(--line); border-radius: 14px; background: var(--card); }
   table { border-collapse: collapse; width: 100%; font-size: .95rem; }
   th, td { padding: 9px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
@@ -188,12 +189,14 @@ function showClasses(){
 }
 
 // The students part of a form: fun names made for you, or your own list
-function studentsFields(){
+function studentsFields(isNew){
   return '<fieldset class="card" style="padding:16px"><legend class="lab">Students</legend>' +
     '<label class="choice"><input type="radio" name="how" value="count" checked><span>Make fun names for me: <input type="number" id="count" min="1" max="60" value="25"> students' +
     '<br><span class="note">e.g. "Brave Panda", "Clever Otter". No real names are stored.</span></span></label>' +
     '<label class="choice"><input type="radio" name="how" value="names"><span>I\'ll type the names, one per line (fun names, not real names)</span></label>' +
-    '<textarea id="names" placeholder="Batman&#10;Totoro&#10;Captain Kiwi" hidden></textarea></fieldset>';
+    '<textarea id="names" placeholder="Batman&#10;Totoro&#10;Captain Kiwi" hidden></textarea>' +
+    (isNew ? '<label class="choice"><input type="radio" name="how" value="none"><span>No new logins: I\'ll add students from my other classes' +
+      '<br><span class="note">For students you already teach in another class: they keep the same login and progress.</span></span></label>' : '') + '</fieldset>';
 }
 function wireStudents(){
   var ta = document.getElementById('names');
@@ -203,6 +206,7 @@ function wireStudents(){
 }
 function studentsValue(){
   var how = document.querySelector('input[name=how]:checked').value;
+  if (how === 'none') return {none: true};
   if (how === 'names') return {names: document.getElementById('names').value.split('\n').map(function(s){ return s.trim(); }).filter(Boolean)};
   return {count: +document.getElementById('count').value || 0};
 }
@@ -211,14 +215,16 @@ function showNew(){
   setTitle('New class'); header();
   view.innerHTML = '<form class="card narrow" id="f" style="max-width:620px">' +
     '<div class="field"><label for="cn">Class name</label><input type="text" id="cn" placeholder="e.g. 8B Media" maxlength="60" required></div>' +
-    studentsFields() +
+    studentsFields(true) +
     '<p class="err" id="err" role="alert" hidden></p>' +
     '<div class="row"><button class="btn" type="submit">Make the class and logins</button><a class="btn alt" href="#/">Cancel</a></div></form>';
   wireStudents(); document.getElementById('cn').focus();
   document.getElementById('f').onsubmit = function(e){
     e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
     var body = studentsValue(); body.name = document.getElementById('cn').value;
-    call('/api/teacher/classes', body).then(function(r){ showCards(r.class.name, r.students, '#/class/' + r.class.id, 'The class is ready.'); }).catch(fail());
+    call('/api/teacher/classes', body).then(function(r){
+      if (body.none) { location.hash = '#/class/' + r.class.id + '/existing'; return; }
+      showCards(r.class.name, r.students, '#/class/' + r.class.id, 'The class is ready.'); }).catch(fail());
   };
 }
 
@@ -258,7 +264,8 @@ function showClass(id){
     list.sort(function(a, b){ var x = sortVal(a, sortBy), y = sortVal(b, sortBy); var d = x < y ? -1 : x > y ? 1 : 0; if (sortBy !== 'name') d = -d; return sortDown ? -d : d; });
     var head = COLS.map(function(col){ return '<th><button type="button" data-sort="' + col[0] + '">' + col[1] + (sortBy === col[0] ? (sortDown ? ' ▴' : ' ▾') : '') + '</button></th>'; }).join('') + '<th></th>';
     var rows = list.map(function(s){
-      return '<tr><td><b>' + esc(s.name) + '</b></td>' +
+      var also = (s.alsoIn || []).map(function(o){ return o.name; });
+      return '<tr><td><b>' + esc(s.name) + '</b>' + (also.length ? '<br><span class="sub">also in ' + esc(also.join(', ')) + '</span>' : '') + '</td>' +
         '<td>' + sideSelect(s.side, 'data-side="' + s.id + '"') + '</td>' +
         '<td>' + levelSelect(s.minLevel || 0, 'data-min="' + s.id + '"') + '</td>' +
         '<td>' + when(s.lastPlayed || s.lastSeen) + '</td>' +
@@ -266,11 +273,13 @@ function showClass(id){
         '<td class="num">' + pair(s.en.total, s.zh.total) + '</td>' +
         '<td>' + pair(s.en.level ? esc(s.en.level) : '<span class="muted">–</span>', s.zh.level ? esc(s.zh.level) : '<span class="muted">–</span>') + '</td>' +
         '<td class="num">' + s.words.known + ' <span class="sub">(+' + s.words.learning + ' learning)</span></td>' +
-        '<td><button class="btn small alt" type="button" data-reset="' + s.id + '" data-name="' + esc(s.name) + '">New password</button></td></tr>';
+        '<td><div class="row" style="flex-wrap:nowrap;gap:6px"><button class="btn small alt" type="button" data-reset="' + s.id + '" data-name="' + esc(s.name) + '">New password</button>' +
+        (also.length ? '<button class="btn small alt" type="button" data-remove="' + s.id + '" data-name="' + esc(s.name) + '" data-also="' + esc(also.join(', ')) + '">Remove from class</button>' : '') + '</div></td></tr>';
     }).join('');
     view.innerHTML =
       '<div class="spread" style="margin-bottom:14px"><a class="backlink" href="#/">← All classes</a>' +
-      '<div class="row"><button class="btn alt" type="button" id="add">+ Add students</button>' +
+      '<div class="row"><button class="btn alt" type="button" id="add">+ New students</button>' +
+      '<a class="btn alt" href="#/class/' + id + '/existing">+ From your other classes</a>' +
       '<button class="btn alt" type="button" id="resetall">New passwords for everyone</button>' +
       '<button class="btn alt" type="button" id="rename">Rename</button></div></div>' +
       classTabs(id, 'students') +
@@ -278,7 +287,7 @@ function showClass(id){
       (list.length ? '<div class="row" style="margin-bottom:10px"><span class="lab">Set everyone:</span>' + sideSelect('', 'id="allSide"').replace('<option value="en" selected>', '<option value="" selected>Version…</option><option value="en">') +
         levelSelect(null, 'id="allMin"', 'Lowest level…') + '<span class="note" id="saved" aria-live="polite"></span></div>' +
         '<div class="tablewrap"><table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
-        '<p class="note" style="margin-top:10px">Version and Lowest level are for class games: each student plays in English or in the Chinese version, at their own level for the subject but never below their lowest level. Changes save straight away.</p>' +
+        '<p class="note" style="margin-top:10px">Version and Lowest level are for class games: each student plays in English or in the Chinese version, at their own level for the subject but never below their lowest level. Changes save straight away. A student in more than one class has one login, one set of points and words, and the same Version and Lowest level in every class.</p>' +
         '<p class="note" style="margin-top:6px">Points: English version · 中 Chinese version. This week starts on Monday ' + esc(r.weekStart) + '. ' +
         'A level shows once a student has answered 10 questions on that side. "Last active" is the last time the student played, or logged in.</p>'
         : '<p class="note">No students in this class yet.</p>');
@@ -299,6 +308,13 @@ function showClass(id){
       call('/api/teacher/classes/' + id + '/rename', {name: n}).then(function(){ showClass(id); }).catch(fail());
     };
     document.getElementById('add').onclick = function(){ showAdd(id, c.name); };
+    Array.prototype.forEach.call(view.querySelectorAll('[data-remove]'), function(b){ b.onclick = function(){
+      if (!confirm('Take ' + b.getAttribute('data-name') + ' out of ' + c.name + '? They stay in ' + b.getAttribute('data-also') + ' with the same login, points and words. Their scores in this class\'s games are kept, and you can add them back.')) return;
+      b.disabled = true;
+      call('/api/teacher/classes/' + id + '/members/remove', {id: +b.getAttribute('data-remove')}).then(function(){ showClass(id); }).catch(fail());
+    }; });
+    var shared = list.filter(function(s){ return s.alsoIn && s.alsoIn.length; }).length;
+    var alsoNote = shared ? ' This also changes it in their other classes for the ' + shared + ' student' + (shared === 1 ? '' : 's') + ' who are in more than one class.' : '';
     var saved = function(){ var el = document.getElementById('saved'); if (el) { el.textContent = 'Saved'; setTimeout(function(){ if (el.textContent === 'Saved') el.textContent = ''; }, 1800); } };
     Array.prototype.forEach.call(view.querySelectorAll('[data-side]'), function(sel){ sel.onchange = function(){
       call('/api/teacher/students/' + sel.getAttribute('data-side') + '/settings', {side: sel.value}).then(saved).catch(fail()); }; });
@@ -306,10 +322,10 @@ function showClass(id){
       call('/api/teacher/students/' + sel.getAttribute('data-min') + '/settings', {minLevel: +sel.value || null}).then(saved).catch(fail()); }; });
     var allSide = document.getElementById('allSide'), allMin = document.getElementById('allMin');
     if (allSide) allSide.onchange = function(){ if (!allSide.value) return;
-      if (!confirm('Put everyone in ' + c.name + ' on the ' + (allSide.value === 'zh' ? 'Chinese version' : 'English version') + '?')) { allSide.value = ''; return; }
+      if (!confirm('Put everyone in ' + c.name + ' on the ' + (allSide.value === 'zh' ? 'Chinese version' : 'English version') + '?' + alsoNote)) { allSide.value = ''; return; }
       call('/api/teacher/classes/' + id + '/settings', {side: allSide.value}).then(function(){ showClass(id); }).catch(fail()); };
     if (allMin) allMin.onchange = function(){ if (allMin.value === '') return;
-      if (!confirm('Set the lowest level for everyone in ' + c.name + ' to ' + (allMin.options[allMin.selectedIndex].text) + '?')) { allMin.value = ''; return; }
+      if (!confirm('Set the lowest level for everyone in ' + c.name + ' to ' + (allMin.options[allMin.selectedIndex].text) + '?' + alsoNote)) { allMin.value = ''; return; }
       call('/api/teacher/classes/' + id + '/settings', {minLevel: +allMin.value || null}).then(function(){ showClass(id); }).catch(fail()); };
   }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
 }
@@ -324,6 +340,50 @@ function showAdd(id, name){
     e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
     call('/api/teacher/classes/' + id + '/students', studentsValue()).then(function(r){ showCards(name, r.students, '#/class/' + id, 'Students added.'); }).catch(fail());
   };
+}
+
+// Students from the teacher's other classes, to put in this class too (30 Oct): same login, points and words
+function showExisting(id){
+  header();
+  Promise.all([call('/api/teacher/classes/' + id), call('/api/teacher/students')]).then(function(rs){
+    var c = rs[0].class, inHere = {}, groups = {}, order = [];
+    rs[0].students.forEach(function(s){ inHere[s.id] = true; });
+    rs[1].students.forEach(function(s){
+      if (inHere[s.id]) return;
+      s.classes.forEach(function(k){ if (!groups[k.id]) { groups[k.id] = {name: k.name, list: []}; order.push(k.id); } groups[k.id].list.push(s); });
+    });
+    order.sort(function(a, b){ return groups[a].name.localeCompare(groups[b].name); });
+    setTitle('Add to ' + c.name + ' from your other classes');
+    var back = '#/class/' + id;
+    if (!order.length) { view.innerHTML = '<div class="card narrow"><p>There is no one to add: everyone in your other classes is already in ' + esc(c.name) + '.</p><div><a class="btn" href="' + back + '">Back to ' + esc(c.name) + '</a></div></div>'; return; }
+    view.innerHTML = '<form class="card" id="f" style="max-width:760px">' +
+      '<p class="note">Tick the students you also teach in ' + esc(c.name) + '. They keep their login card, password, points and words, and see the class games of every class they are in.</p>' +
+      '<div class="field"><label for="q">Find a name</label><input type="text" id="q" autocomplete="off" placeholder="Type part of a name"></div>' +
+      order.map(function(k){ var g = groups[k];
+        return '<fieldset class="card" style="padding:14px 16px;gap:8px" data-group><legend class="lab">' + esc(g.name) + '</legend>' +
+          '<label class="choice"><input type="checkbox" data-all><span class="note">Everyone in ' + esc(g.name) + '</span></label>' +
+          '<div class="grid2" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:4px 14px">' + g.list.map(function(s){
+            return '<label class="choice" data-n="' + esc(s.name.toLowerCase()) + '"><input type="checkbox" value="' + s.id + '"><span>' + esc(s.name) + '</span></label>'; }).join('') + '</div></fieldset>';
+      }).join('') +
+      '<p class="err" id="err" role="alert" hidden></p>' +
+      '<div class="row"><button class="btn" type="submit" id="go" disabled>Add to ' + esc(c.name) + '</button><a class="btn alt" href="' + back + '">Cancel</a><span class="note" id="cnt"></span></div></form>';
+    var boxes = function(){ return Array.prototype.slice.call(view.querySelectorAll('input[type=checkbox][value]')); };
+    var count = function(){   // the same student can be listed under two classes: tick both, count once
+      var ids = {}; boxes().forEach(function(b){ if (b.checked) ids[b.value] = true; });
+      var n = Object.keys(ids).length; document.getElementById('go').disabled = !n;
+      document.getElementById('cnt').textContent = n ? n + ' chosen' : ''; return Object.keys(ids).map(Number); };
+    boxes().forEach(function(b){ b.onchange = function(){ boxes().forEach(function(o){ if (o.value === b.value) o.checked = b.checked; }); count(); }; });
+    Array.prototype.forEach.call(view.querySelectorAll('[data-all]'), function(a){ a.onchange = function(){
+      Array.prototype.forEach.call(a.closest('[data-group]').querySelectorAll('input[value]'), function(b){
+        if (b.closest('label').hidden) return; b.checked = a.checked; b.onchange(); }); }; });
+    document.getElementById('q').oninput = function(){ var q = this.value.trim().toLowerCase();
+      Array.prototype.forEach.call(view.querySelectorAll('[data-n]'), function(l){ l.hidden = !!q && l.getAttribute('data-n').indexOf(q) < 0; }); };
+    document.getElementById('f').onsubmit = function(e){
+      e.preventDefault(); var ids = count(); if (!ids.length) return;
+      document.getElementById('go').disabled = true; document.getElementById('err').hidden = true;
+      call('/api/teacher/classes/' + id + '/members', {ids: ids}).then(function(){ location.hash = back; }).catch(fail());
+    };
+  }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
 }
 
 // ---------- login cards: shown once, to print or copy ----------
@@ -503,6 +563,7 @@ function route(){
   if (h === '#/password') return showPassword();
   if ((m = /^#\/class\/(\d+)$/.exec(h))) return showClass(m[1]);
   if ((m = /^#\/class\/(\d+)\/games$/.exec(h))) return showGames(m[1]);
+  if ((m = /^#\/class\/(\d+)\/existing$/.exec(h))) return showExisting(m[1]);
   if ((m = /^#\/game\/(\d+)$/.exec(h))) return showGame(m[1]);
   showClasses();
 }

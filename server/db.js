@@ -46,6 +46,16 @@ function open(file = DB_PATH) {
   const cols = db.prepare('PRAGMA table_info(students)').all().map(c => c.name);
   if (!cols.includes('side')) db.exec("ALTER TABLE students ADD COLUMN side TEXT NOT NULL DEFAULT 'en'");
   if (!cols.includes('min_level')) db.exec('ALTER TABLE students ADD COLUMN min_level INTEGER');
+  // One student in several classes (30 Oct 2026), e.g. a student the teacher has for English and for Media: one account
+  // (same name, password, progress, version and lowest level) listed in each class. students.class_id stays as the
+  // class the account was made in (or another of their classes if they leave that one); class_members is the full list.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS class_members (
+      class_id INTEGER NOT NULL REFERENCES classes(id), student_id INTEGER NOT NULL REFERENCES students(id), added INTEGER NOT NULL,
+      PRIMARY KEY (class_id, student_id));
+    CREATE INDEX IF NOT EXISTS class_members_student ON class_members(student_id);
+    INSERT OR IGNORE INTO class_members (class_id, student_id, added) SELECT class_id, id, created FROM students;
+  `);
   return db;
 }
 

@@ -82,6 +82,19 @@ sudo bash /opt/aea/server/update.sh
   updated server starts, so `update.sh` is all that's needed.
 - Subjects are listed in `SUBJECTS` in `server.js` (those with an English and a Chinese page).
 
+## Students in more than one class (30 Oct 2026)
+
+- One account can be in several classes (e.g. a student taught for English and for Media): the same fun name, password,
+  login card, points, words, **Version** and **Lowest level** in every class. Each class table lists them ("also in …"),
+  and they see the class games of every class they are in (each card names the class when they are in more than one).
+- Teacher page, on a class: **+ From your other classes** (tick students, or everyone in a class; a name search). A new
+  class can also start with **No new logins** and be filled this way. **Remove from class** shows only for a student who
+  is in another class too: the account and progress stay, and their scores in that class's games are kept.
+  Setting Version or Lowest level for everyone in a class changes it for those students in their other classes too.
+- Table: `class_members` (class, student). Filled from `students.class_id` automatically when the updated server
+  starts, so `update.sh` is all that's needed. `students.class_id` stays as the class the account was made in (moved to
+  another of their classes if they are removed from it).
+
 ## Data and backups
 
 - Database: `/var/lib/aea/aea.db`. A copy is made every day in `/var/lib/aea/backups/` (the last 14 are kept).
