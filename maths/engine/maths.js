@@ -18,7 +18,7 @@ if(!TOPIC){ $app.innerHTML='<p class="notice">This maths topic could not be load
 const SIDE = 'maths', KEY = 'maths-'+TOPIC.key, fmt = TOPIC.fmt, fix = TOPIC.fix;
 
 // ---------- language: one at a time (the switch next to the points bar, from account.js) ----------
-function uiLang(){ try{ return localStorage.getItem('aea:ui-lang')==='zh' ? 'zh' : 'en'; }catch(e){ return 'en'; } }
+const uiLang = () => document.documentElement.getAttribute('data-ui')==='zh' ? 'zh' : 'en';   // the language on show (set in the page's <head>, then by the switch)
 const T = (en, zh) => `<span class="t-en">${en}</span><span class="t-zh" lang="zh-CN">${zh}</span>`;
 const TX = (en, zh) => uiLang()==='zh' ? zh : en;
 
