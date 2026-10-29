@@ -681,3 +681,23 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .lscript .q-mark.now{box-shadow:0 0 0 2px var(--blue)}
 @media (max-width:640px){.lp{padding:10px}.lp-play{flex:1 1 100%}.lp-n{min-width:0}}
 @media (prefers-reduced-motion:reduce){.lp-bar i,.lscript .seg{transition:none}}
+
+/* ---------- Class games (29 Oct 2026): the start / result page and the score in the bar (app.js, CLASS GAME) ---------- */
+.cg-panel{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:clamp(20px,4vw,34px);max-width:640px;margin:8px auto 24px;display:flex;flex-direction:column;gap:12px}
+.cg-panel h1{font-family:var(--f-display);font-weight:400;font-size:clamp(32px,6vw,46px);line-height:1.05;margin:0;letter-spacing:-.01em}
+.cg-panel p{margin:0;color:var(--ink-2)}
+.cg-k{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2)}
+.cg-facts{margin:4px 0 0;padding-left:20px;display:grid;gap:6px;font-size:16px}
+.cg-big{font-family:var(--f-display);font-size:72px;line-height:1;letter-spacing:-.02em}
+.cg-big small{font-family:inherit;font-size:20px;color:var(--ink-2);letter-spacing:0}
+.cg-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px !important}
+.cg-actions .btn{text-decoration:none;display:inline-flex;align-items:center}
+.cg-actions .btn.big{font-size:18px;padding:14px 28px}
+.cg-pass{font-weight:700;color:var(--good) !important}
+.cg-below,.cg-err{font-weight:700;color:var(--bad) !important}
+.cg-score{font-weight:700;white-space:nowrap;border-radius:8px;padding:2px 8px;transition:background .3s}
+.cg-score b{font-family:var(--f-mono);font-size:18px;font-variant-numeric:tabular-nums}
+.cg-score.up{animation:cgUp .6s}.cg-score.down{animation:cgDown .6s}
+@keyframes cgUp{from{background:#23a05c}to{background:transparent}}
+@keyframes cgDown{from{background:#c0392b}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.cg-score.up,.cg-score.down{animation:none}}

@@ -226,8 +226,8 @@ route('POST', '/api/teacher/classes', async (req, body) => {
 
 route('GET', '/api/teacher/classes/:id', (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
-  const students = db.prepare('SELECT id, name, created, last_seen FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(c.id)
-    .map(s => Object.assign({id: s.id, name: s.name, created: s.created}, summary(s.id, s.last_seen)));
+  const students = db.prepare('SELECT id, name, created, last_seen, side, min_level FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(c.id)
+    .map(s => Object.assign({id: s.id, name: s.name, created: s.created, side: s.side, minLevel: s.min_level}, summary(s.id, s.last_seen)));
   return {class: {id: c.id, name: c.name}, students, weekStart: weekStart(now())};
 });
 
@@ -258,6 +258,168 @@ route('POST', '/api/teacher/students/:id/reset', async (req, body, p) => {
 route('POST', '/api/teacher/classes/:id/reset-all', async (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
   return {class: {id: c.id, name: c.name}, students: await resetStudents(db.prepare('SELECT id, name FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(c.id))};
+});
+
+// ---------- class games (29 Oct 2026) ----------
+// The teacher sets a game for a class: a subject, how long (10 minutes unless they change it), the score needed to pass
+// and, if they like, a due time. Each student plays it once, at their own level for that subject but never below the
+// lowest level the teacher set for them, in English or in the Chinese version (also set by the teacher). Score: +1 for
+// each right answer, -1 for each wrong one, never below 0, the same at every level. The clock starts when the student
+// presses Start and keeps running until the time is up, even if they leave the page; after a crash they carry on with
+// the time that is left. Below the score needed: they can play again. After the due time: still allowed, marked late.
+// The games themselves run on the topic pages (en/engine/app.js, address ending #class-<game id>); this part keeps
+// the games and each student's goes ("attempts"), and works out what the teacher and the student see.
+// Subjects: those with an English and a Chinese version. More (arithmetic, general knowledge…) can be added here.
+const SUBJECTS = [
+  {key: 'representation', name: 'Representation', zh: '再现'},
+  {key: 'web-design', name: 'Web design', zh: '网页设计'},
+  {key: 'descriptive', name: 'Descriptive language', zh: '描写性语言'},
+  {key: 'essentials', name: 'Academic English Essentials', zh: '学术英语基础'}
+];
+const subjectOf = key => SUBJECTS.find(s => s.key === key) || {key, name: key, zh: ''};
+const pathFor = (key, side) => (side === 'zh' ? 'zh/' : 'en/') + key + '/index.html';
+const GRACE = 20e3;               // a score sent up to 20 seconds after the time is up still counts (slow connections)
+const MAX_MINUTES = 60;
+const SIDES = ['en', 'zh'];
+const levelIn = v => { const n = Math.floor(+v); return n >= 1 && n <= 5 ? n : null; };
+
+// One student's goes at one game → what to show
+function standing(game, list, t) {
+  const done = list.filter(a => a.finished || t >= a.ends).sort((a, b) => a.started - b.started);
+  const live = list.find(a => !a.finished && t < a.ends) || null;
+  const pass = done.find(a => a.score >= game.min_score) || null;
+  const best = done.reduce((b, a) => (!b || a.score > b.score ? a : b), null);
+  const shown = pass || (live && !done.length ? live : best);
+  const status = pass ? 'passed' : live ? 'playing' : done.length ? 'below' : 'new';
+  const late = pass ? !!(game.due && pass.started > game.due) : !!(game.due && t > game.due);
+  return {status, late, attempts: list.length, score: shown ? shown.score : null, right: shown ? shown.right_n : null, wrong: shown ? shown.wrong_n : null,
+    level: shown ? shown.level : null, side: shown ? shown.side : null, finished: pass ? (pass.finished || pass.ends) : null,
+    live: live ? {id: live.id, msLeft: Math.max(0, live.ends - t), score: live.score, right: live.right_n, wrong: live.wrong_n} : null};
+}
+const gameInfo = g => Object.assign({id: g.id, subject: g.subject, minutes: g.minutes, minScore: g.min_score, due: g.due, created: g.created, closed: g.closed},
+  {name: subjectOf(g.subject).name, zh: subjectOf(g.subject).zh});
+const attemptsOf = (gameId, studentId) => db.prepare('SELECT * FROM attempts WHERE game_id = ? AND student_id = ? ORDER BY started').all(gameId, studentId);
+const studentRow = id => db.prepare('SELECT students.*, classes.teacher_id FROM students JOIN classes ON classes.id = students.class_id WHERE students.id = ?').get(id);
+function ownGame(teacherId, gameId) {
+  const g = db.prepare('SELECT games.* FROM games JOIN classes ON classes.id = games.class_id WHERE games.id = ? AND classes.teacher_id = ?').get(+gameId, teacherId);
+  if (!g) throw new Oops(404, 'Game not found.');
+  return g;
+}
+
+// ----- the student's side -----
+route('GET', '/api/student/games', req => {
+  const u = who(req, 'student'), s = studentRow(u.id), t = now();
+  if (!s) throw new Oops(401, 'Please log in again.');
+  const games = db.prepare('SELECT * FROM games WHERE class_id = ? AND closed IS NULL ORDER BY created DESC').all(s.class_id)
+    .map(g => Object.assign(gameInfo(g), {path: pathFor(g.subject, s.side)}, standing(g, attemptsOf(g.id, s.id), t)));
+  return {side: s.side, minLevel: s.min_level, games, now: t};
+});
+
+// Start a game, or carry on with a go that still has time left
+route('POST', '/api/student/games/:id/start', (req, body, p) => {
+  const u = who(req, 'student'), s = studentRow(u.id), t = now();
+  if (!s) throw new Oops(401, 'Please log in again.');
+  const g = db.prepare('SELECT * FROM games WHERE id = ? AND class_id = ?').get(+p.id, s.class_id);
+  if (!g || g.closed) throw new Oops(404, 'This class game has finished. 这个课堂游戏已经结束了。');
+  const list = attemptsOf(g.id, s.id), st = standing(g, list, t);
+  let a = list.find(x => !x.finished && t < x.ends);
+  if (!a) {
+    if (st.status === 'passed') throw new Oops(409, 'You have already done this one. 你已经完成了。');
+    const id = Number(db.prepare('INSERT INTO attempts (game_id, student_id, side, started, ends, updated, level) VALUES (?,?,?,?,?,?,?)')
+      .run(g.id, s.id, s.side, t, t + g.minutes * 60e3, t, s.min_level).lastInsertRowid);
+    a = db.prepare('SELECT * FROM attempts WHERE id = ?').get(id);
+  }
+  return {game: Object.assign(gameInfo(g), {path: pathFor(g.subject, a.side)}), side: a.side, minLevel: s.min_level,
+    attempt: {id: a.id, n: list.filter(x => x.id < a.id).length + 1, started: a.started, msLeft: Math.max(0, a.ends - t), msTotal: a.ends - a.started,
+      score: a.score, right: a.right_n, wrong: a.wrong_n, games: parse(a.games) || []}};
+});
+
+// The score so far (sent every few seconds while playing, and at the end)
+route('POST', '/api/student/attempts/:id', (req, body, p) => {
+  const u = who(req, 'student'), t = now();
+  const a = db.prepare('SELECT * FROM attempts WHERE id = ? AND student_id = ?').get(+p.id, u.id);
+  if (!a) throw new Oops(404, 'Not found.');
+  const g = db.prepare('SELECT * FROM games WHERE id = ?').get(a.game_id);
+  const open = !a.finished && t <= a.ends + GRACE;
+  if (open) {
+    const n = (v, d) => Math.max(0, Math.min(100000, Math.floor(+v || 0))) || d;
+    const games = Array.isArray(body.games) ? JSON.stringify(body.games.slice(0, 20).map(x => String(x).slice(0, 40))) : a.games;
+    const fin = body.finished || t >= a.ends ? Math.min(t, a.ends) : null;
+    db.prepare('UPDATE attempts SET score = ?, right_n = ?, wrong_n = ?, level = ?, games = ?, updated = ?, finished = ? WHERE id = ?')
+      .run(n(body.score, 0), n(body.right, 0), n(body.wrong, 0), levelIn(body.level) || a.level, games, t, fin, a.id);
+  }
+  const b = db.prepare('SELECT * FROM attempts WHERE id = ?').get(a.id), st = standing(g, attemptsOf(g.id, u.id), t);
+  return {saved: open, score: b.score, msLeft: Math.max(0, b.ends - t), done: !!b.finished || t >= b.ends, passed: b.score >= g.min_score,
+    minScore: g.min_score, status: st.status, late: st.late};
+});
+
+// ----- the teacher's side -----
+// Each student's side and lowest level: one student, or the whole class at once
+function settings(where, args, body) {
+  const sets = [], vals = [];
+  if (body.side !== undefined) { if (!SIDES.includes(body.side)) throw new Oops(400, 'Side must be en or zh.'); sets.push('side = ?'); vals.push(body.side); }
+  if (body.minLevel !== undefined) { sets.push('min_level = ?'); vals.push(levelIn(body.minLevel)); }
+  if (!sets.length) throw new Oops(400, 'Nothing to change.');
+  db.prepare(`UPDATE students SET ${sets.join(', ')} WHERE ${where}`).run(...vals, ...args);
+  return {ok: true};
+}
+route('POST', '/api/teacher/students/:id/settings', (req, body, p) => {
+  const u = who(req, 'teacher'), s = studentRow(+p.id);
+  if (!s || s.teacher_id !== u.id) throw new Oops(404, 'Student not found.');
+  return settings('id = ?', [s.id], body);
+});
+route('POST', '/api/teacher/classes/:id/settings', (req, body, p) => {
+  const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
+  return settings('class_id = ?', [c.id], body);
+});
+
+route('GET', '/api/teacher/subjects', req => { who(req, 'teacher'); return {subjects: SUBJECTS}; });
+
+route('GET', '/api/teacher/classes/:id/games', (req, body, p) => {
+  const u = who(req, 'teacher'), c = ownClass(u.id, p.id), t = now();
+  const students = db.prepare('SELECT id FROM students WHERE class_id = ?').all(c.id);
+  const games = db.prepare('SELECT * FROM games WHERE class_id = ? ORDER BY created DESC').all(c.id).map(g => {
+    const n = {new: 0, playing: 0, passed: 0, below: 0, late: 0};
+    for (const s of students) { const st = standing(g, attemptsOf(g.id, s.id), t); n[st.status]++; if (st.late && st.status === 'passed') n.late++; }
+    return Object.assign(gameInfo(g), {counts: n, students: students.length});
+  });
+  return {class: {id: c.id, name: c.name}, games, subjects: SUBJECTS};
+});
+
+route('POST', '/api/teacher/classes/:id/games', (req, body, p) => {
+  const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
+  if (!SUBJECTS.some(s => s.key === body.subject)) throw new Oops(400, 'Choose a subject.');
+  const minutes = Math.floor(+body.minutes || 10);
+  if (minutes < 1 || minutes > MAX_MINUTES) throw new Oops(400, `The game can be 1 to ${MAX_MINUTES} minutes long.`);
+  const minScore = Math.max(0, Math.min(10000, Math.floor(+body.minScore || 0)));
+  const due = body.due ? Math.floor(+body.due) || null : null;
+  const id = Number(db.prepare('INSERT INTO games (class_id, subject, minutes, min_score, due, created) VALUES (?,?,?,?,?,?)')
+    .run(c.id, body.subject, minutes, minScore, due, now()).lastInsertRowid);
+  return {game: gameInfo(db.prepare('SELECT * FROM games WHERE id = ?').get(id))};
+});
+
+route('GET', '/api/teacher/games/:id', (req, body, p) => {
+  const u = who(req, 'teacher'), g = ownGame(u.id, p.id), t = now();
+  const c = db.prepare('SELECT id, name FROM classes WHERE id = ?').get(g.class_id);
+  const students = db.prepare('SELECT id, name, side, min_level FROM students WHERE class_id = ? ORDER BY name COLLATE NOCASE').all(g.class_id)
+    .map(s => Object.assign({id: s.id, name: s.name, setSide: s.side, minLevel: s.min_level}, standing(g, attemptsOf(g.id, s.id), t)));
+  return {class: c, game: gameInfo(g), students, now: t};
+});
+
+// Change a game: the score needed, the due time, or close it (students stop seeing it) / open it again
+route('POST', '/api/teacher/games/:id', (req, body, p) => {
+  const u = who(req, 'teacher'), g = ownGame(u.id, p.id);
+  if (body.minScore !== undefined) db.prepare('UPDATE games SET min_score = ? WHERE id = ?').run(Math.max(0, Math.min(10000, Math.floor(+body.minScore || 0))), g.id);
+  if (body.due !== undefined) db.prepare('UPDATE games SET due = ? WHERE id = ?').run(body.due ? Math.floor(+body.due) || null : null, g.id);
+  if (body.closed !== undefined) db.prepare('UPDATE games SET closed = ? WHERE id = ?').run(body.closed ? now() : null, g.id);
+  return {game: gameInfo(db.prepare('SELECT * FROM games WHERE id = ?').get(g.id))};
+});
+route('POST', '/api/teacher/games/:id/delete', (req, body, p) => {
+  const u = who(req, 'teacher'), g = ownGame(u.id, p.id);
+  db.exec('BEGIN');
+  try { db.prepare('DELETE FROM attempts WHERE game_id = ?').run(g.id); db.prepare('DELETE FROM games WHERE id = ?').run(g.id); db.exec('COMMIT'); }
+  catch (e) { db.exec('ROLLBACK'); throw e; }
+  return {ok: true};
 });
 
 // ---------- the web server ----------

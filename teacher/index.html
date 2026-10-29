@@ -9,7 +9,7 @@
 <meta name="robots" content="noindex">
 <title>Teacher · Academic English App</title>
 <link rel="stylesheet" href="../css/fonts.css">
-<link rel="stylesheet" href="../css/home.css?v=2026-10-27b">
+<link rel="stylesheet" href="../css/home.css?v=2026-10-29b">
 <style>
   .home { max-width: 1040px; }
   .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
@@ -48,6 +48,29 @@
   td.num { font-variant-numeric: tabular-nums; }
   td .sub { color: var(--muted); font-size: .85rem; }
   .zh { font-family: var(--zh); }
+  select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
+  select.small { padding: 3px 6px; font-size: .88rem; border-width: 1.5px; }
+  input[type=datetime-local] { font: inherit; padding: 8px 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tabs a { padding: 8px 14px; border-radius: 99px; border: 2px solid var(--line); color: var(--ink); text-decoration: none; font-weight: 700; }
+  .tabs a[aria-current] { background: var(--ink); color: var(--card); border-color: var(--ink); }
+  .grid2 { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); align-items: end; }
+  .games-list { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .game-card { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 16px; background: var(--card); border: 2px solid var(--line); color: var(--ink); text-decoration: none; }
+  .game-card:hover { border-color: var(--web); }
+  .game-card b { font-family: var(--display); font-size: 1.2rem; }
+  .game-card .note { font-size: .88rem; }
+  .game-card.closed { opacity: .65; }
+  .counts { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: .9rem; }
+  .st { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: .82rem; font-weight: 700; background: var(--bg); border: 1.5px solid var(--line); }
+  .st.passed { background: #d8f3e3; border-color: #23a05c; color: #135c33; }
+  .st.playing { background: #fff1c2; border-color: #d9a400; color: #5a4300; }
+  .st.below { background: #fde0dc; border-color: #c0392b; color: #7a1d12; }
+  .st.late { background: transparent; border-color: #c0392b; color: #c0392b; margin-left: 4px; }
+  @media (prefers-color-scheme: dark) {
+    .st.passed { background: #123a25; color: #9be7bb; } .st.playing { background: #3d3205; color: #ffe08a; }
+    .st.below { background: #43160f; color: #ffb3a7; } .st.late { color: #ff8a78; border-color: #ff8a78; } }
+  .big-num { font-family: var(--display); font-weight: 800; font-size: 1.15rem; }
   .muted { color: var(--muted); }
   /* Login cards to print and cut out */
   .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
@@ -202,11 +225,22 @@ function showNew(){
 // ---------- one class ----------
 var sortBy = 'name', sortDown = false;
 var COLS = [
-  ['name', 'Student'], ['lastPlayed', 'Last active'], ['week', 'Points this week'], ['total', 'Points in all'],
+  ['name', 'Student'], ['side', 'Version'], ['minLevel', 'Lowest level'], ['lastPlayed', 'Last active'], ['week', 'Points this week'], ['total', 'Points in all'],
   ['level', 'Level'], ['known', 'Words known']];
+var LEVEL_LIST = ['Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced'];
+// Each student's version (English, or the Chinese version) and the lowest level their class games use (29 Oct)
+var sideSelect = function(v, attr){ return '<select class="small" ' + attr + ' aria-label="Version">' +
+  '<option value="en"' + (v !== 'zh' ? ' selected' : '') + '>English</option><option value="zh"' + (v === 'zh' ? ' selected' : '') + '>中文版 Chinese</option></select>'; };
+var levelSelect = function(v, attr, blank){ return '<select class="small" ' + attr + ' aria-label="Lowest level">' + (blank ? '<option value="">' + blank + '</option>' : '') +
+  '<option value="0"' + (!v && !blank ? ' selected' : '') + '>No minimum</option>' +
+  LEVEL_LIST.map(function(n, i){ return '<option value="' + (i + 1) + '"' + (v === i + 1 ? ' selected' : '') + '>' + n + '</option>'; }).join('') + '</select>'; };
+var classTabs = function(id, on){ return '<nav class="tabs" aria-label="Class"><a href="#/class/' + id + '"' + (on === 'students' ? ' aria-current="page"' : '') + '>Students</a>' +
+  '<a href="#/class/' + id + '/games"' + (on === 'games' ? ' aria-current="page"' : '') + '>Class games</a></nav>'; };
 var LEVELS = {Foundation: 1, 'Foundation+': 2, Intermediate: 3, 'Intermediate+': 4, Advanced: 5};
 function sortVal(s, k){
   if (k === 'name') return s.name.toLowerCase();
+  if (k === 'side') return s.side === 'zh' ? 1 : 0;
+  if (k === 'minLevel') return s.minLevel || 0;
   if (k === 'lastPlayed') return s.lastPlayed || s.lastSeen || 0;
   if (k === 'week') return s.en.week + s.zh.week;
   if (k === 'total') return s.en.total + s.zh.total;
@@ -225,6 +259,8 @@ function showClass(id){
     var head = COLS.map(function(col){ return '<th><button type="button" data-sort="' + col[0] + '">' + col[1] + (sortBy === col[0] ? (sortDown ? ' ▴' : ' ▾') : '') + '</button></th>'; }).join('') + '<th></th>';
     var rows = list.map(function(s){
       return '<tr><td><b>' + esc(s.name) + '</b></td>' +
+        '<td>' + sideSelect(s.side, 'data-side="' + s.id + '"') + '</td>' +
+        '<td>' + levelSelect(s.minLevel || 0, 'data-min="' + s.id + '"') + '</td>' +
         '<td>' + when(s.lastPlayed || s.lastSeen) + '</td>' +
         '<td class="num">' + pair(s.en.week, s.zh.week) + '</td>' +
         '<td class="num">' + pair(s.en.total, s.zh.total) + '</td>' +
@@ -237,9 +273,13 @@ function showClass(id){
       '<div class="row"><button class="btn alt" type="button" id="add">+ Add students</button>' +
       '<button class="btn alt" type="button" id="resetall">New passwords for everyone</button>' +
       '<button class="btn alt" type="button" id="rename">Rename</button></div></div>' +
+      classTabs(id, 'students') +
       '<p class="err" id="err" role="alert" hidden></p>' +
-      (list.length ? '<div class="tablewrap"><table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
-        '<p class="note" style="margin-top:10px">Points: English version · 中 Chinese version. This week starts on Monday ' + esc(r.weekStart) + '. ' +
+      (list.length ? '<div class="row" style="margin-bottom:10px"><span class="lab">Set everyone:</span>' + sideSelect('', 'id="allSide"').replace('<option value="en" selected>', '<option value="" selected>Version…</option><option value="en">') +
+        levelSelect(null, 'id="allMin"', 'Lowest level…') + '<span class="note" id="saved" aria-live="polite"></span></div>' +
+        '<div class="tablewrap"><table><thead><tr>' + head + '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+        '<p class="note" style="margin-top:10px">Version and Lowest level are for class games: each student plays in English or in the Chinese version, at their own level for the subject but never below their lowest level. Changes save straight away.</p>' +
+        '<p class="note" style="margin-top:6px">Points: English version · 中 Chinese version. This week starts on Monday ' + esc(r.weekStart) + '. ' +
         'A level shows once a student has answered 10 questions on that side. "Last active" is the last time the student played, or logged in.</p>'
         : '<p class="note">No students in this class yet.</p>');
     Array.prototype.forEach.call(view.querySelectorAll('[data-sort]'), function(b){ b.onclick = function(){
@@ -259,6 +299,18 @@ function showClass(id){
       call('/api/teacher/classes/' + id + '/rename', {name: n}).then(function(){ showClass(id); }).catch(fail());
     };
     document.getElementById('add').onclick = function(){ showAdd(id, c.name); };
+    var saved = function(){ var el = document.getElementById('saved'); if (el) { el.textContent = 'Saved'; setTimeout(function(){ if (el.textContent === 'Saved') el.textContent = ''; }, 1800); } };
+    Array.prototype.forEach.call(view.querySelectorAll('[data-side]'), function(sel){ sel.onchange = function(){
+      call('/api/teacher/students/' + sel.getAttribute('data-side') + '/settings', {side: sel.value}).then(saved).catch(fail()); }; });
+    Array.prototype.forEach.call(view.querySelectorAll('[data-min]'), function(sel){ sel.onchange = function(){
+      call('/api/teacher/students/' + sel.getAttribute('data-min') + '/settings', {minLevel: +sel.value || null}).then(saved).catch(fail()); }; });
+    var allSide = document.getElementById('allSide'), allMin = document.getElementById('allMin');
+    if (allSide) allSide.onchange = function(){ if (!allSide.value) return;
+      if (!confirm('Put everyone in ' + c.name + ' on the ' + (allSide.value === 'zh' ? 'Chinese version' : 'English version') + '?')) { allSide.value = ''; return; }
+      call('/api/teacher/classes/' + id + '/settings', {side: allSide.value}).then(function(){ showClass(id); }).catch(fail()); };
+    if (allMin) allMin.onchange = function(){ if (allMin.value === '') return;
+      if (!confirm('Set the lowest level for everyone in ' + c.name + ' to ' + (allMin.options[allMin.selectedIndex].text) + '?')) { allMin.value = ''; return; }
+      call('/api/teacher/classes/' + id + '/settings', {minLevel: +allMin.value || null}).then(function(){ showClass(id); }).catch(fail()); };
   }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
 }
 
@@ -317,12 +369,141 @@ function showPassword(){
   };
 }
 
+
+// ---------- class games (29 Oct) ----------
+// The teacher sets a game for the class: a subject, how many minutes, the score needed and (if they like) a due time.
+// Each student plays it on their own device, at their level, in English or the Chinese version (set on the Students tab).
+// Score: +1 for each right answer, -1 for each wrong one (never below 0). Below the score needed, a student can play again.
+// The page for one game refreshes every 5 seconds, so the teacher can watch the class play.
+var live = null;   // the refresh timer on a game's page
+var stopLive = function(){ if (live) { clearTimeout(live); live = null; } };
+var two = function(n){ return String(n).padStart(2, '0'); };
+var clock = function(ms){ var s = Math.ceil(ms / 1000); return Math.floor(s / 60) + ':' + two(s % 60); };
+var dueText = function(t){ if (!t) return 'no due time'; var d = new Date(t);
+  return 'due ' + d.toLocaleDateString('en-GB', {weekday: 'short', day: 'numeric', month: 'short'}) + ' ' + two(d.getHours()) + ':' + two(d.getMinutes()); };
+var localInput = function(t){ if (!t) return ''; var d = new Date(t);
+  return d.getFullYear() + '-' + two(d.getMonth() + 1) + '-' + two(d.getDate()) + 'T' + two(d.getHours()) + ':' + two(d.getMinutes()); };
+var fromInput = function(v){ if (!v) return null; var t = new Date(v).getTime(); return isNaN(t) ? null : t; };
+
+function showGames(id){
+  header();
+  call('/api/teacher/classes/' + id + '/games').then(function(r){
+    var c = r.class; setTitle(c.name + ': class games');
+    var card = function(g){ var n = g.counts;
+      return '<a class="game-card' + (g.closed ? ' closed' : '') + '" href="#/game/' + g.id + '"><b>' + esc(g.name) + '</b>' +
+        '<span class="note">' + g.minutes + ' minute' + (g.minutes === 1 ? '' : 's') + ' · pass: ' + g.minScore + ' · ' + esc(dueText(g.due)) + (g.closed ? ' · <b>closed</b>' : '') + '</span>' +
+        '<span class="counts"><span><b>' + n.passed + '</b> passed' + (n.late ? ' (' + n.late + ' late)' : '') + '</span>' +
+        (n.playing ? '<span><b>' + n.playing + '</b> playing</span>' : '') + (n.below ? '<span><b>' + n.below + '</b> below</span>' : '') +
+        '<span><b>' + n.new + '</b> not started</span></span>' +
+        '<span class="note">Set ' + esc(when(g.created)) + '</span></a>'; };
+    view.innerHTML =
+      '<div class="spread" style="margin-bottom:14px"><a class="backlink" href="#/">← All classes</a></div>' + classTabs(id, 'games') +
+      '<form class="card" id="f" style="margin-bottom:18px"><h2>New class game</h2>' +
+      '<div class="grid2">' +
+        '<div class="field"><label for="g-sub">Subject</label><select id="g-sub">' + r.subjects.map(function(s){ return '<option value="' + esc(s.key) + '">' + esc(s.name) + '</option>'; }).join('') + '</select></div>' +
+        '<div class="field"><label for="g-min">Minutes</label><input type="number" id="g-min" min="1" max="60" value="10"></div>' +
+        '<div class="field"><label for="g-score">Score needed to pass</label><input type="number" id="g-score" min="0" max="10000" value="0"></div>' +
+        '<div class="field"><label for="g-due">Due (optional)</label><input type="datetime-local" id="g-due"></div>' +
+      '</div>' +
+      '<p class="note">Every student plays the same mix of five games (quick, longer, arcade, longer, quick), at their own level for the subject but never below the lowest level on the Students tab, in English or the Chinese version. Score: +1 for each right answer, −1 for each wrong one. The clock keeps running once they start. Below the score needed, they can play again; after the due time they can still play, marked late.</p>' +
+      '<p class="err" id="err" role="alert" hidden></p>' +
+      '<div><button class="btn" type="submit">Set the game</button></div></form>' +
+      (r.games.length ? '<div class="games-list">' + r.games.map(card).join('') + '</div>' : '<p class="note">No class games yet.</p>');
+    document.getElementById('f').onsubmit = function(e){
+      e.preventDefault(); this.querySelector('button').disabled = true; document.getElementById('err').hidden = true;
+      call('/api/teacher/classes/' + id + '/games', {subject: document.getElementById('g-sub').value, minutes: +document.getElementById('g-min').value,
+        minScore: +document.getElementById('g-score').value || 0, due: fromInput(document.getElementById('g-due').value)})
+        .then(function(r2){ location.hash = '#/game/' + r2.game.id; }).catch(fail());
+    };
+  }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
+}
+
+var gameSort = 'name';
+function showGame(gid){
+  header(); stopLive();
+  var first = true, cid = null;
+  var statusHtml = function(s){
+    var late = s.late && s.status !== 'new' ? '<span class="st late">late</span>' : '';
+    if (s.status === 'passed') return '<span class="st passed">Passed</span>' + late + (s.live ? ' <span class="st playing">playing again</span>' : '');
+    if (s.status === 'playing') return '<span class="st playing">Playing · ' + clock(s.live.msLeft) + ' left</span>';
+    if (s.status === 'below') return '<span class="st below">Below the score</span>' + late;
+    return '<span class="st">Not started</span>' + (s.late ? '<span class="st late">overdue</span>' : '');
+  };
+  var draw = function(r){
+    var g = r.game, list = r.students.slice(), n = {new: 0, playing: 0, passed: 0, below: 0};
+    list.forEach(function(s){ n[s.status]++; });
+    var rank = {playing: 0, passed: 1, below: 2, new: 3};
+    list.sort(function(a, b){
+      if (gameSort === 'score') return ((b.live ? b.live.score : b.score) || -1) - ((a.live ? a.live.score : a.score) || -1) || a.name.localeCompare(b.name);
+      if (gameSort === 'status') return rank[a.status] - rank[b.status] || a.name.localeCompare(b.name);
+      return a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1; });
+    var rows = list.map(function(s){
+      var sc = s.live ? s.live : s, side = s.side || s.setSide;
+      return '<tr><td><b>' + esc(s.name) + '</b></td><td>' + statusHtml(s) + '</td>' +
+        '<td class="num">' + (sc.score == null ? '<span class="muted">–</span>' : '<span class="big-num">' + sc.score + '</span>') + '</td>' +
+        '<td class="num">' + (sc.right == null ? '<span class="muted">–</span>' : sc.right + ' / ' + sc.wrong) + '</td>' +
+        '<td>' + (side === 'zh' ? '<span class="zh" lang="zh">中文版</span>' : 'English') + '</td>' +
+        '<td>' + (s.level ? esc(LEVEL_LIST[s.level - 1]) : '<span class="muted">–</span>') + '</td>' +
+        '<td class="num">' + (s.attempts || '<span class="muted">0</span>') + '</td>' +
+        '<td>' + (s.finished ? when(s.finished) : '<span class="muted">–</span>') + '</td></tr>';
+    }).join('');
+    var sortBtn = function(k, label){ return '<th><button type="button" data-gsort="' + k + '">' + label + (gameSort === k ? ' ▾' : '') + '</button></th>'; };
+    document.getElementById('gsum').innerHTML = '<span><b>' + n.passed + '</b> passed</span>' + (n.playing ? '<span><b>' + n.playing + '</b> playing</span>' : '') +
+      '<span><b>' + n.below + '</b> below the score</span><span><b>' + n.new + '</b> not started</span>' + (g.closed ? '<span><b>Closed:</b> students can\'t see it</span>' : '');
+    document.getElementById('gtable').innerHTML = list.length ? '<div class="tablewrap"><table><thead><tr>' + sortBtn('name', 'Student') + sortBtn('status', 'Status') + sortBtn('score', 'Score') +
+      '<th>Right / wrong</th><th>Version</th><th>Level played</th><th>Goes</th><th>Finished</th></tr></thead><tbody>' + rows + '</tbody></table></div>' : '<p class="note">No students in this class.</p>';
+    Array.prototype.forEach.call(document.querySelectorAll('[data-gsort]'), function(b){ b.onclick = function(){ gameSort = b.getAttribute('data-gsort'); draw(r); }; });
+  };
+  var load = function(){
+    stopLive();
+    call('/api/teacher/games/' + gid).then(function(r){
+      if (location.hash !== '#/game/' + gid) return;
+      var g = r.game; cid = r.class.id;
+      if (first) {
+        first = false; setTitle(r.class.name + ': ' + g.name);
+        view.innerHTML =
+          '<div class="spread" style="margin-bottom:14px"><a class="backlink" href="#/class/' + cid + '/games">← ' + esc(r.class.name) + ': class games</a>' +
+          '<div class="row"><button class="btn alt" type="button" id="gclose">' + (g.closed ? 'Open it again' : 'Close the game') + '</button>' +
+          '<button class="btn alt" type="button" id="gdel">Delete</button></div></div>' +
+          '<div class="card" style="margin-bottom:14px"><p class="note">' + g.minutes + ' minute' + (g.minutes === 1 ? '' : 's') + ' · set ' + esc(when(g.created).replace(/<[^>]+>/g, '')) + '. This page updates every 5 seconds.</p>' +
+          '<div class="row"><label class="lab" for="gscore">Score needed</label><input type="number" id="gscore" min="0" max="10000" value="' + g.minScore + '">' +
+          '<label class="lab" for="gdue">Due</label><input type="datetime-local" id="gdue" value="' + localInput(g.due) + '">' +
+          '<button class="btn small" type="button" id="gsave">Save</button><span class="note" id="gsaved" aria-live="polite"></span></div>' +
+          '<div class="counts" id="gsum"></div></div>' +
+          '<p class="err" id="err" role="alert" hidden></p><div id="gtable"></div>' +
+          '<p class="note" style="margin-top:10px">Score: +1 for each right answer, −1 for each wrong one. While a student is playing, their score so far shows. ' +
+          'A student who passed keeps the score of the go that passed; otherwise their best go shows. Late: passed after the due time (or not started by then).</p>';
+        document.getElementById('gsave').onclick = function(){
+          call('/api/teacher/games/' + gid, {minScore: +document.getElementById('gscore').value || 0, due: fromInput(document.getElementById('gdue').value)})
+            .then(function(){ var el = document.getElementById('gsaved'); el.textContent = 'Saved'; load(); }).catch(fail());
+        };
+        document.getElementById('gclose').onclick = function(){
+          var closing = !g.closed;
+          if (closing && !confirm('Close this game? Students stop seeing it, and anyone playing can\'t start again. The scores are kept, and you can open it again.')) return;
+          call('/api/teacher/games/' + gid, {closed: closing}).then(function(){ first = true; load(); }).catch(fail());
+        };
+        document.getElementById('gdel').onclick = function(){
+          if (!confirm('Delete this game and all its scores? This can\'t be undone. (Closing it keeps the scores.)')) return;
+          call('/api/teacher/games/' + gid + '/delete', {}).then(function(){ location.hash = '#/class/' + cid + '/games'; }).catch(fail());
+        };
+      }
+      draw(r);
+      live = setTimeout(load, document.hidden ? 15000 : 5000);
+    }).catch(function(x){ if (first) view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>';
+      else live = setTimeout(load, 10000); });
+  };
+  load();
+}
+
 function route(){
+  stopLive();
   if (!auth()) return showLogin();
   var h = location.hash, m;
   if (h === '#/new') return showNew();
   if (h === '#/password') return showPassword();
   if ((m = /^#\/class\/(\d+)$/.exec(h))) return showClass(m[1]);
+  if ((m = /^#\/class\/(\d+)\/games$/.exec(h))) return showGames(m[1]);
+  if ((m = /^#\/game\/(\d+)$/.exec(h))) return showGame(m[1]);
   showClasses();
 }
 addEventListener('hashchange', route);

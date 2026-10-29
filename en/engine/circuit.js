@@ -137,7 +137,7 @@ function circuitPage(box){
     if(location.hash==='#done' && last){
       const R=last.results, right=R.reduce((s,x)=>s+x.right,0), ans=R.reduce((s,x)=>s+x.answered,0), pts=R.reduce((s,x)=>s+x.pts,0);
       main = !R.length ? `<p class="cc-k">${T(zh, 'Circuit', '每日挑战')}</p><h2>${T(zh, 'Nothing to play yet', '还没有可玩的游戏')}</h2>
-          <p>${zh ? T(zh, 'None of your subjects has a game ready at your level yet. Open a subject and use Learn the words first.', '你的科目还没有适合你水平的游戏，先去“学习单词”吧。')
+          <p>${zh ? T(zh, 'None of your subjects has words at your level yet. Try another level or subject.', '你的科目在你的水平还没有单词，换一个级别或科目试试。')
                   : 'None of your subjects has a game ready at your level yet. Try switching on another subject.'}</p>
           <p class="cc-actions"><a class="cc-btn alt" href="${esc(back)}">${T(zh, 'Back to topics', '返回主题')}</a></p>`
         : `<p class="cc-k">${T(zh, 'Circuit complete!', '挑战完成！')}</p>

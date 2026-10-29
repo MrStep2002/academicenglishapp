@@ -267,7 +267,8 @@ const P = (function(){
       if(ok){ const band=d==null ? (zhSide?2:3) : Math.max(1, Math.min(5, Math.floor(d))), row=POINTS[POINT_KIND[game]||'word'];
         pts=row[band-1]; if(item && item.qs>1) pts=Math.ceil(pts/item.qs); t.pts=(t.pts||0)+pts; }
       save(); if(msg) toastLevel(msg);
-      if(inCircuit && window.AEA_CIRCUIT) AEA_CIRCUIT.count(PAGE, ok, pts);
+      if(classRun) classCount(ok);   // a class game: +1 / -1
+      else if(inCircuit && window.AEA_CIRCUIT) AEA_CIRCUIT.count(PAGE, ok, pts);
       if(window.AEA_POINTS) earned(AEA_POINTS.record(SIDE, pts, ok));
     }catch(e){ console.warn('Progress not saved:', e); }
   };
@@ -314,7 +315,7 @@ let pickedBand = (()=>{ const n=levelNum(store.get('level', null)); return n==nu
 let inCircuit = false;   // playing a station of the Daily Circuit: the student's own level on the English side
 // Chinese side: the circuit uses the level the student chose on that topic, because that is where their word bank is
 // (Learn the words teaches at the chosen level and doesn't move their level; 27 Oct). No level chosen: their own level.
-const chosenBand = () => (!inCircuit || SIDE==='zh') && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
+const chosenBand = () => classRun ? classBand() : (!inCircuit || SIDE==='zh') && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
 const chooseBand = b => { pickedBand = b; store.set('level', b==null ? null : LEVEL_CODES[b]); };
 // A choice that has become the student's own level is dropped, so from then on the page follows their level again
 const tidyChoice = () => { if(pickedBand!=null && P.known() && pickedBand===myBand()) chooseBand(null); };
@@ -1149,10 +1150,11 @@ function playListening(){
 // station, with its share of the task's points; each wrong part counts as an answer. Nothing is recorded against their
 // level or their words, because they simply ran out of time.
 function partialCredit(game, item, right, wrong, parts){
-  if(!inCircuit || !window.AEA_CIRCUIT) return;
+  if(!inCircuit || !(classRun || window.AEA_CIRCUIT)) return;
   const n=itemLevel(item), band=n==null ? 3 : Math.max(1, Math.min(5, Math.floor(n))), per=Math.ceil(POINTS[POINT_KIND[game]||'word'][band-1]/Math.max(1,parts));
-  for(let k=0;k<right;k++){ AEA_CIRCUIT.count(PAGE, true, per); if(window.AEA_POINTS) AEA_POINTS.record(SIDE, per, true); }
-  for(let k=0;k<wrong;k++) AEA_CIRCUIT.count(PAGE, false, 0);
+  const tally=(ok, pts)=>{ if(classRun) classCount(ok); else AEA_CIRCUIT.count(PAGE, ok, pts); };   // a class game: +1 / -1
+  for(let k=0;k<right;k++){ tally(true, per); if(window.AEA_POINTS) AEA_POINTS.record(SIDE, per, true); }
+  for(let k=0;k<wrong;k++) tally(false, 0);
 }
 
 // ---------- ARCADE GAMES: the "proper game" in the middle of the Daily Circuit (Word Snake first, 25 Oct) ----------
@@ -1167,7 +1169,7 @@ const ARCADE = [
 ];
 // The shared question: the word to find, and the words on the board with it (the same part of speech where possible,
 // never two that are alike). Same choice of wrong answers as Word or meaning.
-// Chinese side (Daily Circuit, 26 Oct): the word to find comes from the student's word bank, like the other Chinese games,
+// Chinese side (Daily Circuit, 26 Oct): the word to find comes from all the words at the chosen level, like the other Chinese games,
 // and the meaning at the top has its Chinese under it (arcadeDef).
 function arcadeQuestions(n){
   const zh=SIDE==='zh', p=zh ? zhWords() : pick(S.words), deck=Deck(p), pool=zh ? zhPool(p) : p.length>=8 ? p : S.words;
@@ -1584,11 +1586,13 @@ function playInvaders(){
 // Chinese appears next to the key word only. Answer options are always English.
 const ZH = Object.fromEntries(S.words.filter(w=>w.zh).map(w=>[w.id,w.zh]));   // the zh column of words.csv
 const zhLevelWords = () => pick(S.words).filter(w=>ZH[w.id]);   // every word at the chosen level: Learn the words teaches these
-// The games only use words in the student's word bank: words met in Learn the words (or answered before).
-// A game is greyed out until there are enough of them at the chosen level.
+// The games use every word at the chosen level (29 Oct, teacher: "I don't like the words to unlock screens… the kids
+// kinda know most of the words and they're quite supported within the game"). Until then they only used the student's
+// word bank (words met in Learn the words), and a game stayed locked until there were enough of them. Learn the words
+// is still there as an optional start; the word stages still move as words are answered in any game.
 const inBank = w => !!P.wordRec(w.id);
-const zhWords = () => zhLevelWords().filter(inBank);
-const zhBankAll = () => S.words.filter(w=>ZH[w.id] && inBank(w));   // the word bank at every level
+const zhWords = () => zhLevelWords();
+const zhBankAll = () => S.words.filter(w=>ZH[w.id]);   // every word with its Chinese, at every level
 // Wrong answers come from the word bank when it is big enough, otherwise from all the words at the level
 const zhPool = p => { if(p.length>=8) return p; const l=zhLevelWords(); return l.length>=8 ? l : S.words.filter(w=>ZH[w.id]); };
 const ZH_GAMES = [
@@ -1640,8 +1644,7 @@ function zhMenu(){
   </section>
   ${learnHtml(teaser)}
   <h2 class="zh-games-h">${T('Games','游戏')}</h2>
-  ${open.length ? `${open.some(g=>!g.ready)?`<p class="bank-note">${T(`The games use the words you have learned: ${have} of ${n} at this level.`, `游戏只用你学过的单词：本级别 ${have} / ${n} 个。`)}</p>`:''}
-  <div class="games">${open.map(card).join('')}</div>` : ''}
+  ${open.length ? `<div class="games">${open.map(card).join('')}</div>` : ''}
   ${locked.length ? `${open.length?`<p class="instr group-label">${T('Still locked','还没解锁')}</p>`:''}<div class="locks">${locked.map(tile).join('')}</div>` : ''}
   <div class="wl-link"><p>${T('See every word with its Chinese meaning.','查看所有单词和中文释义。')}</p><a class="btn alt" href="#words">${T('Word list','词汇表')}</a></div>`);
   wireLevels(zhMenu);
@@ -1667,13 +1670,13 @@ function learnHtml(teaser){
   const pct=k=>total ? (100*c[k]/total).toFixed(2) : 0;
   const status = !ready ? T('Not enough words at this level yet.','本级别单词不够。')
     : !c.new ? T(`You have met all ${total} words. Review them to make them Known.`, '都学过了，复习一下吧。')
-    : teaser || '';
+    : teaser || (met ? '' : T('Optional: every game already uses all the words at this level.','可选：所有游戏都已经可以玩本级别的全部单词。'));
   const go = !ready ? `<span class="btn big off" aria-disabled="true">${T('Learn the words','学习单词')}</span>`
     : !c.new ? `<a class="btn big" href="#learn">${T('Review the words','复习单词')} →</a>`
     : met ? `<a class="btn big" href="#learn">${T(`Learn ${next} more`, `再学 ${next} 个`)} →</a>`
     : `<a class="btn big" href="#learn">${T('Start','开始')} →</a>`;
   return `<section class="learn" aria-labelledby="learnH">
-    <p class="learn-k">${met ? T('Your words','你的单词') : T('Start here','从这里开始')}${b!=null && LEVELS.length>1 ? ' · '+T(esc(bandName(b)), LEVEL_ZH[LEVEL_CODES[b]]) : ''}</p>
+    <p class="learn-k">${met ? T('Your words','你的单词') : T('New words?','新单词？')}${b!=null && LEVELS.length>1 ? ' · '+T(esc(bandName(b)), LEVEL_ZH[LEVEL_CODES[b]]) : ''}</p>
     <h2 id="learnH">${T('Learn the words','学习单词')}</h2>
     ${met ? '' : `<p class="learn-how">${T(`${LEARN_N} new words at a time: look at them, then match them.`, `每次 ${LEARN_N} 个新单词：先看一看，再配一配。`)}</p>`}
     ${total ? `<div class="wb"><p class="wb-count">${T(`<b>${met}</b> / ${total} words learned`, `已学 <b>${met}</b> / ${total} 个单词`)}</p>
@@ -2037,9 +2040,9 @@ function wordList(){
 // then a short game is used. Time up in the middle of a long task: what the student has done is marked (circuitFinish).
 // Chinese side (26 Oct, teacher: the same format as the English one): the same five stations and times; short = True or
 // false, long = Type it, Build the sentence, Match the meaning or Choose the meaning (ZH_CIRCUIT), arcade = the same
-// arcade games, with the Chinese under each meaning and the words from the student's word bank. Only these games (27 Oct:
+// arcade games, with the Chinese under each meaning and every word at the chosen level. Only these games (27 Oct:
 // Learn the words is no longer a station). A subject with no game ready for a station: another subject is tried for it;
-// none has one: the subject is dropped from the circuit; nothing anywhere: the circuit says to learn some words first.
+// none has one: the subject is dropped from the circuit; nothing anywhere: the circuit says so.
 // Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival; on the Chinese side
 // also 中文 → English.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
@@ -2132,10 +2135,196 @@ function stationOver(){
 }
 window.addEventListener('pagehide', ()=>{ if(inCircuit && window.AEA_CIRCUIT) AEA_CIRCUIT.pause(PAGE); });
 window.addEventListener('pageshow', e=>{ if(e.persisted && location.hash==='#circuit'){ inCircuit=false; route(); } });
+window.addEventListener('pageshow', e=>{ if(e.persisted && /^#class-/.test(location.hash)){ leaveClass(); route(); } });
+
+// ---------- CLASS GAME (29 Oct 2026): a game the teacher set for the class (teacher page → Class games) ----------
+// The address ends #class-<game id>; the card on the topic lists (en/engine/classgame.js) links here. The game is the
+// Daily Circuit's five stations (quick, longer, arcade, longer, quick) on this one subject, each a fifth of the time the
+// teacher set (10 minutes: two minutes each). Differences from the circuit:
+// - Level: the student's own level for this subject (Chinese version: the level they chose, as in the circuit), but never
+//   below the lowest level the teacher set for them; higher is fine (classBand).
+// - Score: +1 for each right answer, -1 for each wrong one, never below 0, the same at every level (classCount). Points
+//   and word stages are earned as usual.
+// - The clock is the server's: it starts when the student presses Start and keeps running when they leave the page.
+//   Coming back (a crash, a closed tab) carries on with the time that is left; which station they are on comes from the
+//   time, so nothing has to be saved for that. The score is sent to the server every few seconds and at the end, so the
+//   teacher sees it live.
+// - At the end: the score, and whether it reaches the score the teacher set. Below it: Play again (a new go).
+const CLASS_KEY = 'aea:classgame:v1', CLASS_PLAN = ['short','long','arcade','long','short'];
+let classRun = null, classTick = null, classSendT = null;
+const classLocal = () => { try{ return JSON.parse(localStorage.getItem(CLASS_KEY)) || {}; }catch(e){ return {}; } };
+function classSave(){ const c=classRun; if(!c) return; const all=classLocal(), now=Date.now();
+  Object.keys(all).forEach(k=>{ if(now-(all[k].t||0) > 864e5) delete all[k]; });
+  all[c.attempt]={score:c.score, right:c.right, wrong:c.wrong, games:c.games, t:now};
+  try{ localStorage.setItem(CLASS_KEY, JSON.stringify(all)); }catch(e){} }
+// The level a class game plays at: the student's own (or chosen, on the Chinese version), never below the teacher's lowest
+// level. A subject without that level uses the next one up, or its top level.
+function classBand(){
+  if(!LEVELS.length) return null;
+  const own=SIDE==='zh' && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
+  const want=Math.max(own||1, (classRun && classRun.minLevel)||1);
+  const up=LEVELS.find(b=>b>=want); return up!=null ? up : LEVELS[LEVELS.length-1];
+}
+// Every answer in a class game: +1 right, -1 wrong (not below 0)
+function classCount(ok){
+  const c=classRun; if(!c || Date.now()>c.ends+1500) return;
+  if(ok){ c.right++; c.score++; } else { c.wrong++; c.score=Math.max(0, c.score-1); }
+  classSave(); classScore(ok); classSend();
+}
+// The score to the server: at most every 4 seconds while playing, and straight away at the end (final) or when the
+// student leaves the game (now)
+function classSend(final, now){
+  const c=classRun; if(!c || !window.AEA_ACCOUNT) return Promise.resolve(null);
+  const body={score:c.score, right:c.right, wrong:c.wrong, level:chosenBand(), games:c.games, finished:!!final};
+  if(!final && !now){ const wait=4000-(Date.now()-(c.sent||0)); if(wait>0){ if(!classSendT) classSendT=setTimeout(()=>{ classSendT=null; classSend(); }, wait); return Promise.resolve(null); } }
+  clearTimeout(classSendT); classSendT=null; c.sent=Date.now();
+  return AEA_ACCOUNT.request('/api/student/attempts/'+c.attempt, body).catch(e=>{ console.warn('Class game score not sent:', e.message); return null; });
+}
+const classClock = ms => { const s=Math.max(0, Math.ceil(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+function classPanel(html){
+  frame({href:'../index.html', label:'', html:T('All topics','所有主题')}, `<section class="cg-panel">${html}</section>`);
+}
+// Open #class-<id>: check the game, say how it works, start (or carry on with time left)
+async function classOpen(id){
+  leaveClass(); stopCircuitBar(); inCircuit=false;
+  const A=window.AEA_ACCOUNT, acct=A && A.account();
+  if(!acct || !acct.token) return classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}</p><h1>${T('Log in to play','请先登录')}</h1>
+    <p>${T('Class games are saved to your account, so log in with the name and password from your teacher.','课堂游戏的成绩保存在你的账户里，请用老师给你的名字和密码登录。')}</p>
+    <p class="cg-actions"><a class="btn" href="${ROOT}login/index.html?from=${encodeURIComponent(location.pathname+location.hash)}">${T('Log in','登录')} →</a></p>`);
+  classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}</p><p>${T('Loading…','加载中…')}</p>`);
+  let list;
+  try{ list=await A.request('/api/student/games'); }
+  catch(e){ return classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}</p><h1>${T('Can’t load the game','无法加载游戏')}</h1><p>${esc(e.message)}</p>
+    <p class="cg-actions"><a class="btn" href="#class-${id}" onclick="location.reload();return false">${T('Try again','再试一次')}</a></p>`); }
+  if(location.hash!=='#class-'+id) return;
+  const g=(list.games||[]).find(x=>x.id===id);
+  if(!g) return classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}</p><h1>${T('This game has finished','这个游戏已经结束了')}</h1>
+    <p>${T('Your teacher has closed it, or it is for another class.','老师已经关闭了它，或者它是别的班级的。')}</p>`);
+  const bare=p=>String(p).replace(/index\.html$/, '');
+  if(bare(g.path)!==bare(PAGE)){ location.replace(ROOT+g.path+'#class-'+id); return; }   // the student's version of the subject is the other one
+  const name=T(esc(g.name), esc(g.zh||g.name));
+  if(g.status==='passed') return classPanel(`<p class="cg-k">${T('Class game','课堂游戏')} · ${name}</p><h1>✓ ${T('Done','完成')}</h1>
+    <div class="cg-big">${g.score}<small> ${T('points','分')}</small></div><p>${T(`Score needed: ${g.minScore}.`, `目标分数：${g.minScore}。`)}${g.late?' '+T('Handed in late.','迟交。'):''}</p>
+    <p class="cg-actions"><a class="btn alt" href="../index.html">${T('Back to topics','返回主题')}</a></p>`);
+  if(g.status==='playing') return classBegin(id);
+  const per=Math.round(g.minutes*60/CLASS_PLAN.length), perTxt=per%60 ? `${per} seconds` : `${per/60} minute${per===60?'':'s'}`, perZh=per%60 ? `${per} 秒` : `${per/60} 分钟`;
+  classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}${g.status==='below'?' · '+T('Play again','再玩一次'):''}</p><h1>${name}</h1>
+    <ul class="cg-facts"><li><b>${T(`${g.minutes} minute${g.minutes===1?'':'s'}`, `${g.minutes} 分钟`)}</b>: ${T(`five games of ${perTxt} each, at your level.`, `五个游戏，每个 ${perZh}，难度适合你。`)}</li>
+      <li><b>+1</b> ${T('for each right answer,','答对一题加 1 分，')} <b>−1</b> ${T('for each wrong one.','答错一题减 1 分。')}</li>
+      ${g.minScore?`<li>${T(`Score needed: <b>${g.minScore}</b>.`, `目标分数：<b>${g.minScore}</b>。`)}</li>`:''}
+      ${g.status==='below'?`<li>${T(`Last time: <b>${g.score}</b>.`, `上一次：<b>${g.score}</b> 分。`)}</li>`:''}
+      <li>${T('The clock starts when you press Start and doesn’t stop, even if you leave the page.','按“开始”后计时开始，离开页面也不会停。')}</li></ul>
+    <p class="cg-actions"><button class="btn big" type="button" id="cgGo">${T('Start','开始')} →</button></p><p class="cg-err" id="cgErr" hidden></p>`);
+  const go=document.getElementById('cgGo'); go.focus({preventScroll:true});
+  go.onclick=()=>{ go.disabled=true; classBegin(id, ()=>{ go.disabled=false; }); };
+  keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); go.click(); } };
+}
+async function classBegin(id, failed){
+  let r;
+  try{ r=await AEA_ACCOUNT.request('/api/student/games/'+id+'/start', {}); }
+  catch(e){ const el=document.getElementById('cgErr'); if(el){ el.textContent=e.message; el.hidden=false; } else classPanel(`<h1>${T('Can’t start the game','无法开始游戏')}</h1><p>${esc(e.message)}</p>`); if(failed) failed(); return; }
+  if(location.hash!=='#class-'+id) return;
+  const a=r.attempt, here=classLocal()[a.id], mine=here && (here.right+here.wrong)>=(a.right+a.wrong) ? here : null;
+  classRun={id, attempt:a.id, n:a.n, ends:Date.now()+a.msLeft, total:a.msTotal, minLevel:r.minLevel, minScore:r.game.minScore,
+    name:r.game.name, zh:r.game.zh, score:mine?mine.score:a.score, right:mine?mine.right:a.right, wrong:mine?mine.wrong:a.wrong,
+    games:(mine && mine.games) || a.games || [], station:-1, sent:0};
+  classSave();
+  if(a.msLeft<=0) return classEnd();
+  classTick=setInterval(classStep, 250); classStep();
+}
+// Every quarter second: the time, and moving on to the next station when its time is up
+function classStep(){
+  const c=classRun; if(!c) return;
+  const left=c.ends-Date.now();
+  if(left<=0) return classEnd();
+  const i=Math.min(CLASS_PLAN.length-1, Math.floor((c.total-left)/(c.total/CLASS_PLAN.length)));
+  if(i!==c.station){
+    const first=c.station<0; c.station=i;
+    if(first) classStation(i);
+    else { classStop(); classBetween(i); }
+  }
+  const f=document.getElementById('ccFill'), s=document.getElementById('ccSecs');
+  if(f) f.style.width=(100*left/c.total)+'%'; if(s) s.textContent=classClock(left);
+}
+// Stop the game on screen (a long task half done is marked, an arcade game stopped), as at the end of a circuit station
+function classStop(){
+  if(circuitFinish){ try{ circuitFinish(); }catch(e){ console.warn(e); } circuitFinish=null; }
+  if(circuitStop){ circuitStop(); circuitStop=null; }
+  clearTimers(); keyHandler=null;
+}
+// Between stations: two seconds to see the score and what's next (the clock keeps going)
+function classBetween(i){
+  const c=classRun, over=document.createElement('div'); over.className='cc-over'; over.id='ccOver';
+  over.innerHTML=`<div class="cc-box" role="dialog" aria-modal="true" aria-labelledby="ccH"><p class="instr">${T(`Game ${i} of ${CLASS_PLAN.length} done`, `第 ${i} 个游戏完成（共 ${CLASS_PLAN.length} 个）`)}</p>
+    <h2 id="ccH">${T(`Score: ${c.score}`, `得分：${c.score}`)}</h2><p class="cc-sub">${T('Next game…','下一个游戏…')}</p></div>`;
+  document.body.appendChild(over);
+  setTimeout(()=>{ over.remove(); if(classRun===c && c.station===i) classStation(i); }, 2000);
+}
+// One station: a game of the station's kind at the class level; nothing of that kind here: another kind
+function classStation(i){
+  const c=classRun; if(!c) return;
+  inCircuit=true; P.refresh();
+  const kinds=[CLASS_PLAN[i], ...({short:['long','arcade'], long:['short','arcade'], arcade:['short','long']})[CLASS_PLAN[i]]];
+  let games=[], kind=null;
+  for(const k of kinds){ games=circuitGames(k); if(games.length){ kind=k; break; } }
+  if(!games.length){ classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}</p><h1>${T('No game at your level here','这里没有适合你水平的游戏')}</h1><p>${T('Tell your teacher.','请告诉老师。')}</p>`); return classBar(null); }
+  let g=games.find(x=>x.key===c.games[i]);
+  if(!g){
+    if(kind==='arcade') g=games.find(x=>x.key===CIRCUIT_ARCADE[(c.attempt+i)%CIRCUIT_ARCADE.length]) || games[0];
+    else { const fresh=games.filter(x=>!c.games.includes(x.key)), from=fresh.length ? fresh : games; g=from[Math.floor(Math.random()*from.length)]; }
+    c.games[i]=g.key; classSave();
+  }
+  g.run(); classBar(g);
+}
+// The bar along the bottom: which game, the time left (the whole game), the score
+function classBar(g){
+  const c=classRun; stopCircuitBar(); if(!c) return;
+  document.body.classList.add('in-circuit');
+  const bar=document.createElement('div'); bar.id='ccBar'; bar.className='cc-bar cg-bar';
+  bar.innerHTML=`<div class="cc-in"><span class="cc-st">${T('Class game','课堂游戏')} · <b>${c.station+1}</b>/${CLASS_PLAN.length}</span>
+    <span class="cc-game">${SIDE==='zh' ? T(esc(c.name), esc(c.zh||c.name)) : esc(c.name)}${g?` · ${SIDE==='zh'&&g.zh ? T(esc(g.name), esc(g.zh)) : esc(g.name)}`:''}</span>
+    <span class="cc-time" aria-hidden="true"><i id="ccFill"></i></span><b class="cc-secs" id="ccSecs" aria-label="time left"></b>
+    <span class="cg-score">${T('Score','得分')} <b id="cgScore">${c.score}</b></span></div>`;
+  document.body.appendChild(bar); classStep();
+}
+function classScore(ok){
+  const b=document.getElementById('cgScore'); if(!b || !classRun) return;
+  b.textContent=classRun.score; const p=b.parentNode; p.classList.remove('up','down'); void p.offsetWidth; p.classList.add(ok?'up':'down');
+}
+// Time is up: stop, send the final score, show the result
+async function classEnd(){
+  const c=classRun; if(!c || c.ending) return; c.ending=true;
+  clearInterval(classTick); classTick=null;
+  classStop(); stopCircuitBar(); inCircuit=false;
+  const over=document.getElementById('ccOver'); if(over) over.remove();
+  classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}</p><h1>${T('Time’s up!','时间到！')}</h1><p>${T('Saving your score…','正在保存成绩…')}</p>`);
+  let r=null; for(let k=0;k<3 && !r;k++){ r=await classSend(true); if(!r) await new Promise(ok=>setTimeout(ok, 2500)); }
+  classRun=null;
+  if(location.hash!=='#class-'+c.id) return;
+  const score=r ? r.score : c.score, need=c.minScore, passed=score>=need;
+  const name=SIDE==='zh' ? T(esc(c.name), esc(c.zh||c.name)) : esc(c.name);
+  classPanel(`<p class="cg-k">${T('Class game','课堂游戏')} · ${name}</p><h1>${T('Time’s up!','时间到！')}</h1>
+    <div class="cg-big">${score}<small> ${T('points','分')}</small></div>
+    <p>${T(`${c.right} right · ${c.wrong} wrong`, `答对 ${c.right} · 答错 ${c.wrong}`)}</p>
+    ${!r ? `<p class="cg-err">${T('Your score couldn’t be sent to your teacher yet (no connection). It was saved during the game; tell your teacher if it doesn’t show.','暂时无法把成绩发给老师（没有网络）。游戏中的成绩已经保存；如果老师看不到，请告诉老师。')}</p>` : ''}
+    ${need ? (passed ? `<p class="cg-pass">✓ ${T(`You reached the score needed (${need}). Well done!`, `你达到了目标分数（${need}）。真棒！`)}${r && r.late?' '+T('(Late.)','（迟交。）'):''}</p>`
+      : `<p class="cg-below">${T(`You need ${need} to pass. Have another go!`, `需要 ${need} 分才能通过，再试一次吧！`)}</p>`) : ''}
+    <p class="cg-actions">${need && !passed ? `<a class="btn" href="#class-${c.id}" id="cgAgain">${T('Play again','再玩一次')} →</a>` : ''}<a class="btn alt" href="../index.html">${T('Back to topics','返回主题')}</a></p>`);
+  const again=document.getElementById('cgAgain'); if(again) again.onclick=e=>{ e.preventDefault(); classOpen(c.id); };
+}
+// Leaving the game (another page or another part of this page): the clock keeps running on the server; send the score
+function leaveClass(){
+  if(!classRun) return;
+  clearInterval(classTick); classTick=null; classStop(); classSend(false, true); classRun=null; inCircuit=false; stopCircuitBar();
+}
+window.addEventListener('pagehide', ()=>{ const c=classRun; if(c && window.AEA_ACCOUNT && AEA_ACCOUNT.beacon)
+  AEA_ACCOUNT.beacon('/api/student/attempts/'+c.attempt, {score:c.score, right:c.right, wrong:c.wrong, level:chosenBand(), games:c.games}); });
 
 // ---------- router ----------
 function route(){
-  const h=location.hash.replace(/^#/,'');
+  const h=location.hash.replace(/^#/,''), cg=/^class-(\d+)$/.exec(h);
+  if(cg && (!CFG.only || CFG.only==='zh')){ if(!classRun || classRun.id!==+cg[1]) classOpen(+cg[1]); return; }
+  if(classRun) leaveClass();
   if(h==='circuit' && !CFG.only || h==='circuit' && CFG.only==='zh') return circuitStation();
   if(inCircuit || document.getElementById('ccBar')) leaveCircuit();
   if(CFG.only==='progress') return progressPage();

@@ -29,7 +29,23 @@ function open(file = DB_PATH) {
       PRIMARY KEY (student_id, key));
     CREATE INDEX IF NOT EXISTS students_class ON students(class_id);
     CREATE INDEX IF NOT EXISTS sessions_user ON sessions(role, user_id);
+    -- Class games (29 Oct 2026): the teacher sets a game for a class (a subject, how many minutes, the score needed to
+    -- pass, an optional due time); each student plays it at their own level, on their side. One row per go.
+    CREATE TABLE IF NOT EXISTS games (
+      id INTEGER PRIMARY KEY, class_id INTEGER NOT NULL REFERENCES classes(id), subject TEXT NOT NULL, minutes INTEGER NOT NULL,
+      min_score INTEGER NOT NULL DEFAULT 0, due INTEGER, created INTEGER NOT NULL, closed INTEGER);
+    CREATE TABLE IF NOT EXISTS attempts (
+      id INTEGER PRIMARY KEY, game_id INTEGER NOT NULL REFERENCES games(id), student_id INTEGER NOT NULL REFERENCES students(id),
+      side TEXT NOT NULL, started INTEGER NOT NULL, ends INTEGER NOT NULL, updated INTEGER NOT NULL, finished INTEGER,
+      score INTEGER NOT NULL DEFAULT 0, right_n INTEGER NOT NULL DEFAULT 0, wrong_n INTEGER NOT NULL DEFAULT 0, level INTEGER, games TEXT);
+    CREATE INDEX IF NOT EXISTS games_class ON games(class_id);
+    CREATE INDEX IF NOT EXISTS attempts_game ON attempts(game_id, student_id);
   `);
+  // Columns added after the first version: each student's side (English, or the Chinese version) and the lowest level
+  // their class games use (1 Foundation … 5 Advanced; empty = no minimum)
+  const cols = db.prepare('PRAGMA table_info(students)').all().map(c => c.name);
+  if (!cols.includes('side')) db.exec("ALTER TABLE students ADD COLUMN side TEXT NOT NULL DEFAULT 'en'");
+  if (!cols.includes('min_level')) db.exec('ALTER TABLE students ADD COLUMN min_level INTEGER');
   return db;
 }
 

@@ -259,5 +259,18 @@ addEventListener('pagehide', leaving);
 // Another tab logged in or out: show it here too
 addEventListener('storage', e=>{ if(e.key === ACCT) render(); if(e.key === UI && document.querySelector('.ui-sw')) uiApply(uiGet()); });
 
-window.AEA_ACCOUNT = {account, login, finishLogin, logout, sync, guestProgress, api, ROOT};
+// A call to the server as the logged-in student (class games use it: en/engine/classgame.js and app.js). A logged-out
+// login (401) is remembered here, so the button says "Log in again".
+async function request(path, body){
+  const a = account(); if(!a || !a.token){ const e = new Error('Please log in. 请先登录。'); e.status = 401; throw e; }
+  try{ return await call(path, body || null, a.token); }
+  catch(e){ if(e.status === 401){ const b = account(); if(b && b.token === a.token){ b.token = null; setAccount(b); } setState('relogin'); } throw e; }
+}
+// The same, for the last message as the page closes (fetch with keepalive, so it still goes)
+function beacon(path, body){
+  const a = account(); if(!a || !a.token) return;
+  try{ fetch(api()+path, {method:'POST', keepalive:true, headers:{'Content-Type':'application/json', Authorization:'Bearer '+a.token}, body:JSON.stringify(body)}).catch(()=>{}); }catch(e){}
+}
+
+window.AEA_ACCOUNT = {account, login, finishLogin, logout, sync, guestProgress, api, ROOT, request, beacon};
 })();

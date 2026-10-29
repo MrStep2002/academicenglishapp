@@ -65,6 +65,23 @@ sudo bash /opt/aea/server/update.sh
   should always log out.
 - A new password from the teacher logs the student out everywhere ("Log in again" button); their progress is kept.
 
+## Class games (29 Oct 2026)
+
+- On the teacher page, a class has two tabs. **Students**: each student's **Version** (English or 中文版) and **Lowest level**
+  (or "No minimum"), saved straight away, or for everyone at once. **Class games**: set a game (subject, minutes,
+  score needed, optional due time), then open it to watch the class play (the page updates every 5 seconds), change
+  the score needed or the due time, close it (students stop seeing it; scores kept) or delete it.
+- Students see the game as a card at the top of the topic lists (`en/engine/classgame.js`) and play it on the subject's
+  page for their version (`#class-<id>`, run by `en/engine/app.js`): the Daily Circuit's five stations, each a fifth of
+  the time, at their own level but never below their lowest level. Score: +1 right, -1 wrong, never below 0.
+- The clock is the server's: it starts at Start and runs until the time is up, even if the student leaves. Coming back
+  carries on with the time left. Scores are sent every few seconds and at the end (20 seconds' grace after the time).
+- Below the score needed, a student can play again (a new go); the go that passes is their score. Passed or started
+  after the due time: marked late.
+- Tables: `games` and `attempts` (one row per go); `students` gained `side` and `min_level`. Added automatically when the
+  updated server starts, so `update.sh` is all that's needed.
+- Subjects are listed in `SUBJECTS` in `server.js` (those with an English and a Chinese page).
+
 ## Data and backups
 
 - Database: `/var/lib/aea/aea.db`. A copy is made every day in `/var/lib/aea/backups/` (the last 14 are kept).
