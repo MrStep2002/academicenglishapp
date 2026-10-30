@@ -1662,27 +1662,26 @@ function zhShell(title, note){
 const LEARN_N = 4, LEARN_EXTRA = 2, LEARN_REVIEW = 8;
 const stageOf = w => { const r=P.wordRec(w.id); return !r ? 'new' : r.s>=4 ? 'known' : r.s>=2 ? 'fam' : 'learn'; };
 const STAGES = [['known','Known','掌握'], ['fam','Familiar','熟悉'], ['learn','Learning','学习中'], ['new','New','新']];
-// The start card on a Chinese topic menu. teaser: what the next words unlock ("Learn 4 words to unlock 4 games"), from zhMenu.
+// The start card on a Chinese topic menu. The button sits beside the title (30 Oct 2026; the line of text next to it was removed,
+// so teaser, from zhMenu, is no longer shown).
 function learnHtml(teaser){
   P.refresh();
   const p=zhLevelWords(), c={known:0, fam:0, learn:0, new:0}; p.forEach(w=>c[stageOf(w)]++);
   const total=p.length, met=total-c.new, ready=total>=4, next=Math.min(LEARN_N, c.new), b=chosenBand();
   const pct=k=>total ? (100*c[k]/total).toFixed(2) : 0;
-  const status = !ready ? T('Not enough words at this level yet.','本级别单词不够。')
-    : !c.new ? T(`You have met all ${total} words. Review them to make them Known.`, '都学过了，复习一下吧。')
-    : teaser || (met ? '' : T('Optional: every game already uses all the words at this level.','可选：所有游戏都已经可以玩本级别的全部单词。'));
   const go = !ready ? `<span class="btn big off" aria-disabled="true">${T('Learn the words','学习单词')}</span>`
     : !c.new ? `<a class="btn big" href="#learn">${T('Review the words','复习单词')} →</a>`
     : met ? `<a class="btn big" href="#learn">${T(`Learn ${next} more`, `再学 ${next} 个`)} →</a>`
     : `<a class="btn big" href="#learn">${T('Start','开始')} →</a>`;
   return `<section class="learn" aria-labelledby="learnH">
+    <div class="learn-top"><div class="learn-title">
     <p class="learn-k">${met ? T('Your words','你的单词') : T('New words?','新单词？')}${b!=null && LEVELS.length>1 ? ' · '+T(esc(bandName(b)), LEVEL_ZH[LEVEL_CODES[b]]) : ''}</p>
-    <h2 id="learnH">${T('Learn the words','学习单词')}</h2>
+    <h2 id="learnH">${T('Learn the words','学习单词')}</h2></div>
+    ${go}</div>
     ${met ? '' : `<p class="learn-how">${T(`${LEARN_N} new words at a time: look at them, then match them.`, `每次 ${LEARN_N} 个新单词：先看一看，再配一配。`)}</p>`}
     ${total ? `<div class="wb"><p class="wb-count">${T(`<b>${met}</b> / ${total} words learned`, `已学 <b>${met}</b> / ${total} 个单词`)}</p>
       <span class="wb-bar" role="img" aria-label="${c.known} known, ${c.fam} familiar, ${c.learn} learning, ${c.new} new">${STAGES.filter(x=>x[0]!=='new').map(([k])=>`<i class="wb-${k}" style="width:${pct(k)}%"></i>`).join('')}</span>
       ${met ? `<p class="wb-legend">${STAGES.map(([k,en,zh])=>`<span><i class="sw wb-${k}"></i>${T(en, zh)} <b>${c[k]}</b></span>`).join('')}</p>` : ''}</div>` : ''}
-    <div class="learn-row">${go}${status?`<p class="learn-status">${status}</p>`:''}</div>
   </section>`;
 }
 function playLearn(){

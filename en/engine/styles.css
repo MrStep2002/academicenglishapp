@@ -613,6 +613,15 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .learn .btn.big{background:var(--good);color:var(--paper)}
 .learn .btn.big.off{background:var(--rule);color:var(--ink-2)}
 .learn-status{font-size:15px;color:var(--ink)}
+/* 30 Oct 2026: the Learn button sits beside the title (no line of text next to it); under it on a phone */
+.learn-top{display:flex;align-items:center;justify-content:space-between;gap:14px 24px;flex-wrap:wrap}
+.learn-title{display:grid;gap:10px;min-width:0}
+.learn-top .btn.big{flex:0 1 360px;align-self:stretch;display:flex;align-items:center;justify-content:center;gap:12px;min-height:96px;padding:20px 32px;font-size:clamp(22px,2.4vw,27px);border-radius:16px;text-decoration:none;box-shadow:0 6px 0 color-mix(in srgb,var(--good) 45%,#000);transition:transform .12s,box-shadow .12s}
+.learn-top a.btn.big:hover{opacity:1;transform:translateY(-2px);box-shadow:0 8px 0 color-mix(in srgb,var(--good) 45%,#000)}
+.learn-top a.btn.big:active{transform:translateY(4px);box-shadow:0 2px 0 color-mix(in srgb,var(--good) 45%,#000)}
+.learn-top .btn.big.off{box-shadow:none}
+@media (max-width:560px){.learn-top .btn.big{flex:1 1 100%;min-height:72px}}
+@media (prefers-reduced-motion:reduce){.learn-top .btn.big{transition:none}.learn-top a.btn.big:hover,.learn-top a.btn.big:active{transform:none}}
 .zh-games-h{font-family:var(--f-display);font-weight:400;font-size:30px;line-height:1.1;margin:36px 0 0}
 .zh-games-h [lang]{font-family:var(--f-zh);font-size:.62em;color:var(--ink-2);margin-left:6px}
 .zh-games-h + .bank-note{margin-top:6px}
