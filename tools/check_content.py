@@ -31,7 +31,9 @@ HEADS = {
     'questions': ['id', 'level', 'command', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],
     'extracts': ['id', 'level', 'extract', 'word', 'correct', 'wrong1', 'wrong2', 'wrong3', 'word2', 'correct2', 'wrong1_2',
                  'wrong2_2', 'wrong3_2', 'word3', 'correct3', 'wrong1_3', 'wrong2_3', 'wrong3_3'],
+    'knowledge': ['id', 'level', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],   # General knowledge (31 Oct): level optional
 }
+KNOWLEDGE_OPTIONAL = {'level', 'wrong2', 'wrong3', 'explanation'}
 ROLE = re.compile(r'^(topic|verb|detail|link|judge|hedge)\s*:\s*(.+)$', re.I)
 ERR = re.compile(r'\[([^\]|]+)\|([^\]|]+)\|([^\]]+)\]')
 
@@ -62,7 +64,8 @@ def check_folder(folder, all_word_ids):
         path = os.path.join(folder, kind + '.csv')
         if not os.path.exists(path): continue
         h, rows = read(path)
-        missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)]
+        missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)
+                   and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL)]
         unknown = [c for c in h if c not in head and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)]
         if missing: problems.append(f'{kind}.csv: missing column(s) {", ".join(missing)}')
         if unknown: problems.append(f'{kind}.csv: column(s) not used by the games: {", ".join(unknown)}')
@@ -107,7 +110,8 @@ def check_folder(folder, all_word_ids):
             elif rid in seen: say(kind, r, 'id used more than once')
             seen.add(rid)
             b = band(r.get('level'))
-            if not r.get('level'): say(kind, r, 'no level (it would be used at every level)')
+            if not r.get('level'):
+                if kind != 'knowledge': say(kind, r, 'no level (it would be used at every level)')   # General knowledge: no level = every level
             elif b is None: say(kind, r, f'level "{r["level"]}" not recognised')
             wrongs = lambda suf='': [r.get(f'wrong{k}{suf}', '') for k in (1, 2, 3) if r.get(f'wrong{k}{suf}', '')]
             if kind == 'words':
@@ -116,6 +120,9 @@ def check_folder(folder, all_word_ids):
                 for col in ('similar', 'accept'):
                     for v in [x.strip() for x in r.get(col, '').split(';') if x.strip()]:
                         if not known(v): say(kind, r, f'{col}: "{v}" is not in words.csv')
+            elif kind == 'knowledge':
+                if not r.get('question') or not r.get('correct') or not wrongs(): say(kind, r, 'needs a question, a correct answer and at least one wrong answer (skipped)'); ok = False
+                elif r.get('correct') in wrongs(): say(kind, r, 'the correct answer is also a wrong answer')
             elif kind == 'gaps':
                 s = r.get('sentence', '')
                 if s.count('___') != 1 or not r.get('answer') or not wrongs(): say(kind, r, 'needs a sentence with one ___, an answer and a wrong answer (skipped)'); ok = False
@@ -216,6 +223,10 @@ def check_folder(folder, all_word_ids):
     if builds:   # Build the sentence is on the Chinese version only: a sentence without its Chinese is not played anywhere
         with_zh = sum(1 for r in builds if r.get('zh'))
         print(f'  builds.csv: {with_zh} of {len(builds)} sentences have Chinese (zh). Build the sentence (Chinese version) uses only those.')
+    gk = data.get('knowledge', [])
+    if gk:   # General knowledge: no levels needed
+        nolevel = sum(1 for r in gk if not r.get('level'))
+        print(f'  knowledge.csv: {len(gk)} General knowledge questions ({nolevel} with no level, so played at every level).')
     tf = data.get('tf', [])
     if tf:   # True or false giveaways (31 Oct): absolute words and hedges should not tell students the answer
         ABS = re.compile(r"\b(always|never|must|only|every|all|automatically|cannot|can't|impossible|completely|nothing|everyone|no one|none)\b", re.I)

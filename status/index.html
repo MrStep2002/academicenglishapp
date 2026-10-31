@@ -51,7 +51,7 @@
 const ROOT = new URL('../', location.href).href;   // the site's top folder
 const LEVELS = [['A1','F','Foundation'], ['A2','F+','Foundation+'], ['B1','I','Intermediate'], ['B2','I+','Intermediate+'], ['C1','A','Advanced']];
 const BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts'];
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'];
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = n => Number(n).toLocaleString('en-GB');
 
@@ -97,6 +97,8 @@ const SECTIONS = [
     {key:'read', name:'Complete the text', src:'reads', min:1, circuit:'long'},
     {key:'own', name:'In your own words', src:'extracts', min:1, circuit:'long'},
     {key:'question', name:'Answer the question', src:'questions', min:1, circuit:'long'}]],
+  ['Games (across the bottom of the page)', [
+    {key:'gk', name:'General knowledge (no levels needed: a question with no level plays at every level)', src:'knowledge', min:1, circuit:''}]],
   ['Arcade (not on the menus: open with #play-…)', [
     {key:'whack', name:'Whack-a-word', src:'words', min:6, circuit:'arcade', link:'whack'},
     {key:'invaders', name:'Word Invaders', src:'words', min:6, circuit:'arcade', link:'invaders'},
@@ -121,7 +123,7 @@ async function loadSubject(href){
     T.words=T.words.filter(w=>{ const l=String(w.list||'').split(';').map(x=>x.trim().toLowerCase()).filter(Boolean); return !l.length || l.some(x=>want.includes(x)); });
     if(d.linked){ const on=new Set(T.words.flatMap(w=>[String(w.word||'').toLowerCase(), String(w.id||'').toLowerCase()]));
       T.gaps=(T.gaps||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
-      ['builds','errors','tf','right-wrong','reads','questions','extracts'].forEach(k=>{ T[k]=[]; }); }
+      ['builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'].forEach(k=>{ T[k]=[]; }); }
   }
   return {name:d.name||href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T};
 }
@@ -148,6 +150,7 @@ function count(s, zhFolders){
     words:{lv:perLevel(words), total:words.length},
     syn:{lv:perLevel(words.filter(w=>w.synonyms)), total:words.filter(w=>w.synonyms).length},
     gaps:{lv:perLevel(T.gaps, wordLevel), total:(T.gaps||[]).length},
+    knowledge:(()=>{ const rs=(T.knowledge||[]).filter(r=>r.question&&r.correct), lv=perLevel(rs); return {lv:lv.slice(0,5).map(n=>n+lv[5]).concat([0]), total:rs.length}; })(),
     builds:{lv:perLevel(builds, wordLevel), total:builds.length},
     errors:{lv:perLevel(T.errors), total:(T.errors||[]).length, extra:`${(T.errors||[]).reduce((n,r)=>n+((r.text||'').match(err)||[]).length,0)} mistakes`},
     tf:{lv:perLevel(T.tf, wordLevel), total:(T.tf||[]).length},
@@ -172,7 +175,7 @@ function count(s, zhFolders){
       else if(ok.every(Boolean)){ status='All levels'; cls='all'; }
       else if(ok.some(Boolean)){ status='Some levels'; cls='some'; }
       else { status='None yet'; cls='none'; }
-      if(sect.startsWith('Vocabulary')||sect.startsWith('Grammar')||sect.startsWith('Reading')) tally[cls]++;
+      if(sect.startsWith('Vocabulary')||sect.startsWith('Grammar')||sect.startsWith('Reading')||sect.startsWith('Games')) tally[cls]++;
       rows.push({g, c, ok, status, cls});
     });
   });
@@ -220,7 +223,7 @@ async function main(){
     ${counted.map(({s,k})=>`<tr><td><a href="#${esc(s.folder)}">${esc(s.name)}</a></td><td class="n">${fmt(k.words)}</td><td class="n">${fmt(k.items)}</td>
       <td class="n s s-all">${k.tally.all}</td><td class="n s s-some">${k.tally.some}</td><td class="n s s-none">${k.tally.none}${k.tally.off?` <span class="k">(+${k.tally.off} off)</span>`:''}</td></tr>`).join('')}
     <tr><td><b>Total</b></td><td class="n"><b>${fmt(totalWords)}</b></td><td class="n"><b>${fmt(total)}</b></td><td></td><td></td><td></td></tr></tbody></table></div>
-    <ul class="notes"><li>All levels / Some levels / None yet count the ${SECTIONS.slice(0,3).reduce((n,x)=>n+x[1].length,0)} games on the English topic pages (Vocabulary, Grammar, Reading).</li>
+    <ul class="notes"><li>All levels / Some levels / None yet count the ${SECTIONS.slice(0,4).reduce((n,x)=>n+x[1].length,0)} games on the English topic pages (Vocabulary, Grammar, Reading, and the Games row).</li>
     <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately below.</li>
     <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>`;
   counted.forEach(({s,k})=>{

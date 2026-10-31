@@ -31,6 +31,7 @@ The Chinese version uses only `words.csv` (and its `zh` column).
 | `right-wrong.csv` | SPAG: Right or Wrong (is the sentence right, or does it have a mistake?) |
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
+| `knowledge.csv` | General knowledge (Games row; no levels needed) |
 | `extracts.csv` | In your own words |
 
 Longer reading passages are not in the topic folders: they are in `reading-comprehension/` (Close reading, Big idea, Note taking). The topic folders' empty `reading.csv` files (Read and answer, replaced by Close reading) were removed on 25 Oct.
@@ -106,6 +107,20 @@ gaps and texts written around them keep their meanings).
   and the word's progress. Word progress is saved by id, so a word moves on wherever it is answered.
 - `data-linked="yes"` as well: the page's other games use only content linked to its own words (Fill the gap rows whose
   `word` is on the list). Everything else (true/false rows, texts, Spot the error…) stays on the main page.
+
+### knowledge.csv (General knowledge)
+
+`id,level,question,correct,wrong1,wrong2,wrong3,explanation`
+
+The General knowledge game sits in the **Games** row across the bottom of each English topic page (31 Oct 2026).
+Questions about the wider world of the topic: people, places, history, ideas ("cultural capital").
+
+- **question**, **correct** and **wrong1** are needed; wrong2 and wrong3 are optional (aim for three).
+- **level** is optional: leave it empty and the question plays at every level. A level, if given, works as in the other files.
+- **explanation** is optional: shown after any answer (right or wrong). `<b>` and `<i>` allowed.
+- The answers are shuffled on screen, so the correct answer can always go in the `correct` column.
+- Keep the right answer from standing out by length.
+- Example rows: `templates/knowledge.csv`. English pages only for now; a Chinese column can be added later.
 
 ### gaps.csv (Fill the gap)
 

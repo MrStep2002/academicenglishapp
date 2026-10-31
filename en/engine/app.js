@@ -80,7 +80,7 @@ function notesRow(r){
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
-  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[]};
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[]};
   const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
   const lv=(file,r)=>{ const v=(r.level||'').trim();
     if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
@@ -150,6 +150,13 @@ function buildSubject(T){
   (T.questions||[]).forEach(r=>{ const wrong=wrongs(r);
     if(!r.question||!r.correct||!wrong.length) return warn('questions',r,'skipped: it needs a question, a correct answer and a wrong answer');
     S.questions.push({id:r.id, level:lv('questions',r), cmd:r.command||'', q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
+  // General knowledge (knowledge.csv, 31 Oct): id, question, correct, wrong1-3, optional explanation. No levels needed:
+  // a row with no level plays at every level (a level, if given, works as everywhere else).
+  (T.knowledge||[]).forEach((r,i)=>{ const wrong=wrongs(r);
+    if(!r.question||!r.correct||!wrong.length) return warn('knowledge',r,'skipped: it needs a question, a correct answer and a wrong answer');
+    const v=(r.level||'').trim(), level=v && levelNum(v)!=null ? v : '';
+    if(v && !level) warn('knowledge',r,`level "${v}" not recognised, so it is used at every level`);
+    S.gk.push({id:r.id||('gk-'+(i+1)), level, q:r.question, opts:[r.correct,...wrong], why:r.explanation||''}); });
   // In your own words: each [underlined] word has word, correct, wrong1-3 (the first) or wordN, correctN, wrong1_N… (the Nth)
   (T.extracts||[]).forEach(r=>{ const n=(String(r.extract||'').match(/\[[^\]]+\]/g)||[]).length, qs=[], wids=[];
     for(let k=1;k<=9;k++){ const a=k===1?'':String(k), b=k===1?'':'_'+k; if(!r['correct'+a]) break; qs.push([r['correct'+a], wrongs(r,b)]); wids.push(ref1('extracts',r,r['word'+a])); }
@@ -175,14 +182,14 @@ function buildSubject(T){
     S.words=S.words.filter(w=>!w.lists.length || w.lists.some(l=>want.includes(l)));
     if(CFG.linked){ const on=new Set(S.words.map(w=>w.id));
       S.gaps=S.gaps.filter(g=>g.wid && on.has(g.wid));
-      ['builds','errors','tf','rw','reads','questions','extracts'].forEach(k=>{ S[k]=[]; }); }
+      ['builds','errors','tf','rw','reads','questions','extracts','gk'].forEach(k=>{ S[k]=[]; }); }
   }
   return S;
 }
 // Load the page's files, then start. The Chinese version only needs the words, and builds.csv for Build the sentence.
 // A topic folder's files. Reading passages are not among them: the Reading Comprehension pages load theirs with data-reading
 // (Read and answer on the topic pages was replaced by Close reading, and the empty reading.csv files were removed, 25 Oct).
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts'];
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
@@ -225,9 +232,9 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
-  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage', listen:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong'], ['build','Build the sentence, Spot the error, In your own words'],
+  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong, General knowledge'], ['build','Build the sentence, Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -391,6 +398,9 @@ const CATS = {
   grammar: {name:'Grammar',    blurb:'Use the words accurately: word forms, verb forms, sentence building.'},
   reading: {name:'Reading',    blurb:'Read longer texts and work out meaning in context.', desktop:true}
 };
+// Games (31 Oct, teacher): a section that runs across the bottom of the topic page, under the three columns.
+// Not one of the columns (CATS), so the column loops leave it alone; menuCompact() draws it.
+const GAME_ROW = {games: {name:'Games'}};
 // form: short (one quick answer at a time) or long (read something, then several answers): the Daily Circuit's
 // short and long stations choose from these. A game with no form (Read and answer) is never in the circuit.
 // Columns (26 Oct, teacher): True or false moved from Grammar to Vocabulary, Spot the error from Grammar to Reading.
@@ -413,16 +423,19 @@ const GAMES = [
   {key:'build',    form:'short', cat:'reading', phone:true, name:'Build the sentence', blurb:'Put the coloured pieces in order to build the sentence. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     form:'long', cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
+  // General knowledge (31 Oct, teacher): "things connected to the topic but more about cultural capital". In the Games
+  // row across the bottom; plays on phones; no form, so not in the Daily Circuit.
+  {key:'gk',       cat:'games', phone:true, name:'General knowledge', blurb:'Questions about the wider world of this topic. Four answers: one is right.', items:()=>pick(S.gk), min:1, run:()=>playGK()},
   {key:'question', form:'long', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
 // A game that can't be played on this device: a Reading game on a phone (unless it is marked phone:true)
-const phoneOff = g => PHONE && !!CATS[g.cat].desktop && !g.phone;
+const phoneOff = g => PHONE && !!(CATS[g.cat]||{}).desktop && !g.phone;
 // Games switched off on this page: data-hide="syn" (a game's key; several with spaces or commas). Its content stays in the files.
 const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
 // ---------- page frame ----------
 function frame(back, inner){
@@ -486,6 +499,9 @@ function menuCompact(){
       return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
         ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}${rest}</section>`; }).join('')}
   </div>
+  ${(()=>{ const all=gamesIn('games');
+    return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
+      ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
   wireLevels(menu);
 }
@@ -524,7 +540,7 @@ function category(cat){
 
 // ---------- game shell ----------
 function shell(game, note){
-  const c=CATS[game.cat];
+  const c=CATS[game.cat]||GAME_ROW[game.cat]||{name:'Back'};
   frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
 }
@@ -1002,6 +1018,19 @@ function playQuestion(){
     const qHtml=q.cmd ? esc(q.q).replace(new RegExp('^('+esc(q.cmd).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'),'<mark>$1</mark>') : esc(q.q);
     mcCard({instr:'Exam question', promptHtml:`<div class="exam-q">${qHtml}</div>`, options:q.opts, answer:q.opts[q.a], optClass:'long',
       onResult:(ok,card,fb)=>{ ok?fbOk(fb,`<span>${rich(q.why)}</span>`):fbNo(fb,'',`<span>${rich(q.why)}</span>`); settle(ok,card,st,deck,q,step); }});
+  };
+  step();
+}
+
+// ---------- GAMES: General knowledge (knowledge.csv) ----------
+function playGK(){
+  const game=GAMES.find(g=>g.key==='gk'), items=game.items(), deck=Deck(items), st=Stats('gk');
+  shell(game,'Choose the right answer. Correct answers move on by themselves.'); st.draw();
+  const step=()=>{
+    const q=deck.next(), long=q.opts.some(o=>String(o).length>32);
+    mcCard({instr:'General knowledge', promptHtml:`<p class="gk-q">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:long?'long':'',
+      onResult:(ok,card,fb)=>{ const why=q.why?`<span>${rich(q.why)}</span>`:'';
+        ok?fbOk(fb,why):fbNo(fb,q.opts[0],why); settle(ok,card,st,deck,q,step); }});
   };
   step();
 }
