@@ -1408,7 +1408,7 @@ function partialCredit(game, item, right, wrong, parts){
 // early: a mistake costs length or points, not the game. Played from the Games row, Word Snake has no clock instead: it
 // goes on until a wrong word ends it (1 Nov 2026, teacher; see playSnake). On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
 const ARCADE = [
-  {key:'snake', name:'Word Snake', blurb:'Eat the word that matches the meaning. Eat a wrong one and the game is over.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
+  {key:'snake', name:'Word Snake', blurb:'Eat the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
   {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up from holes. Tap the one that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
   {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'Words march down the screen. Shoot the one that fits the meaning.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];

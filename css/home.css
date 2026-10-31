@@ -216,3 +216,19 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
   .top-row .circuit-box { grid-column: auto; }
 }
 @media (max-width: 759px) and (min-width: 480px) { .ess-actions { flex-direction: row; } .ess-actions .cc-btn { flex: 1; } }
+
+/* Top row, 1 Nov 2026 (teacher: "the buttons are misaligned… make the split at half a page"): the Daily Circuit and
+   Academic English Essentials half each, built the same way: name and text at the top, the two buttons side by side
+   along the bottom, so the buttons line up across the row. One under the other below 820px. */
+.top-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.top-row .circuit-box { grid-column: auto; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto 1fr; align-items: start; padding: 16px 18px; gap: 6px 16px; }
+.top-row .cc-box-actions { grid-column: 1 / -1; flex-direction: row; align-self: end; padding-top: 12px; }
+.ess-card { gap: 6px; }
+.ess-actions { flex-direction: row; padding-top: 12px; }
+.top-row .cc-box-actions .cc-btn, .ess-actions .cc-btn { flex: 1 1 auto; width: auto; justify-content: center; padding: 10px 14px; white-space: nowrap; }
+@media (max-width: 819px) { .top-row { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 479px) {
+  .top-row .cc-box-actions, .ess-actions { flex-direction: column; }
+  .top-row .cc-box-actions .cc-btn, .ess-actions .cc-btn { white-space: normal; }
+}
+.ess-sub { color: var(--muted); font-size: .92rem; }
