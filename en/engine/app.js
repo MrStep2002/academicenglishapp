@@ -210,7 +210,7 @@ const POINTS = {
 const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it'], ['grammar','Fill the gap, True or false, Grammar: Write or Wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
+  ['type','Type it'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -369,7 +369,7 @@ const CATS = {
 // form: short (one quick answer at a time) or long (read something, then several answers): the Daily Circuit's
 // short and long stations choose from these. A game with no form (Read and answer) is never in the circuit.
 // Columns (26 Oct, teacher): True or false moved from Grammar to Vocabulary, Spot the error from Grammar to Reading.
-// 31 Oct (teacher): Spot the error back in Grammar ("its natural home"); Right or wrong renamed "Grammar: Write or Wrong".
+// 31 Oct (teacher): Spot the error back in Grammar ("its natural home"); Right or wrong renamed "SPAG: Right or Wrong".
 // Reading games are for computers only, except the ones marked phone:true.
 const GAMES = [
   // Match the meaning (31 Oct, teacher): Synonym groups merged in. The right-hand column mixes meanings and synonym groups
@@ -379,7 +379,7 @@ const GAMES = [
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
   {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'rw',       form:'short', cat:'grammar', name:'Grammar: Write or Wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},

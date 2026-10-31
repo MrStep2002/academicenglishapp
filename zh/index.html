@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#151935">
 <title>中文版 · Academic English App</title>
 <link rel="stylesheet" href="../css/fonts.css">
-<link rel="stylesheet" href="../css/home.css?v=2026-10-29b">
+<link rel="stylesheet" href="../css/home.css?v=2026-10-31a">
 </head>
 <body>
 <main class="home">
@@ -39,39 +39,41 @@
     </div>
   </section>
 
-  <section class="topic-group" aria-labelledby="t-media">
-    <h2 id="t-media"><span class="t-en">Media</span> <span class="t-zh" lang="zh">媒体</span></h2>
-    <div class="topics">
-      <div class="topic topic-sw">
-        <a class="topic-link" href="web-design/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Web design</span> <span class="t-zh" lang="zh">网页设计</span></span><span class="topic-sub"><span class="t-en">Year 8: websites, layout and design choices</span> <span class="t-zh" lang="zh">八年级：网站、布局与设计</span></span></span></a>
-        <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Web design"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
+  <!-- Subjects side by side (31 Oct 2026): one column per subject, its topics stacked under it, no descriptions.
+       Add a topic inside its subject's <div class="topics">; add a subject as another <section> in this div. -->
+  <div class="subjects">
+    <section class="topic-group" aria-labelledby="t-media">
+      <h2 id="t-media"><span class="t-en">Media</span> <span class="t-zh" lang="zh">媒体</span></h2>
+      <div class="topics">
+        <div class="topic topic-sw">
+          <a class="topic-link" href="web-design/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Web design</span> <span class="t-zh" lang="zh">网页设计</span></span></span></a>
+          <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Web design"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
+        </div>
+        <div class="topic topic-sw">
+          <a class="topic-link" href="representation/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Representation</span> <span class="t-zh" lang="zh">再现</span></span></span></a>
+          <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Representation"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
+        </div>
       </div>
-      <div class="topic topic-sw">
-        <a class="topic-link" href="representation/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Representation</span> <span class="t-zh" lang="zh">再现</span></span><span class="topic-sub"><span class="t-en">Year 9: adverts, posters and magazine covers</span> <span class="t-zh" lang="zh">九年级：广告、海报和杂志封面</span></span></span></a>
-        <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Representation"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
+    </section>
+    <section class="topic-group" aria-labelledby="t-eng">
+      <h2 id="t-eng"><span class="t-en">English Language</span> <span class="t-zh" lang="zh">英语语言</span></h2>
+      <div class="topics">
+        <div class="topic topic-sw">
+          <a class="topic-link" href="descriptive/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Descriptive language</span> <span class="t-zh" lang="zh">描写性语言</span></span></span></a>
+          <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Descriptive language"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
+        </div>
       </div>
-    </div>
-  </section>
-
-  <section class="topic-group" aria-labelledby="t-eng">
-    <h2 id="t-eng"><span class="t-en">English Language</span> <span class="t-zh" lang="zh">英语语言</span></h2>
-    <div class="topics">
-      <div class="topic topic-sw">
-        <a class="topic-link" href="descriptive/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Descriptive language</span> <span class="t-zh" lang="zh">描写性语言</span></span><span class="topic-sub"><span class="t-en">Words for describing feelings, places and actions</span> <span class="t-zh" lang="zh">描写情感、地点和动作的词汇</span></span></span></a>
-        <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Descriptive language"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
+    </section>
+    <section class="topic-group" aria-labelledby="t-maths">
+      <h2 id="t-maths"><span class="t-en">Maths</span> <span class="t-zh" lang="zh">数学</span></h2>
+      <div class="topics">
+        <a class="topic" href="../maths/index.html?from=zh">
+          <span class="topic-text"><span class="topic-name"><span class="t-en">Maths</span> <span class="t-zh" lang="zh">数学</span></span></span>
+          <span class="topic-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 6v5a3 3 0 0 1-3 3H6m0 0 4-4m-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
       </div>
-    </div>
-  </section>
-
-  <section class="topic-group" aria-labelledby="t-maths">
-    <h2 id="t-maths"><span class="t-en">Maths</span> <span class="t-zh" lang="zh">数学</span></h2>
-    <div class="topics">
-      <a class="topic" href="../maths/index.html?from=zh">
-        <span class="topic-text"><span class="topic-name"><span class="t-en">Maths</span> <span class="t-zh" lang="zh">数学</span></span><span class="topic-sub"><span class="t-en">Quick practice for your maths exam: Cambridge IGCSE to start with</span> <span class="t-zh" lang="zh">剑桥 IGCSE 数学考试快速练习</span></span></span>
-        <span class="topic-go" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M19 6v5a3 3 0 0 1-3 3H6m0 0 4-4m-4 4 4 4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
-      </a>
-    </div>
-  </section>
+    </section>
+  </div>
 
   <p class="more"><span class="t-en">Science, History and more subjects are coming soon.</span> <span class="t-zh" lang="zh">科学、历史等学科即将推出。</span></p>
 </main>

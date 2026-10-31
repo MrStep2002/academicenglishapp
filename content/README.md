@@ -28,7 +28,7 @@ The Chinese version uses only `words.csv` (and its `zh` column).
 | `builds.csv` | Build the sentence (Chinese version only: see the sentence in Chinese, build it in English) |
 | `errors.csv` | Spot the error |
 | `tf.csv` | True or false |
-| `right-wrong.csv` | Grammar: Write or Wrong (is the sentence right, or does it have a mistake?) |
+| `right-wrong.csv` | SPAG: Right or Wrong (is the sentence right, or does it have a mistake?) |
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
 | `extracts.csv` | In your own words |
@@ -133,7 +133,7 @@ Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chi
 
 - **answer**: `TRUE` or `FALSE`.
 
-### right-wrong.csv (Grammar: Write or Wrong)
+### right-wrong.csv (SPAG: Right or Wrong)
 
 `id,level,statement,answer,explanation` and, if you like, `correction`
 
