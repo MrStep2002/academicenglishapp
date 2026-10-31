@@ -256,9 +256,10 @@ const P = (function(){
         else if(t.n>CAL && Math.floor(t.r)>oldBand) msg=zhSide && uiLang()==='zh' ? `升级到${L.zh}！` : `Level up! You've reached ${L.name}`;
       }
       const words = item && item.ids ? item.ids.map(id=>byId[id]).filter(Boolean) : [wordOf(item)].filter(Boolean);
-      words.forEach(w=>{ const rec=data.words[w.id] || (data.words[w.id]={s:0, due:0});
-        if(ok){ if(now>=rec.due && rec.s<4){ rec.s++; rec.due=now+WAIT[rec.s]; } }
-        else { rec.s=Math.max(rec.s?1:0, rec.s-1); rec.due=now; } });
+      words.forEach(w=>{ const fresh=!data.words[w.id], rec=data.words[w.id] || (data.words[w.id]={s:0, due:0});
+        if(fresh && ok && (GUESS[game] ?? .25)<=.25) rec.f=1;   // right the first time it was met (not a 50/50 guess): they already knew it
+        if(ok){ if(now>=rec.due && rec.s<4){ rec.s++; rec.due=now+WAIT[rec.s]; } rec.c=(rec.c||0)+1; }
+        else { rec.s=Math.max(rec.s?1:0, rec.s-1); rec.due=now; rec.c=0; } });   // c: right answers in a row (Chinese side: 2 = confident)
       let known=0, fam=0, learn=0;
       S.words.forEach(w=>{ const s=(data.words[w.id]||{}).s||0; if(s>=4) known++; else if(s>=2) fam++; else if(s>=1) learn++; });
       t.words={total:S.words.length, known, fam, learn};
@@ -266,7 +267,8 @@ const P = (function(){
       let pts=0;
       if(ok){ const band=d==null ? (zhSide?2:3) : Math.max(1, Math.min(5, Math.floor(d))), row=POINTS[POINT_KIND[game]||'word'];
         pts=row[band-1]; if(item && item.qs>1) pts=Math.ceil(pts/item.qs); t.pts=(t.pts||0)+pts; }
-      save(); if(msg) toastLevel(msg);
+      save(); if(msg && !zhSide) toastLevel(msg);
+      if(zhSide && !classRun){ const r=store.get('zhrecent', []); r.push(ok?1:0); store.set('zhrecent', r.slice(-20)); }   // pace of new words (zhPace)   // the Chinese side has its own level-up message (zhPoolWords)
       if(classRun) classCount(ok);   // a class game: +1 / -1
       else if(inCircuit && window.AEA_CIRCUIT) AEA_CIRCUIT.count(PAGE, ok, pts);
       if(window.AEA_POINTS) earned(AEA_POINTS.record(SIDE, pts, ok));
@@ -281,6 +283,10 @@ const P = (function(){
 // words already known come last. Items with no level are simply shuffled.
 function rankForLevel(items){
   const target=P.rating()+0.25, now=Date.now();
+  // Chinese side (31 Oct): no level target; shaky words first, words never answered soon after, confident ones less often, known ones last
+  if(SIDE==='zh' && !classRun) return items.map(it=>{ let sc=Math.random()*0.8; const w=wordOf(it), rec=w && P.wordRec(w.id);
+      if(w){ if(!rec) sc-=0.3; else if(!zhConfident(w)) sc-=0.6; else if(rec.s>=4 && rec.due>now) sc+=0.9; else sc+=0.3; }
+      return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
   return items.map(it=>{ let sc=Math.random()*0.6; const d=itemLevel(it); if(d!=null) sc+=Math.abs(d-target);
       const w=wordOf(it), rec=w && P.wordRec(w.id);
       if(rec){ if(rec.s>=1 && rec.s<4 && rec.due<=now) sc-=0.6; else if(rec.s>=4 && rec.due>now) sc+=0.8; }
@@ -315,7 +321,8 @@ let pickedBand = (()=>{ const n=levelNum(store.get('level', null)); return n==nu
 let inCircuit = false;   // playing a station of the Daily Circuit: the student's own level on the English side
 // Chinese side: the circuit uses the level the student chose on that topic, because that is where their word bank is
 // (Learn the words teaches at the chosen level and doesn't move their level; 27 Oct). No level chosen: their own level.
-const chosenBand = () => classRun ? classBand() : (!inCircuit || SIDE==='zh') && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
+// Chinese side (31 Oct): no level buttons; the level is the one their words have reached (zhBand), never chosen.
+const chosenBand = () => classRun ? classBand() : SIDE==='zh' ? zhBand() : !inCircuit && pickedBand!=null && LEVELS.includes(pickedBand) ? pickedBand : myBand();
 const chooseBand = b => { pickedBand = b; store.set('level', b==null ? null : LEVEL_CODES[b]); };
 // A choice that has become the student's own level is dropped, so from then on the page follows their level again
 const tidyChoice = () => { if(pickedBand!=null && P.known() && pickedBand===myBand()) chooseBand(null); };
@@ -340,11 +347,12 @@ const later = (fn,ms) => { const t=setTimeout(fn,ms); timers.push(t); return t; 
 const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
 
 // Endless deck: shuffled, refilled when empty; missed items come back a few cards later.
-function Deck(items){
-  let queue=[], last=null; const retried=new Set();
-  const refill=()=>{ queue=rankForLevel(items); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
+function Deck(items){   // items: a list, or a function giving the list (read again on refill, and every 4 cards for newcomers)
+  let queue=[], last=null, calls=0; const retried=new Set(), dealt=new Set(), live=typeof items==='function', src=live ? items : ()=>items;
+  const newcomers=()=>{ const inQ=new Set(queue); src().filter(x=>!inQ.has(x) && !dealt.has(x) && x!==last).forEach(x=>queue.splice(Math.min(queue.length, 1+Math.floor(Math.random()*4)), 0, x)); };
+  const refill=()=>{ dealt.clear(); queue=rankForLevel(src()); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
   return {
-    next(){ if(!queue.length) refill(); last=queue.shift(); return last; },
+    next(){ if(!queue.length) refill(); else if(live && ++calls%4===0) newcomers(); last=queue.shift(); dealt.add(last); return last; },
     // A missed item comes back once, a few cards later. Missed again, it waits for the next round,
     // so a student who is struggling still meets new items instead of the same few on a loop.
     retry(item){ if(retried.has(item)){ retried.delete(item); return; } retried.add(item);
@@ -553,7 +561,7 @@ function settle(ok, card, st, deck, item, next){
 function playMatch(mode, withZh){
   const game=withZh ? {key:'zhmatch', name:'Match the meaning', items:zhWords} : GAMES.find(g=>g.key===(mode==='syn'?'syn':'match'));
   const PER=5, REFILL_AT=3;
-  const p=game.items(), deck=Deck(p), st=Stats(game.key);
+  const p=game.items(), deck=Deck(withZh ? zhWords : p), st=Stats(game.key);
   if(withZh) zhShell(T('Match the meaning','单词配释义'), T('Tap a word, then its English meaning. Matched pairs turn grey; after three, new pairs appear.','点击单词，再点击它的英文释义。配好的会变灰，配好三对后会出现新的单词。'));
   else shell(game, mode==='def'?'Tap a word, then its meaning. Matched pairs turn grey; after three, new pairs take their place.'
     : mode==='mix'?'Tap a word, then its meaning or the group of words that means something similar. Matched pairs turn grey; after three, new pairs take their place.'
@@ -1597,16 +1605,71 @@ function playInvaders(){
 // ---------- CHINESE SIDE (data-only="zh"): vocabulary games with Chinese support ----------
 // Chinese appears next to the key word only. Answer options are always English.
 const ZH = Object.fromEntries(S.words.filter(w=>w.zh).map(w=>[w.id,w.zh]));   // the zh column of words.csv
-const zhLevelWords = () => pick(S.words).filter(w=>ZH[w.id]);   // every word at the chosen level: Learn the words teaches these
+// ----- Chinese side: the student's words (31 Oct 2026, teacher) -----
+// "It doesn't really teach you the words… the learning comes through repeated use of the vocabulary, not explicit teaching."
+// No Learn the words step and no level buttons: every game uses the student's own set of words for this topic. A new
+// student starts with ZH_START words from the lowest level (Foundation first, in words.csv order). Whenever few enough of the
+// set are still shaky, a batch more join; how many, and how few is "few enough", follow how the student is doing (zhPace).
+// A word is confident after two right answers in a row in any game, or one right answer if it was right the first time it
+// came up (they already knew it), or once it is Familiar and last answered right. New words are slipped into a game
+// already being played (Deck checks every few cards). Words from the
+// next level only join once ZH_CROSS of the set is confident. "Your level" is the lowest level that still has words not yet
+// in the set or not yet confident; when it goes up, the student sees "Level up!". The set is saved per topic (aea:<topic>:pool, synced like other aea: keys).
+const ZH_START=12, ZH_CROSS=.8;   // batch size and shaky limit: zhPace()
+function zhOrdered(){ return S.words.filter(w=>w.zh).map((w,i)=>[bandOf(w)??9, i, w]).sort((a,b)=>a[0]-b[0]||a[1]-b[1]).map(x=>x[2]); }
+function zhConfident(w){ const r=P.wordRec(w.id); if(!r) return false; return r.c!=null ? (r.c>=2 || (r.f===1 && r.c>=1) || (r.s>=2 && r.c>=1)) : r.s>=2; }
+// Pace (31 Oct, teacher: "if they're getting a long streak they should move up faster, if they're getting them wrong they
+// should move slower"): from their last 20 answers on this topic. add = words per batch; shaky = how many shaky words are
+// allowed before a batch joins.
+function zhPace(){
+  const r=store.get('zhrecent', []); if(r.length<8) return {add:4, shaky:4};
+  const acc=r.reduce((a,b)=>a+b,0)/r.length; let run=0; for(let i=r.length-1;i>=0 && r[i];i--) run++;
+  if(acc>=.9 || run>=12) return {add:6, shaky:6};   // flying: bigger batches, more new words at once
+  if(acc>=.75) return {add:4, shaky:4};
+  if(acc>=.6) return {add:2, shaky:3};
+  return {add:2, shaky:1};                          // struggling: new words wait until the current ones settle
+}
+function zhPoolWords(){
+  P.refresh();
+  const all=zhOrdered(), byid=Object.fromEntries(all.map(w=>[w.id,w])), saved=store.get('pool', null);
+  // First visit: start from the words they have already met here (earlier Learn the words, or the English side)
+  const pool=(Array.isArray(saved) ? saved : all.filter(w=>P.wordRec(w.id)).map(w=>w.id)).map(id=>byid[id]).filter(Boolean);
+  const have=new Set(pool.map(w=>w.id)), rest=all.filter(w=>!have.has(w.id));
+  if(pool.length<ZH_START) pool.push(...rest.splice(0, ZH_START-pool.length));
+  const pace=zhPace();
+  for(let guard=0; guard<200 && rest.length; guard++){
+    const shaky=pool.filter(w=>!zhConfident(w)).length; if(shaky>pace.shaky) break;
+    const top=Math.max(0, ...pool.map(w=>bandOf(w)??9)), nb=bandOf(rest[0])??9;
+    if(nb>top && pool.length && (pool.length-shaky)/pool.length<ZH_CROSS) break;
+    const batch=[]; while(rest.length && batch.length<pace.add && (bandOf(rest[0])??9)===nb) batch.push(rest.shift());
+    pool.push(...batch);
+  }
+  const ids=pool.map(w=>w.id); if(!Array.isArray(saved) || saved.join()!==ids.join()) store.set('pool', ids);
+  // Their level: the lowest level that still has words not yet in the set or not yet confident. Level up when it rises.
+  const inSet=new Set(ids), open_=all.find(w=>!inSet.has(w.id) || !zhConfident(w)), b=open_ ? (bandOf(open_) ?? zhTop(pool)) : zhTop(pool), was=store.get('zhband', null);
+  if(b!=null){ if(was!=null && b>was && LEVEL_CODES[b]){ const c=LEVEL_CODES[b]; toastLevel(uiLang()==='zh' ? `升级到${LEVEL_ZH[c]}！` : `Level up! You've reached ${LEVEL_NAMES[c]}`); }
+    if(was!==b) store.set('zhband', b); }
+  return pool;
+}
+function zhTop(pool){ const bs=pool.map(w=>bandOf(w)).filter(b=>b!=null); return bs.length ? Math.max(...bs) : null; }
+function zhBand(){ zhPoolWords(); const b=store.get('zhband', null); return b==null ? myBand() : (nearestLevel(b) ?? b); }
+// "Your level" on a Chinese topic page: the level of the words joining now; the bar is how many words at that level are confident
+function zhLevelLine(){
+  const b=zhBand(), code=LEVEL_CODES[b]||'', at=S.words.filter(w=>w.zh && bandOf(w)===b), conf=at.filter(zhConfident).length;
+  const pct=at.length ? Math.round(100*conf/at.length) : 0, tip=`${conf} of ${at.length} ${LEVEL_NAMES[code]||''} words going well`;
+  return `<div class="lvl-line"><p class="lvl-k">${T('Your level','你的水平')}: <span class="lvl-now">${T(esc(LEVEL_NAMES[code]||''), LEVEL_ZH[code]||'')}</span></p>
+    <span class="lvl-bar lvl-divider" role="img" aria-label="${esc(tip)}" title="${esc(tip)}"><i style="width:${pct}%"></i></span></div>`;
+}
+const zhLevelWords = () => zhWords();   // (was: every word at the chosen level; now the student's own set)
 // The games use every word at the chosen level (29 Oct, teacher: "I don't like the words to unlock screens… the kids
 // kinda know most of the words and they're quite supported within the game"). Until then they only used the student's
 // word bank (words met in Learn the words), and a game stayed locked until there were enough of them. Learn the words
 // is still there as an optional start; the word stages still move as words are answered in any game.
 const inBank = w => !!P.wordRec(w.id);
-const zhWords = () => zhLevelWords();
+const zhWords = () => zhPoolWords();
 const zhBankAll = () => S.words.filter(w=>ZH[w.id]);   // every word with its Chinese, at every level
 // Wrong answers come from the word bank when it is big enough, otherwise from all the words at the level
-const zhPool = p => { if(p.length>=8) return p; const l=zhLevelWords(); return l.length>=8 ? l : S.words.filter(w=>ZH[w.id]); };
+const zhPool = p => { if(p.length>=8) return p; const all=S.words.filter(w=>ZH[w.id]), b=zhBand(), l=all.filter(w=>(bandOf(w)??9)<=b); return l.length>=8 ? l : all; };
 const ZH_GAMES = [
   {key:'zh',       type:'practice',  name:'中文 → English',     zh:'看中文，选英文', blurb:'See the Chinese meaning and choose the English word.', zhBlurb:'看中文意思，选出英文单词。', run:()=>playZh()},
   {key:'zhmatch',  type:'practice',  name:'Match the meaning',  zh:'单词配释义',     blurb:'Match each word to its English meaning. The Chinese is shown under the word.', zhBlurb:'把每个单词和它的英文释义配对，单词下面有中文。', min:6, run:()=>playMatch('def', true)},
@@ -1651,10 +1714,8 @@ function zhMenu(){
   <section class="hero hero-compact hero-zhc">
     <p class="eyebrow">${T('Chinese version','中文版')}</p>
     <h1>${nameT(CFG.name)}</h1>
-    ${levelsHtml()}
-    ${levelLine()}
+    ${zhLevelLine()}
   </section>
-  ${learnHtml(teaser)}
   <h2 class="zh-games-h">${T('Games','游戏')}</h2>
   ${open.length ? `<div class="games">${open.map(card).join('')}</div>` : ''}
   ${locked.length ? `${open.length?`<p class="instr group-label">${T('Still locked','还没解锁')}</p>`:''}<div class="locks">${locked.map(tile).join('')}</div>` : ''}
@@ -1759,7 +1820,7 @@ function playLearn(){
   if(review){ total=quiz.length; quizStep(); } else intro(0);
 }
 function playZh(){
-  const p=zhWords(), deck=Deck(p), st=Stats('zh');
+  const p=zhWords(), deck=Deck(zhWords), st=Stats('zh');
   zhShell(T('中文 → English','看中文，选英文'), T('See the Chinese meaning and choose the English word.','看中文意思，选出英文单词。')); st.draw();
   const step=()=>{
     const w=deck.next(), ds=distractors(w,zhPool(p),3);
@@ -1770,7 +1831,7 @@ function playZh(){
   step();
 }
 function playZhMeaning(){
-  const p=zhWords(), deck=Deck(p), st=Stats('zhmean');
+  const p=zhWords(), deck=Deck(zhWords), st=Stats('zhmean');
   zhShell(T('Choose the meaning','选出释义'), T('Read the word and its Chinese, then choose the English meaning.','看单词和中文，选出正确的英文释义。')); st.draw();
   const step=()=>{
     const w=deck.next(), ds=distractors(w,zhPool(p),3);
@@ -1788,7 +1849,7 @@ const answersFor = w => { const base=normAns(w.w); return [base, ...base.split(/
 const acceptOf = {}; (S.accept||[]).forEach(g=>g.forEach(id=>{ (acceptOf[id]=acceptOf[id]||new Set()); g.forEach(o=>{ if(o!==id) acceptOf[id].add(o); }); }));
 const altsFor = w => [...(acceptOf[w.id]||[])].map(id=>byId[id]).filter(Boolean);
 function playType(){
-  const p=zhWords(), deck=Deck(p), st=Stats('zhtype');
+  const p=zhWords(), deck=Deck(zhWords), st=Stats('zhtype');
   zhShell(T('Type it','拼写单词'), T('Read the meaning, then type the English word.','看释义，拼写出英文单词。')); st.draw();
   const step=()=>{
     const w=deck.next(), target=normAns(w.w).split(/\s*\/\s*/)[0];
@@ -1818,7 +1879,7 @@ function playType(){
 
 // ----- Chinese side: True or false (does this meaning match the word?) -----
 function playZhTF(){
-  const p=zhWords(), deck=Deck(p), st=Stats('zhtf');
+  const p=zhWords(), deck=Deck(zhWords), st=Stats('zhtf');
   zhShell(T('True or false','判断对错'), T('Does the meaning match the word? Press T or F, or tap.','释义和单词匹配吗？按 T 或 F，或点击按钮。')); st.draw();
   const step=()=>{
     const w=deck.next(), truth=Math.random()<.5, other=truth?w:(distractors(w,zhPool(p),1)[0]||w), real=truth||other===w;
@@ -1891,7 +1952,7 @@ function challengeEnd(key, title, score, missed, again){
 }
 function timerBar(){ return `<div class="timer"><i id="timeFill"></i></div>`; }
 function playSpeed(){
-  const p=zhWords(), deck=Deck(p), SECS=60; let score=0, missed=[], end=Date.now()+SECS*1000, over=false;
+  const p=zhWords(), deck=Deck(zhWords), SECS=60; let score=0, missed=[], end=Date.now()+SECS*1000, over=false;
   zhShell(T('Speed round','限时挑战'), T('60 seconds: see the Chinese, choose the English word.','60 秒内看中文选英文，尽量多答对。'));
   document.getElementById('stats').innerHTML=`<span>${T('Score','得分')} <b id="sc">0</b></span><span><b id="secs">${SECS}</b>s</span>`;
   const feed=document.getElementById('feed'); feed.insertAdjacentHTML('beforebegin', timerBar());
@@ -1908,7 +1969,7 @@ function playSpeed(){
   tick(); step();
 }
 function playSurvival(){
-  const p=zhWords(), deck=Deck(p); let lives=3, score=0, missed=[], limit=10000, over=false;
+  const p=zhWords(), deck=Deck(zhWords); let lives=3, score=0, missed=[], limit=10000, over=false;
   zhShell(T('Survival','生存挑战'), T('Three lives. Choose the meaning before time runs out.','三条命，在时间用完前选出释义。'));
   const draw=()=>{ document.getElementById('stats').innerHTML=`<span>${T('Score','得分')} <b>${score}</b></span><span class="lives" aria-label="${lives} lives left">${'♥'.repeat(lives)}<span class="lost">${'♥'.repeat(3-lives)}</span></span>`; };
   draw();
