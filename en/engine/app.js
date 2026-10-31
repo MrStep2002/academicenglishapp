@@ -385,7 +385,7 @@ const GAMES = [
   {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair each word with its meaning or with a group of words that mean something similar. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch(matchMode())},
   // {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
-  {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
+  {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
   {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
@@ -402,7 +402,7 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
 // ---------- page frame ----------
 function frame(back, inner){
@@ -770,18 +770,28 @@ function playErr(){
 }
 
 // ---------- GRAMMAR: True or false ----------
+// True or false mixes two sources (31 Oct, teacher): the written statements in tf.csv, and statements made from words.csv
+// (a word with its own meaning = TRUE, or with another word's meaning = FALSE; wrong meanings chosen as in Word or meaning,
+// so words marked similar never swap). Half and half when the level has both; otherwise whichever it has.
+const lcFirst = x => x ? x.charAt(0).toLowerCase()+x.slice(1) : x;
+function tfFromWord(w, pool){
+  const truth=Math.random()<.5, other=truth ? w : (distractors(w, pool, 1)[0] || w), t=truth || other===w;
+  return {w, t, s:`“${w.w}” means “${lcFirst(other.def)}”`, why: t ? `This is the meaning of “${w.w}”.` : `“${w.w}” means ${lcFirst(w.def)}`};
+}
 function playTF(){
-  const game=GAMES.find(g=>g.key==='tf'), items=game.items(), deck=Deck(items), st=Stats('tf');
+  const game=GAMES.find(g=>g.key==='tf'), rows=pick(S.tf), words=pick(S.words), st=Stats('tf');
+  const deck=rows.length ? Deck(rows) : null, wdeck=words.length>=4 ? Deck(words) : null, pool=words.length>=8 ? words : S.words;
   shell(game,'Press T or F on a keyboard, or tap.'); st.draw();
   const step=()=>{
-    const t=deck.next();
+    const fromWords = wdeck && (!deck || Math.random()<.5);
+    const t = fromWords ? tfFromWord(wdeck.next(), pool) : deck.next(), item = fromWords ? t.w : t, from = fromWords ? wdeck : deck;
     const card=showCard(`<p class="instr">True or false?</p><p class="statement">${esc(t.s)}</p>
       <div class="tf-btns"><button class="tfb yes" data-v="1">True</button><button class="tfb no" data-v="0">False</button></div><div class="fb"></div>`);
     let done=false;
     const choose=v=>{ if(done) return; done=true; const ok=(v===1)===!!t.t;
       card.querySelectorAll('.tfb').forEach(b=>{ b.disabled=true; if(+b.dataset.v===(t.t?1:0)) b.classList.add('ok'); else b.classList.add('dim'); });
       const fb=card.querySelector('.fb'); ok?fbOk(fb,`<span>${rich(t.why)}</span>`):fbNo(fb,t.t?'True':'False',`<span>${rich(t.why)}</span>`);
-      settle(ok,card,st,deck,t,step); };
+      settle(ok,card,st,from,item,step); };
     card.querySelectorAll('.tfb').forEach(b=>b.onclick=()=>choose(+b.dataset.v));
     keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='t'||e.key==='ArrowRight'||k==='1') choose(1); if(k==='f'||e.key==='ArrowLeft'||k==='2') choose(0); };
   };
