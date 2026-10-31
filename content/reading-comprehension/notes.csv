@@ -1,9 +1,9 @@
 id,level,title,passage,topic,select_count,option1,option2,option3,option4,option5,option6,correct_options,explanation,source
-"notes-001","B1","Mapping the Old Trees","Our forest survey takes place on Saturday. Volunteers will record the locations of old trees on sheets supplied at the meeting point. Please read the route notes emailed to you before you arrive. The notes explain which entrance to use and where to meet.
+notes-001,B1,Mapping the Old Trees,"Our forest survey takes place on Saturday. Volunteers will record the locations of old trees on sheets supplied at the meeting point. Please read the route notes emailed to you before you arrive. The notes explain which entrance to use and where to meet.
 
 The route includes uneven ground, so everyone must arrive wearing strong shoes. There is also an online group where you can introduce yourself to other volunteers beforehand. Joining it is optional; all essential information will be sent by email.
 
-Please bring a filled water bottle, as drinking water is not available along the route. After the survey, you will upload your completed records from home. The organisers will combine these records into a map, which volunteers can view online when it is finished.","Required preparations before arriving for the forest survey","3","Read the route notes sent before the survey.","Introduce yourself online to the other survey volunteers.","Wear strong shoes suitable for uneven forest paths.","Record tree locations using the organisers' survey sheets.","Bring drinking water in your own filled bottle.","Upload completed records after returning from the forest.","[1,3,5]","Read the route notes sent before the survey.
+Please bring a filled water bottle, as drinking water is not available along the route. After the survey, you will upload your completed records from home. The organisers will combine these records into a map, which volunteers can view online when it is finished.",Required preparations before arriving for the forest survey,3,Read the route notes sent before the survey.,Introduce yourself online to the other survey volunteers.,Wear strong shoes suitable for uneven forest paths.,Record tree locations using the organisers' survey sheets.,Bring drinking water in your own filled bottle.,Upload completed records after returning from the forest.,"[1,3,5]","Read the route notes sent before the survey.
 Evidence: ""Please read the route notes emailed to you before you arrive.""
 
 Wear strong shoes suitable for uneven forest paths.
@@ -11,35 +11,35 @@ Evidence: ""everyone must arrive wearing strong shoes""
 
 Bring drinking water in your own filled bottle.
 Evidence: ""Please bring a filled water bottle""","Original fictional notice. The event, route and participation requirements are invented for this exercise."
-"notes-002","B2","Looking After Drawings","Protecting a museum drawing involves more than repairing visible damage. Light can harm both paper and the materials used to make an image, even before a visitor notices a change. Museums therefore keep sensitive drawings under low lighting and limit the length of their exhibitions.
+notes-002,B2,Looking After Drawings,"Protecting a museum drawing involves more than repairing visible damage. Light can harm both paper and the materials used to make an image, even before a visitor notices a change. Museums therefore keep sensitive drawings under low lighting and limit the length of their exhibitions.
 
 Other conservation work addresses different problems. A conservator may remove harmful dirt from a drawing's surface or repair a tear in the paper. Photographs and written records document the object's condition before treatment. Such work is valuable, but it does not replace controls on light exposure.
 
-Between exhibitions, sensitive drawings return to storage away from display lighting. This reduces further exposure rather than reversing damage already caused. By rotating the works on their walls, museums can offer visitors changing exhibitions while giving individual drawings periods out of the light.","Methods used to reduce light exposure for drawings","3","Repairing tears in drawings before returning them to exhibitions.","Keeping sensitive drawings under carefully controlled low lighting levels.","Removing harmful surface dirt from drawings during conservation treatment.","Limiting the time individual drawings remain on public display.","Recording the condition of individual drawings through detailed photographs.","Returning sensitive drawings to storage between their exhibition periods.","[2,4,6]","Keeping sensitive drawings under carefully controlled low lighting levels.
+Between exhibitions, sensitive drawings return to storage away from display lighting. This reduces further exposure rather than reversing damage already caused. By rotating the works on their walls, museums can offer visitors changing exhibitions while giving individual drawings periods out of the light.",Methods used to reduce light exposure for drawings,3,Repairing tears in drawings before returning them to exhibitions.,Keeping sensitive drawings under carefully controlled low lighting levels.,Removing harmful surface dirt from drawings during conservation treatment.,Limiting the time individual drawings remain on public display.,Recording the condition of individual drawings through detailed photographs.,Returning sensitive drawings to storage between their exhibition periods.,"[2,4,6]","Keeping sensitive drawings under carefully controlled low lighting levels.
 Evidence: ""Museums therefore keep sensitive drawings under low lighting""
 
 Limiting the time individual drawings remain on public display.
 Evidence: ""limit the length of their exhibitions""
 
 Returning sensitive drawings to storage between their exhibition periods.
-Evidence: ""Between exhibitions, sensitive drawings return to storage away from display lighting.""","Original nonfiction. Smithsonian conservation guidance: https://asia-archive.si.edu/research/conservation-scientific-research/paper-photographs/overview/ ; https://postalmuseum.si.edu/to-rotate-or-not-to-rotate ; https://siarchives.si.edu/what-we-do/preservation/environment"
-"notes-003","B1","My First Kitchen Project","When I joined the community kitchen, I could follow a recipe but had never cooked for a large group. During the project, I learned to calculate how much food we needed from the number of guests. The organiser then taught me to share jobs according to each volunteer's experience, rather than giving everyone the same task.
+Evidence: ""Between exhibitions, sensitive drawings return to storage away from display lighting.""",Original nonfiction. Smithsonian conservation guidance: https://asia-archive.si.edu/research/conservation-scientific-research/paper-photographs/overview/ ; https://postalmuseum.si.edu/to-rotate-or-not-to-rotate ; https://siarchives.si.edu/what-we-do/preservation/environment
+notes-003,B1,My First Kitchen Project,"When I joined the community kitchen, I could follow a recipe but had never cooked for a large group. During the project, I learned to calculate how much food we needed from the number of guests. The organiser then taught me to share jobs according to each volunteer's experience, rather than giving everyone the same task.
 
 At first, I found it difficult to explain a recipe without doing everything myself. By the final session, I could give clear instructions to newer volunteers and let them complete the work.
 
-There were other benefits too. I met neighbours I had never spoken to before. After our last event, we were allowed to take home the food left over. Everyone who completed the project also received a certificate, which I keep beside a photograph of our kitchen team.","Practical skills the narrator developed during the project","3","Meeting local people through regular shared kitchen sessions.","Planning meal quantities from the number of guests.","Receiving a certificate after completing the kitchen sessions.","Taking home food left over after the event.","Sharing kitchen jobs according to each person's experience.","Explaining recipes clearly to volunteers with less experience.","[2,5,6]","Planning meal quantities from the number of guests.
+There were other benefits too. I met neighbours I had never spoken to before. After our last event, we were allowed to take home the food left over. Everyone who completed the project also received a certificate, which I keep beside a photograph of our kitchen team.",Practical skills the narrator developed during the project,3,Meeting local people through regular shared kitchen sessions.,Planning meal quantities from the number of guests.,Receiving a certificate after completing the kitchen sessions.,Taking home food left over after the event.,Sharing kitchen jobs according to each person's experience.,Explaining recipes clearly to volunteers with less experience.,"[2,5,6]","Planning meal quantities from the number of guests.
 Evidence: ""I learned to calculate how much food we needed from the number of guests.""
 
 Sharing kitchen jobs according to each person's experience.
 Evidence: ""share jobs according to each volunteer's experience""
 
 Explaining recipes clearly to volunteers with less experience.
-Evidence: ""I could give clear instructions to newer volunteers""","Original fiction. The narrator and community project are invented; this is not a report of research or an actual programme."
-"notes-004","B2","Ideas on the Move","In a 2014 study, researchers investigated whether walking affected different kinds of thinking. Adults completed tasks while sitting or walking. One involved suggesting unusual but possible uses for everyday objects. Another required finding a single word linking three other words.
+Evidence: ""I could give clear instructions to newer volunteers""",Original fiction. The narrator and community project are invented; this is not a report of research or an actual programme.
+notes-004,B2,Ideas on the Move,"In a 2014 study, researchers investigated whether walking affected different kinds of thinking. Adults completed tasks while sitting or walking. One involved suggesting unusual but possible uses for everyday objects. Another required finding a single word linking three other words.
 
 Walking improved performance on the creative uses task, but did not improve performance on the task with one correct answer. Some participants also showed a creative benefit when they sat down shortly after walking. The effect was therefore not restricted to moments when their feet were moving.
 
-Outdoor scenery was not essential: participants walking on an indoor treadmill, facing a blank wall, also benefited creatively. The research supports using a walk to help generate ideas. It does not show that walking improves every kind of thinking or every stage of a creative project.","Findings reported by the study about walking and thinking","3","Walking helped adults produce original ideas for everyday objects.","Walking improved accuracy on tasks requiring single correct answers.","Indoor walking also improved participants' performance on creative tasks.","Creative benefits sometimes remained after participants sat down again.","Outdoor scenery was necessary for improvements in creative performance.","Creative benefits disappeared immediately when participants stopped physically walking.","[1,3,4]","Walking helped adults produce original ideas for everyday objects.
+Outdoor scenery was not essential: participants walking on an indoor treadmill, facing a blank wall, also benefited creatively. The research supports using a walk to help generate ideas. It does not show that walking improves every kind of thinking or every stage of a creative project.",Findings reported by the study about walking and thinking,3,Walking helped adults produce original ideas for everyday objects.,Walking improved accuracy on tasks requiring single correct answers.,Indoor walking also improved participants' performance on creative tasks.,Creative benefits sometimes remained after participants sat down again.,Outdoor scenery was necessary for improvements in creative performance.,Creative benefits disappeared immediately when participants stopped physically walking.,"[1,3,4]","Walking helped adults produce original ideas for everyday objects.
 Evidence: ""Walking improved performance on the creative uses task""
 
 Indoor walking also improved participants' performance on creative tasks.
@@ -47,15 +47,548 @@ Evidence: ""participants walking on an indoor treadmill, facing a blank wall, al
 
 Creative benefits sometimes remained after participants sat down again.
 Evidence: ""Some participants also showed a creative benefit when they sat down shortly after walking.""","Original nonfiction describing a real study. Oppezzo and Schwartz (2014), Give Your Ideas Some Legs: https://aaalab.stanford.edu/assets/papers/2014/Give_your_ideas_some_legs.pdf ; Stanford summary: https://ed.stanford.edu/news/study-finds-walking-boosts-creativity"
-"notes-005","C1","A Place to Begin","An arts centre that removes entrance fees may attract more visitors without making it easier for beginners to take part. Watching an exhibition and risking a first attempt at drawing are different experiences. A programme can be publicly available yet still assume that everyone arrives with equipment, confidence and spare time.
+notes-005,C1,A Place to Begin,"An arts centre that removes entrance fees may attract more visitors without making it easier for beginners to take part. Watching an exhibition and risking a first attempt at drawing are different experiences. A programme can be publicly available yet still assume that everyone arrives with equipment, confidence and spare time.
 
 I would therefore reserve one evening each week for beginners, with materials provided and no requirement to display finished work. Regular workshops could continue on other evenings. This would extend the programme rather than replace it.
 
-An annual exhibition would still be selected on artistic quality. Places in the beginner sessions, however, would be allocated by application order, not by portfolios. These arrangements serve different purposes: the exhibition presents accomplished work; the sessions give inexperienced people somewhere to start. Attendance figures alone would not tell us whether that second purpose had been achieved.","Arrangements proposed for the beginner sessions themselves","3","Supplying materials so beginners need not bring equipment.","Selecting exhibition entries according to their artistic quality.","Allocating places according to when applications are received.","Continuing the established workshops on other available evenings.","Displaying every participant's finished artwork in annual exhibitions.","Removing any requirement for participants to exhibit artwork.","[1,3,6]","Supplying materials so beginners need not bring equipment.
+An annual exhibition would still be selected on artistic quality. Places in the beginner sessions, however, would be allocated by application order, not by portfolios. These arrangements serve different purposes: the exhibition presents accomplished work; the sessions give inexperienced people somewhere to start. Attendance figures alone would not tell us whether that second purpose had been achieved.",Arrangements proposed for the beginner sessions themselves,3,Supplying materials so beginners need not bring equipment.,Selecting exhibition entries according to their artistic quality.,Allocating places according to when applications are received.,Continuing the established workshops on other available evenings.,Displaying every participant's finished artwork in annual exhibitions.,Removing any requirement for participants to exhibit artwork.,"[1,3,6]","Supplying materials so beginners need not bring equipment.
 Evidence: ""with materials provided""
 
 Allocating places according to when applications are received.
 Evidence: ""Places in the beginner sessions, however, would be allocated by application order, not by portfolios.""
 
 Removing any requirement for participants to exhibit artwork.
-Evidence: ""no requirement to display finished work""","Original opinion piece proposing a hypothetical programme. Reuses the passage in close-105 so that the two task formats can be compared. No actual arts centre or research results are claimed."
+Evidence: ""no requirement to display finished work""",Original opinion piece proposing a hypothetical programme. Reuses the passage in close-105 so that the two task formats can be compared. No actual arts centre or research results are claimed.
+notes-010,A1,An Egg on the Ice,"A mother emperor penguin lays one egg. She gives it to the father and goes to sea to eat. The father puts the egg on top of his feet. The skin on his belly covers it like a warm coat. The egg never touches the ice while he holds it.
+
+When the wind blows hard, the fathers stand very close together to keep warm. The mother is away at sea for weeks. All that time, the father stays with the egg and eats nothing.",What the father penguin does while the mother is away,3,Takes short trips to the sea for food.,Keeps the egg off the cold ground.,Joins the other fathers on windy days.,Keeps his feet on top of the egg.,Waits many days without a meal.,Gives the egg back to the mother each night.,"[2,3,5]","Keeps the egg off the cold ground.
+Evidence: “The egg never touches the ice while he holds it.”
+
+Joins the other fathers on windy days.
+Evidence: “When the wind blows hard, the fathers stand very close together to keep warm.”
+
+Waits many days without a meal.
+Evidence: “The mother is away at sea for weeks. All that time, the father stays with the egg and eats nothing.”
+
+Why the other notes do not fit
+
+Takes short trips to the sea for food.
+Evidence: “the father stays with the egg and eats nothing”
+
+Keeps his feet on top of the egg.
+Evidence: “The father puts the egg on top of his feet.”
+
+Gives the egg back to the mother each night.
+Evidence: “The mother is away at sea for weeks. All that time, the father stays with the egg”","Original nonfiction based on the Australian Antarctic Program, Emperor penguin breeding cycle. https://www.antarctica.gov.au/about-antarctica/animals/penguins/emperor-penguin/breeding-cycle/"
+notes-011,A2,A Fish Takes Aim,"Imagine an insect sitting on a leaf above the water. It looks safe there, but a banded archerfish can see it. The fish swims under the leaf and points its mouth up at the insect. A thin line of water shoots from its mouth. The first shot misses. The insect is still on the leaf.
+
+The fish has enough water left in its mouth to shoot again. This time the insect falls. As soon as it lands on the water, the fish swims over and eats it. The fish has caught its lunch without jumping out of the water.",How the archerfish catches the insect in this hunt,3,Aims at its food from below.,Jumps out of the water to reach the leaf.,Uses the same mouthful of water for a second try.,Knocks the insect down on its first try.,Takes its meal while the insect is still on the plant.,Catches its food just after it falls into the water.,"[1,3,6]","Aims at its food from below.
+Evidence: “The fish swims under the leaf and points its mouth up at the insect.”
+
+Uses the same mouthful of water for a second try.
+Evidence: “The fish has enough water left in its mouth to shoot again.”
+
+Catches its food just after it falls into the water.
+Evidence: “As soon as it lands on the water, the fish swims over and eats it.”
+
+Why the other notes do not fit
+
+Jumps out of the water to reach the leaf.
+Evidence: “The fish has caught its lunch without jumping out of the water.”
+
+Knocks the insect down on its first try.
+Evidence: “The first shot misses. The insect is still on the leaf.”
+
+Takes its meal while the insect is still on the plant.
+Evidence: “As soon as it lands on the water, the fish swims over and eats it.”","Illustrative hunt based on the behaviour of the banded archerfish. San Diego Zoo Wildlife Alliance, Banded Archer Fish. https://animals.sandiegozoo.org/animals/banded-archer-fish"
+notes-012,B1,The Blue Bottle Top,"On the floor of an Australian forest, two low walls of sticks form a narrow path. A male satin bowerbird built them. The path is called a bower. A blue bottle top near its entrance might look like a piece of rubbish, but the bird chose it.
+
+Before a female comes to look, the male collects bright blue things and arranges them around his bower. A feather or a flower will do. Near houses, he can sometimes find a blue clothes peg. When a female arrives, he bows and spreads his wings. Sometimes he dances with one of his treasures in his beak.
+
+Where will the eggs go? The female builds a separate nest in a tree or bush and looks after the chicks on her own. The male keeps his bower ready for his next visitor.",How the male satin bowerbird attracts a female,3,Builds the nest in which the female will raise her chicks.,Waits for a female to bring the first decorations.,Makes a walkway between two rows of sticks.,Decorates his display area with blue objects he finds.,Stands still throughout the female’s visit.,"Performs for his visitor, sometimes holding a decoration.","[3,4,6]","Makes a walkway between two rows of sticks.
+Evidence: “two low walls of sticks form a narrow path. A male satin bowerbird built them.”
+
+Decorates his display area with blue objects he finds.
+Evidence: “Before a female comes to look, the male collects bright blue things and arranges them around his bower.”
+
+Performs for his visitor, sometimes holding a decoration.
+Evidence: “Sometimes he dances with one of his treasures in his beak.”
+
+Why the other notes do not fit
+
+Builds the nest in which the female will raise her chicks.
+Evidence: “The female builds a separate nest in a tree or bush and looks after the chicks on her own.”
+
+Waits for a female to bring the first decorations.
+Evidence: “Before a female comes to look, the male collects bright blue things and arranges them around his bower.”
+
+Stands still throughout the female’s visit.
+Evidence: “When a female arrives, he bows and spreads his wings.”","Original nonfiction based on the Australian Museum, Satin Bowerbird. https://australian.museum/learn/animals/birds/satin-bowerbird/"
+notes-013,B2,When Is a Swarm Ready to Move?,"A swarm of honeybees hanging from a branch may look as if it is resting. Meanwhile, a small number of bees, the scouts, are out looking for a new home. When a scout comes back, she dances on the branch. A better site gets a longer dance, which draws more scouts out to inspect it for themselves.
+
+Researchers offered swarms two good nest boxes. When about fifteen scouts had gathered at one box, the swarm began to prepare for flight. Back on the branch, some bees were still dancing for the other box. The decision could go ahead while those bees still favoured a different home.
+
+In another experiment, the researchers put five equally good boxes close together. Visitors spread out among them, so it took longer for a group to build up at any one box. With five homes on offer, the swarm actually left later than when there was just one.",What the experiments showed about how honeybees choose a home,3,A scout spends more time advertising a site she rates highly.,The swarm delays its decision until the last scout stops promoting a rival site.,The five-box trial was slower because the boxes were far apart.,A gathering at one possible home can set preparations for flight in motion.,Dividing visits among several good homes delays departure.,The group of about fifteen that triggered preparations was on the branch.,"[1,4,5]","A scout spends more time advertising a site she rates highly.
+Evidence: “A better site gets a longer dance”
+
+A gathering at one possible home can set preparations for flight in motion.
+Evidence: “When about fifteen scouts had gathered at one box, the swarm began to prepare for flight.”
+
+Dividing visits among several good homes delays departure.
+Evidence: “Visitors spread out among them, so it took longer for a group to build up at any one box.”
+
+Why the other notes do not fit
+
+The swarm delays its decision until the last scout stops promoting a rival site.
+Evidence: “The decision could go ahead while those bees still favoured a different home.”
+
+The five-box trial was slower because the boxes were far apart.
+Evidence: “the researchers put five equally good boxes close together. Visitors spread out among them, so it took longer for a group to build up at any one box.”
+
+The group of about fifteen that triggered preparations was on the branch.
+Evidence: “When about fifteen scouts had gathered at one box, the swarm began to prepare for flight.”","Original nonfiction based on Cornell University’s account of nest-site selection experiments and Seeley & Visscher, Quorum sensing during nest-site selection by honeybee swarms. https://news.cornell.edu/stories/2006/04/honeybee-decision-making-ability-rivals-any-department-committee | https://doi.org/10.1007/s00265-004-0814-5"
+notes-014,C1,Ten Metres on Six Legs,"How do you tell where an ant expects its nest to be? Give it a homeward track with no nest entrance and watch where it starts doubling back. Researchers used this approach with desert ants trained to collect food ten metres from home. The centre of each ant’s search gave the team a measure of how far it believed it had travelled.
+
+On the first outward trip, all the ants walked on legs of their usual length. At the feeder, the researchers fitted some with tiny bristles that acted as stilts and shortened the legs of others. On the return trip, the ants taking longer steps centred their searches beyond the ten-metre mark. Those taking shorter steps searched well short of it.
+
+The timing of the change proved crucial. On later trips, the same ants walked to the feeder and back on their altered legs. Their searches clustered close to the ten-metre mark, much like those of ants whose legs had never been altered. The earlier errors had largely disappeared, even though the legs themselves had not been restored to their original length.
+
+The findings support the idea that an ant gauges distance using its strides. Calling this a step counter is convenient shorthand. The experiment revealed how a change in stride displaced the search. It could not establish that the ant assigns a number to each step.",Conclusions supported by the ants’ searches for their nest,3,The first change in stride caused both groups to underestimate how far they needed to walk.,The direction of the first error depended on whether the return stride had grown or shrunk.,The usual search distance returned only once the ants had regained their original leg length.,The searches established that the ants kept a numerical tally of their steps.,A change in leg length caused little error when it applied to the entire round trip.,The search pattern supports the idea that desert ants use information from their steps to gauge distance.,"[2,5,6]","The direction of the first error depended on whether the return stride had grown or shrunk.
+Evidence: “the ants taking longer steps centred their searches beyond the ten-metre mark. Those taking shorter steps searched well short of it.”
+
+A change in leg length caused little error when it applied to the entire round trip.
+Evidence: “On later trips, the same ants walked to the feeder and back on their altered legs. Their searches clustered close to the ten-metre mark, much like those of ants whose legs had never been altered.”
+
+The search pattern supports the idea that desert ants use information from their steps to gauge distance.
+Evidence: “The findings support the idea that an ant gauges distance using its strides.”
+
+Why the other notes do not fit
+
+The first change in stride caused both groups to underestimate how far they needed to walk.
+Evidence: “the ants taking longer steps centred their searches beyond the ten-metre mark. Those taking shorter steps searched well short of it.”
+
+The usual search distance returned only once the ants had regained their original leg length.
+Evidence: “The earlier errors had largely disappeared, even though the legs themselves had not been restored to their original length.”
+
+The searches established that the ants kept a numerical tally of their steps.
+Evidence: “It could not establish that the ant assigns a number to each step.”","Original nonfiction based on Wittlinger, Wehner & Wolf (2006), The Ant Odometer: Stepping on Stilts and Stumps, Science. https://doi.org/10.1126/science.1126912 | https://pubmed.ncbi.nlm.nih.gov/16809544/"
+notes-015,A1,Two Beds on a Train,"Lin and her dad get on the night train after dinner. Their little room has two beds, one above the other. Dad climbs up to the top bed. The bed below him is Lin’s for the night. Before she gets in, she takes off her shoes and leaves them by the door.
+
+There is no space for her big bag on her bed. She puts it under her bed for the night. In the morning, she opens her eyes. Through the train window she can see the sea.",How Lin gets ready for her night on the train,3,Sleeps below Dad.,Leaves her big bag on Dad’s bed.,Shares Dad’s bed for the night.,Keeps her bag under the place where she sleeps.,Keeps her shoes on her feet all night.,Puts her shoes near the door of the room.,"[1,4,6]","Sleeps below Dad.
+Evidence: “Dad climbs up to the top bed. The bed below him is Lin’s for the night.”
+
+Keeps her bag under the place where she sleeps.
+Evidence: “She puts it under her bed for the night.”
+
+Puts her shoes near the door of the room.
+Evidence: “Before she gets in, she takes off her shoes and leaves them by the door.”
+
+Why the other notes do not fit
+
+Leaves her big bag on Dad’s bed.
+Evidence: “She puts it under her bed for the night.”
+
+Shares Dad’s bed for the night.
+Evidence: “Dad climbs up to the top bed. The bed below him is Lin’s for the night.”
+
+Keeps her shoes on her feet all night.
+Evidence: “Before she gets in, she takes off her shoes and leaves them by the door.”",Original fictional travel account.
+notes-016,A1,Ring Once for the Boat,"Our hotel is across the river. I can see its red door. The little boat is on the hotel side, and there is a bell on our side. A sign says to ring once for the boat. I pull the rope, and the bell rings once. The woman in the boat hears it and comes across.
+
+We wait until the boat stops beside us. Then we get in with our bags. I take out some coins, but the woman says we can pay at the end. I give her the money when we reach the hotel steps.",How we cross the river to our hotel,3,Ring the bell a second time to call the boat.,Use one ring to ask for the boat.,Get in after the boat stops moving.,Leave the bags behind for this trip.,Pay on the hotel side of the river.,Give the woman the coins before she takes us across.,"[2,3,5]","Use one ring to ask for the boat.
+Evidence: “I pull the rope, and the bell rings once. The woman in the boat hears it and comes across.”
+
+Get in after the boat stops moving.
+Evidence: “We wait until the boat stops beside us. Then we get in with our bags.”
+
+Pay on the hotel side of the river.
+Evidence: “I give her the money when we reach the hotel steps.”
+
+Why the other notes do not fit
+
+Ring the bell a second time to call the boat.
+Evidence: “I pull the rope, and the bell rings once.”
+
+Leave the bags behind for this trip.
+Evidence: “Then we get in with our bags.”
+
+Give the woman the coins before she takes us across.
+Evidence: “I give her the money when we reach the hotel steps.”","Original fictional travel account. The boat, hotel and payment arrangement are invented."
+notes-017,A1,Two Faces on a Bus,"My friend Ana lives far away now. I draw a big red bus on a sheet of paper. All the windows are empty. I fold my picture, put it in an envelope and post it to Ana.
+
+When Ana gets my drawing, she takes out a black pen. She draws her face in one bus window and mine in the next. Then she sends the same sheet of paper back to me. I put it above my desk. Now I can look up and see us on the bus together.",What Ana does with her friend’s drawing,3,Draws the red bus before her friend sees it.,Works on the paper her friend sent.,Puts both friends outside the bus.,Adds both faces to the bus windows.,Returns the picture to her friend.,Keeps the finished picture at her house.,"[2,4,5]","Works on the paper her friend sent.
+Evidence: “She draws her face in one bus window and mine in the next. Then she sends the same sheet of paper back to me.”
+
+Adds both faces to the bus windows.
+Evidence: “She draws her face in one bus window and mine in the next.”
+
+Returns the picture to her friend.
+Evidence: “Then she sends the same sheet of paper back to me.”
+
+Why the other notes do not fit
+
+Draws the red bus before her friend sees it.
+Evidence: “I draw a big red bus on a sheet of paper. All the windows are empty. I fold my picture, put it in an envelope and post it to Ana.”
+
+Puts both friends outside the bus.
+Evidence: “She draws her face in one bus window and mine in the next.”
+
+Keeps the finished picture at her house.
+Evidence: “Then she sends the same sheet of paper back to me. I put it above my desk.”",Original fictional account of two friends making a picture together.
+notes-018,A1,A Place on Mia’s Team,"Dan wants to play football at lunch. His friend Mia is already on the field. Dan waits by the gate because he does not know the other children. Mia sees him and walks over. She takes him onto the field to play on her team.
+
+Mia gets the ball first. She calls Dan’s name and kicks it to him. Dan tries to score, but the ball goes past the goal. Mia claps for him anyway. This time, when the game starts again, Dan calls for the ball himself.",What Mia does to help Dan join the game,3,Brings Dan onto her own side.,Sends Dan to play against her.,Passes the ball to Dan.,Leaves Dan at the gate for the whole game.,Claps because Dan’s first shot goes into the goal.,Claps even when Dan misses.,"[1,3,6]","Brings Dan onto her own side.
+Evidence: “She takes him onto the field to play on her team.”
+
+Passes the ball to Dan.
+Evidence: “She calls Dan’s name and kicks it to him.”
+
+Claps even when Dan misses.
+Evidence: “Dan tries to score, but the ball goes past the goal. Mia claps for him anyway.”
+
+Why the other notes do not fit
+
+Sends Dan to play against her.
+Evidence: “She takes him onto the field to play on her team.”
+
+Leaves Dan at the gate for the whole game.
+Evidence: “She takes him onto the field to play on her team.”
+
+Claps because Dan’s first shot goes into the goal.
+Evidence: “Dan tries to score, but the ball goes past the goal. Mia claps for him anyway.”",Original fictional account of a school football game.
+notes-019,A1,Three Animals in the Sky,"In 1783, people at a palace in France saw a great balloon rise into the sky. Under the balloon was a basket. A sheep, a duck and a chicken were inside it. The three animals had the basket to themselves. The people stayed on the ground.
+
+The balloon flew away from the palace. Eight minutes later, it came down in a wood. A man hurried there to find the animals. All three were alive after their trip.",What happened on the animals’ balloon trip,3,The passengers rode below the balloon.,The trip took less than ten minutes.,A man rode with the animals.,The flight ended in the palace garden.,The balloon landed among trees.,Only two animals were alive after the flight.,"[1,2,5]","The passengers rode below the balloon.
+Evidence: “Under the balloon was a basket. A sheep, a duck and a chicken were inside it.”
+
+The trip took less than ten minutes.
+Evidence: “Eight minutes later, it came down in a wood.”
+
+The balloon landed among trees.
+Evidence: “Eight minutes later, it came down in a wood.”
+
+Why the other notes do not fit
+
+A man rode with the animals.
+Evidence: “The three animals had the basket to themselves. The people stayed on the ground.”
+
+The flight ended in the palace garden.
+Evidence: “The balloon flew away from the palace. Eight minutes later, it came down in a wood.”
+
+Only two animals were alive after the flight.
+Evidence: “All three were alive after their trip.”","Original historical account. Château de Versailles, The first hot air balloon flight. https://en.chateauversailles.fr/discover/history/key-dates/first-hot-air-balloon-flight"
+notes-020,A1,A Roman Writer’s Mistake,"Long ago, a Roman writer could send a message on a small wooden board. Soft wax, like the wax in a candle, covered one side of the board. Imagine a writer putting a name on that side. She has a thin metal stick. One end is sharp. She pushes that end into the wax to make the letters.
+
+One letter is wrong. She turns the stick round. With its flat end, she rubs the letter away. The wax is smooth again. She writes the right letter in the same place.",How the writer uses this Roman board,3,Uses the flat end to write the name.,Writes the name on the bare wood.,Makes the letters in the soft wax.,Uses the other end of her stick to remove a letter.,Gets a new board to write the correct letter.,Puts the new letter where the old one was.,"[3,4,6]","Makes the letters in the soft wax.
+Evidence: “She pushes that end into the wax to make the letters.”
+
+Uses the other end of her stick to remove a letter.
+Evidence: “She turns the stick round. With its flat end, she rubs the letter away.”
+
+Puts the new letter where the old one was.
+Evidence: “She writes the right letter in the same place.”
+
+Why the other notes do not fit
+
+Uses the flat end to write the name.
+Evidence: “One end is sharp. She pushes that end into the wax to make the letters.”
+
+Writes the name on the bare wood.
+Evidence: “She pushes that end into the wax to make the letters.”
+
+Gets a new board to write the correct letter.
+Evidence: “She writes the right letter in the same place.”","Illustrative scene based on Roman writing tools. London Museum, Stylus. https://www.londonmuseum.org.uk/collections/v/object-9789/stylus/"
+notes-021,A1,A Book Made with Sunlight,"In 1843, people could see the first pages of Anna Atkins’s book about seaweed. She wanted people to see the shape of each piece. She put real seaweed on special paper and left it in the sun. The seaweed kept the light off the paper under it.
+
+Anna took the seaweed off the page. Then she washed the paper in water. On the finished page, the shape of the seaweed was white. The space around it was a deep blue, like the sea.",How Anna made her pictures of seaweed,3,Let the light reach every part of the paper.,Laid a real piece of seaweed on the page.,Left the seaweed in place while she washed the page.,Made the shape blue and the space around it white.,Used light from the sun to make the picture.,Washed the sheet after taking the seaweed away.,"[2,5,6]","Laid a real piece of seaweed on the page.
+Evidence: “She put real seaweed on special paper and left it in the sun.”
+
+Used light from the sun to make the picture.
+Evidence: “She put real seaweed on special paper and left it in the sun.”
+
+Washed the sheet after taking the seaweed away.
+Evidence: “Anna took the seaweed off the page. Then she washed the paper in water.”
+
+Why the other notes do not fit
+
+Let the light reach every part of the paper.
+Evidence: “The seaweed kept the light off the paper under it.”
+
+Left the seaweed in place while she washed the page.
+Evidence: “Anna took the seaweed off the page. Then she washed the paper in water.”
+
+Made the shape blue and the space around it white.
+Evidence: “On the finished page, the shape of the seaweed was white. The space around it was a deep blue, like the sea.”","Original historical account. The Metropolitan Museum of Art, Photographs of British Algae: Cyanotype Impressions, https://www.metmuseum.org/art/collection/search/286656 | Natural History Museum, Anna Atkins’s cyanotypes, https://www.nhm.ac.uk/discover/anna-atkins-cyanotypes-the-first-book-of-photographs.html"
+notes-022,A1,A Sunny Spot in Rjukan,"Rjukan is a town in Norway with mountains around it. In winter, the sun shines on the mountains, but the town square is down in the shade. How can people bring the light down to the square?
+
+They use three big mirrors high above the houses. The mirrors catch sunlight on the mountain and send it down to just one part of the square. As the sun moves across the sky, the mirrors slowly turn. On a clear day, people can stand in the sunny spot together.",How the mirrors bring sunlight to Rjukan’s town square,3,Catch the light high up on the mountain.,Cover the whole square with sunlight.,Turn to follow the sun during the day.,Make a sunny place in the square below.,Stay in the same position all day.,Send light up from the square to the mountain.,"[1,3,4]","Catch the light high up on the mountain.
+Evidence: “The mirrors catch sunlight on the mountain”
+
+Turn to follow the sun during the day.
+Evidence: “As the sun moves across the sky, the mirrors slowly turn.”
+
+Make a sunny place in the square below.
+Evidence: “send it down to just one part of the square.”
+
+Why the other notes do not fit
+
+Cover the whole square with sunlight.
+Evidence: “send it down to just one part of the square.”
+
+Stay in the same position all day.
+Evidence: “As the sun moves across the sky, the mirrors slowly turn.”
+
+Send light up from the square to the mountain.
+Evidence: “The mirrors catch sunlight on the mountain and send it down to just one part of the square.”","Original geographical account. VisitRjukan, The Sun Mirror. https://visitrjukan.com/en/things-to-do/the-sun-mirror/ Visit Norway, The Giant Sun Mirrors in Rjukan. https://www.visitnorway.com/listings//the-giant-sun-mirrors-in-rjukan/16430/"
+notes-023,A1,A River Far from the Sea,"Every year, rain falls on the hills of Angola. Some of that water runs into the Okavango River and travels south to Botswana. The journey takes months. By the time the water reaches the grass in Botswana, the dry months have begun.
+
+Here the river splits into many smaller streams. Water spreads across the flat land, even when there is very little rain nearby. Many rivers carry water to the sea. The Okavango ends in the sand, a long way from the coast.",What happens to the water of the Okavango River,3,Comes only from rain that falls in Botswana.,Travels from Angola into Botswana.,Stays in one large river across the flat land.,Flows along several smaller paths across the land.,Reaches the grass only when there is heavy rain nearby.,Ends its journey a long way from the coast.,"[2,4,6]","Travels from Angola into Botswana.
+Evidence: “Every year, rain falls on the hills of Angola. Some of that water runs into the Okavango River and travels south to Botswana.”
+
+Flows along several smaller paths across the land.
+Evidence: “Here the river splits into many smaller streams.”
+
+Ends its journey a long way from the coast.
+Evidence: “The Okavango ends in the sand, a long way from the coast.”
+
+Why the other notes do not fit
+
+Comes only from rain that falls in Botswana.
+Evidence: “Every year, rain falls on the hills of Angola. Some of that water runs into the Okavango River and travels south to Botswana.”
+
+Stays in one large river across the flat land.
+Evidence: “Here the river splits into many smaller streams.”
+
+Reaches the grass only when there is heavy rain nearby.
+Evidence: “Water spreads across the flat land, even when there is very little rain nearby.”","Original geographical account. UNESCO World Heritage Centre, Okavango Delta. https://whc.unesco.org/en/list/1432/ Botswana, Okavango Delta World Heritage Nomination Dossier. https://whc.unesco.org/uploads/nominations/1432.pdf"
+notes-024,A1,A Hill That Moves,"A hill of sand is called a dune. Imagine one on a windy day. The wind blows from left to right. It carries little bits of sand up the left side of the hill. When the sand gets to the top, it falls down the right side.
+
+More sand follows the same path. The left side loses sand, and the right side gets more. Slowly, the hill moves to the right. It goes the same way as the wind.",How the sand hill moves in this example,3,The wind takes sand up one side.,The sand drops back down the side it came from.,Sand crosses the top and drops on the other side.,The left side gets more sand as time passes.,The hill moves in the direction the wind blows.,The hill stays in one place as the sand moves.,"[1,3,5]","The wind takes sand up one side.
+Evidence: “It carries little bits of sand up the left side of the hill.”
+
+Sand crosses the top and drops on the other side.
+Evidence: “When the sand gets to the top, it falls down the right side.”
+
+The hill moves in the direction the wind blows.
+Evidence: “Slowly, the hill moves to the right. It goes the same way as the wind.”
+
+Why the other notes do not fit
+
+The sand drops back down the side it came from.
+Evidence: “When the sand gets to the top, it falls down the right side.”
+
+The left side gets more sand as time passes.
+Evidence: “The left side loses sand, and the right side gets more.”
+
+The hill stays in one place as the sand moves.
+Evidence: “Slowly, the hill moves to the right.”","Illustrative dune with a steady wind from left to right. US National Park Service, Aeolian (Dunes) Landforms and Dune Dynamics. https://www.nps.gov/subjects/geology/aeolian-landforms.htm | https://www.nps.gov/im/chdn/dune-dynamics.htm"
+notes-025,A2,The Case with One Red Wheel,"After our flight, two dark green cases came round on the belt. The first one even had a yellow ribbon like mine. I reached for the handle, but the name on the card was a stranger’s, so I let the case go past. The second green case was much too small. When the belt stopped, I still had no bag.
+
+At the airport desk, I showed a photo I had taken of my case before the flight. Three of its wheels were black. The fourth was red. The woman brought a case from behind the desk. There was the red wheel. I checked the name on the handle too. This time it was mine.",How the traveller finds the right case,3,Takes the case with the stranger’s name to the desk.,Checks who owns the first case before taking it.,Shows the airport worker a picture from before the journey.,Finds the missing case on the belt just before it stops.,Takes the case from the desk without reading its label.,Recognises the wheel that is a different colour from the others.,"[2,3,6]","Checks who owns the first case before taking it.
+Evidence: “I reached for the handle, but the name on the card was a stranger’s, so I let the case go past.”
+
+Shows the airport worker a picture from before the journey.
+Evidence: “At the airport desk, I showed a photo I had taken of my case before the flight.”
+
+Recognises the wheel that is a different colour from the others.
+Evidence: “Three of its wheels were black. The fourth was red. The woman brought a case from behind the desk. There was the red wheel.”
+
+Why the other notes do not fit
+
+Takes the case with the stranger’s name to the desk.
+Evidence: “the name on the card was a stranger’s, so I let the case go past.”
+
+Finds the missing case on the belt just before it stops.
+Evidence: “When the belt stopped, I still had no bag.”
+
+Takes the case from the desk without reading its label.
+Evidence: “I checked the name on the handle too. This time it was mine.”",Original fictional travel account.
+notes-026,A2,The Way Back in Pictures,"On a visit to a new city, my aunt and I walked from our hotel to a market on a hill. At each corner where we turned, I stopped and looked back down the street we had just walked along. I took a photo facing that way. It was the view we would see on our way home.
+
+At one corner, a red van was outside a shop with a round window. The van might drive away, so I kept it out of the photo and chose the window instead. When we left the market, I opened my last photo first. I worked back through the pictures until we saw our hotel door again.",How the traveller uses photos to find the way back,3,Takes pictures in the direction they will face on the return walk.,Uses the parked van as the sign to look for later.,Takes the first picture after arriving at the market.,Chooses a detail on a building that will still be there later.,Starts the return walk with the earliest picture.,Looks at the pictures in the opposite order on the way home.,"[1,4,6]","Takes pictures in the direction they will face on the return walk.
+Evidence: “I stopped and looked back down the street we had just walked along. I took a photo facing that way. It was the view we would see on our way home.”
+
+Chooses a detail on a building that will still be there later.
+Evidence: “The van might drive away, so I kept it out of the photo and chose the window instead.”
+
+Looks at the pictures in the opposite order on the way home.
+Evidence: “When we left the market, I opened my last photo first. I worked back through the pictures until we saw our hotel door again.”
+
+Why the other notes do not fit
+
+Uses the parked van as the sign to look for later.
+Evidence: “The van might drive away, so I kept it out of the photo and chose the window instead.”
+
+Takes the first picture after arriving at the market.
+Evidence: “At each corner where we turned, I stopped and looked back down the street we had just walked along. I took a photo facing that way.”
+
+Starts the return walk with the earliest picture.
+Evidence: “When we left the market, I opened my last photo first.”",Original fictional travel account.
+notes-027,A2,One Word for Ellie,"My friend Ellie wrote a poem about her grandad for the school show. When she read it to me, she always stopped in the same place, just before the last two lines. We spent our practice time on those two lines. After a few tries, she could say both if she heard the first word.
+
+At the show, I sat in the front row because Ellie wanted to hear me if she needed help. She read most of the poem without a problem. Then she stopped and looked at me. I whispered just one word, and she read the last two lines herself. Her grandad was sitting beside me. He heard the whole poem.",How Ellie’s friend helps her read the poem,3,Practises the part where Ellie usually gets stuck.,Sits near the front so Ellie can hear the help.,Spends the practice time on the opening lines.,Calls out the missing word before Ellie stops.,Gives Ellie a quiet clue so she can finish for herself.,Reads the ending to the audience in Ellie’s place.,"[1,2,5]","Practises the part where Ellie usually gets stuck.
+Evidence: “We spent our practice time on those two lines.”
+
+Sits near the front so Ellie can hear the help.
+Evidence: “I sat in the front row because Ellie wanted to hear me if she needed help.”
+
+Gives Ellie a quiet clue so she can finish for herself.
+Evidence: “I whispered just one word, and she read the last two lines herself.”
+
+Why the other notes do not fit
+
+Spends the practice time on the opening lines.
+Evidence: “We spent our practice time on those two lines.”
+
+Calls out the missing word before Ellie stops.
+Evidence: “Then she stopped and looked at me. I whispered just one word”
+
+Reads the ending to the audience in Ellie’s place.
+Evidence: “she read the last two lines herself.”",Original fictional account of a friendship at school.
+notes-028,A2,The Photo with the Blue Nose,"At art club, Ben got a spot of blue paint on the end of his nose. He laughed when I showed him the photo. I put it in a message to our class, ready to send. Before I pressed the button, I asked Ben if the others could see it. He shook his head. He liked the joke between us, but he didn’t want the picture on thirty other phones. I closed the message without sending it.
+
+Later, Ben took a different photo. It showed only the picture we had painted together. He asked me to send that one to the class, so I did. By the end of the day, three people had asked us how we had made the purple sky.",What Ben’s friend does about sharing the photos,3,Sends the first photo before asking Ben about it.,Takes the photo that the class finally receives.,Checks that Ben is happy for the class to see his photo.,Leaves the picture of Ben’s face out of the class chat.,Shares a photo of their artwork at Ben’s request.,Sends a second photo that shows Ben beside the painting.,"[3,4,5]","Checks that Ben is happy for the class to see his photo.
+Evidence: “Before I pressed the button, I asked Ben if the others could see it.”
+
+Leaves the picture of Ben’s face out of the class chat.
+Evidence: “I closed the message without sending it.”
+
+Shares a photo of their artwork at Ben’s request.
+Evidence: “He asked me to send that one to the class, so I did. By the end of the day, three people had asked us how we had made the purple sky.”
+
+Why the other notes do not fit
+
+Sends the first photo before asking Ben about it.
+Evidence: “Before I pressed the button, I asked Ben if the others could see it.”
+
+Takes the photo that the class finally receives.
+Evidence: “Later, Ben took a different photo. It showed only the picture we had painted together. He asked me to send that one to the class, so I did.”
+
+Sends a second photo that shows Ben beside the painting.
+Evidence: “It showed only the picture we had painted together.”",Original fictional account of two friends at art club.
+notes-029,A2,A Clock for the Dark,"A sundial tells the time by the shadow the sun makes. What could people use after sunset? A stone bowl from a temple at Karnak in ancient Egypt offers one answer. To use this clock, someone filled the bowl with water. A tiny hole near the bottom let the water run out slowly.
+
+There were twelve sets of marks inside the bowl, one for each month. People divided every night into twelve hours, but summer nights were shorter than winter nights. That is why the month mattered. The reader chose the marks for that month and checked how far the water had fallen. The new water level showed how much of the night had passed.",How to tell the time with the water clock at Karnak,3,Start with an empty bowl and wait for water to enter it.,Put water into the bowl at the start.,Use a single set of marks throughout the year.,Wait for the water to rise to the next mark.,Use the marks that match the time of year.,Read the time from the water left in the bowl.,"[2,5,6]","Put water into the bowl at the start.
+Evidence: “To use this clock, someone filled the bowl with water.”
+
+Use the marks that match the time of year.
+Evidence: “The reader chose the marks for that month”
+
+Read the time from the water left in the bowl.
+Evidence: “The reader chose the marks for that month and checked how far the water had fallen. The new water level showed how much of the night had passed.”
+
+Why the other notes do not fit
+
+Start with an empty bowl and wait for water to enter it.
+Evidence: “To use this clock, someone filled the bowl with water. A tiny hole near the bottom let the water run out slowly.”
+
+Use a single set of marks throughout the year.
+Evidence: “The reader chose the marks for that month”
+
+Wait for the water to rise to the next mark.
+Evidence: “The reader chose the marks for that month and checked how far the water had fallen.”","Original historical account based on the Science Museum Group, Egyptian Water Clock. https://collection.sciencemuseumgroup.org.uk/objects/co454/egyptian-water-clock"
+notes-030,A2,Six Places for Dots,"When Louis Braille was a boy at a school for blind children in Paris, he learnt about a way to read messages by touch. Each group of dots had twelve possible places. The group was too large to feel all at once. As a teenager, Louis worked on a smaller group that would fit under one fingertip.
+
+His new group had six places for dots, three down the left and three down the right. A dot that stood up from the paper could be felt with a finger. To make different letters, the writer changed which places had raised dots. For example, the letter ‘a’ needed just one raised dot, at the top left.",How the letters in Louis Braille’s system worked,3,Each group was small enough to feel with one fingertip.,A group had twelve possible dot positions in Louis’s new system.,The letter ‘a’ used a single dot at the bottom right.,Each group had three spaces on each side.,Changing the pattern of raised dots made a different letter.,Every letter needed all six dots to stand up from the paper.,"[1,4,5]","Each group was small enough to feel with one fingertip.
+Evidence: “Louis worked on a smaller group that would fit under one fingertip.”
+
+Each group had three spaces on each side.
+Evidence: “His new group had six places for dots, three down the left and three down the right.”
+
+Changing the pattern of raised dots made a different letter.
+Evidence: “To make different letters, the writer changed which places had raised dots.”
+
+Why the other notes do not fit
+
+A group had twelve possible dot positions in Louis’s new system.
+Evidence: “His new group had six places for dots”
+
+The letter ‘a’ used a single dot at the bottom right.
+Evidence: “the letter ‘a’ needed just one raised dot, at the top left.”
+
+Every letter needed all six dots to stand up from the paper.
+Evidence: “the letter ‘a’ needed just one raised dot, at the top left.”","Original historical account. Library of Congress, Louis Braille (1809–1852), https://www.loc.gov/nls/new-materials/book-lists/louis-braille-1809-1852/ | American Foundation for the Blind, What Is Braille?, https://afb.org/blindness-and-low-vision/braille/what-braille"
+notes-031,A2,Chocolate from the Sky,"In 1948, planes were bringing food into West Berlin. An American pilot called Gail Halvorsen met some children outside the airport fence. He promised to bring them sweets on another flight. So many planes came in each day that the children needed a way to recognise his.
+
+Before his flight, Halvorsen tied the sweets to small pieces of cloth. When he came near the airport, he tipped his plane’s wings first one way and then the other. That was the sign the children were waiting for. He dropped the sweets before he landed. The pieces of cloth opened like tiny parachutes and helped the sweets fall more slowly.",How Halvorsen delivered sweets to the children,3,Landed his plane before giving out the sweets on that flight.,Prepared the little packets before he took off.,Moved the wings so the children would know his plane.,Drops the sweets before making the sign with the wings.,Added cloth to make the sweets reach the ground faster.,Used cloth to slow the packets on their way down.,"[2,3,6]","Prepared the little packets before he took off.
+Evidence: “Before his flight, Halvorsen tied the sweets to small pieces of cloth.”
+
+Moved the wings so the children would know his plane.
+Evidence: “he tipped his plane’s wings first one way and then the other. That was the sign the children were waiting for.”
+
+Used cloth to slow the packets on their way down.
+Evidence: “The pieces of cloth opened like tiny parachutes and helped the sweets fall more slowly.”
+
+Why the other notes do not fit
+
+Landed his plane before giving out the sweets on that flight.
+Evidence: “He dropped the sweets before he landed.”
+
+Drops the sweets before making the sign with the wings.
+Evidence: “he tipped his plane’s wings first one way and then the other. That was the sign the children were waiting for. He dropped the sweets before he landed.”
+
+Added cloth to make the sweets reach the ground faster.
+Evidence: “The pieces of cloth opened like tiny parachutes and helped the sweets fall more slowly.”","Original historical account. Smithsonian National Air and Space Museum, Supplying a City by Air, https://airandspace.si.edu/stories/editorial/supplying-city-air-berlin-airlift | Harry S. Truman Presidential Library and Museum, The Berlin Candy Bomber, https://estore.archives.gov/truman/product/the-berlin-candy-bomber-1"
+notes-032,A2,A Walk Beneath the Boats,"At Hopewell Rocks in Canada, trees grow on the tops of tall rocks beside the sea. Visit at low tide, when the sea has gone out, and you can walk between the rocks. From down there, the trees look a long way above your head.
+
+About six hours later, at high tide, the same walk is under water. Now people in small boats can paddle around the upper parts of the rocks, much closer to the trees. The rocks are the same height as before, and their tops are still in the open air. It is the sea around them that has risen. A boat can pass over the very spot where someone stood earlier that day.",What changes at Hopewell Rocks from low tide to high tide,3,The rocks grow taller as the water comes in.,Water covers even the tops of the rocks.,The change from low water to high water takes about six hours.,A place people could walk becomes deep enough for a boat.,The path between the rocks stays dry at high tide.,People in boats can get closer to the trees at the top.,"[3,4,6]","The change from low water to high water takes about six hours.
+Evidence: “About six hours later, at high tide, the same walk is under water.”
+
+A place people could walk becomes deep enough for a boat.
+Evidence: “A boat can pass over the very spot where someone stood earlier that day.”
+
+People in boats can get closer to the trees at the top.
+Evidence: “Now people in small boats can paddle around the upper parts of the rocks, much closer to the trees.”
+
+Why the other notes do not fit
+
+The rocks grow taller as the water comes in.
+Evidence: “The rocks are the same height as before”
+
+Water covers even the tops of the rocks.
+Evidence: “their tops are still in the open air.”
+
+The path between the rocks stays dry at high tide.
+Evidence: “at high tide, the same walk is under water.”","Original geographical account. Tourism New Brunswick, Hopewell Rocks. https://tourismnewbrunswick.ca/hopewell-rocks"
+notes-033,A2,The First Seeds on Surtsey,"In 1963, a volcano under the sea near Iceland began sending out hot rock and ash. As material built up above the water, a new island appeared. The new island was named Surtsey. At first its surface was bare. There were no flowers on the new land.
+
+The following spring, scientists found seeds along the shore. The sea had carried them to the island. In 1965 they saw a plant called sea rocket growing beside the water. The volcano was still active then. It did not fall quiet for the last time until 1967. Plants had already begun to grow while the island was still being made.",What happened in Surtsey’s early years,3,Material from below the sea formed new land above it.,Seeds reached the shore by water.,The island first appeared after the volcano fell quiet in 1967.,The sea rocket found in 1965 was growing far from the shore.,The island was covered with flowers as soon as it appeared.,Plants grew there before the volcano finished its work.,"[1,2,6]","Material from below the sea formed new land above it.
+Evidence: “a volcano under the sea near Iceland began sending out hot rock and ash. As material built up above the water, a new island appeared.”
+
+Seeds reached the shore by water.
+Evidence: “The following spring, scientists found seeds along the shore. The sea had carried them to the island.”
+
+Plants grew there before the volcano finished its work.
+Evidence: “Plants had already begun to grow while the island was still being made.”
+
+Why the other notes do not fit
+
+The island first appeared after the volcano fell quiet in 1967.
+Evidence: “In 1963, a volcano under the sea near Iceland began sending out hot rock and ash. As material built up above the water, a new island appeared.”
+
+The sea rocket found in 1965 was growing far from the shore.
+Evidence: “In 1965 they saw a plant called sea rocket growing beside the water.”
+
+The island was covered with flowers as soon as it appeared.
+Evidence: “At first its surface was bare. There were no flowers on the new land.”","Original geographical account. UNESCO World Heritage Centre, Surtsey, https://whc.unesco.org/en/list/1267/ | Surtsey Research Society, Arrival of terrestrial biota, https://english.surtsey.is/adflutningur-lifvera/"
+notes-034,A2,"One Door, Two Numbers","In Baarle you can walk from Belgium into the Netherlands several times without leaving town. Small white crosses on the ground show where the border goes. It sometimes runs right through a house. Someone can walk from one room to another and change countries on the way.
+
+When a house is on the border, its front door usually decides which country its address is in. The size of the rooms on each side makes no difference. One house has a special problem. The border goes through the middle of its front door. The house has two numbers. Its Belgian number is 2 and its Dutch number is 19. Either address takes you to the same door.",How the border affects houses in Baarle,3,Rooms in one home can be in different countries.,The country with the largest rooms gets the address.,The entrance usually decides which country the address belongs to.,One door on the border has a number for each country.,The numbers 2 and 19 lead visitors to different doors.,The border follows the outside walls of every house it reaches.,"[1,3,4]","Rooms in one home can be in different countries.
+Evidence: “Someone can walk from one room to another and change countries on the way.”
+
+The entrance usually decides which country the address belongs to.
+Evidence: “its front door usually decides which country its address is in.”
+
+One door on the border has a number for each country.
+Evidence: “Its Belgian number is 2 and its Dutch number is 19. Either address takes you to the same door.”
+
+Why the other notes do not fit
+
+The country with the largest rooms gets the address.
+Evidence: “The size of the rooms on each side makes no difference.”
+
+The numbers 2 and 19 lead visitors to different doors.
+Evidence: “Either address takes you to the same door.”
+
+The border follows the outside walls of every house it reaches.
+Evidence: “It sometimes runs right through a house.”","Original geographical account. Visit Baarle, Enclave H7 and Enclave tour. https://en.visitbaarle.com/locaties/enclave-h7-5f85a80764f477263a4b19a9 | https://en.visitbaarle.com/routes/enclavewandeling-5b7a93512a5ab02996c0fbfb"

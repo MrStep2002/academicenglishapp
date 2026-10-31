@@ -216,6 +216,15 @@ def check_folder(folder, all_word_ids):
     if builds:   # Build the sentence is on the Chinese version only: a sentence without its Chinese is not played anywhere
         with_zh = sum(1 for r in builds if r.get('zh'))
         print(f'  builds.csv: {with_zh} of {len(builds)} sentences have Chinese (zh). Build the sentence (Chinese version) uses only those.')
+    tf = data.get('tf', [])
+    if tf:   # True or false giveaways (31 Oct): absolute words and hedges should not tell students the answer
+        ABS = re.compile(r"\b(always|never|must|only|every|all|automatically|cannot|can't|impossible|completely|nothing|everyone|no one|none)\b", re.I)
+        HED = re.compile(r"\b(can|may|might|often|usually|sometimes|probably|could|tends?)\b", re.I)
+        pct = lambda rs, rx: round(100 * sum(bool(rx.search(r.get('statement', ''))) for r in rs) / len(rs)) if rs else 0
+        t = [r for r in tf if r.get('answer', '').strip().upper() in ('TRUE', 'T')]; f = [r for r in tf if r.get('answer', '').strip().upper() in ('FALSE', 'F')]
+        a, h = (pct(t, ABS), pct(f, ABS)), (pct(t, HED), pct(f, HED))
+        print(f'  tf.csv: {len(t)} TRUE, {len(f)} FALSE. Absolute words (only, every, never…) in {a[0]}% of TRUE and {a[1]}% of FALSE; hedges (may, can, probably…) in {h[0]}% and {h[1]}%.'
+              + ('  Aim: within 10 points of each other.' if max(abs(a[0] - a[1]), abs(h[0] - h[1])) > 10 else ''))
     reads = data.get('reads', [])
     if reads:   # Complete the text: the word bank has only the key words and the text's own extra words
         with_extra = sum(1 for r in reads if any(r.get(k) for k in ('extra1', 'extra2', 'extra3')))
