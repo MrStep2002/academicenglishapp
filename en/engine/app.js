@@ -1379,10 +1379,11 @@ function partialCredit(game, item, right, wrong, parts){
 // ---------- ARCADE GAMES: the "proper game" in the middle of the Daily Circuit (Word Snake first, 25 Oct) ----------
 // Every arcade game asks the same question: a meaning at the top, and the student goes for its word among a few on the
 // board. The words are this topic's, at the student's level. The first go at each meaning is recorded like any other
-// answer (word points, word stages, level). A game lasts one minute and never ends early: a mistake costs length or
-// points, not the game. On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
+// answer (word points, word stages, level). In the Daily Circuit (and class games) a game lasts one minute and never ends
+// early: a mistake costs length or points, not the game. Played from the Games row, Word Snake has no clock instead: it
+// goes on until a wrong word ends it (1 Nov 2026, teacher; see playSnake). On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
 const ARCADE = [
-  {key:'snake', name:'Word Snake', blurb:'Steer the snake into the word that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
+  {key:'snake', name:'Word Snake', blurb:'Eat the word that matches the meaning. Eat a wrong one and the game is over.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
   {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up from holes. Tap the one that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
   {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'Words march down the screen. Shoot the one that fits the meaning.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];
@@ -1401,12 +1402,14 @@ function arcadeDef(el, w){ if(!el) return; el.textContent=w.def;
 function fitLabel(box, span){ span.style.fontSize=''; let px=parseFloat(getComputedStyle(span).fontSize)||16;
   while(px>11 && (span.scrollWidth>box.clientWidth-10 || span.scrollHeight>box.clientHeight-6)){ px--; span.style.fontSize=px+'px'; } }
 // Time's up (outside the circuit): score, best score and the words to practise
-function arcadeEnd(game, score, missed, again){
+// o (optional): {title, unit(score), note}: Word Snake's game over (1 Nov) says what ended it and counts points
+function arcadeEnd(game, score, missed, again, o){
+  o=o||{};
   clearTimers(); keyHandler=null; document.querySelector('.timer')?.remove();
   const prev=store.get('best:'+game.key,0), isBest=score>prev; if(isBest) store.set('best:'+game.key,score);
   const list=[...new Map(missed.map(w=>[w.id,w])).values()];
-  const card=showCard(`<div class="end"><p class="instr">${esc(game.name)} · time's up</p>
-    <div class="big">${score}</div><p class="end-sub">${score===1?'word':'words'} found</p>
+  const card=showCard(`<div class="end"><p class="instr">${esc(game.name)} · ${o.title||"time's up"}</p>
+    <div class="big">${score}</div><p class="end-sub">${o.unit ? o.unit(score) : (score===1?'word':'words')+' found'}</p>${o.note||''}
     <h2>${isBest ? 'New best score!' : 'Best score: '+Math.max(prev,score)}</h2>
     ${list.length?`<p class="instr" style="margin-top:22px">Words to practise</p><ul class="review">${list.map(w=>`<li><b>${esc(w.w)}</b> – ${esc(w.def)}</li>`).join('')}</ul>`:''}
     <div class="end-actions"><button class="btn" id="again">Play again</button><a class="btn alt" href="#">All games</a></div></div>`);
@@ -1417,23 +1420,28 @@ function arcadeEnd(game, score, missed, again){
 // ----- Word Snake -----
 // The board is a grid (24 x 14 on computers, 14 x 14 on phones). The words sit on it as labels; steer the snake's head
 // into the one that matches the meaning. Right: the snake grows and speeds up a little, and a new meaning appears.
-// Wrong: the snake loses two pieces and the word's own meaning is shown. The walls let the snake through, and running
-// into its own tail just bites that part off. Computers: arrow keys or WASD. Phones: swipe on the board, or the arrows.
+// The walls let the snake through.
+// From the Games row (1 Nov 2026, teacher): no clock; it goes on for as long as you survive. Each right word scores 3
+// points; a wrong word ends the game (its meaning and the word you needed are shown); biting your own tail cuts it off
+// and costs a point for each piece lost.
+// In the Daily Circuit and class games: one minute; a wrong word costs two pieces, and biting your tail just cuts it off.
+// Controls: arrow keys or WASD, or tap (or click) the screen on the side you want to go: above or below the head when
+// the snake is going sideways, left or right of it when it is going up or down. Never diagonal, never straight back.
 function playSnake(){
   const game=ARCADE.find(g=>g.key==='snake'), SECS=60;
   const touch=PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
   const COLS=PHONE?14:24, ROWS=14, N=PHONE?3:4;
+  const ENDLESS=!inCircuit && !classRun, timed=!inCircuit && !ENDLESS;   // ENDLESS: played from the Games row
   const nextQ=arcadeQuestions(N), best=store.get('best:snake',0);
   let score=0; const missed=[];
   frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${PHONE?'Swipe on the board or tap the arrows to steer into the right word. Wrong words make the snake shorter.':`${touch?'Swipe on the board (or use the arrows)':'Use the arrow keys or WASD'} to steer into the word that matches the meaning. A wrong word makes the snake shorter. You can go through the walls.`}</p>
-    ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
-  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>Found <b>${score}</b></span>${inCircuit?'':`<span><b id="snSecs">${SECS}</b>s</span>`}<span>Best <b>${Math.max(best,score)}</b></span>`; };
+    <p class="hint">${touch?'Tap the screen on the side you want the snake to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the snake shorter. You can go through the walls.'}</p>
+    ${timed?timerBar():''}<div class="feed" id="feed"></div>`);
+  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="snSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
   const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="snDef"></p>
-    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="Word Snake board"></canvas><p class="snake-msg" id="snMsg">${touch?'Swipe to start':'Press an arrow key to start'}</p></div>
-    <p class="toast arcade-toast" id="toast" aria-live="polite"></p>
-    ${touch?`<div class="snake-pad">${[['up','▲'],['left','◀'],['right','▶'],['down','▼']].map(([d,s])=>`<button type="button" class="pad-${d}" data-d="${d}" aria-label="${d}">${s}</button>`).join('')}</div>`:''}`);
-  card.classList.add('arcade-card');
+    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="Word Snake board"></canvas><p class="snake-msg" id="snMsg">${touch?'Tap to start':'Press an arrow key to start'}</p></div>
+    <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
+  card.classList.add('arcade-card'); card.style.touchAction='manipulation';   // quick taps never zoom the page
   const box=card.querySelector('#snBoard'), cv=card.querySelector('#snCanvas'), cx=cv.getContext('2d'), msg=card.querySelector('#snMsg');
   const alive=()=>document.body.contains(cv);   // false once the student has moved on to another page or game
 
@@ -1443,7 +1451,7 @@ function playSnake(){
   const colours=()=>{ col={paper:css('--paper'), sheet:css('--sheet'), ink:css('--ink'), rule:css('--rule'), mark:css('--mark'), good:css('--good'), goodSoft:css('--good-soft'), bad:css('--bad'), badSoft:css('--bad-soft'), font:css('--f-body')||'sans-serif'}; };
   const font=px=>`700 ${px}px ${col.font}`;
   // The board fills the card's width, but stays short enough for the meaning, the board (and the arrows) to fit on the screen together
-  const size=()=>{ const dpr=window.devicePixelRatio||1, fitH=Math.floor((window.innerHeight-(touch?360:240))/ROWS);
+  const size=()=>{ const dpr=window.devicePixelRatio||1, fitH=Math.floor((window.innerHeight-(touch?280:240))/ROWS);
     cell=Math.max(12, Math.min(Math.floor(box.clientWidth/COLS), fitH));
     cv.style.width=cell*COLS+'px'; cv.style.height=cell*ROWS+'px'; cv.width=Math.round(cell*COLS*dpr); cv.height=Math.round(cell*ROWS*dpr);
     cx.setTransform(dpr,0,0,dpr,0,0); fontPx=Math.max(11, Math.min(16, Math.round(cell*(PHONE?0.58:0.5)))); };
@@ -1486,7 +1494,7 @@ function playSnake(){
   const pillAt=(x,y)=>pills.find(p=>p.state==='' && x>=p.x && x<p.x+p.len && y>=p.y && y<p.y+p.h);
 
   function right(p){
-    score++; stats(); if(firstTry) P.record('snake', q.w, true);
+    score+=ENDLESS?3:1; stats(); if(firstTry) P.record('snake', q.w, true);
     grow+=2; step=Math.max(115, step-4);
     say('✓ '+q.w.w);
     flash=Object.assign({}, p, {until:performance.now()+500});
@@ -1495,6 +1503,12 @@ function playSnake(){
   function wrong(p){
     p.state='bad'; p.until=performance.now()+700;   // shown in red for a moment, then gone
     if(firstTry){ firstTry=false; P.record('snake', q.w, false); missed.push(q.w); q.retry(); }
+    if(ENDLESS){   // the wrong word ends the game: a moment to see it, then the score
+      over=true; p.until=performance.now()+1400; say(`✗ ${p.w.w}: ${p.w.def}`, true);
+      const want=q.w, ate=p.w;
+      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playSnake, {title:'game over', unit:n=>n===1?'point':'points',
+        note:`<p class="end-sub" style="margin:14px 0 20px">You ate <b>${esc(ate.w)}</b>: ${esc(ate.def)}<br>The word you needed was <b>${esc(want.w)}</b>.</p>`}); }, 1400);
+      return; }
     const cut=Math.min(2, snake.length-3); if(cut>0){ snake.splice(snake.length-cut, cut); prevTail=null; }
     say(`✗ ${p.w.w}: ${p.w.def}`, true);
   }
@@ -1504,7 +1518,9 @@ function playSnake(){
     const bite=snake.findIndex((p,i)=>i>0 && i<snake.length-(grow?0:1) && p.x===nh.x && p.y===nh.y);
     prevHead=h; snake.unshift(nh);
     if(grow>0){ grow--; prevTail=null; } else prevTail=snake.pop();
-    if(bite>0){ snake=snake.slice(0, bite+1); prevTail=null; say('Ouch! You bit your tail.', true); }
+    if(bite>0){ const lost=snake.length-(bite+1); snake=snake.slice(0, bite+1); prevTail=null;
+      if(ENDLESS){ const was=score; score=Math.max(0, score-lost); stats(); say(`Ouch! You bit your tail: −${was-score} point${was-score===1?'':'s'}.`, true); }
+      else say('Ouch! You bit your tail.', true); }
     const now=performance.now(); pills=pills.filter(p=>p.state!=='bad' || now<p.until); lastTick=now;
     const p=pillAt(nh.x, nh.y); if(p){ if(p.w===q.w) right(p); else wrong(p); }
   }
@@ -1517,14 +1533,14 @@ function playSnake(){
     if(!(d.x===last.x && d.y===last.y) && !(d.x===-last.x && d.y===-last.y) && queue.length<3) queue.push(d);
     if(!started) start(); else if(paused) resume();
   }
-  function start(){ if(started) return; started=true; msg.hidden=true; if(!inCircuit) end=Date.now()+SECS*1000; run(); clock();
+  function start(){ if(started) return; started=true; msg.hidden=true; if(timed) end=Date.now()+SECS*1000; run(); clock();
     // if the game does not fit on the screen, scroll so the timer and the whole card are in view
     if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8, behavior:'smooth'}); } }
-  function pause(){ if(!started || paused || over) return; paused=true; if(!inCircuit) left=Math.max(0, end-Date.now());
-    msg.textContent=touch?'Paused. Swipe to carry on':'Paused. Press an arrow key to carry on'; msg.hidden=false; }
-  function resume(){ if(!paused || over) return; paused=false; if(!inCircuit) end=Date.now()+left; msg.hidden=true; run(); }
+  function pause(){ if(!started || paused || over) return; paused=true; if(timed) left=Math.max(0, end-Date.now());
+    msg.textContent=touch?'Paused. Tap to carry on':'Paused. Press an arrow key to carry on'; msg.hidden=false; }
+  function resume(){ if(!paused || over) return; paused=false; if(timed) end=Date.now()+left; msg.hidden=true; run(); }
   // The game's own minute (in the Daily Circuit, the circuit's clock ends the station instead)
-  function clock(){ if(over || inCircuit || !alive()) return;
+  function clock(){ if(over || !timed || !alive()) return;
     const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('snSecs');
     if(f) f.style.width=(100*l/(SECS*1000))+'%'; if(s) s.textContent=Math.ceil(l/1000);
     if(l<=0){ over=true; return arcadeEnd(game, score, missed, playSnake); }
@@ -1564,20 +1580,19 @@ function playSnake(){
     requestAnimationFrame(draw);
   }
 
-  // Controls: keys, swipes on the board (several turns in one swipe are fine), and the arrow buttons
+  // Controls: keys, and taps (or clicks) anywhere on the game card: the snake turns towards the side tapped
   const KEYS={ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right'};
   keyHandler=e=>{ const n=KEYS[e.key]; if(n){ e.preventDefault(); turn(n); }
     else if((e.key===' ' || e.key==='Enter') && (!started || paused)){ e.preventDefault(); started ? resume() : start(); } };
-  let sw=null;
-  cv.addEventListener('pointerdown', e=>{ sw={x:e.clientX, y:e.clientY, id:e.pointerId, moved:false}; if(e.pointerType!=='mouse') e.preventDefault(); });
-  cv.addEventListener('pointermove', e=>{ if(!sw || e.pointerId!==sw.id) return; const dx=e.clientX-sw.x, dy=e.clientY-sw.y;
-    if(Math.max(Math.abs(dx), Math.abs(dy))<20) return;
-    turn(Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up')); sw={x:e.clientX, y:e.clientY, id:e.pointerId, moved:true}; });
-  cv.addEventListener('pointerup', ()=>{ if(sw && !sw.moved){ if(!started) start(); else if(paused) resume(); } sw=null; });
-  cv.addEventListener('pointercancel', ()=>{ sw=null; });
-  card.querySelectorAll('.snake-pad button').forEach(b=>{
-    b.addEventListener('pointerdown', e=>{ e.preventDefault(); turn(b.dataset.d); });
-    b.addEventListener('click', e=>{ if(e.detail===0) turn(b.dataset.d); }); });   // keyboard on the buttons
+  // Going sideways: a tap above the head turns up, below turns down. Going up or down: left or right of the head.
+  // Taps are judged against the direction the snake will be going after any turns already waiting, so quick taps chain.
+  card.addEventListener('pointerdown', e=>{
+    if(over || (e.target.closest && e.target.closest('button, a, input'))) return;
+    if(e.pointerType!=='mouse') e.preventDefault();
+    const r=cv.getBoundingClientRect(), h=snake[0], hx=r.left+(h.x+.5)*cell, hy=r.top+(h.y+.5)*cell;
+    const dx=e.clientX-hx, dy=e.clientY-hy, last=queue.length ? queue[queue.length-1] : dir;
+    const name = last.x ? (Math.abs(dy)<cell*.5 ? null : dy<0 ? 'up' : 'down') : (Math.abs(dx)<cell*.5 ? null : dx<0 ? 'left' : 'right');
+    if(name) turn(name); else if(!started) start(); else if(paused) resume(); });
   // Away from the tab: the snake waits (and so does the game's minute)
   const onVis=()=>{ if(!alive()){ document.removeEventListener('visibilitychange', onVis); return; } if(document.hidden) pause(); };
   document.addEventListener('visibilitychange', onVis);

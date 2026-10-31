@@ -208,9 +208,12 @@ async function readingComp(){
 async function main(){
   const enUrl=ROOT+'en/index.html', zhUrl=ROOT+'zh/index.html';
   const [en, zh]=await Promise.all([getDoc(enUrl), getDoc(zhUrl).catch(()=>null)]);
-  const hrefs=[...en.querySelectorAll('a.topic-link')].map(a=>a.getAttribute('href'));
+  // Topics: the bars on the English topic list, and (since 31 Oct) Academic English Essentials in the top row beside
+  // the Daily Circuit (its Start button: .ess-card, no .topic-link bar any more)
+  const TOPICS='a.topic-link, .ess-card a.cc-btn:not(.alt)';
+  const hrefs=[...new Set([...en.querySelectorAll(TOPICS)].map(a=>a.getAttribute('href').split('#')[0]))];
   const zhFolders=new Set();
-  if(zh) await Promise.all([...zh.querySelectorAll('a.topic-link')].map(async a=>{ try{ const u=new URL(a.getAttribute('href'), zhUrl).href, d=(await getDoc(u)).getElementById('app');
+  if(zh) await Promise.all([...zh.querySelectorAll(TOPICS)].map(async a=>{ try{ const u=new URL(a.getAttribute('href'), zhUrl).href, d=(await getDoc(u)).getElementById('app');
     if(d && d.dataset.content) zhFolders.add(new URL(d.dataset.content.replace(/\/*$/,'/'), u).href.slice(ROOT.length)); }catch(e){} }));
   const subjects=(await Promise.all(hrefs.map(h=>loadSubject(h).catch(()=>null)))).filter(Boolean);
   const counted=subjects.map(s=>({s, k:count(s, zhFolders)}));
