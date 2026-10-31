@@ -207,10 +207,10 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
+const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
+  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -223,7 +223,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
+  const GUESS={mouse:.05, zhmouse:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -386,6 +386,7 @@ const GAMES = [
   // {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
   {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
+  {key:'mouse',    cat:'vocab',   name:'Save the mouse',   blurb:'Guess the word from its meaning, one letter at a time. Every wrong letter and the mouse loses a piece.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
   {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
@@ -402,7 +403,7 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
 // ---------- page frame ----------
 function frame(back, inner){
@@ -554,6 +555,57 @@ const fbNo = (fb, answer, html) => fb.innerHTML=`<div class="feedback no"><span 
 // After an answer: right → move on by itself; wrong → explain, wait, and bring the item back later.
 function settle(ok, card, st, deck, item, next){
   if(ok){ st.hit(item); autoNext(card, next); } else { st.miss(item); deck.retry(item); manualNext(card, next); }
+}
+
+// ---------- VOCABULARY: Save the mouse (hangman with the logo mouse, 31 Oct, teacher) ----------
+// Guess the word from its meaning (and its Chinese on the Chinese side), one letter at a time, on screen or with the
+// keyboard. Every wrong letter takes one of the mouse's 8 pieces away (ears, cheeks, top of head, eyes, nose: the logo,
+// HOME_MARK, cut up with clip paths); lose all 8 and the word is shown. One answer per word (right if guessed in time).
+// Words need 4+ letters (parts in brackets and alternatives after "/" are left out). Not in the Daily Circuit.
+const mouseTarget = w => String(w.w).split(/\s*\/\s*/)[0].replace(/\s*\([^)]*\)\s*/g,' ').trim().toLowerCase();
+const mouseWords = list => { const ok=list.filter(w=>{ const t=mouseTarget(w); return /^[a-z][a-z '\-]*$/.test(t) && t.replace(/[^a-z]/g,'').length>=4; }); return ok.length>=4 ? ok : list; };
+const MOUSE_ORDER = ['earL','earR','cheekL','cheekR','top','eyeL','eyeR','nose'];   // the order the pieces go
+function mouseSvg(){
+  const d=(HOME_MARK.match(/ d="([^"]+)"/)||[])[1]||'', sub=d.split('M').filter(x=>x.trim()).map(x=>'M'+x);
+  if(sub.length<6) return HOME_MARK;
+  const ring=sub[1]+sub[4]+sub[5], R={earL:'0,0 120,0 120,60 72,110 0,128', earR:'290,0 170,0 170,60 218,110 290,128',
+    top:'120,0 170,0 170,60 218,110 72,110 120,60', cheekL:'0,128 72,110 145,110 145,240 0,240', cheekR:'290,128 218,110 145,110 145,240 290,240'};
+  return `<svg class="mouse" viewBox="0 0 290 240" role="img" aria-label="The mouse"><defs>${Object.entries(R).map(([k,v])=>`<clipPath id="mc-${k}"><polygon points="${v}"/></clipPath>`).join('')}</defs>
+    ${Object.keys(R).map(k=>`<path class="mp" data-part="${k}" clip-path="url(#mc-${k})" fill="currentColor" fill-rule="evenodd" d="${ring}"/>`).join('')}
+    <path class="mp" data-part="nose" fill="currentColor" d="${sub[0]}"/><path class="mp" data-part="eyeL" fill="currentColor" d="${sub[2]}"/><path class="mp" data-part="eyeR" fill="currentColor" d="${sub[3]}"/></svg>`;
+}
+function playMouse(zh){
+  const LIVES=MOUSE_ORDER.length, key=zh?'zhmouse':'mouse', st=Stats(key);
+  const deck=zh ? Deck(()=>mouseWords(zhWords())) : Deck(mouseWords(pick(S.words)));
+  if(zh) zhShell(T('Save the mouse','拯救小老鼠'), T('Guess the English word one letter at a time. Every wrong letter and the mouse loses a piece.','一个字母一个字母地猜英文单词。每猜错一次，小老鼠就少一块。'));
+  else shell(GAMES.find(g=>g.key==='mouse'), 'Tap letters, or type them. Every wrong letter and the mouse loses a piece.');
+  st.draw();
+  const step=()=>{
+    const w=deck.next(), target=mouseTarget(w), letters=new Set(target.replace(/[^a-z]/g,''));
+    const card=showCard(`<p class="instr">${T('Guess the word','猜单词')}</p>
+      <div class="hm"><div class="hm-mouse">${mouseSvg()}</div>
+      <div class="hm-main"><p class="prompt-def">${esc(w.def)}${!zh&&w.pos?` <small class="hm-pos">${esc(w.pos)}</small>`:''}</p>${zh&&ZH[w.id]?`<p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`:''}
+        <p class="hm-word" aria-live="polite">${[...target].map(ch=>/[a-z]/.test(ch)?`<span class="hm-l" data-ch="${ch}"></span>`:ch===' '?'<span class="hm-sp"></span>':`<span class="hm-p">${esc(ch)}</span>`).join('')}</p>
+        <p class="hm-left"></p></div></div>
+      <div class="hm-keys">${'abcdefghijklmnopqrstuvwxyz'.split('').map(c=>`<button class="hm-k" data-k="${c}" aria-label="${c}">${c}</button>`).join('')}</div><div class="fb"></div>`);
+    let wrong=0, done=false; const found=new Set();
+    const left=()=>{ const n=LIVES-wrong; card.querySelector('.hm-left').innerHTML=T(`<b>${n}</b> wrong guess${n===1?'':'es'} left`, `还能猜错 <b>${n}</b> 次`); };
+    left();
+    const finish=ok=>{ done=true; keyHandler=null; card.querySelectorAll('.hm-k').forEach(b=>b.disabled=true);
+      card.querySelectorAll('.hm-l').forEach(s=>{ if(!s.textContent){ s.textContent=s.dataset.ch; s.classList.add('miss'); } });
+      const fb=card.querySelector('.fb'), ex=w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:'';
+      ok ? fbOk(fb, ex) : fbNo(fb, w.w, ex);
+      settle(ok, card, st, deck, w, step); };
+    const guess=c=>{ if(done) return; const b=card.querySelector(`.hm-k[data-k="${c}"]`); if(!b || b.disabled) return; b.disabled=true;
+      if(letters.has(c)){ b.classList.add('ok'); found.add(c); card.querySelectorAll(`.hm-l[data-ch="${c}"]`).forEach(s=>{ s.textContent=c; s.classList.add('in'); });
+        if(found.size===letters.size) finish(true); }
+      else { b.classList.add('no'); const part=card.querySelector(`.mp[data-part="${MOUSE_ORDER[wrong]}"]`); if(part) part.classList.add('gone'); wrong++; left();
+        const m=card.querySelector('.hm-mouse'); m.classList.remove('shake'); void m.offsetWidth; m.classList.add('shake');
+        if(wrong>=LIVES) finish(false); } };
+    card.querySelectorAll('.hm-k').forEach(b=>b.onclick=()=>guess(b.dataset.k));
+    keyHandler=e=>{ const k=e.key.toLowerCase(); if(/^[a-z]$/.test(k)) guess(k); };
+  };
+  step();
 }
 
 // ---------- VOCABULARY: Match the meaning / Synonym groups ----------
@@ -1690,6 +1742,7 @@ const ZH_GAMES = [
   // Odd one out was taken off the Chinese side on 26 Oct (teacher: replace it with Build the sentence). playOdd() is still
   // below; to bring it back, remove the // from the next line.
   // {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
+  {key:'zhmouse',  type:'practice',  name:'Save the mouse',     zh:'拯救小老鼠',     blurb:'See the Chinese and the meaning, then guess the English word one letter at a time. Every wrong letter and the mouse loses a piece.', zhBlurb:'看中文和释义，一个字母一个字母地猜出英文单词。每猜错一次，小老鼠就少一块！', run:()=>playMouse(true)},
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', zhBlurb:'60 秒内看中文选英文，看你能答对多少个！', min:8, run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', zhBlurb:'三条命。看单词和中文，在时间用完前选出英文释义，会越来越快。', min:8, run:()=>playSurvival()}
 ];
