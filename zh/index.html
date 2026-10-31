@@ -11,7 +11,7 @@
 <meta name="theme-color" content="#151935">
 <title>中文版 · Academic English App</title>
 <link rel="stylesheet" href="../css/fonts.css">
-<link rel="stylesheet" href="../css/home.css?v=2026-10-31b">
+<link rel="stylesheet" href="../css/home.css?v=2026-10-31c">
 </head>
 <body>
 <main class="home">
@@ -21,21 +21,18 @@
     <h1><span class="t-en">Let's get going...</span> <span class="t-zh h1-zh" lang="zh">开始吧！</span></h1>
   </header>
 
-  <section class="topic-group" aria-label="Daily Circuit 每日挑战">
+  <!-- Top row (31 Oct 2026, teacher): the Daily Circuit across two columns, Academic English Essentials in the third.
+       Essentials has no "I study this" switch: it is always in the Daily Circuit (ALWAYS in en/engine/circuit.js). -->
+  <section class="topic-group top-row" aria-label="Daily Circuit 每日挑战">
     <div class="circuit-box" data-circuit-card data-side="zh">
       <span class="cc-badge" aria-hidden="true"><span>5</span><small>min</small></span>
       <div class="cc-text"><p class="cc-name"><span class="t-en">Daily Circuit</span> <span class="t-zh" lang="zh">每日挑战</span></p><p class="cc-sub"><span class="t-en">Five games from your subjects, at your level: four minutes</span> <span class="t-zh" lang="zh">每天四分钟，五个小游戏</span></p><p class="cc-status" data-circuit-status></p></div>
       <div class="cc-box-actions"><a class="cc-btn" href="circuit/index.html" data-circuit-go><span class="t-en">Start</span> <span class="t-zh" lang="zh">开始</span> →</a><a class="cc-btn alt" href="../progress/index.html?from=zh"><span class="t-en">My progress</span> <span class="t-zh" lang="zh">我的进步</span></a></div>
     </div>
-  </section>
-
-  <section class="topic-group" aria-labelledby="t-all">
-    <h2 id="t-all"><span class="t-en">All subjects</span> <span class="t-zh" lang="zh">所有学科</span></h2>
-    <div class="topics">
-      <div class="topic topic-sw">
-        <a class="topic-link" href="essentials/index.html"><span class="topic-text"><span class="topic-name"><span class="t-en">Academic English Essentials</span> <span class="t-zh" lang="zh">学术英语基础</span></span><span class="topic-sub"><span class="t-en">Words for every subject: explain, compare, evidence, however…</span> <span class="t-zh" lang="zh">各学科通用词汇</span></span></span></a>
-        <button class="sw" type="button" role="switch" aria-checked="false" aria-label="I study Academic English Essentials"><span class="sw-track" aria-hidden="true"><span class="sw-knob"></span></span><span class="sw-text"><span class="t-en">I study this</span> <span class="t-zh" lang="zh">我在学</span></span></button>
-      </div>
+    <div class="ess-card">
+      <p class="ess-on"><span class="t-en">Always in your Daily Circuit</span> <span class="t-zh" lang="zh">每日挑战一直包含</span></p>
+      <p class="ess-name"><span class="t-en">Academic English Essentials</span> <span class="t-zh" lang="zh">学术英语基础</span></p>
+      <div class="ess-actions"><a class="cc-btn" href="essentials/index.html"><span class="t-en">Start</span> <span class="t-zh" lang="zh">开始</span> →</a><a class="cc-btn alt" href="essentials/index.html#learn"><span class="t-en">Learn the key terms</span> <span class="t-zh" lang="zh">学习关键词</span></a></div>
     </div>
   </section>
 
@@ -82,7 +79,7 @@
   <p class="more"><span class="t-en">Science, History and more subjects are coming soon.</span> <span class="t-zh" lang="zh">科学、历史等学科即将推出。</span></p>
 </main>
 <script src="../en/engine/points.js?v=2026-10-29b" data-side="zh"></script>
-<script src="../en/engine/circuit.js?v=2026-10-29b"></script>
+<script src="../en/engine/circuit.js?v=2026-10-31a"></script>
 <script src="../en/engine/account.js?v=2026-10-29b"></script>
 <script src="../en/engine/classgame.js?v=2026-10-30a"></script>
 </body>

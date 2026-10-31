@@ -2,6 +2,7 @@
 // Short game 45 s → longer game 45 s → arcade game 60 s → longer game 45 s → short game 45 s (4 minutes): the English side
 // since 25 Oct, the Chinese side since 26 Oct. Each English game is tagged short or long in GAMES (en/engine/app.js), the
 // Chinese ones are listed in ZH_CIRCUIT there; the arcade station takes turns between the arcade games in CIRCUIT_ARCADE.
+// Academic English Essentials is always in the circuit (31 Oct 2026, teacher): ALWAYS below, no switch for it.
 // This file does: the "I study this" switches and the Circuit card on en/index.html and zh/index.html,
 // the Circuit page (en/circuit/, zh/circuit/: start and results) and the saved state.
 // The stations themselves run on the topic pages (en/engine/app.js, address ending #circuit): the page chooses a game
@@ -24,7 +25,12 @@ const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.
 const load = () => { const d=read(KEY, {}); d.days=d.days||{}; return d; };
 
 // ----- Subjects the student studies (the switches): {en: {"en/web-design/index.html": "Web design"}, zh: {...}} -----
-const studying = side => (read(STUDY, {})[side]) || {};
+// Academic English Essentials is always on, on both sides (31 Oct 2026, teacher: "so that it always appears in the Daily
+// Circuit"). It has no switch on the topic lists; it is added here, so every part of the circuit counts it as switched on.
+const ALWAYS = {en: {'en/essentials/index.html': 'Academic English Essentials'},
+                zh: {'zh/essentials/index.html': 'Academic English Essentials 学术英语基础'}};
+const switchedOn = side => (read(STUDY, {})[side]) || {};
+const studying = side => Object.assign({}, ALWAYS[side] || {}, switchedOn(side));
 const setStudying = (side, path, name, on) => { const s=read(STUDY, {}); s[side]=s[side]||{}; if(on) s[side][path]=name; else delete s[side][path]; write(STUDY, s); };
 
 // ----- The circuit in progress -----
@@ -109,6 +115,7 @@ function indexPage(card){
     let html;
     if(run) html=`<b>${T(zh, `In progress: station ${Math.min(run.i+1, run.n)} of ${run.n}`, `进行中：第 ${Math.min(run.i+1, run.n)} 站`)}</b>`;
     else if(!subs) html=T(zh, 'Switch on the subjects you study below to start.', '先在下面打开你在学的科目。');
+    else if(!Object.keys(switchedOn(side)).some(p=>!(ALWAYS[side]||{})[p])) html=T(zh, 'Essentials is always on. Switch on your other subjects below.', '学术英语基础一直包含在内。在下面打开你在学的其他科目。');
     else if(t && t.runs) html=`<b class="cc-done">✓ ${T(zh, 'Done today', '今天已完成')}</b> · ${T(zh, `${t.right} right`, `答对 ${t.right}`)}${st>1?` · ${T(zh, `${st} days in a row`, `连续 ${st} 天`)}`:''}`;
     else html=`${T(zh, `${subs} subject${subs===1?'':'s'} switched on · not done today`, `已选 ${subs} 个科目 · 今天还没完成`)}${st?` · ${T(zh, `${st} day${st===1?'':'s'} in a row`, `连续 ${st} 天`)}`:''}`;
     if(status) status.innerHTML=html;

@@ -3,25 +3,25 @@ desc-tf-001,A1,“very” is similar in meaning to “extremely.”,TRUE,“extr
 desc-tf-002,A1,“big” means: Needing rest because you have used your energy.,FALSE,Correct definition: “big” means Larger than most other things of the same kind.
 desc-tf-003,A1,“carry” means: Hold and move something from one place to another.,TRUE,Correct definition: “carry” means Hold and move something from one place to another.
 desc-tf-004,A1,“shout” means: Push yourself off the ground using your legs.,FALSE,Correct definition: “shout” means Speak or call out in a very loud voice.
-desc-tf-005,A1,"This is the correct use of “new”: “The object was new and old simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “A new bridge crosses the river.”
+desc-tf-005,A1,This is the correct use of “new”: “Grandma's new coat had been in the family for sixty years.”,FALSE,"“New” means made recently, so a coat that is sixty years old is not new."
 desc-tf-006,A1,“healthy” is similar in meaning to “glad.”,FALSE,“healthy” means Physically well and not suffering from illness. The proposed synonym “glad” belongs with “happy.”
-desc-tf-007,A1,This is the correct use of “thirsty”: “The characters was thirsty.”,FALSE,This is the correct use of this word: “We are thirsty after our long walk.”
+desc-tf-007,A1,"This is the correct use of “thirsty”: “After three big glasses of water, the thirsty boy could not drink another drop.”",FALSE,“Thirsty” means wanting a drink. A boy who cannot drink another drop is not thirsty.
 desc-tf-008,A1,“angry” means: Larger than most other things of the same kind.,FALSE,Correct definition: “angry” means Feeling strong displeasure about something unfair or unpleasant.
 desc-tf-009,A1,“watch” is similar in meaning to “stand.”,FALSE,“watch” means Look at something carefully over a period of time. The proposed synonym “stand” belongs with “stand.”
 desc-tf-010,A1,“listen” is used correctly here: “We listen to the rain on the roof.”,TRUE,The example uses “listen” correctly: “We listen to the rain on the roof.”
 desc-tf-011,A1,“rich” is used correctly here: “The rich family lives in a large house.”,TRUE,The example uses “rich” correctly: “The rich family lives in a large house.”
 desc-tf-012,A1,“dark” means: Having little or no light to see by.,TRUE,Correct definition: “dark” means Having little or no light to see by.
 desc-tf-013,A1,“excited” is similar in meaning to “eager.”,TRUE,“eager” is a synonym of “excited.”
-desc-tf-014,A1,"This is the correct use of “fast”: “The movement was fast and slow simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “The fast train passes our small town.”
+desc-tf-014,A1,This is the correct use of “fast”: “The fast snail took all afternoon to cross the garden path.”,FALSE,“Fast” means moving at great speed. A snail that takes all afternoon is slow.
 desc-tf-015,A1,“long” is used correctly here: “A long path leads to the house.”,TRUE,The example uses “long” correctly: “A long path leads to the house.”
 desc-tf-016,A1,“red” means: Larger than most other things of the same kind.,FALSE,Correct definition: “red” means Having the colour of blood or a ripe tomato.
 desc-tf-017,A1,“well” is similar in meaning to “skilfully.”,TRUE,“skilfully” is a synonym of “well.”
 desc-tf-018,A1,“laugh” is used correctly here: “The children laugh at the funny picture.”,TRUE,The example uses “laugh” correctly: “The children laugh at the funny picture.”
 desc-tf-019,A1,“talk” means: Have a conversation by exchanging words with someone.,TRUE,Correct definition: “talk” means Have a conversation by exchanging words with someone.
 desc-tf-020,A1,“stop” means: Cease moving or doing a particular activity.,TRUE,Correct definition: “stop” means Cease moving or doing a particular activity.
-desc-tf-021,A1,This is the correct use of “brown”: “The characters was brown.”,FALSE,This is the correct use of this word: “Brown leaves cover the garden path.”
+desc-tf-021,A1,This is the correct use of “brown”: “Her brown dress was the colour of fresh snow.”,FALSE,Fresh snow is white. “Brown” is the colour of chocolate or dark wood.
 desc-tf-022,A1,“stand” means: Be upright with your weight supported on your feet.,TRUE,Correct definition: “stand” means Be upright with your weight supported on your feet.
-desc-tf-023,A1,This is the correct use of “quietly”: “The character quietly into the room.”,FALSE,This is the correct use of this word: “She quietly closes the classroom door.”
+desc-tf-023,A1,This is the correct use of “quietly”: “He quietly slammed the door and shouted for his dog.”,FALSE,“Quietly” means with very little noise. Slamming and shouting are loud.
 desc-tf-024,A1,“fly” is similar in meaning to “soar.”,TRUE,“soar” is a synonym of “fly.”
 desc-tf-025,A1,"“eat” means: Put food in your mouth, chew it and swallow.",TRUE,"Correct definition: “eat” means Put food in your mouth, chew it and swallow."
 desc-tf-026,A1,“sleep” means: Rest with your eyes closed and without normal awareness.,TRUE,Correct definition: “sleep” means Rest with your eyes closed and without normal awareness.
@@ -38,8 +38,8 @@ desc-tf-036,A1,“full” is similar in meaning to “brand-new.”,FALSE,“ful
 desc-tf-037,A1,“hot” is used correctly here: “The hot sand hurts my feet.”,TRUE,The example uses “hot” correctly: “The hot sand hurts my feet.”
 desc-tf-038,A1,“open” means: Look at something carefully over a period of time.,FALSE,Correct definition: “open” means Move something so an entrance or inside becomes accessible.
 desc-tf-039,A1,"“famous” means: Made or appearing recently, rather than existing for years.",FALSE,Correct definition: “famous” means Known and recognised by very many people.
-desc-tf-040,A1,"This is the correct use of “warm”: “The room was warm and cold simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “The warm sun shines on my face.”
-desc-tf-041,A1,This is the correct use of “quickly”: “The character quickly into the room.”,FALSE,This is the correct use of this word: “The rabbit quickly runs into the trees.”
+desc-tf-040,A1,This is the correct use of “warm”: “The warm lake was so icy that Sam's toes went numb.”,FALSE,“Warm” means pleasantly hot. An icy lake that makes toes numb is cold.
+desc-tf-041,A1,This is the correct use of “quickly”: “She quickly finished the jigsaw after three long weeks of work.”,FALSE,“Quickly” means without taking much time. Three weeks is a long time.
 desc-tf-042,A1,“great” is similar in meaning to “excellent.”,TRUE,“excellent” is a synonym of “great.”
 desc-tf-043,A1,“tired” is similar in meaning to “high.”,FALSE,“tired” means Needing rest because you have used your energy. The proposed synonym “high” belongs with “tall.”
 desc-tf-044,A1,“orange” is used correctly here: “The orange light shines through the window.”,TRUE,The example uses “orange” correctly: “The orange light shines through the window.”
@@ -48,7 +48,7 @@ desc-tf-046,A1,“look” means: Look at something carefully over a period of ti
 desc-tf-047,A1,“clean” is similar in meaning to “lengthy.”,FALSE,"“clean” means Free from dirt, marks or unwanted material. The proposed synonym “lengthy” belongs with “long.”"
 desc-tf-048,A1,“free” is similar in meaning to “aged.”,FALSE,“free” means Not occupied with work or another planned activity. The proposed synonym “aged” belongs with “old.”
 desc-tf-049,A1,“green” means: Measuring a large distance from one end to the other.,FALSE,Correct definition: “green” means Having the colour of grass and most leaves.
-desc-tf-050,A1,"This is the correct use of “tall”: “The character was tall and short simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “A tall tree stands beside our house.”
+desc-tf-050,A1,This is the correct use of “tall”: “The tall tree was no higher than Lily's ankle.”,FALSE,“Tall” means measuring a large distance upwards. A tree no higher than an ankle is tiny.
 desc-tf-051,A2,“colourful” means: Containing many different noticeable colours.,TRUE,Correct definition: “colourful” means Containing many different noticeable colours.
 desc-tf-052,A2,“polite” is similar in meaning to “sleeping.”,FALSE,“polite” means Showing good manners and consideration for other people. The proposed synonym “sleeping” belongs with “asleep.”
 desc-tf-053,A2,“lovely” is used correctly here: “Lovely flowers cover the wall beside the gate.”,TRUE,The example uses “lovely” correctly: “Lovely flowers cover the wall beside the gate.”
@@ -67,44 +67,44 @@ desc-tf-065,A2,“dead” means: No longer living because life has ended.,TRUE,C
 desc-tf-066,A2,“brightly” is similar in meaning to “readily.”,FALSE,“brightly” means With a strong or noticeable amount of light. The proposed synonym “readily” belongs with “easily.”
 desc-tf-067,A2,“crowded” is similar in meaning to “packed.”,TRUE,“packed” is a synonym of “crowded.”
 desc-tf-068,A2,“terrible” is similar in meaning to “cautious.”,FALSE,"“terrible” means Extremely bad, unpleasant or frightening to experience. The proposed synonym “cautious” belongs with “careful.”"
-desc-tf-069,A2,"This is the correct use of “bright”: “The room was bright and dark simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “Bright sunlight fills the empty classroom.”
-desc-tf-070,A2,This is the correct use of “strange”: “The characters was strange.”,FALSE,This is the correct use of this word: “A strange sound comes from the locked cupboard.”
+desc-tf-069,A2,This is the correct use of “bright”: “The bright cellar was so dark that nobody could see their own hands.”,FALSE,“Bright” means full of light. A cellar too dark to see your hands is not bright.
+desc-tf-070,A2,This is the correct use of “strange”: “The strange cup of tea tasted exactly like every other cup she had ever drunk.”,FALSE,“Strange” means unusual or puzzling. A cup that tastes like every other cup is ordinary.
 desc-tf-071,A2,“sound” means: Come into view or become visible to someone.,FALSE,Correct definition: “sound” means Seem a particular way because of what can be heard.
 desc-tf-072,A2,“catch” is similar in meaning to “blaze.”,FALSE,“catch” means Stop and hold something that is moving through the air. The proposed synonym “blaze” belongs with “burn.”
 desc-tf-073,A2,“carelessly” is used correctly here: “He carelessly leaves the gate open behind him.”,TRUE,The example uses “carelessly” correctly: “He carelessly leaves the gate open behind him.”
 desc-tf-074,A2,“nervous” means: Resting with your eyes closed and unaware of your surroundings.,FALSE,Correct definition: “nervous” means Feeling tense or afraid before something difficult or important.
 desc-tf-075,A2,“politely” means: With a feeling of pleasure or satisfaction.,FALSE,Correct definition: “politely” means With good manners and respect for other people.
 desc-tf-076,A2,“shake” is used correctly here: “The strong wind makes the windows shake.”,TRUE,The example uses “shake” correctly: “The strong wind makes the windows shake.”
-desc-tf-077,A2,This is the correct use of “sing”: “The character can to sing during the scene.”,FALSE,This is the correct use of this word: “The children sing as they walk through the village.”
-desc-tf-078,A2,This is the correct use of “attractive”: “The characters was attractive.”,FALSE,This is the correct use of this word: “The attractive building has curved windows and a red roof.”
+desc-tf-077,A2,This is the correct use of “sing”: “The baby sang by smiling at her mother without making a sound.”,FALSE,To “sing” is to make musical sounds with your voice. Silent smiling is not singing.
+desc-tf-078,A2,This is the correct use of “attractive”: “The attractive old sofa was so ugly that nobody wanted to look at it.”,FALSE,"“Attractive” means pleasing to look at, the opposite of ugly."
 desc-tf-079,A2,“kick” is used correctly here: “He lifts his foot to kick the ball across the field.”,TRUE,The example uses “kick” correctly: “He lifts his foot to kick the ball across the field.”
-desc-tf-080,A2,This is the correct use of “turn”: “The character can to turn during the scene.”,FALSE,This is the correct use of this word: “The dog will turn when it hears its name.”
+desc-tf-080,A2,"This is the correct use of “turn”: “Without moving her feet or her body at all, she turned to face the window.”",FALSE,To “turn” is to move so that you face a different direction. She cannot turn without moving.
 desc-tf-081,A2,“happily” means: With a feeling of pleasure or satisfaction.,TRUE,Correct definition: “happily” means With a feeling of pleasure or satisfaction.
 desc-tf-082,A2,“hug” is similar in meaning to “embrace.”,TRUE,“embrace” is a synonym of “hug.”
 desc-tf-083,A2,“sleepy” is similar in meaning to “thoughtless.”,FALSE,“sleepy” means Feeling that you would like to rest with your eyes closed. The proposed synonym “thoughtless” belongs with “careless.”
-desc-tf-084,A2,This is the correct use of “unusual”: “The characters was unusual.”,FALSE,This is the correct use of this word: “The tree has unusual purple leaves.”
+desc-tf-084,A2,This is the correct use of “unusual”: “Snow in the Arctic in winter is very unusual.”,FALSE,“Unusual” means different from what is normal. Snow in the Arctic in winter is completely normal.
 desc-tf-085,A2,“careless” is similar in meaning to “thoughtless.”,TRUE,“thoughtless” is a synonym of “careless.”
-desc-tf-086,A2,This is the correct use of “disappear”: “The character can to disappear during the scene.”,FALSE,This is the correct use of this word: “The fox seems to disappear behind the wall.”
+desc-tf-086,A2,This is the correct use of “disappear”: “The moon disappeared from the sky and shone brightly all night.”,FALSE,To “disappear” is to stop being visible. A moon shining all night has not disappeared.
 desc-tf-087,A2,“ugly” means: Resting with your eyes closed and unaware of your surroundings.,FALSE,Correct definition: “ugly” means Unpleasant to look at because of its appearance.
 desc-tf-088,A2,“point” is similar in meaning to “emerge.”,FALSE,“point” means Direct your finger towards something to show its position. The proposed synonym “emerge” belongs with “appear.”
 desc-tf-089,A2,“drop” means: Let something fall from your hand or a higher position.,TRUE,Correct definition: “drop” means Let something fall from your hand or a higher position.
-desc-tf-090,A2,This is the correct use of “proud”: “The characters was proud.”,FALSE,This is the correct use of this word: “Her proud parents clap when she receives the prize.”
+desc-tf-090,A2,This is the correct use of “proud”: “Ella felt proud when she forgot her lines and the audience laughed at her.”,FALSE,We feel “proud” after an achievement. Forgetting your lines is more likely to make you embarrassed.
 desc-tf-091,A2,“throw” means: Send something through the air with a movement of your arm.,TRUE,Correct definition: “throw” means Send something through the air with a movement of your arm.
-desc-tf-092,A2,This is the correct use of “wide”: “The characters was wide.”,FALSE,This is the correct use of this word: “A wide river separates the village from the town.”
+desc-tf-092,A2,This is the correct use of “wide”: “The wide path was so narrow that only one person could walk along it.”,FALSE,"“Wide” means measuring a large distance from side to side, the opposite of narrow."
 desc-tf-093,A2,“wave” is similar in meaning to “gesture in greeting.”,TRUE,“gesture in greeting” is a synonym of “wave.”
 desc-tf-094,A2,“clap” is used correctly here: “The children clap when the last song finishes.”,TRUE,The example uses “clap” correctly: “The children clap when the last song finishes.”
 desc-tf-095,A2,“asleep” is similar in meaning to “composed.”,FALSE,“asleep” means Resting with your eyes closed and unaware of your surroundings. The proposed synonym “composed” belongs with “calm.”
 desc-tf-096,A2,“safe” is similar in meaning to “secure.”,TRUE,“secure” is a synonym of “safe.”
 desc-tf-097,A2,“sadly” is used correctly here: “She sadly looks at the empty chair.”,TRUE,The example uses “sadly” correctly: “She sadly looks at the empty chair.”
 desc-tf-098,A2,“surprised” is similar in meaning to “on your own.”,FALSE,“surprised” means Feeling something unexpected has happened or become known. The proposed synonym “on your own” belongs with “alone.”
-desc-tf-099,A2,This is the correct use of “peaceful”: “The characters was peaceful.”,FALSE,This is the correct use of this word: “The peaceful village is surrounded by fields and trees.”
+desc-tf-099,A2,"This is the correct use of “peaceful”: “The peaceful playground was full of screaming, fighting children.”",FALSE,“Peaceful” means free from noise and conflict. Screaming and fighting are the opposite.
 desc-tf-100,A2,“smooth” means: Taking time and paying attention to avoid mistakes or harm.,FALSE,Correct definition: “smooth” means Having an even surface without rough areas or bumps.
 desc-tf-101,A2,“easily” is similar in meaning to “readily.”,TRUE,“readily” is a synonym of “easily.”
 desc-tf-102,A2,“fight” is similar in meaning to “blaze.”,FALSE,“fight” means Use physical force against someone in a struggle. The proposed synonym “blaze” belongs with “burn.”
 desc-tf-103,A2,“soft” is used correctly here: “The kitten sleeps on a soft blanket.”,TRUE,The example uses “soft” correctly: “The kitten sleeps on a soft blanket.”
-desc-tf-104,A2,"This is the correct use of “empty”: “The room was empty and full simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “The empty classroom has its lights switched off.”
+desc-tf-104,A2,This is the correct use of “empty”: “The empty box was packed with books.”,FALSE,“Empty” means containing nothing. A box packed with books is full.
 desc-tf-105,A2,“uncomfortable” means: Feeling satisfaction or pleasure about a particular result.,FALSE,"Correct definition: “uncomfortable” means Causing physical difficulty, pain or an inability to relax."
-desc-tf-106,A2,This is the correct use of “hit”: “The character can to hit during the scene.”,FALSE,This is the correct use of this word: “Small stones hit the window during the storm.”
+desc-tf-106,A2,This is the correct use of “hit”: “The boxer hit the punchbag without touching it.”,FALSE,To “hit” is to strike something with force. You cannot hit something without touching it.
 desc-tf-107,A2,“familiar” is similar in meaning to “recognisable.”,TRUE,“recognisable” is a synonym of “familiar.”
 desc-tf-108,A2,“rough” is used correctly here: “The rough bark scratches his fingers.”,TRUE,The example uses “rough” correctly: “The rough bark scratches his fingers.”
 desc-tf-109,A2,“broken” is used correctly here: “A broken chair lies beside the empty house.”,TRUE,The example uses “broken” correctly: “A broken chair lies beside the empty house.”
@@ -119,7 +119,7 @@ desc-tf-117,A2,“wet” means: Covered with water or another liquid.,TRUE,Corre
 desc-tf-118,A2,“pleased” is similar in meaning to “conscious.”,FALSE,“pleased” means Feeling satisfaction or pleasure about a particular result. The proposed synonym “conscious” belongs with “awake.”
 desc-tf-119,A2,“shine” means: Move downwards without being held or supported.,FALSE,Correct definition: “shine” means Give out or reflect a noticeable amount of light.
 desc-tf-120,A2,“rude” is used correctly here: “His rude reply makes the other students fall silent.”,TRUE,The example uses “rude” correctly: “His rude reply makes the other students fall silent.”
-desc-tf-121,A2,This is the correct use of “hurry”: “The character can to hurry during the scene.”,FALSE,This is the correct use of this word: “We hurry along the path before the rain begins.”
+desc-tf-121,A2,"This is the correct use of “hurry”: “With hours to spare, Tom hurried, stopping to look in every shop window on the way.”",FALSE,To “hurry” is to move faster because there is little time. Tom has plenty of time and is in no rush.
 desc-tf-122,A2,“comfortable” means: Allowing your body to relax without pain or difficulty.,TRUE,Correct definition: “comfortable” means Allowing your body to relax without pain or difficulty.
 desc-tf-123,A2,“burn” is similar in meaning to “let fall.”,FALSE,"“burn” means Produce flames, heat and light while being damaged by fire. The proposed synonym “let fall” belongs with “drop.”"
 desc-tf-124,A2,“deep” is used correctly here: “The stone disappears into the deep water.”,TRUE,The example uses “deep” correctly: “The stone disappears into the deep water.”
@@ -130,18 +130,18 @@ desc-tf-128,A2,“follow” means: Move behind someone or something going in the
 desc-tf-129,A2,“pull” means: Stop and hold something that is moving through the air.,FALSE,Correct definition: “pull” means Use force to move something closer to yourself.
 desc-tf-130,A2,“flat” is similar in meaning to “level.”,TRUE,“level” is a synonym of “flat.”
 desc-tf-131,A2,“softly” is similar in meaning to “gently.”,TRUE,“gently” is a synonym of “softly.”
-desc-tf-132,A2,This is the correct use of “suddenly”: “The character suddenly into the room.”,FALSE,This is the correct use of this word: “The lights suddenly go out in the hall.”
-desc-tf-133,A2,This is the correct use of “reach”: “The character can to reach during the scene.”,FALSE,This is the correct use of this word: “She stands on her toes to reach the top shelf.”
+desc-tf-132,A2,"This is the correct use of “suddenly”: “The sun suddenly rose, little by little, over the course of an hour.”",FALSE,“Suddenly” means quickly and unexpectedly. Little by little over an hour is gradual.
+desc-tf-133,A2,This is the correct use of “reach”: “He reached for the cup by putting both hands in his pockets.”,FALSE,To “reach” is to stretch your hand towards something. Hands in pockets are not reaching.
 desc-tf-134,A2,"“clever” means: Quick at learning, understanding things or solving problems.",TRUE,"Correct definition: “clever” means Quick at learning, understanding things or solving problems."
 desc-tf-135,A2,“calm” is similar in meaning to “composed.”,TRUE,“composed” is a synonym of “calm.”
 desc-tf-136,A2,“heavy” means: Weighing a lot and therefore difficult to lift.,TRUE,Correct definition: “heavy” means Weighing a lot and therefore difficult to lift.
-desc-tf-137,A2,This is the correct use of “knock”: “The character can to knock during the scene.”,FALSE,This is the correct use of this word: “She raises her hand to knock on the wooden door.”
+desc-tf-137,A2,This is the correct use of “knock”: “She knocked on the door by quietly sliding a letter underneath it.”,FALSE,To “knock” is to hit a surface to make a sound. Sliding a letter makes no knock.
 desc-tf-138,A2,“round” means: Shaped like a circle or a ball.,TRUE,Correct definition: “round” means Shaped like a circle or a ball.
 desc-tf-139,A2,“worried” means: Resting with your eyes closed and unaware of your surroundings.,FALSE,Correct definition: “worried” means Thinking about problems or unpleasant things that may happen.
 desc-tf-140,A2,“arrive” means: Come into view or become visible to someone.,FALSE,Correct definition: “arrive” means Reach the place where a journey ends.
 desc-tf-141,A2,“dry” is similar in meaning to “conscious.”,FALSE,“dry” means Having no water or other liquid on its surface. The proposed synonym “conscious” belongs with “awake.”
 desc-tf-142,A2,“shy” is similar in meaning to “sleeping.”,FALSE,“shy” means Feeling nervous about meeting or speaking to other people. The proposed synonym “sleeping” belongs with “asleep.”
-desc-tf-143,A2,This is the correct use of “angrily”: “The character angrily into the room.”,FALSE,This is the correct use of this word: “She angrily pushes the broken chair away.”
+desc-tf-143,A2,This is the correct use of “angrily”: “She angrily thanked her friend for the lovely present and gave her a warm hug.”,FALSE,“Angrily” means with strong displeasure. Thanking someone warmly for a lovely present is not angry.
 desc-tf-144,A2,“silly” is used correctly here: “His silly hat makes the younger children laugh.”,TRUE,The example uses “silly” correctly: “His silly hat makes the younger children laugh.”
 desc-tf-145,A2,“narrow” means: Not sleeping and able to notice what is happening.,FALSE,Correct definition: “narrow” means Measuring little from one side to the other.
 desc-tf-146,A2,“fall” means: Move downwards without being held or supported.,TRUE,Correct definition: “fall” means Move downwards without being held or supported.
@@ -158,15 +158,15 @@ desc-tf-156,B1,“lonely” is used correctly here: “The lonely traveller ate 
 desc-tf-157,B1,“ashamed” is similar in meaning to “embarrassed.”,TRUE,“embarrassed” is a synonym of “ashamed.”
 desc-tf-158,B1,“eagerly” means: With strong interest or enthusiasm.,TRUE,Correct definition: “eagerly” means With strong interest or enthusiasm.
 desc-tf-159,B1,“dusty” means: Sure of yourself or your ability.,FALSE,Correct definition: “dusty” means Covered with a layer of fine dry dirt.
-desc-tf-160,B1,This is the correct use of “embarrassed”: “The characters was embarrassed.”,FALSE,This is the correct use of this word: “He looked embarrassed when everyone turned to watch him retrieve his shoe.”
+desc-tf-160,B1,This is the correct use of “embarrassed”: “Mo was so embarrassed by his mistake that he proudly told everyone about it.”,FALSE,"“Embarrassed” means feeling awkward about a mistake. An embarrassed person would hide it, not proudly share it."
 desc-tf-161,B1,“grab” is similar in meaning to “mumble.”,FALSE,“grab” means Take hold of something suddenly or quickly. The proposed synonym “mumble” belongs with “mutter.”
 desc-tf-162,B1,“ambitious” is similar in meaning to “driven.”,TRUE,“driven” is a synonym of “ambitious.”
 desc-tf-163,B1,“swing” means: Move backwards and forwards around a fixed support.,TRUE,Correct definition: “swing” means Move backwards and forwards around a fixed support.
 desc-tf-164,B1,“foggy” is used correctly here: “The foggy road seemed to disappear a few metres ahead.”,TRUE,The example uses “foggy” correctly: “The foggy road seemed to disappear a few metres ahead.”
 desc-tf-165,B1,“rush” means: Move or act very quickly because of urgency.,TRUE,Correct definition: “rush” means Move or act very quickly because of urgency.
 desc-tf-166,B1,“stare” means: Look at something for a long time with eyes held wide or fixed.,TRUE,Correct definition: “stare” means Look at something for a long time with eyes held wide or fixed.
-desc-tf-167,B1,This is the correct use of “wander”: “The character can to wander during the scene.”,FALSE,This is the correct use of this word: “We wandered through the empty streets.”
-desc-tf-168,B1,This is the correct use of “shallow”: “The characters was shallow.”,FALSE,This is the correct use of this word: “Small fish moved through the shallow water beside the bank.”
+desc-tf-167,B1,"This is the correct use of “wander”: “The bus wandered along its fixed route, stopping at every stop on the timetable.”",FALSE,To “wander” is to move without a fixed route. A bus on a timetable does the opposite.
+desc-tf-168,B1,This is the correct use of “shallow”: “The shallow well was so deep that a stone took five seconds to reach the bottom.”,FALSE,“Shallow” means not deep. A well that takes five seconds to reach the bottom is very deep.
 desc-tf-169,B1,“dim” is used correctly here: “A dim lamp showed the outline of the narrow bed.”,TRUE,The example uses “dim” correctly: “A dim lamp showed the outline of the narrow bed.”
 desc-tf-170,B1,“bend” means: Change a straight shape into an angle or curve.,TRUE,Correct definition: “bend” means Change a straight shape into an angle or curve.
 desc-tf-171,B1,“tense” means: Slightly worried or uncomfortable.,FALSE,"Correct definition: “tense” means Unable to relax because of strain, worry or possible danger."
@@ -180,13 +180,13 @@ desc-tf-178,B1,“rocky” means: No longer worried or frightened.,FALSE,Correct
 desc-tf-179,B1,“tremble” is similar in meaning to “mumble.”,FALSE,"“tremble” means Shake slightly through fear, cold or strong emotion. The proposed synonym “mumble” belongs with “mutter.”"
 desc-tf-180,B1,“puzzled” means: Careful to avoid danger or mistakes.,FALSE,Correct definition: “puzzled” means Unable to understand why something has happened or what it means.
 desc-tf-181,B1,“gloomy” means: No longer worried or frightened.,FALSE,"Correct definition: “gloomy” means Dark and depressing, or unhappy."
-desc-tf-182,B1,This is the correct use of “stretch”: “The character can to stretch during the scene.”,FALSE,This is the correct use of this word: “She stood on tiptoe to stretch towards the highest shelf.”
+desc-tf-182,B1,This is the correct use of “stretch”: “The cat stretched by curling up into a tight little ball.”,FALSE,To “stretch” is to extend your body to its full length. Curling up is the opposite.
 desc-tf-183,B1,“steep” is used correctly here: “A steep staircase led to the room beneath the roof.”,TRUE,The example uses “steep” correctly: “A steep staircase led to the room beneath the roof.”
 desc-tf-184,B1,“mutter” means: Move without a fixed route or destination.,FALSE,"Correct definition: “mutter” means Speak quietly and indistinctly, often in annoyance."
-desc-tf-185,B1,This is the correct use of “miserable”: “The characters was miserable.”,FALSE,"This is the correct use of this word: “Cold and miserable, they waited under the leaking roof.”"
+desc-tf-185,B1,This is the correct use of “miserable”: “Ana was so miserable on her birthday that she laughed and danced all day.”,FALSE,“Miserable” means extremely unhappy. Laughing and dancing all day shows the opposite.
 desc-tf-186,B1,“faint” means: So weak or slight that it is difficult to notice.,TRUE,Correct definition: “faint” means So weak or slight that it is difficult to notice.
-desc-tf-187,B1,This is the correct use of “sensitive”: “The characters was sensitive.”,FALSE,This is the correct use of this word: “The sensitive student remembered the careless remark for days.”
-desc-tf-188,B1,This is the correct use of “silently”: “The character silently into the room.”,FALSE,This is the correct use of this word: “They silently watched the last light disappear beyond the hills.”
+desc-tf-187,B1,This is the correct use of “sensitive”: “Ben is so sensitive that cruel comments never bother him at all.”,FALSE,A “sensitive” person is easily upset by others' words. Someone never bothered by cruel comments is not sensitive.
+desc-tf-188,B1,"This is the correct use of “silently”: “The drummer played silently, filling the hall with loud, crashing beats.”",FALSE,"“Silently” means without any sound. Loud, crashing beats are the opposite."
 desc-tf-189,B1,“bravely” is similar in meaning to “courageously.”,TRUE,“courageously” is a synonym of “bravely.”
 desc-tf-190,B1,“whisper” means: Speak very quietly without using your normal speaking voice.,TRUE,Correct definition: “whisper” means Speak very quietly without using your normal speaking voice.
 desc-tf-191,B1,“curious” is similar in meaning to “inquisitive.”,TRUE,“inquisitive” is a synonym of “curious.”
@@ -196,7 +196,7 @@ desc-tf-194,B1,“race” is used correctly here: “We watched the dark clouds 
 desc-tf-195,B1,“cautious” is similar in meaning to “careful.”,TRUE,“careful” is a synonym of “cautious.”
 desc-tf-196,B1,“patient” is similar in meaning to “tolerant.”,TRUE,“tolerant” is a synonym of “patient.”
 desc-tf-197,B1,“lean” means: Rest or place your weight against a supporting surface.,TRUE,Correct definition: “lean” means Rest or place your weight against a supporting surface.
-desc-tf-198,B1,This is the correct use of “creep”: “The character can to creep during the scene.”,FALSE,This is the correct use of this word: “He tried to creep past the sleeping dog without waking it.”
+desc-tf-198,B1,"This is the correct use of “creep”: “The burglar crept into the house, singing loudly and switching on every light.”",FALSE,To “creep” is to move slowly and quietly to avoid being noticed. Singing loudly would get him noticed.
 desc-tf-199,B1,"“gently” means: Suddenly and unexpectedly, sometimes rudely.",FALSE,Correct definition: “gently” means With little force and care to avoid hurting or damaging.
 desc-tf-200,B1,“anxious” is similar in meaning to “inquisitive.”,FALSE,“anxious” means Worried about what might happen. The proposed synonym “inquisitive” belongs with “curious.”
 desc-tf-201,B1,“astonished” is similar in meaning to “annoyed.”,FALSE,“astonished” means Extremely surprised because something is unexpected or remarkable. The proposed synonym “annoyed” belongs with “frustrated.”
@@ -209,16 +209,16 @@ desc-tf-207,B1,“deliberately” is used correctly here: “She deliberately le
 desc-tf-208,B1,“frozen” means: Worried about what might happen.,FALSE,Correct definition: “frozen” means Turned into solid ice by a very low temperature.
 desc-tf-209,B1,“drift” is similar in meaning to “float.”,TRUE,“float” is a synonym of “drift.”
 desc-tf-210,B1,“cheerfully” means: In a noticeably happy and positive way.,TRUE,Correct definition: “cheerfully” means In a noticeably happy and positive way.
-desc-tf-211,B1,"This is the correct use of “gentle”: “The character was gentle and harsh simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “A gentle breeze stirred the curtains.”
+desc-tf-211,B1,This is the correct use of “gentle”: “The gentle wave smashed the boat to pieces against the rocks.”,FALSE,“Gentle” means soft and careful. A wave that smashes a boat to pieces is violent.
 desc-tf-212,B1,“march” is similar in meaning to “come nearer.”,FALSE,"“march” means Walk with regular, firm steps, often together with others. The proposed synonym “come nearer” belongs with “approach.”"
 desc-tf-213,B1,“selfish” is similar in meaning to “reassured.”,FALSE,“selfish” means Concerned mainly with your own wishes rather than other people's needs. The proposed synonym “reassured” belongs with “relieved.”
-desc-tf-214,B1,This is the correct use of “crawl”: “The character can to crawl during the scene.”,FALSE,This is the correct use of this word: “The child had to crawl beneath the low wooden bench.”
+desc-tf-214,B1,"This is the correct use of “crawl”: “The baby crawled across the room, running upright on two feet.”",FALSE,To “crawl” is to move with your body close to the ground. Running upright is not crawling.
 desc-tf-215,B1,“jealous” means: Sure of yourself or your ability.,FALSE,Correct definition: “jealous” means Unhappy because someone else has an advantage you want.
 desc-tf-216,B1,“elegant” means: Wanting to discover or understand something.,FALSE,"Correct definition: “elegant” means Attractive through good taste, simplicity or refined appearance."
 desc-tf-217,B1,“leap” means: Pause because you are uncertain.,FALSE,Correct definition: “leap” means Make a large or sudden jump.
 desc-tf-218,B1,“confident” is similar in meaning to “worried.”,FALSE,“confident” means Sure of yourself or your ability. The proposed synonym “worried” belongs with “anxious.”
 desc-tf-219,B1,“pause” is similar in meaning to “stop briefly.”,TRUE,“stop briefly” is a synonym of “pause.”
-desc-tf-220,B1,This is the correct use of “furious”: “The characters was furious.”,FALSE,This is the correct use of this word: “He was furious when he discovered that his work had been thrown away.”
+desc-tf-220,B1,"This is the correct use of “furious”: “Dad was furious about the broken window, so he smiled calmly and said it didn't matter.”",FALSE,"“Furious” means extremely angry. A calm smile and ""it didn't matter"" show he is not."
 desc-tf-221,B1,“dull” is used correctly here: “The dull metal door showed no reflection of the passing lights.”,TRUE,The example uses “dull” correctly: “The dull metal door showed no reflection of the passing lights.”
 desc-tf-222,B1,“harsh” is similar in meaning to “severe.”,TRUE,“severe” is a synonym of “harsh.”
 desc-tf-223,B1,“abruptly” is used correctly here: “He abruptly ended the conversation.”,TRUE,The example uses “abruptly” correctly: “He abruptly ended the conversation.”
@@ -226,15 +226,15 @@ desc-tf-224,B1,“grin” is similar in meaning to “pause.”,FALSE,"“grin�
 desc-tf-225,B1,“delighted” is similar in meaning to “annoyed.”,FALSE,“delighted” means Extremely pleased about something good that has happened. The proposed synonym “annoyed” belongs with “frustrated.”
 desc-tf-226,B1,“uneasy” is similar in meaning to “troubled.”,TRUE,“troubled” is a synonym of “uneasy.”
 desc-tf-227,B1,“cruel” is similar in meaning to “careful.”,FALSE,“cruel” means Willing to cause pain or suffering without concern for others. The proposed synonym “careful” belongs with “cautious.”
-desc-tf-228,B1,This is the correct use of “slide”: “The character can to slide during the scene.”,FALSE,This is the correct use of this word: “The loose book began to slide towards the edge of the desk.”
+desc-tf-228,B1,This is the correct use of “slide”: “The puck slid across the ice in a series of high bounces.”,FALSE,To “slide” is to move smoothly without lifting off the surface. Bouncing is not sliding.
 desc-tf-229,B1,“suspicious” is used correctly here: “The suspicious guard asked why the visitor was carrying two identical bags.”,TRUE,The example uses “suspicious” correctly: “The suspicious guard asked why the visitor was carrying two identical bags.”
-desc-tf-230,B1,This is the correct use of “enthusiastic”: “The characters was enthusiastic.”,FALSE,This is the correct use of this word: “The enthusiastic volunteers arrived early and immediately asked for jobs.”
+desc-tf-230,B1,"This is the correct use of “enthusiastic”: “The enthusiastic student yawned, sighed and refused to join in.”",FALSE,“Enthusiastic” means showing strong interest and excitement. Yawning and refusing show the opposite.
 desc-tf-231,B1,“grateful” is similar in meaning to “annoyed.”,FALSE,“grateful” means Feeling that you want to thank someone for their help. The proposed synonym “annoyed” belongs with “frustrated.”
 desc-tf-232,B1,“thoughtful” means: Wanting to discover or understand something.,FALSE,Correct definition: “thoughtful” means Showing care for other people's feelings or needs.
 desc-tf-233,B1,“violent” is similar in meaning to “fierce.”,TRUE,“fierce” is a synonym of “violent.”
 desc-tf-234,B1,“gaze” is used correctly here: “She stopped to gaze at the lights beyond the river.”,TRUE,The example uses “gaze” correctly: “She stopped to gaze at the lights beyond the river.”
-desc-tf-235,B1,This is the correct use of “terrified”: “The characters was terrified.”,FALSE,This is the correct use of this word: “The terrified child held the railing as the bridge began to sway.”
-desc-tf-236,B1,This is the correct use of “guilty”: “The characters was guilty.”,FALSE,This is the correct use of this word: “He felt guilty whenever he looked at the empty space on the shelf.”
+desc-tf-235,B1,"This is the correct use of “terrified”: “Terrified of the dark, Leo happily wandered alone through the unlit forest.”",FALSE,“Terrified” means extremely afraid. Someone terrified of the dark would not be happy alone in a dark forest.
+desc-tf-236,B1,This is the correct use of “guilty”: “Maya felt guilty about helping her neighbour carry the shopping home.”,FALSE,We feel “guilty” when we believe we have done something wrong. Helping a neighbour is not wrong.
 desc-tf-237,B1,“graceful” means: Annoyed because something prevents progress or success.,FALSE,"Correct definition: “graceful” means Moving or shaped in a smooth, controlled and pleasing way."
 desc-tf-238,B1,“disappointed” is similar in meaning to “let down.”,TRUE,“let down” is a synonym of “disappointed.”
 desc-tf-239,B1,“affectionate” is used correctly here: “The dog gave its owner an affectionate nudge before settling beside her.”,TRUE,The example uses “affectionate” correctly: “The dog gave its owner an affectionate nudge before settling beside her.”
@@ -243,24 +243,24 @@ desc-tf-241,B1,“spacious” means: Having plenty of room for people to move co
 desc-tf-242,B1,“nod” is similar in meaning to “signal agreement.”,TRUE,“signal agreement” is a synonym of “nod.”
 desc-tf-243,B1,“patiently” means: Without becoming annoyed while waiting or facing difficulty.,TRUE,Correct definition: “patiently” means Without becoming annoyed while waiting or facing difficulty.
 desc-tf-244,B1,“stubborn” is similar in meaning to “obstinate.”,TRUE,“obstinate” is a synonym of “stubborn.”
-desc-tf-245,B1,This is the correct use of “reluctantly”: “The character reluctantly into the room.”,FALSE,This is the correct use of this word: “She reluctantly handed over her phone.”
+desc-tf-245,B1,"This is the correct use of “reluctantly”: “The children reluctantly raced outside, cheering, the moment the bell rang for break.”",FALSE,“Reluctantly” means unwillingly. Racing out and cheering shows they are very willing.
 desc-tf-246,B1,“chase” is similar in meaning to “pause.”,FALSE,“chase” means Run after someone or something in order to catch them. The proposed synonym “pause” belongs with “hesitate.”
 desc-tf-247,B1,“cheerful” is similar in meaning to “happy.”,TRUE,“happy” is a synonym of “cheerful.”
 desc-tf-248,B1,“approach” is similar in meaning to “curve.”,FALSE,“approach” means Move closer to someone or something. The proposed synonym “curve” belongs with “bend.”
-desc-tf-249,B1,"This is the correct use of “relieved”: “The character was relieved and anxious simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “She was relieved to hear his key turn in the lock.”
+desc-tf-249,B1,"This is the correct use of “relieved”: “Relieved by the good news, the family stayed awake all night, sick with worry.”",FALSE,“Relieved” means no longer worried. Staying awake sick with worry is the opposite.
 desc-tf-250,B1,“exhausted” is similar in meaning to “worried.”,FALSE,“exhausted” means Extremely tired after using a great deal of energy. The proposed synonym “worried” belongs with “anxious.”
-desc-tf-251,B2,This is the correct use of “eerie”: “The characters was eerie.”,FALSE,This is the correct use of this word: “An eerie silence settled over the playground when the wind stopped.”
-desc-tf-252,B2,This is the correct use of “secluded”: “The characters was secluded.”,FALSE,This is the correct use of this word: “They discovered a secluded garden behind the abandoned workshop.”
+desc-tf-251,B2,"This is the correct use of “eerie”: “The eerie classroom felt bright, cheerful and completely ordinary.”",FALSE,"“Eerie” means strange and frightening. Bright, cheerful and ordinary is the opposite."
+desc-tf-252,B2,This is the correct use of “secluded”: “The secluded cottage stood in the middle of a busy shopping street.”,FALSE,“Secluded” means hidden away from where people go. A busy shopping street is the opposite.
 desc-tf-253,B2,“unevenly” is similar in meaning to “intensely.”,FALSE,“unevenly” means In a way that varies rather than remaining level or regular. The proposed synonym “intensely” belongs with “fiercely.”
 desc-tf-254,B2,“clench” means: Stay longer than expected or be slow to disappear.,FALSE,"Correct definition: “clench” means Close or press something together tightly, especially fists or teeth."
 desc-tf-255,B2,“assertive” is used correctly here: “Her assertive reply made it clear that the extra work would need more time.”,TRUE,The example uses “assertive” correctly: “Her assertive reply made it clear that the extra work would need more time.”
 desc-tf-256,B2,"“evade” means: Avoid something, often deliberately or skilfully.",TRUE,"Correct definition: “evade” means Avoid something, often deliberately or skilfully."
 desc-tf-257,B2,“reassuring” means: Helping someone feel less worried by suggesting that things will be all right.,TRUE,Correct definition: “reassuring” means Helping someone feel less worried by suggesting that things will be all right.
-desc-tf-258,B2,This is the correct use of “rugged”: “The characters was rugged.”,FALSE,This is the correct use of this word: “The rugged coast made every attempt to reach the small beach difficult.”
+desc-tf-258,B2,This is the correct use of “rugged”: “The rugged coastline was as smooth and flat as a sheet of glass.”,FALSE,“Rugged” means rough and uneven. Smooth and flat is the opposite.
 desc-tf-259,B2,“bitterly” is similar in meaning to “angrily.”,TRUE,“angrily” is a synonym of “bitterly.”
 desc-tf-260,B2,“ominous” is used correctly here: “An ominous rumble came from the mountain.”,TRUE,The example uses “ominous” correctly: “An ominous rumble came from the mountain.”
 desc-tf-261,B2,“stride” is used correctly here: “She continued to stride towards the entrance despite the rising wind.”,TRUE,The example uses “stride” correctly: “She continued to stride towards the entrance despite the rising wind.”
-desc-tf-262,B2,This is the correct use of “stark”: “The characters was stark.”,FALSE,This is the correct use of this word: “The stark room held a narrow bed and a single uncovered light bulb.”
+desc-tf-262,B2,"This is the correct use of “stark”: “The stark room was full of soft cushions, rugs and bright paintings.”",FALSE,"“Stark” means bare and severe, with little softness or decoration. This room is soft and decorated."
 desc-tf-263,B2,“aloof” is similar in meaning to “bitter.”,FALSE,“aloof” means Deliberately distant and unwilling to become friendly with others. The proposed synonym “bitter” belongs with “resentful.”
 desc-tf-264,B2,“dilapidated” means: In poor condition because of age and a lack of repairs.,TRUE,Correct definition: “dilapidated” means In poor condition because of age and a lack of repairs.
 desc-tf-265,B2,“hesitantly” means: With uncertainty or a lack of confidence.,TRUE,Correct definition: “hesitantly” means With uncertainty or a lack of confidence.
@@ -271,7 +271,7 @@ desc-tf-269,B2,“decaying” is used correctly here: “The smell of decaying w
 desc-tf-270,B2,“elated” means: Openly refusing to obey or accept authority.,FALSE,Correct definition: “elated” means Extremely happy and excited because of good news or success.
 desc-tf-271,B2,"“intensify” means: Lose strength, confidence or steadiness.",FALSE,"Correct definition: “intensify” means Become stronger, or make something stronger."
 desc-tf-272,B2,“suffocating” is used correctly here: “The suffocating room sent them searching for a window that would open.”,TRUE,The example uses “suffocating” correctly: “The suffocating room sent them searching for a window that would open.”
-desc-tf-273,B2,This is the correct use of “pristine”: “The characters was pristine.”,FALSE,This is the correct use of this word: “The pristine notebook lay beside a pile of torn and stained exercise books.”
+desc-tf-273,B2,"This is the correct use of “pristine”: “The pristine car was covered in dents, scratches and mud.”",FALSE,"“Pristine” means unspoilt, with no damage or signs of use. Dents and scratches are damage."
 desc-tf-274,B2,“ambivalent” means: Having conflicting feelings about something.,TRUE,Correct definition: “ambivalent” means Having conflicting feelings about something.
 desc-tf-275,B2,“flinch” is similar in meaning to “wince.”,TRUE,“wince” is a synonym of “flinch.”
 desc-tf-276,B2,“barren” is similar in meaning to “unproductive.”,TRUE,“unproductive” is a synonym of “barren.”
@@ -281,17 +281,17 @@ desc-tf-279,B2,“bustling” is used correctly here: “The bustling market spr
 desc-tf-280,B2,“melancholy” is used correctly here: “A melancholy tune drifted from the room overlooking the deserted square.”,TRUE,The example uses “melancholy” correctly: “A melancholy tune drifted from the room overlooking the deserted square.”
 desc-tf-281,B2,“dismissively” is similar in meaning to “repeatedly.”,FALSE,“dismissively” means As though something deserves little attention or respect. The proposed synonym “repeatedly” belongs with “persistently.”
 desc-tf-282,B2,“apprehensive” is similar in meaning to “fearful.”,TRUE,“fearful” is a synonym of “apprehensive.”
-desc-tf-283,B2,"This is the correct use of “vulnerable”: “The character was vulnerable and protected simultaneously, in the same respect.”",FALSE,"This is the correct use of this word: “Alone in the unfamiliar city, she felt vulnerable.”"
+desc-tf-283,B2,"This is the correct use of “vulnerable”: “Surrounded by bodyguards inside a locked steel room, the president was vulnerable.”",FALSE,“Vulnerable” means easily hurt or attacked. Bodyguards and a locked steel room make him well protected.
 desc-tf-284,B2,“erode” is similar in meaning to “face.”,FALSE,“erode” means Gradually wear away or weaken. The proposed synonym “face” belongs with “confront.”
-desc-tf-285,B2,This is the correct use of “compassionate”: “The characters was compassionate.”,FALSE,This is the correct use of this word: “The compassionate nurse noticed the child's fear and waited beside the bed.”
+desc-tf-285,B2,This is the correct use of “compassionate”: “The compassionate nurse laughed at her patients' pain and refused to help them.”,FALSE,"A “compassionate” person cares about others' suffering and wants to help, the opposite of laughing at pain."
 desc-tf-286,B2,“vibrant” means: Openly refusing to obey or accept authority.,FALSE,"Correct definition: “vibrant” means Full of strong colour, energy or life."
-desc-tf-287,B2,"This is the correct use of “desolate”: “The landscape was desolate and lively simultaneously, in the same respect.”",FALSE,This is the correct use of this word: “A desolate farmhouse stood among the abandoned fields.”
-desc-tf-288,B2,This is the correct use of “remorseful”: “The characters was remorseful.”,FALSE,This is the correct use of this word: “The remorseful boy returned the stolen money.”
+desc-tf-287,B2,This is the correct use of “desolate”: “The desolate village was packed with laughing families and busy market stalls.”,FALSE,“Desolate” means empty and bleak. A village full of families and busy stalls is lively.
+desc-tf-288,B2,"This is the correct use of “remorseful”: “Remorseful about breaking the vase, the boy grinned and broke another one.”",FALSE,“Remorseful” means deeply sorry. Grinning and breaking another shows no sorrow at all.
 desc-tf-289,B2,“contemptuous” is similar in meaning to “scornful.”,TRUE,“scornful” is a synonym of “contemptuous.”
 desc-tf-290,B2,“sceptical” is used correctly here: “The sceptical audience asked to see the results before accepting the inventor's claims.”,TRUE,The example uses “sceptical” correctly: “The sceptical audience asked to see the results before accepting the inventor's claims.”
 desc-tf-291,B2,“lurch” is similar in meaning to “stumble.”,FALSE,"“lurch” means Move suddenly and unsteadily, often forwards or sideways. The proposed synonym “stumble” belongs with “falter.”"
 desc-tf-292,B2,“drag” means: Face a difficult person or situation directly.,FALSE,"Correct definition: “drag” means Pull something along a surface, often with effort."
-desc-tf-293,B2,This is the correct use of “glimmer”: “The character can to glimmer during the scene.”,FALSE,This is the correct use of this word: “A distant light began to glimmer through the trees.”
+desc-tf-293,B2,"This is the correct use of “glimmer”: “The torch glimmered with a blinding, steady beam that lit up the whole valley.”",FALSE,"To “glimmer” is to give off a faint, unsteady light. A blinding, steady beam is the opposite."
 desc-tf-294,B2,“reflective” is similar in meaning to “thoughtful.”,TRUE,“thoughtful” is a synonym of “reflective.”
 desc-tf-295,B2,“poignant” means: Unable to relax or remain still.,FALSE,Correct definition: “poignant” means Causing a strong feeling of sadness or sympathy.
 desc-tf-296,B2,“persistently” is used correctly here: “She persistently questioned the official explanation.”,TRUE,The example uses “persistently” correctly: “She persistently questioned the official explanation.”
@@ -301,15 +301,15 @@ desc-tf-299,B2,"“slump” means: Fall or sink heavily into a loose, unsupporte
 desc-tf-300,B2,“quiver” is similar in meaning to “face.”,FALSE,"“quiver” means Shake with small, rapid movements, often through fear or emotion. The proposed synonym “face” belongs with “confront.”"
 desc-tf-301,B2,"“recoil” means: Move back suddenly through fear, shock or disgust.",TRUE,"Correct definition: “recoil” means Move back suddenly through fear, shock or disgust."
 desc-tf-302,B2,“fiercely” means: As though something deserves little attention or respect.,FALSE,"Correct definition: “fiercely” means With great force, intensity or determined aggression."
-desc-tf-303,B2,This is the correct use of “tentatively”: “The character tentatively into the room.”,FALSE,This is the correct use of this word: “She tentatively suggested a different solution.”
+desc-tf-303,B2,"This is the correct use of “tentatively”: “She tentatively marched onto the stage, grabbed the microphone and sang at full volume.”",FALSE,"“Tentatively” means with uncertainty or caution. Marching, grabbing and singing at full volume are confident."
 desc-tf-304,B2,“steadily” means: At a regular rate or in a controlled way.,TRUE,Correct definition: “steadily” means At a regular rate or in a controlled way.
 desc-tf-305,B2,“oppressive” is used correctly here: “The oppressive heat made every movement an effort.”,TRUE,The example uses “oppressive” correctly: “The oppressive heat made every movement an effort.”
 desc-tf-306,B2,“agitated” is similar in meaning to “disturbed.”,TRUE,“disturbed” is a synonym of “agitated.”
 desc-tf-307,B2,“indifferent” is used correctly here: “She seemed indifferent to the result and continued reading as the scores were announced.”,TRUE,The example uses “indifferent” correctly: “She seemed indifferent to the result and continued reading as the scores were announced.”
 desc-tf-308,B2,“overwhelmed” means: Unable to cope because feelings or demands are too strong or numerous.,TRUE,Correct definition: “overwhelmed” means Unable to cope because feelings or demands are too strong or numerous.
-desc-tf-309,B2,This is the correct use of “bleak”: “The characters was bleak.”,FALSE,This is the correct use of this word: “The factory closure left the town facing a bleak future.”
+desc-tf-309,B2,"This is the correct use of “bleak”: “The bleak future looked bright, hopeful and full of chances.”",FALSE,“Bleak” means offering little hope. Bright and hopeful is the opposite.
 desc-tf-310,B2,“loom” means: Stay longer than expected or be slow to disappear.,FALSE,"Correct definition: “loom” means Appear as a large, unclear or threatening shape."
-desc-tf-311,B2,This is the correct use of “sparse”: “The characters was sparse.”,FALSE,This is the correct use of this word: “Sparse trees dotted the hillside above the village.”
+desc-tf-311,B2,This is the correct use of “sparse”: “The sparse crowd packed the stadium from end to end.”,FALSE,“Sparse” means few and spread far apart. A crowd that packs a stadium is dense.
 desc-tf-312,B2,“serene” means: Openly refusing to obey or accept authority.,FALSE,Correct definition: “serene” means Calm and peaceful.
 desc-tf-313,B2,“crumple” is similar in meaning to “crush.”,TRUE,“crush” is a synonym of “crumple.”
 desc-tf-314,B2,“bewildered” is similar in meaning to “deserted.”,FALSE,“bewildered” means Very confused and unable to make sense of what is happening. The proposed synonym “deserted” belongs with “desolate.”
@@ -328,8 +328,8 @@ desc-tf-326,B2,“resentful” means: Worried that something unpleasant may happ
 desc-tf-327,B2,“defiantly” means: In a way that openly challenges authority or opposition.,TRUE,Correct definition: “defiantly” means In a way that openly challenges authority or opposition.
 desc-tf-328,B2,“murky” is similar in meaning to “cloudy.”,TRUE,“cloudy” is a synonym of “murky.”
 desc-tf-329,B2,“confront” is similar in meaning to “hide.”,FALSE,“confront” means Face a difficult person or situation directly. The proposed synonym “hide” belongs with “conceal.”
-desc-tf-330,B2,This is the correct use of “withdrawn”: “The characters was withdrawn.”,FALSE,This is the correct use of this word: “The normally cheerful boy became withdrawn after the argument.”
-desc-tf-331,B2,This is the correct use of “shudder”: “The character can to shudder during the scene.”,FALSE,This is the correct use of this word: “She felt herself shudder as the cold water reached her waist.”
+desc-tf-330,B2,This is the correct use of “withdrawn”: “The withdrawn boy chatted to everyone and organised all the class parties.”,FALSE,“Withdrawn” means quiet and unwilling to spend time with others. This boy is the opposite.
+desc-tf-331,B2,This is the correct use of “shudder”: “He shuddered by standing perfectly still and calm.”,FALSE,To “shudder” is to shake suddenly. Standing perfectly still is not shuddering.
 desc-tf-332,B2,"“undermine” means: Weaken someone's confidence, authority or position.",TRUE,"Correct definition: “undermine” means Weaken someone's confidence, authority or position."
 desc-tf-333,B2,“indignant” is similar in meaning to “fearful.”,FALSE,“indignant” means Angry because something seems unfair or wrong. The proposed synonym “fearful” belongs with “apprehensive.”
 desc-tf-334,B2,“restless” is used correctly here: “The restless audience shifted in their seats.”,TRUE,The example uses “restless” correctly: “The restless audience shifted in their seats.”
@@ -338,7 +338,7 @@ desc-tf-336,B2,“disdainful” is used correctly here: “His disdainful glance
 desc-tf-337,B2,“stagger” means: Move unsteadily as though you might fall.,TRUE,Correct definition: “stagger” means Move unsteadily as though you might fall.
 desc-tf-338,B2,“resigned” means: Accepting something unpleasant because change seems impossible.,TRUE,Correct definition: “resigned” means Accepting something unpleasant because change seems impossible.
 desc-tf-339,B2,“unsettling” is used correctly here: “There was something unsettling about the perfectly silent playground.”,TRUE,The example uses “unsettling” correctly: “There was something unsettling about the perfectly silent playground.”
-desc-tf-340,B2,This is the correct use of “radiant”: “The characters was radiant.”,FALSE,This is the correct use of this word: “The radiant morning sky brightened the snow-covered roofs below.”
+desc-tf-340,B2,This is the correct use of “radiant”: “The radiant lamp gave out no light at all.”,FALSE,"“Radiant” means giving out strong, glowing light. A lamp with no light is not radiant."
 desc-tf-341,B2,“falter” is similar in meaning to “flinch.”,FALSE,"“falter” means Lose strength, confidence or steadiness. The proposed synonym “flinch” belongs with “recoil.”"
 desc-tf-342,B2,“hostile” means: Worried that something unpleasant may happen.,FALSE,Correct definition: “hostile” means Unfriendly or openly opposed.
 desc-tf-343,B2,“dart” means: Move suddenly and quickly in a particular direction.,TRUE,Correct definition: “dart” means Move suddenly and quickly in a particular direction.
@@ -347,10 +347,10 @@ desc-tf-345,B2,“detached” means: Worried that something unpleasant may happe
 desc-tf-346,B2,“cramped” is similar in meaning to “aloof.”,FALSE,“cramped” means Uncomfortably small and leaving too little room to move. The proposed synonym “aloof” belongs with “detached.”
 desc-tf-347,B2,“grasp” is similar in meaning to “grip.”,TRUE,“grip” is a synonym of “grasp.”
 desc-tf-348,B2,“murmur” means: Hold something firmly.,FALSE,"Correct definition: “murmur” means Speak in a low, soft voice, often without clear words."
-desc-tf-349,B2,This is the correct use of “linger”: “The character can to linger during the scene.”,FALSE,This is the correct use of this word: “The smell of smoke lingered in the room.”
+desc-tf-349,B2,This is the correct use of “linger”: “The smell of smoke lingered for a second and was instantly gone.”,FALSE,To “linger” is to stay longer than expected. Something gone in a second has not lingered.
 desc-tf-350,B2,“plunge” means: Hold something firmly.,FALSE,Correct definition: “plunge” means Move or fall suddenly and forcefully downwards or into something.
 desc-tf-351,C1,"“contemplate” means: Look at someone with a sustained, angry expression.",FALSE,Correct definition: “contemplate” means Think carefully and deeply about something before deciding or understanding.
-desc-tf-352,C1,This is the correct use of “subdued”: “The characters was subdued.”,FALSE,"This is the correct use of this word: “The children were unusually subdued on the journey home, each absorbed in the afternoon's events.”"
+desc-tf-352,C1,"This is the correct use of “subdued”: “The subdued crowd cheered, sang and danced on their seats.”",FALSE,“Subdued” means quieter and less energetic than usual. Cheering and dancing are the opposite.
 desc-tf-353,C1,“meticulous” is similar in meaning to “unclear.”,FALSE,“meticulous” means Paying very close attention to every small detail. The proposed synonym “unclear” belongs with “ambiguous.”
 desc-tf-354,C1,“equivocal” means: Gradually causing harm in a way that is difficult to notice.,FALSE,Correct definition: “equivocal” means Unclear or allowing more than one interpretation.
 desc-tf-355,C1,“benevolent” means: Gradually causing harm in a way that is difficult to notice.,FALSE,Correct definition: “benevolent” means Kind and wishing to help others.
@@ -367,7 +367,7 @@ desc-tf-365,C1,“dwindle” means: Make an existing problem worse.,FALSE,"Corre
 desc-tf-366,C1,"“ostensibly” means: According to appearances or the stated reason, which may hide another reason.",TRUE,"Correct definition: “ostensibly” means According to appearances or the stated reason, which may hide another reason."
 desc-tf-367,C1,“stifle” is used correctly here: “She covered her mouth to stifle a laugh during the speech.”,TRUE,The example uses “stifle” correctly: “She covered her mouth to stifle a laugh during the speech.”
 desc-tf-368,C1,"“introspective” means: Examining your own thoughts, feelings and experiences closely.",TRUE,"Correct definition: “introspective” means Examining your own thoughts, feelings and experiences closely."
-desc-tf-369,C1,This is the correct use of “wistful”: “The characters was wistful.”,FALSE,This is the correct use of this word: “She cast a wistful glance at the empty stage before following the others towards the exit.”
+desc-tf-369,C1,"This is the correct use of “wistful”: “She smiled wistfully, delighted that she would never have to see that horrible school again.”",FALSE,“Wistful” means gently sad about something lost or longed for. Being delighted to leave a horrible school is not wistful.
 desc-tf-370,C1,“sardonic” means: Expressing bitter amusement and a mocking view of something.,TRUE,Correct definition: “sardonic” means Expressing bitter amusement and a mocking view of something.
 desc-tf-371,C1,“taciturn” is similar in meaning to “uncommunicative.”,TRUE,“uncommunicative” is a synonym of “taciturn.”
 desc-tf-372,C1,“furtively” is used correctly here: “She furtively checked the folded note before slipping it beneath the open book.”,TRUE,The example uses “furtively” correctly: “She furtively checked the folded note before slipping it beneath the open book.”
@@ -381,19 +381,19 @@ desc-tf-379,C1,“nonchalantly” is similar in meaning to “stealthily.”,FAL
 desc-tf-380,C1,“iridescent” is similar in meaning to “ambiguous.”,FALSE,“iridescent” means Showing changing colours when seen from different angles. The proposed synonym “ambiguous” belongs with “equivocal.”
 desc-tf-381,C1,“imperceptibly” means: So slightly or gradually that the change cannot be noticed.,TRUE,Correct definition: “imperceptibly” means So slightly or gradually that the change cannot be noticed.
 desc-tf-382,C1,“unflinching” is similar in meaning to “glowing.”,FALSE,“unflinching” means Remaining firm without showing fear or hesitation when facing difficulty. The proposed synonym “glowing” belongs with “luminous.”
-desc-tf-383,C1,This is the correct use of “meander”: “The character can to meander during the scene.”,FALSE,"This is the correct use of this word: “The path began to meander between the trees, repeatedly turning away from the distant village.”"
+desc-tf-383,C1,This is the correct use of “meander”: “The motorway meandered in a perfectly straight line to the city.”,FALSE,To “meander” is to follow a winding course. A perfectly straight line is not winding.
 desc-tf-384,C1,“impassive” is similar in meaning to “expressionless.”,TRUE,“expressionless” is a synonym of “impassive.”
-desc-tf-385,C1,This is the correct use of “insinuate”: “The character can to insinuate during the scene.”,FALSE,This is the correct use of this word: “He insinuated that her success depended on favouritism.”
-desc-tf-386,C1,This is the correct use of “placid”: “The characters was placid.”,FALSE,This is the correct use of this word: “The placid horse continued eating while the children noisily unpacked their equipment beside the gate.”
+desc-tf-385,C1,"This is the correct use of “insinuate”: “He insinuated that he liked the cake by saying clearly, ‘This is delicious.’”",FALSE,"To “insinuate” is to suggest something unpleasant indirectly. Clear, direct praise is the opposite."
+desc-tf-386,C1,"This is the correct use of “placid”: “The placid horse kicked, reared and bolted at every sound.”",FALSE,“Placid” means naturally calm and not easily excited. Kicking and bolting at every sound is the opposite.
 desc-tf-387,C1,“pervasive” is similar in meaning to “widespread.”,TRUE,“widespread” is a synonym of “pervasive.”
 desc-tf-388,C1,"“perceptibly” means: According to appearances or the stated reason, which may hide another reason.",FALSE,Correct definition: “perceptibly” means Enough to be noticed.
 desc-tf-389,C1,“monotonous” means: Continuing in the same repetitive way without interesting changes.,TRUE,Correct definition: “monotonous” means Continuing in the same repetitive way without interesting changes.
-desc-tf-390,C1,This is the correct use of “saunter”: “The character can to saunter during the scene.”,FALSE,"This is the correct use of this word: “He chose to saunter through the square, apparently unconcerned that the others were already waiting.”"
+desc-tf-390,C1,"This is the correct use of “saunter”: “Late for his exam, he sauntered at full speed across the car park.”",FALSE,To “saunter” is to walk slowly and casually. Full speed is the opposite.
 desc-tf-391,C1,“palpable” is similar in meaning to “ambiguous.”,FALSE,“palpable” means So strong or clear that it seems almost physically noticeable. The proposed synonym “ambiguous” belongs with “equivocal.”
 desc-tf-392,C1,“indomitable” is used correctly here: “Her indomitable spirit kept the exhausted group moving when another section of the path disappeared.”,TRUE,The example uses “indomitable” correctly: “Her indomitable spirit kept the exhausted group moving when another section of the path disappeared.”
 desc-tf-393,C1,“brood” is similar in meaning to “dwell on.”,TRUE,“dwell on” is a synonym of “brood.”
-desc-tf-394,C1,This is the correct use of “glower”: “The character can to glower during the scene.”,FALSE,This is the correct use of this word: “The caretaker continued to glower at the muddy footprints while the embarrassed visitors searched for a cloth.”
-desc-tf-395,C1,This is the correct use of “throb”: “The character can to throb during the scene.”,FALSE,This is the correct use of this word: “We could hear the distant engine throb beneath the steady hiss of the rain.”
+desc-tf-394,C1,"This is the correct use of “glower”: “The grandmother glowered at the baby with a warm, loving smile.”",FALSE,"To “glower” is to look at someone angrily. A warm, loving smile is the opposite."
+desc-tf-395,C1,This is the correct use of “throb”: “His headache throbbed once and then stopped forever.”,FALSE,To “throb” is to beat or pulse strongly and repeatedly. Once is not repeatedly.
 desc-tf-396,C1,“distraught” is similar in meaning to “glowing.”,FALSE,“distraught” means Extremely upset and unable to remain emotionally calm. The proposed synonym “glowing” belongs with “luminous.”
 desc-tf-397,C1,“permeate” is similar in meaning to “spread through.”,TRUE,“spread through” is a synonym of “permeate.”
 desc-tf-398,C1,“laconic” means: Using very few words to express what you mean.,TRUE,Correct definition: “laconic” means Using very few words to express what you mean.

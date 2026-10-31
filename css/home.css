@@ -197,3 +197,22 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 .subjects .topic-go { width: 32px; height: 32px; border-radius: 10px; }
 .subjects .topic-go svg { width: 18px; height: 18px; }
 @media (max-width: 619px) { .subjects .topics { grid-template-columns: 1fr; } }
+
+/* Top row of the topic lists, 31 Oct 2026 (teacher): the Daily Circuit across two columns and Academic English Essentials
+   in the third, lined up with the three columns of topic tiles below. One column on a phone. */
+.top-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: stretch; }
+.top-row .circuit-box { grid-column: span 2; }
+.ess-card { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; border-radius: 20px; background: var(--card); border: 2px solid var(--ess); min-width: 0; }
+.ess-card p { margin: 0; }
+.ess-on { font-size: .78rem; font-weight: 700; color: var(--ess); }
+.ess-on::before { content: "✓ "; }
+.ess-name { font-family: var(--display); font-weight: 800; font-size: 1.12rem; line-height: 1.2; letter-spacing: -.01em; }
+.ess-name [lang="zh"] { font-family: var(--zh); font-weight: 700; letter-spacing: 0; }
+.ess-actions { margin-top: auto; padding-top: 8px; display: flex; flex-direction: column; gap: 8px; }
+.ess-actions .cc-btn { justify-content: center; padding: 8px 14px; text-align: center; }
+.ess-actions .cc-btn:not(.alt) { background: var(--ess); border-color: var(--ess); }
+@media (max-width: 759px) {   /* tablets and phones: one under the other */
+  .top-row { grid-template-columns: 1fr; }
+  .top-row .circuit-box { grid-column: auto; }
+}
+@media (max-width: 759px) and (min-width: 480px) { .ess-actions { flex-direction: row; } .ess-actions .cc-btn { flex: 1; } }
