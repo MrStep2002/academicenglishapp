@@ -66,6 +66,10 @@ choose another level to push themselves.
   and double any quote mark inside it: `"She said ""no"", then left."`
 - **id**: unique in its file. Never change or reuse a **word's** id: students' progress is saved against it.
   Word ids must also be unique across the whole site. A short readable code is best, e.g. `web-171`, `desc-gap-241`.
+- **Explanations are optional, and usually best left blank** (1 Nov 2026, teacher: "just the correct answer is normally
+  better"). After a wrong answer every game already shows the right answer, and the word and its meaning when the row
+  has a `word`. Write one short sentence only when the right answer alone won't make the mistake clear. The exception is
+  **knowledge.csv** (General knowledge): there the explanation is the interesting fact, so always write one.
 - Explanations may use `<b>bold</b>` and `<i>italic</i>`. Nothing else is turned into formatting.
 - Where a column refers to a word (`word`, `similar`, `accept`, `[[…]]` in reads), write the word as it appears in
   `words.csv` (or its id). It must be in the same folder's `words.csv`.
@@ -128,7 +132,7 @@ Questions about the wider world of the topic: people, places, history, ideas ("c
 
 - **sentence** has `___` (three underscores) where the gap is.
 - **answer** fits the gap; **wrong1** plus up to two more wrong answers (`wrong2`, `wrong3`) don't.
-- explanation: why the answer is right. focus: a short label shown with the question, e.g. `Articles`, `Word forms`.
+- explanation (optional, usually blank): one short sentence, only if it helps. focus: a short label shown with the question, e.g. `Articles`, `Word forms`.
 - word: the word this sentence practises, if any (it then counts towards that word's progress).
 
 ### builds.csv (Build the sentence)
