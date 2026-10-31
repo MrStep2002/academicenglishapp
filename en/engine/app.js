@@ -366,17 +366,100 @@ let keyHandler=null, timers=[];
 // Daily Circuit: when a station's time is up, circuitFinish marks a long task the student has started (what they did counts)
 // and circuitStop stops an arcade game, so nothing is recorded after the station ends
 let circuitFinish=null, circuitStop=null;
-document.addEventListener('keydown', e => { if(keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey && e.target.tagName!=='INPUT') keyHandler(e); });
+document.addEventListener('keydown', e => { if(keyHandler && !e.metaKey && !e.ctrlKey && !e.altKey && e.target.tagName!=='INPUT' && !(e.target.closest && e.target.closest('.report'))) keyHandler(e); });
 const later = (fn,ms) => { const t=setTimeout(fn,ms); timers.push(t); return t; };
 const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
 
+// ---------- Reporting a question (31 Oct 2026, teacher) ----------
+// "A report button next to the wrong answer for when a student thinks they've been hard done by or a question hasn't made
+// sense." After a wrong answer, manualNext() puts a small Report button beside Next. The student chooses a reason (and can
+// add a comment); the report goes to the server (POST /api/report, see server/README.md), with the question as they saw
+// it. Limits: 5 a day per device (here and on the server) and per logged-in student; none for the teacher (a browser
+// logged in on the teacher page sends the teacher's login, and the report shows as "You").
+// The teacher keeps or removes each reported question on the teacher page (#/reports). Removed questions are left out of
+// every game (Deck skips them): the list comes from GET /api/hidden when a page opens and is kept in this browser
+// ("aeaHidden", not "aea:", so it isn't saved to accounts) for when the server can't be reached.
+// A question is: this page's content folder (TOPIC) + the game + the row's id (or the word's id, for cards made from words).
+const TOPIC = (()=>{ const m=String(CFG.content||CFG.reading||'').match(/content\/(.+?)\/*$/); return m ? m[1].replace(/\.csv$/,'') : ''; })();
+const REPORT_MAX = 5, HID_KEY = 'aeaHidden', REP_KEY = 'aeaReports', DEV_KEY = 'aeaDevice';
+const apiBase = () => { try{ if(window.AEA_ACCOUNT && AEA_ACCOUNT.api) return AEA_ACCOUNT.api(); }catch(e){}
+  let a=''; try{ a=localStorage.getItem('aea:api')||''; }catch(e){} return (a||'https://api.academicenglishapp.com').replace(/\/+$/,''); };
+let HIDDEN = new Set(), CUR_GAME = '', lastMiss = null;
+const useHidden = list => { const h=new Set();
+  (Array.isArray(list)?list:[]).forEach(x=>{ if(!x || x.topic!==TOPIC) return; const id=String(x.item); h.add(x.game+'|'+id); h.add(x.game+'|'+id.split('#')[0]); });   // part of a passage: the whole passage
+  HIDDEN=h; };
+try{ useHidden(JSON.parse(localStorage.getItem(HID_KEY)||'[]')); }catch(e){}
+if(TOPIC && window.fetch) fetch(apiBase()+'/api/hidden', {cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{
+  if(d && Array.isArray(d.hidden)){ try{ localStorage.setItem(HID_KEY, JSON.stringify(d.hidden)); }catch(e){} useHidden(d.hidden); } }).catch(()=>{});
+const hiddenItem = x => !!(HIDDEN.size && x && x.id!=null && HIDDEN.has(CUR_GAME+'|'+x.id));
+const repDay = () => { const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); };
+const repLog = () => { let r=null; try{ r=JSON.parse(localStorage.getItem(REP_KEY)); }catch(e){} return r && r.day===repDay() ? r : {day:repDay(), n:0, sent:[]}; };
+const repSave = r => { try{ localStorage.setItem(REP_KEY, JSON.stringify(r)); }catch(e){} };
+const device = () => { let d=''; try{ d=localStorage.getItem(DEV_KEY)||''; if(!/^[A-Za-z0-9_-]{8,40}$/.test(d)){ d='d'+Math.random().toString(36).slice(2,12)+Date.now().toString(36); localStorage.setItem(DEV_KEY, d); } }catch(e){} return d; };
+const teacherLogin = () => { try{ const a=JSON.parse(localStorage.getItem('aea:account:teacher')); return a && a.token && a.until>Date.now() ? a.token : null; }catch(e){ return null; } };
+const studentLogin = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(); return a && a.token || null; }catch(e){ return null; } };
+const gameNameOf = key => { const g=[...GAMES, ...ZH_GAMES, ...ARCADE].find(x=>x.key===key); return g ? g.name : (CFG.name||key); };
+// The question as the student saw it: the card's text without the feedback, Next and the report panel
+function cardText(card){
+  const skip='.fb,.next-row,.report,.opts,.tf-btns,kbd';
+  const prompt=[...card.children].filter(el=>!el.matches(skip)).map(el=>el.innerText.trim()).filter(Boolean).join('\n');
+  const opts=[...card.querySelectorAll('.opt')].map(b=>(b.querySelector('span')||b).innerText.trim()).filter(Boolean);
+  return {shown: prompt+(opts.length ? '\nOptions: '+opts.join(' | ') : ''),
+    chosen: [...card.querySelectorAll('.no:not(.feedback)')].map(el=>(el.querySelector('span')||el).innerText.trim()).filter(Boolean).join(' | '),
+    feedback: ((card.querySelector('.fb')||{}).innerText||'').trim()};
+}
+function reportButton(card, row, miss){
+  if(!TOPIC || !miss || !miss.item || miss.item.id==null) return;
+  const key=miss.game+'|'+miss.item.id, teacher=!!teacherLogin();
+  const b=document.createElement('button'); b.type='button'; b.className='report-btn';
+  const done=()=>{ b.innerHTML=T('Reported ✓','已报告 ✓'); b.disabled=true; };
+  b.innerHTML=T('⚑ Report this question','⚑ 报告这道题'); row.prepend(b);
+  if(repLog().sent.includes(key)) return done();
+  b.onclick=()=>{
+    if(card.querySelector('.report')) return;
+    const log=repLog(), seen=cardText(card), panel=document.createElement('div');
+    panel.className='report'; panel.setAttribute('role','group'); panel.setAttribute('aria-label', TX('Report this question','报告这道题'));
+    if(!teacher && log.n>=REPORT_MAX){
+      panel.innerHTML=`<p class="report-msg">${T(`You've sent ${REPORT_MAX} reports today. Thank you for checking! You can send more tomorrow.`, `你今天已经报告了${REPORT_MAX}次，谢谢你的检查！明天可以再报告。`)}</p>`;
+      card.appendChild(panel); b.disabled=true; return;
+    }
+    const R=[['answer', T('My answer should be right','我的答案应该是对的')], ['unclear', T("The question doesn't make sense",'这道题说不通')], ['other', T('Something else','其他问题')]];
+    panel.innerHTML=`<p class="report-k">${T("What's wrong with this question?",'这道题有什么问题？')}</p>
+      <div class="report-opts">${R.map(([v,l])=>`<button type="button" class="report-opt" data-v="${v}" aria-pressed="false">${l}</button>`).join('')}</div>
+      <input type="text" class="report-note" maxlength="300" placeholder="${esc(TX('Anything to add? (optional)','还有什么要说的吗？（可选）'))}">
+      <div class="report-row"><button type="button" class="btn report-send" disabled>${T('Send report','发送')}</button><button type="button" class="btn alt report-cancel">${T('Cancel','取消')}</button></div>
+      <p class="report-msg" role="status"></p>`;
+    card.appendChild(panel);
+    let reason='';
+    const send=panel.querySelector('.report-send'), msg=panel.querySelector('.report-msg');
+    panel.querySelectorAll('.report-opt').forEach(o=>o.onclick=()=>{ reason=o.dataset.v;
+      panel.querySelectorAll('.report-opt').forEach(x=>x.setAttribute('aria-pressed', x===o?'true':'false')); send.disabled=false; });
+    panel.querySelector('.report-cancel').onclick=()=>{ panel.remove(); b.focus({preventScroll:true}); };
+    send.onclick=()=>{
+      send.disabled=true; msg.textContent=TX('Sending…','发送中…');
+      const token=teacherLogin()||studentLogin(), item=miss.item, lv=item.level!=null && item.level!=='' ? levelName(item.level) : bandName(chosenBand());
+      fetch(apiBase()+'/api/report', {method:'POST', headers:Object.assign({'Content-Type':'application/json'}, token?{Authorization:'Bearer '+token}:{}),
+        body:JSON.stringify({topic:TOPIC, game:miss.game, item:String(item.id), reason, comment:panel.querySelector('.report-note').value,
+          shown:seen.shown, chosen:seen.chosen, feedback:seen.feedback, side:SIDE, page:PAGE, pageName:CFG.name||'', gameName:gameNameOf(miss.game), level:lv||'', device:device()})})
+        .then(r=>r.json().catch(()=>({})).then(d=>{ if(!r.ok){ const err=new Error(d.error||''); err.server=true; err.full=r.status===429; throw err; }
+          const l=repLog(); if(!teacher && !d.already) l.n++; l.sent.push(key); repSave(l); done();
+          panel.innerHTML=`<p class="report-msg ok">${teacher ? T("Reported. It's on your Reports page.",'已报告。') : T('Thanks! Your teacher will check this question.','谢谢！老师会检查这道题。')}</p>`; }))
+        .catch(e=>{ if(e.full){ const l=repLog(); l.n=Math.max(l.n, REPORT_MAX); repSave(l); } else send.disabled=false;
+          msg.textContent=e.full ? TX(`You've sent ${REPORT_MAX} reports today. Thank you for checking! You can send more tomorrow.`, `你今天已经报告了${REPORT_MAX}次，谢谢你的检查！明天可以再报告。`) : (e.server && e.message) || TX("Couldn't send the report. Check your internet connection and try again.",'无法发送，请检查网络后再试。'); });
+    };
+  };
+}
+
 // Endless deck: shuffled, refilled when empty; missed items come back a few cards later.
+// Questions the teacher removed after a report (hiddenItem, 31 Oct) are skipped; if every item is removed, all play.
 function Deck(items){   // items: a list, or a function giving the list (read again on refill, and every 4 cards for newcomers)
   let queue=[], last=null, calls=0; const retried=new Set(), dealt=new Set(), live=typeof items==='function', src=live ? items : ()=>items;
-  const newcomers=()=>{ const inQ=new Set(queue); src().filter(x=>!inQ.has(x) && !dealt.has(x) && x!==last).forEach(x=>queue.splice(Math.min(queue.length, 1+Math.floor(Math.random()*4)), 0, x)); };
-  const refill=()=>{ dealt.clear(); queue=rankForLevel(src()); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
+  const newcomers=()=>{ const inQ=new Set(queue); src().filter(x=>!inQ.has(x) && !dealt.has(x) && x!==last && !hiddenItem(x)).forEach(x=>queue.splice(Math.min(queue.length, 1+Math.floor(Math.random()*4)), 0, x)); };
+  const refill=()=>{ dealt.clear(); const all=src(), shown=all.filter(x=>!hiddenItem(x)); queue=rankForLevel(shown.length ? shown : all); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
   return {
-    next(){ if(!queue.length) refill(); else if(live && ++calls%4===0) newcomers(); last=queue.shift(); dealt.add(last); return last; },
+    next(){ if(!queue.length) refill(); else if(live && ++calls%4===0) newcomers();
+      while(queue.length>1 && hiddenItem(queue[0])) queue.shift();   // removed while this game was open
+      last=queue.shift(); dealt.add(last); return last; },
     // A missed item comes back once, a few cards later. Missed again, it waits for the next round,
     // so a student who is struggling still meets new items instead of the same few on a loop.
     retry(item){ if(retried.has(item)){ retried.delete(item); return; } retried.add(item);
@@ -384,9 +467,9 @@ function Deck(items){   // items: a list, or a function giving the list (read ag
   };
 }
 function Stats(game){
-  const s={answered:0,correct:0,streak:0,best:store.get('streak:'+game,0)};
+  const s={answered:0,correct:0,streak:0,best:store.get('streak:'+game,0)}; CUR_GAME=game;
   s.hit=(item)=>{ s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); };
-  s.miss=(item)=>{ s.answered++; s.streak=0; s.draw(); P.record(game,item,false); };
+  s.miss=(item)=>{ s.answered++; s.streak=0; s.draw(); P.record(game,item,false); lastMiss={game, item}; };
   s.draw=()=>{ const el=document.getElementById('stats'); if(!el) return;
     el.innerHTML=`<span>${T('Correct','答对')} <b>${s.correct}</b>/${s.answered}</span><span class="streak">${T('Streak','连对')} <b>${s.streak}</b></span><span>${T('Best','最佳')} <b>${s.best}</b></span>`; };
   return s;
@@ -547,7 +630,7 @@ function shell(game, note){
 function showCard(html){
   const feed=document.getElementById('feed');
   const old=feed.querySelector('.card'); if(old) old.remove();
-  const card=document.createElement('div'); card.className='card enter'; card.innerHTML=html;
+  const card=document.createElement('div'); card.className='card enter'; card.innerHTML=html; lastMiss=null;
   feed.appendChild(card);
   const top=feed.getBoundingClientRect().top; if(top<0) window.scrollBy(0, top-16);
   return card;
@@ -565,6 +648,7 @@ function manualNext(card, next, label){
   const row=document.createElement('div'); row.className='next-row';
   row.innerHTML=`<button class="btn">${label||T('Next','下一个')+' →'}</button>`; card.appendChild(row);
   const b=row.querySelector('button'); b.onclick=next; b.focus({preventScroll:true});
+  const miss=lastMiss; lastMiss=null; reportButton(card, row, miss);   // only after a wrong answer
   keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); next(); } };
 }
 const wordNote = w => w ? `<span class="wd"><b>${esc(w.w)}</b>${w.pos?` (${esc(w.pos)})`:''}: ${esc(w.def)}</span>` : '';

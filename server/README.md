@@ -95,6 +95,24 @@ sudo bash /opt/aea/server/update.sh
   starts, so `update.sh` is all that's needed. `students.class_id` stays as the class the account was made in (moved to
   another of their classes if they are removed from it).
 
+## Reports (31 Oct 2026)
+
+- After a wrong answer, the games show a small **Report** button next to Next. The student chooses **My answer should be
+  right**, **The question doesn't make sense** or **Something else**, and can add a comment. No login needed. Not in Match
+  the meaning, Speed round, Survival or the arcade games (no wrong-answer card there).
+- Limits: 5 reports a day for each device and for each logged-in student, 300 a day from one network address (a whole
+  school shares one). One report per question per device or student until the teacher decides. No limit for a teacher:
+  a report sent from a browser that is logged in on the teacher page is marked "You".
+- Teacher page → **Reports** (`#/reports`): questions grouped, most-reported first, with what the student saw, what they
+  chose, the reasons, comments and who sent them. **Keep**: it stays in the games (a new report brings it back to the
+  list, marked "kept before"). **Remove**: every game stops showing it straight away (`GET /api/hidden`, read by
+  `en/engine/app.js` when a page opens; a page that can't reach the server uses the last list it saw). **Put back**
+  undoes a removal. **Download as spreadsheet**: everything as a CSV file that opens in Excel.
+- The content files are not changed: the Removed list is the list of rows to fix or delete in `content/`. A removed
+  question that is part of a passage or text (ids like `rep-read-004#2`) hides the whole passage.
+- Tables: `reports` (one row per report; `ip` is a hash, only used for the limit) and `report_items` (the teacher's
+  decision on each question). Added automatically when the updated server starts, so `update.sh` is all that's needed.
+
 ## Data and backups
 
 - Database: `/var/lib/aea/aea.db`. A copy is made every day in `/var/lib/aea/backups/` (the last 14 are kept).

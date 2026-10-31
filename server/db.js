@@ -56,6 +56,20 @@ function open(file = DB_PATH) {
     CREATE INDEX IF NOT EXISTS class_members_student ON class_members(student_id);
     INSERT OR IGNORE INTO class_members (class_id, student_id, added) SELECT class_id, id, created FROM students;
   `);
+  // Reports (31 Oct 2026): a student or teacher presses Report after a wrong answer. One row per report; report_items
+  // holds the teacher's decision on a question (kept, or removed = hidden from every game until put back).
+  // ip is a SHA-256 of the network address, only used for the daily limit.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS reports (
+      id INTEGER PRIMARY KEY, topic TEXT NOT NULL, game TEXT NOT NULL, item TEXT NOT NULL, reason TEXT NOT NULL, comment TEXT,
+      shown TEXT, chosen TEXT, feedback TEXT, side TEXT, page TEXT, page_name TEXT, game_name TEXT, level TEXT,
+      role TEXT, user_id INTEGER, device TEXT, ip TEXT, day TEXT NOT NULL, created INTEGER NOT NULL);
+    CREATE INDEX IF NOT EXISTS reports_item ON reports(topic, game, item);
+    CREATE INDEX IF NOT EXISTS reports_day ON reports(day);
+    CREATE TABLE IF NOT EXISTS report_items (
+      topic TEXT NOT NULL, game TEXT NOT NULL, item TEXT NOT NULL, status TEXT NOT NULL, decided INTEGER NOT NULL, teacher_id INTEGER,
+      PRIMARY KEY (topic, game, item));
+  `);
   return db;
 }
 

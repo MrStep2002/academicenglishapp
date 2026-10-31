@@ -88,6 +88,16 @@
     .lc { border: 1px dashed #888; background: #fff; color: #000; padding: 4mm 5mm; }
     .lc .site, .lc .k { color: #444; }
   }
+  /* Reports (31 Oct 2026) */
+  .btn.danger { background: #c0392b; border-color: #c0392b; color: #fff; }
+  .reps { display: flex; flex-direction: column; gap: 12px; }
+  .rep { gap: 8px; padding: 16px 18px; }
+  .rep p { margin: 0; }
+  .rep-name { font-family: var(--display); font-size: 1.1rem; }
+  .rep-shown { margin: 0; font: inherit; white-space: pre-wrap; word-break: break-word; background: var(--bg); border-radius: 10px; padding: 10px 12px; }
+  .rep-comments { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+  .rep-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+  .rep-count { margin-left: 4px; }
 </style>
 </head>
 <body>
@@ -105,7 +115,8 @@
    Talks to the login server (server/server.js). The teacher's login is kept in this browser as "aea:account:teacher":
    {token, name, keep, until}. Since 26 Oct the login doesn't stay for 30 days unless the teacher ticks "Keep me logged in"
    (for their own computer): otherwise it ends after 2 hours without using this page, so a student on a classroom computer
-   can't open the teacher page later. Logins saved before then (no "until") end the next time the page is opened. */
+   can't open the teacher page later. Logins saved before then (no "until") end the next time the page is opened.
+   Reports (31 Oct 2026): #/reports lists the questions reported in the games; Keep or Remove each one. */
 (function(){
 'use strict';
 var API = (function(){ var a = ''; try { a = localStorage.getItem('aea:api') || ''; } catch (e) {} return (a || 'https://api.academicenglishapp.com').replace(/\/+$/, ''); })();
@@ -182,9 +193,10 @@ function showClasses(){
   call('/api/teacher/classes').then(function(r){
     view.innerHTML =
       '<div class="spread" style="margin-bottom:14px"><p class="note">' + (r.classes.length ? 'Choose a class to see its students.' : 'No classes yet. Make your first one.') + '</p>' +
-      '<a class="btn" href="#/new">+ New class</a></div>' +
+      '<span class="rep-btns"><a class="btn alt" href="#/reports">Reports<span id="repn" class="rep-count"></span></a><a class="btn" href="#/new">+ New class</a></span></div>' +
       '<div class="classes">' + r.classes.map(function(c){
         return '<a class="class-card" href="#/class/' + c.id + '"><b>' + esc(c.name) + '</b><span>' + c.students + ' student' + (c.students === 1 ? '' : 's') + '</span></a>'; }).join('') + '</div>';
+    call('/api/teacher/reports').then(function(x){ var n = document.getElementById('repn'); if (n && x.open.length) n.textContent = ' (' + x.open.length + ' to check)'; }).catch(function(){});
   }).catch(function(x){ view.innerHTML = '<p class="err">' + esc(x.message) + '</p>'; });
 }
 
@@ -555,6 +567,87 @@ function showGame(gid){
   load();
 }
 
+// ---------- reports (31 Oct 2026) ----------
+// Questions students (or you) reported after a wrong answer, grouped by question, most-reported first.
+// Keep: it stays in the games (a new report brings it back here). Remove: every game stops showing it straight away,
+// until Put back. Content files are not changed: the Removed list is what to fix or delete in content/.
+var REASON_NAMES = {answer: 'My answer should be right', unclear: "Doesn't make sense", other: 'Something else'};
+var repData = null;
+function repTab(){ var m = /^#\/reports\/(removed|kept)$/.exec(location.hash); return m ? m[1] : 'open'; }
+function repCard(g, tab){
+  var reasons = Object.keys(REASON_NAMES).filter(function(k){ return g.reasons[k]; })
+    .map(function(k){ return esc(REASON_NAMES[k]) + (g.reasons[k] > 1 ? ' ×' + g.reasons[k] : ''); }).join(' · ');
+  var comments = g.reports.filter(function(r){ return r.comment; });
+  var who = []; g.reports.forEach(function(r){ if (who.indexOf(r.who) < 0) who.push(r.who); });
+  var key = esc(JSON.stringify({topic: g.topic, game: g.game, item: g.item}));
+  var btns = tab === 'removed'
+    ? '<button class="btn small alt" data-do="kept" data-q="' + key + '">Put back</button>'
+    : (tab === 'open' ? '<button class="btn small" data-do="kept" data-q="' + key + '">Keep</button>' : '') +
+      '<button class="btn small ' + (tab === 'open' ? 'danger' : 'alt') + '" data-do="removed" data-q="' + key + '">Remove</button>';
+  return '<div class="card rep">' +
+    '<div class="spread"><b class="rep-name">' + esc(g.pageName || g.topic) + ' · ' + esc(g.gameName || g.game) + '</b>' +
+      '<span><span class="st' + (tab === 'open' ? ' below' : '') + '">' + g.count + ' report' + (g.count === 1 ? '' : 's') + '</span>' +
+      (g.keptBefore ? ' <span class="st">kept before</span>' : '') + '</span></div>' +
+    '<pre class="rep-shown">' + esc(g.shown || '(no text)') + '</pre>' +
+    (g.chosen.length ? '<p><span class="lab">Chosen:</span> ' + esc(g.chosen.join(' · ')) + '</p>' : '') +
+    (g.feedback ? '<p class="note"><span class="lab">The game said:</span> ' + esc(g.feedback) + '</p>' : '') +
+    '<p><span class="lab">Why:</span> ' + reasons + '</p>' +
+    (comments.length ? '<ul class="rep-comments">' + comments.map(function(r){ return '<li>“' + esc(r.comment) + '” <span class="note">' + esc(r.who) + ', ' + when(r.created) + '</span></li>'; }).join('') + '</ul>' : '') +
+    '<p class="note">From ' + esc(who.join(', ')) + ' · last ' + when(g.last) + (g.level ? ' · ' + esc(g.level) : '') + ' · ' + esc(g.topic) + ' / ' + esc(g.item) +
+      (tab !== 'open' && g.decided ? ' · ' + (tab === 'removed' ? 'removed ' : 'kept ') + when(g.decided) : '') + '</p>' +
+    '<div class="spread"><span class="rep-btns">' + btns + '</span>' +
+      (g.page ? '<a class="note" href="../' + esc(g.page) + '#play-' + esc(g.game) + '" target="_blank" rel="noopener">Open this game ↗</a>' : '') + '</div>' +
+    '</div>';
+}
+function repCsv(){
+  var q = function(v){ v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  var d = function(t){ return t ? new Date(t).toLocaleString('en-GB') : ''; };
+  var head = ['Status', 'Page', 'Game', 'Content folder', 'Question id', 'Reports', 'My answer should be right', "Doesn't make sense", 'Something else',
+    'Comments', 'Question as shown', 'Chosen', 'The game said', 'Level', 'From', 'First report', 'Last report', 'Decided'];
+  var rows = [];
+  [['open', 'Open'], ['removed', 'Removed'], ['kept', 'Kept']].forEach(function(t){
+    (repData[t[0]] || []).forEach(function(g){
+      var who = []; g.reports.forEach(function(r){ if (who.indexOf(r.who) < 0) who.push(r.who); });
+      rows.push([t[1], g.pageName, g.gameName, g.topic, g.item, g.count, g.reasons.answer || 0, g.reasons.unclear || 0, g.reasons.other || 0,
+        g.reports.filter(function(r){ return r.comment; }).map(function(r){ return r.comment + ' (' + r.who + ')'; }).join('\n'),
+        g.shown, g.chosen.join(' | '), g.feedback, g.level, who.join(', '), d(g.first), d(g.last), d(g.decided)]);
+    });
+  });
+  var text = '﻿' + [head].concat(rows).map(function(r){ return r.map(q).join(','); }).join('\r\n');
+  var a = document.createElement('a'), url = URL.createObjectURL(new Blob([text], {type: 'text/csv;charset=utf-8'}));
+  var now = new Date();
+  a.href = url; a.download = 'reports-' + now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + '.csv';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function showReports(){
+  setTitle('Reports'); header();
+  var tab = repTab();
+  call('/api/teacher/reports').then(function(r){
+    repData = r;
+    var list = r[tab] || [], tabs = [['open', 'To check', r.open.length], ['removed', 'Removed', r.removed.length], ['kept', 'Kept', r.kept.length]];
+    var intro = {
+      open: 'Questions students reported after a wrong answer, most reports first. <b>Keep</b> leaves it in the games. <b>Remove</b> takes it out of every game straight away.',
+      removed: 'Taken out of the games. The rows are still in the content files: this is the list to fix or delete. <b>Put back</b> returns a question to the games.',
+      kept: 'Questions you decided to keep (the last 200). A new report brings a question back to "To check".'}[tab];
+    view.innerHTML =
+      '<div class="spread" style="margin-bottom:14px"><a class="backlink" href="#/">← All classes</a>' +
+        '<button class="btn small alt" type="button" id="csv"' + (r.open.length + r.removed.length + r.kept.length ? '' : ' disabled') + '>Download as spreadsheet</button></div>' +
+      '<nav class="tabs">' + tabs.map(function(t){ return '<a href="#/reports' + (t[0] === 'open' ? '' : '/' + t[0]) + '"' + (t[0] === tab ? ' aria-current="page"' : '') + '>' + t[1] + ' (' + t[2] + ')</a>'; }).join('') + '</nav>' +
+      '<p class="note" style="margin-bottom:14px">' + intro + '</p>' +
+      '<p class="err" id="err" hidden></p>' +
+      (list.length ? '<div class="reps">' + list.map(function(g){ return repCard(g, tab); }).join('') + '</div>'
+        : '<p class="note">' + (tab === 'open' ? 'Nothing to check. 🎉' : 'None yet.') + '</p>');
+    document.getElementById('csv').onclick = repCsv;
+    Array.prototype.forEach.call(view.querySelectorAll('[data-do]'), function(b){
+      b.onclick = function(){
+        var q = JSON.parse(b.getAttribute('data-q')), status = b.getAttribute('data-do');
+        b.disabled = true;
+        call('/api/teacher/reports/decide', {topic: q.topic, game: q.game, item: q.item, status: status}).then(showReports).catch(fail());
+      };
+    });
+  }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
+}
+
 function route(){
   stopLive();
   if (!auth()) return showLogin();
@@ -565,6 +658,7 @@ function route(){
   if ((m = /^#\/class\/(\d+)\/games$/.exec(h))) return showGames(m[1]);
   if ((m = /^#\/class\/(\d+)\/existing$/.exec(h))) return showExisting(m[1]);
   if ((m = /^#\/game\/(\d+)$/.exec(h))) return showGame(m[1]);
+  if (/^#\/reports(\/(removed|kept))?$/.test(h)) return showReports();
   showClasses();
 }
 addEventListener('hashchange', route);

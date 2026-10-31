@@ -1,7 +1,8 @@
 // Academic English App: the login server (api.academicenglishapp.com).
 // Students log in with the fun name and password their teacher gave them; their saved progress (the same data the
 // games keep in the browser) is copied to the server, so it follows them to any device. Teachers make classes and
-// accounts and see each student's points, level and last activity.
+// accounts and see each student's points, level and last activity. Reports (31 Oct 2026): anyone can report a question
+// after a wrong answer; the teacher keeps it or removes it from the games (see "reports" below).
 // No packages to install: plain Node.js 22.13+ (http, crypto and the built-in SQLite). Caddy sits in front and adds HTTPS.
 // Run: node server/server.js   (settings come from the environment: PORT, DB_PATH, ALLOWED_ORIGINS, SCHOOL_TZ, BACKUP_DIR)
 'use strict';
@@ -473,6 +474,108 @@ route('POST', '/api/teacher/games/:id/delete', (req, body, p) => {
   db.exec('BEGIN');
   try { db.prepare('DELETE FROM attempts WHERE game_id = ?').run(g.id); db.prepare('DELETE FROM games WHERE id = ?').run(g.id); db.exec('COMMIT'); }
   catch (e) { db.exec('ROLLBACK'); throw e; }
+  return {ok: true};
+});
+
+// ---------- reports (31 Oct 2026) ----------
+// After a wrong answer, a student (or the teacher, playing the games) can press Report: "My answer should be right",
+// "The question doesn't make sense" or "Something else", with an optional comment. The teacher page (#/reports) shows
+// them grouped by question. Keep: the question stays in the games (a later report brings it back to the list).
+// Remove: every game stops showing that question straight away (GET /api/hidden, read by en/engine/app.js), until the
+// teacher presses Put back. The CSV row itself is not changed: the removed list is the list of rows to fix or delete.
+// Limits: 5 reports a day for each device and each logged-in student, 300 a day from one network address (a whole
+// school shares one); none for teachers. One report per question per device or student until the teacher decides.
+const REASONS = ['answer', 'unclear', 'other'];
+const REPORTS_A_DAY = 5, REPORTS_A_DAY_IP = 300;
+const TOPIC_RE = /^[a-z0-9][a-z0-9\-\/]{0,59}$/, GAME_RE = /^[a-z0-9]{1,20}$/, ITEM_RE = /^[\w:.#\-]{1,100}$/, DEVICE_RE = /^[A-Za-z0-9_-]{8,40}$/;
+const clip = (v, n) => String(v == null ? '' : v).replace(/\r/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim().slice(0, n);
+// The login on the request, if there is one (reporting works without one)
+function reporter(req) {
+  const m = /^Bearer\s+(\S+)$/.exec(req.headers.authorization || '');
+  if (!m) return null;
+  const s = db.prepare('SELECT * FROM sessions WHERE token = ?').get(tokenHash(m[1]));
+  return s && s.expires >= now() ? {role: s.role, id: s.user_id} : null;
+}
+const decisionOf = (topic, game, item) => db.prepare('SELECT * FROM report_items WHERE topic = ? AND game = ? AND item = ?').get(topic, game, item);
+
+route('POST', '/api/report', (req, body) => {
+  const topic = String(body.topic || ''), game = String(body.game || ''), item = String(body.item || ''), reason = String(body.reason || '');
+  if (!TOPIC_RE.test(topic) || !GAME_RE.test(game) || !ITEM_RE.test(item)) throw new Oops(400, "This question can't be reported. 这道题无法报告。");
+  if (!REASONS.includes(reason)) throw new Oops(400, 'Choose what is wrong. 请选择问题。');
+  const u = reporter(req), t = now(), day = dayKey(t), ipKey = tokenHash('ip:' + ipOf(req));
+  const device = DEVICE_RE.test(String(body.device || '')) ? String(body.device) : '';
+  const student = u && u.role === 'student' ? u.id : null, teacher = u && u.role === 'teacher' ? u.id : null;
+  if (!teacher) {
+    const d = decisionOf(topic, game, item);
+    const since = d ? d.decided : 0;
+    const same = db.prepare('SELECT 1 FROM reports WHERE topic = ? AND game = ? AND item = ? AND created > ? AND ((user_id = ? AND role = ?) OR (device != \'\' AND device = ?))')
+      .get(topic, game, item, since, student || -1, 'student', device || '-');
+    if (same) return {ok: true, already: true};
+    const count = (where, ...args) => db.prepare(`SELECT COUNT(*) AS n FROM reports WHERE day = ? AND ${where}`).get(day, ...args).n;
+    const full = 'You can send 5 reports a day. Thank you for checking! 每天最多可以报告5次，谢谢你的检查！';
+    if (student && count("role = 'student' AND user_id = ?", student) >= REPORTS_A_DAY) throw new Oops(429, full);
+    if (device && count('device = ?', device) >= REPORTS_A_DAY) throw new Oops(429, full);
+    if (count('ip = ?', ipKey) >= REPORTS_A_DAY_IP) throw new Oops(429, 'Too many reports from this school today. Please try again tomorrow. 今天报告太多了，请明天再试。');
+  }
+  db.prepare(`INSERT INTO reports (topic, game, item, reason, comment, shown, chosen, feedback, side, page, page_name, game_name, level,
+      role, user_id, device, ip, day, created) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)
+    .run(topic, game, item, reason, clip(body.comment, 300), clip(body.shown, 2000), clip(body.chosen, 300), clip(body.feedback, 1500),
+      body.side === 'zh' ? 'zh' : 'en', clip(body.page, 120), clip(body.pageName, 80), clip(body.gameName, 60), clip(body.level, 20),
+      u ? u.role : '', u ? u.id : null, device, ipKey, day, t);
+  return {ok: true};
+});
+
+// The questions the teacher has removed: every game page reads this when it opens (no login needed)
+route('GET', '/api/hidden', () => ({hidden: db.prepare("SELECT topic, game, item FROM report_items WHERE status = 'removed' ORDER BY topic, game, item").all()}));
+
+// The teacher's list: open (reported, not decided since), removed, and kept (the last 200)
+route('GET', '/api/teacher/reports', req => {
+  const u = who(req, 'teacher');
+  const names = {student: {}, teacher: {}};
+  const nameOf = r => {
+    if (!r.role) return 'Guest';
+    if (r.role === 'teacher' && r.user_id === u.id) return 'You';
+    const box = names[r.role] || {};
+    if (!(r.user_id in box)) { const row = db.prepare(`SELECT name FROM ${r.role === 'teacher' ? 'teachers' : 'students'} WHERE id = ?`).get(r.user_id); box[r.user_id] = row ? row.name : '?'; }
+    return box[r.user_id];
+  };
+  const groups = new Map();
+  for (const r of db.prepare('SELECT * FROM reports ORDER BY created').all()) {
+    const k = r.topic + '|' + r.game + '|' + r.item;
+    let g = groups.get(k);
+    if (!g) groups.set(k, g = {topic: r.topic, game: r.game, item: r.item, all: []});
+    g.all.push(r);
+  }
+  const open = [], kept = [], removed = [];
+  for (const g of groups.values()) {
+    const d = decisionOf(g.topic, g.game, g.item), since = d ? d.decided : 0;
+    const fresh = g.all.filter(r => r.created > since), list = d && d.status === 'removed' ? g.all : (fresh.length ? fresh : g.all), last = list[list.length - 1];
+    const reasons = {answer: 0, unclear: 0, other: 0};
+    list.forEach(r => { reasons[r.reason] = (reasons[r.reason] || 0) + 1; });
+    const out = {topic: g.topic, game: g.game, item: g.item, pageName: last.page_name, gameName: last.game_name, page: last.page, side: last.side,
+      level: last.level, shown: last.shown, feedback: last.feedback, chosen: [...new Set(list.map(r => r.chosen).filter(Boolean))],
+      reasons, count: list.length, total: g.all.length, first: list[0].created, last: last.created,
+      reports: list.map(r => ({reason: r.reason, comment: r.comment, who: nameOf(r), side: r.side, chosen: r.chosen, created: r.created})),
+      status: d ? d.status : null, decided: d ? d.decided : null, keptBefore: !!(d && d.status === 'kept' && fresh.length)};
+    if (d && d.status === 'removed') removed.push(out);
+    else if (!d || fresh.length) open.push(out);
+    else kept.push(out);
+  }
+  open.sort((a, b) => b.count - a.count || b.last - a.last);
+  removed.sort((a, b) => b.decided - a.decided);
+  kept.sort((a, b) => b.decided - a.decided);
+  return {open, removed, kept: kept.slice(0, 200)};
+});
+
+// Keep, Remove, or Put back (= keep) one question
+route('POST', '/api/teacher/reports/decide', (req, body) => {
+  const u = who(req, 'teacher'), topic = String(body.topic || ''), game = String(body.game || ''), item = String(body.item || '');
+  if (!TOPIC_RE.test(topic) || !GAME_RE.test(game) || !ITEM_RE.test(item)) throw new Oops(400, 'Bad question.');
+  if (!['kept', 'removed'].includes(body.status)) throw new Oops(400, 'Choose Keep or Remove.');
+  if (!db.prepare('SELECT 1 FROM reports WHERE topic = ? AND game = ? AND item = ?').get(topic, game, item)) throw new Oops(404, 'That question has no reports.');
+  db.prepare(`INSERT INTO report_items (topic, game, item, status, decided, teacher_id) VALUES (?,?,?,?,?,?)
+    ON CONFLICT(topic, game, item) DO UPDATE SET status = excluded.status, decided = excluded.decided, teacher_id = excluded.teacher_id`)
+    .run(topic, game, item, body.status, now(), u.id);
   return {ok: true};
 });
 
