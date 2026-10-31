@@ -1,6 +1,8 @@
 // DAILY CIRCUIT: five stations, each a game from one of the student's subjects, at their level.
-// Short game 45 s → longer game 45 s → arcade game 60 s → longer game 45 s → short game 45 s (4 minutes): the English side
-// since 25 Oct, the Chinese side since 26 Oct. Each English game is tagged short or long in GAMES (en/engine/app.js), the
+// Since 1 Nov 2026 (teacher: "a speed round… a high energy experience"), five minutes: quick-fire 60 s → arcade 60 s →
+// quick-fire 60 s → arcade 60 s → quick-fire 60 s, on both sides. Quick-fire: the game changes every three questions and
+// a right answer moves straight on (app.js, QF_…). The two arcade stations are two different arcade games (slot 0 and 1).
+// (25 Oct to 1 Nov: short 45 s → longer 45 s → arcade 60 s → longer 45 s → short 45 s, four minutes.) Each English game is tagged short or long in GAMES (en/engine/app.js), the
 // Chinese ones are listed in ZH_CIRCUIT there; the arcade station takes turns between the arcade games in CIRCUIT_ARCADE.
 // Academic English Essentials is always in the circuit (31 Oct 2026, teacher): ALWAYS below, no switch for it.
 // This file does: the "I study this" switches and the Circuit card on en/index.html and zh/index.html,
@@ -13,7 +15,7 @@ const SRC = (document.currentScript && document.currentScript.src) || '';
 const ROOT = SRC ? SRC.replace(/en\/engine\/circuit\.js([?#].*)?$/, '') : location.origin + '/';
 const KEY = 'aea:circuit:v1', STUDY = 'aea:studying:v1';
 const STATIONS = 5, SECS = 60;
-const PLAN = [['short',45], ['long',45], ['arcade',60], ['long',45], ['short',45]];   // both sides: [kind, seconds]
+const PLAN = [['short',60], ['arcade',60], ['short',60], ['arcade',60], ['short',60]];   // both sides: [kind, seconds]; short = quick-fire
 const STALE = 30*60*1000;               // a circuit left alone for 30 minutes is dropped
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read = (k,d) => { try{ const v=JSON.parse(localStorage.getItem(k)); return v==null ? d : v; }catch(e){ return d; } };
@@ -38,14 +40,16 @@ const setStudying = (side, path, name, on) => { const s=read(STUDY, {}); s[side]
 // kind: 'short', 'long' or 'arcade'; arcade: which arcade game's turn it is
 function active(side){ const r=load().run;
   if(!r || r.done || (side && r.side!==side)) return null;
-  if(!r.plan || !r.plan[0] || !r.plan[0].kind) return null;   // a circuit saved in an old format (English before 25 Oct, Chinese before 26 Oct): start a new one
+  if(!r.plan || !r.plan[0] || !r.plan[0].kind) return null;
+  if(r.plan.some(x=>x.kind==='long')) return null;   // planned before 1 Nov (with longer games): start a new one   // a circuit saved in an old format (English before 25 Oct, Chinese before 26 Oct): start a new one
   if(Date.now()-(r.touched||r.started) > STALE) return null;
   return r; }
 // One topic per station, mixed, never the same topic twice in a row when there is a choice
 function makePlan(topics, side){ const out=[]; let last=null;
   while(out.length<STATIONS){ const round=shuffle(topics); if(round.length>1 && round[0]===last) round.push(round.shift());
     for(const t of round) if(out.length<STATIONS){ out.push(t); last=t; } }
-  return out.map((path,i)=>({path, kind:PLAN[i][0], secs:PLAN[i][1]})); }
+  let slot=0;   // the arcade stations are numbered, so each plays a different arcade game
+  return out.map((path,i)=>Object.assign({path, kind:PLAN[i][0], secs:PLAN[i][1]}, PLAN[i][0]==='arcade' ? {slot:slot++} : {})); }
 const go = path => { location.href = ROOT + path + '#circuit'; };
 const resultsUrl = side => ROOT + side + '/circuit/index.html#done';
 function start(side){ const topics=Object.keys(studying(side)); if(!topics.length) return false;
@@ -161,9 +165,9 @@ function circuitPage(box){
         <p class="cc-actions"><a class="cc-btn" href="${esc(back)}">${T(zh, 'Choose your subjects', '选择科目')} →</a></p>`;
     } else {
       main = `<p class="cc-k">${t && t.runs ? `✓ ${T(zh, 'Done today. You can play again', '今天已完成，可以再玩')}` : T(zh, 'Today', '今天')}</p>
-        <h2>${T(zh, `${STATIONS} stations · 4 minutes`, `${STATIONS} 站 · 4 分钟`)}</h2>
-        <p>${T(zh, 'A quick game, a longer one, an arcade game, another longer one and a quick one to finish, each from one of your subjects at your level. When the time is up, you move on to the next one.',
-               '先玩一个快速游戏，再玩一个长一点的游戏、一个街机游戏、又一个长一点的游戏，最后用一个快速游戏结束。每个游戏都来自你的科目，难度适合你。时间到了就进入下一站。')}</p>${streakLine}
+        <h2>${T(zh, `${STATIONS} stations · 5 minutes`, `${STATIONS} 站 · 5 分钟`)}</h2>
+        <p>${T(zh, 'Three quick-fire rounds and two arcade games, a minute each, from your subjects at your level. In quick-fire the game changes every three questions, so be quick!',
+               '三轮快速答题和两个街机游戏，每个一分钟，都来自你的科目，难度适合你。快速答题每三题换一个游戏，要快哦！')}</p>${streakLine}
         <p class="cc-actions"><button class="cc-btn big" data-start>${T(zh, 'Start the circuit', '开始挑战')} →</button></p>`;
     }
     box.innerHTML = `<section class="cc-panel">${main}</section>${subjects?`<section class="cc-subjects">${subjects}</section>`:''}`;

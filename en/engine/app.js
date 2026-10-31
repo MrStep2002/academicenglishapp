@@ -451,6 +451,28 @@ function reportButton(card, row, miss){
   };
 }
 
+// ---------- DAILY CIRCUIT QUICK-FIRE (1 Nov 2026, teacher: "It's got to be a speed round… a high energy experience") ----------
+// A quick-fire station (kind 'short') plays one game for three answers, then switches to another (never the same twice
+// in a row, and the ones not played lately first). A right answer moves straight on; a wrong one shows the answer for
+// half a second, then moves on (no Next button). Games: those that ask one thing at a time (QF_GAMES), plus Match the
+// meaning (it switches after three pairs). Only the Daily Circuit: class games and normal play are unchanged.
+const QF_EACH = 3, QF_RIGHT_MS = 150, QF_WRONG_MS = 500;
+const QF_GAMES = {en:['meaning','tf','gap','rw','match'], zh:['zh','zhmean','zhtf','zhtype','zhmatch','zhodd']};
+let qf = null;   // {pool, game, n (answers in this game), recent}
+const qfDue = () => !!qf && qf.n>=QF_EACH;
+function qfPlay(g){
+  qf.game=g.key; qf.n=0; qf.recent=[...qf.recent, g.key].slice(-Math.max(1, qf.pool.length-2));
+  g.run();
+  const el=document.querySelector('#ccBar .cc-game'), c=(window.AEA_CIRCUIT && AEA_CIRCUIT.active(SIDE) || {}).cur;
+  if(el && c) el.innerHTML=`${SIDE==='zh' ? nameT(c.topic) : esc(c.topic)} · ${T('Quick-fire','快速答题')}: ${SIDE==='zh'&&g.zh ? T(esc(g.name), esc(g.zh)) : esc(g.name)}`;
+}
+function qfSwitch(){
+  if(!qf || !inCircuit) return;
+  const others=qf.pool.filter(g=>g.key!==qf.game), fresh=others.filter(g=>!qf.recent.includes(g.key)), from=fresh.length ? fresh : others.length ? others : qf.pool;
+  qfPlay(from[Math.floor(Math.random()*from.length)]);
+}
+const qfNext = (next, ms) => { later(()=>{ if(!qf) return; qfDue() ? qfSwitch() : next(); }, ms); };
+
 // Endless deck: shuffled, refilled when empty; missed items come back a few cards later.
 // Questions the teacher removed after a report (hiddenItem, 31 Oct) are skipped; if every item is removed, all play.
 function Deck(items){   // items: a list, or a function giving the list (read again on refill, and every 4 cards for newcomers)
@@ -469,8 +491,8 @@ function Deck(items){   // items: a list, or a function giving the list (read ag
 }
 function Stats(game){
   const s={answered:0,correct:0,streak:0,best:store.get('streak:'+game,0)}; CUR_GAME=game;
-  s.hit=(item)=>{ s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); };
-  s.miss=(item)=>{ s.answered++; s.streak=0; s.draw(); P.record(game,item,false); lastMiss={game, item}; };
+  s.hit=(item)=>{ if(qf) qf.n++; s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); };
+  s.miss=(item)=>{ if(qf) qf.n++; s.answered++; s.streak=0; s.draw(); P.record(game,item,false); lastMiss={game, item}; };
   s.draw=()=>{ const el=document.getElementById('stats'); if(!el) return;
     el.innerHTML=`<span>${T('Correct','答对')} <b>${s.correct}</b>/${s.answered}</span><span class="streak">${T('Streak','连对')} <b>${s.streak}</b></span><span>${T('Best','最佳')} <b>${s.best}</b></span>`; };
   return s;
@@ -637,6 +659,7 @@ function showCard(html){
   return card;
 }
 function autoNext(card, next, ms){
+  if(qf) return qfNext(next, QF_RIGHT_MS);   // Daily Circuit quick-fire: straight on
   const dur=ms||AUTO_MS, bar=document.createElement('div'); bar.className='auto'; bar.innerHTML='<i></i>';
   bar.style.setProperty('--dur', dur+'ms'); card.appendChild(bar);
   requestAnimationFrame(()=>requestAnimationFrame(()=>bar.classList.add('run')));
@@ -646,6 +669,7 @@ function autoNext(card, next, ms){
   keyHandler = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fire(); } };
 }
 function manualNext(card, next, label){
+  if(qf) return qfNext(next, QF_WRONG_MS);   // Daily Circuit quick-fire: the answer for half a second, then on
   const row=document.createElement('div'); row.className='next-row';
   row.innerHTML=`<button class="btn">${label||T('Next','下一个')+' →'}</button>`; card.appendChild(row);
   const b=row.querySelector('button'); b.onclick=next; b.focus({preventScroll:true});
@@ -781,6 +805,7 @@ function playMatch(mode, withZh){
       [a,b].forEach(x=>{x.classList.add('done'); x.disabled=true;});
       if(wrongOn.has(id)){ wrongOn.delete(id); st.miss(byId[id]); } else st.hit(byId[id]);
       toast('Correct: '+byId[id].w);
+      if(qfDue()) return qfNext(()=>{}, 300);   // Daily Circuit quick-fire: three pairs, then another game
       later(()=>{ spentL.add(+left.dataset.slot); spentR.add(+right_.dataset.slot);
         if(spentL.size>=REFILL_AT) refill(); else paint(); }, 450);
     } else {
@@ -2332,11 +2357,24 @@ function wordList(){
 // none has one: the subject is dropped from the circuit; nothing anywhere: the circuit says so.
 // Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival; on the Chinese side
 // also 中文 → English.
+// Since 1 Nov 2026 the Daily Circuit is quick-fire (kind 'short': QF_GAMES, a new game every three answers, see QF_…) and
+// arcade (DC_ARCADE: Word Snake, Whack-a-word, Word Invaders, Save the mouse; two different ones per circuit). The rules
+// above for short/long stations are still how class games choose their games.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
-const CIRCUIT_ARCADE = ['invaders', 'whack'];   // Word Snake is left out for now (teacher, 25 Oct)
+const CIRCUIT_ARCADE = ['invaders', 'whack'];   // class games' arcade stations (Word Snake left out, teacher, 25 Oct)
+// Daily Circuit arcade stations (1 Nov 2026, teacher): two different ones per circuit, taking turns from circuit to circuit
+const DC_ARCADE = {en:['snake','whack','invaders','mouse'], zh:['snake','whack','invaders','zhmouse']};
 const ZH_CIRCUIT = {short:['zhtf'], long:['zhtype','zhbuild','zhmatch','zhmean']};
 let ccTick = null;
 function circuitGames(kind){
+  if(kind==='quick'){   // Daily Circuit quick-fire: the games that are ready here, in QF_GAMES
+    const keys=QF_GAMES[SIDE==='zh'?'zh':'en'];
+    if(SIDE==='zh') return ZH_GAMES.filter(g=>keys.includes(g.key) && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
+    return GAMES.filter(g=>keys.includes(g.key) && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run})); }
+  if(kind==='dcarcade'){   // Daily Circuit arcade: the four arcade games (Save the mouse among them) that are ready here
+    const keys=DC_ARCADE[SIDE==='zh'?'zh':'en'];
+    if(SIDE==='zh') return zhWords().length>=4 ? [...ARCADE, ...ZH_GAMES].filter(g=>keys.includes(g.key) && (ARCADE.includes(g) || zhReady(g))).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run})) : [];
+    return [...ARCADE, ...GAMES].filter(g=>keys.includes(g.key) && !HIDE.has(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run})); }
   if(SIDE==='zh'){
     if(kind==='arcade') return zhWords().length>=4 ? ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run})) : [];
     const keys=ZH_CIRCUIT[kind]||ZH_CIRCUIT.short;
@@ -2350,10 +2388,10 @@ function circuitStation(){
   const C=window.AEA_CIRCUIT, run=C && C.active(SIDE);
   if(!run){ leaveCircuit(); history.replaceState(null, '', location.pathname+location.search); return route(); }
   inCircuit=true;
-  const st=(C.station && C.station()) || {}, kind=st.kind||null;
-  const games=circuitGames(kind);
-  let cur=run.cur;
-  if(cur && C.norm(cur.path)===C.norm(PAGE) && games.some(g=>g.key===cur.game)) cur=C.resume();
+  const st=(C.station && C.station()) || {}, kind=st.kind||null, quick=kind==='short';
+  const games=circuitGames(quick ? 'quick' : kind==='arcade' ? 'dcarcade' : kind);
+  let cur=run.cur; qf=null;
+  if(cur && C.norm(cur.path)===C.norm(PAGE) && (quick ? cur.game==='quick' && games.length : games.some(g=>g.key===cur.game))) cur=C.resume();
   else {
     if(!games.length){ inCircuit=false;
       if(kind==='long' || kind==='arcade' || SIDE==='zh' && kind==='short'){   // try another of their subjects for this station, or make it a short game
@@ -2364,20 +2402,25 @@ function circuitStation(){
         location.href=ROOT+next+'#circuit'; return; }
       return C.skipTopic(PAGE); }   // nothing ready here: another of their subjects instead
     let g;
-    if(kind==='arcade') g=games.find(x=>x.key===CIRCUIT_ARCADE[(st.arcade||0)%CIRCUIT_ARCADE.length]) || games[0];
+    if(quick) g={key:'quick', name:'Quick-fire', zh:'快速答题'};
+    else if(kind==='arcade'){   // this circuit's turn in the list; never the arcade game already played in this circuit
+      const list=DC_ARCADE[SIDE==='zh'?'zh':'en'], at=((st.arcade||0)*2+(st.slot||0))%list.length, played=run.results.map(r=>r.game);
+      const order=[...list.slice(at), ...list.slice(0, at)].map(k=>games.find(x=>x.key===k)).filter(Boolean);
+      g=order.find(x=>!played.includes(x.key)) || order[0]; }
     else { const played=run.results.map(r=>r.game), fresh=games.filter(x=>!played.includes(x.key)), from=fresh.length ? fresh : games;
       g=from[Math.floor(Math.random()*from.length)]; }
     cur=C.begin({path:PAGE, topic:CFG.name||'', game:g.key, name:g.name, zh:g.zh||''});
   }
-  games.find(g=>g.key===cur.game).run();
   circuitBar(cur);
+  if(quick){ qf={pool:games, game:null, n:0, recent:[]}; return qfSwitch(); }
+  games.find(g=>g.key===cur.game).run();
 }
 function stopCircuitBar(){
   if(ccTick){ clearInterval(ccTick); ccTick=null; }
   ['ccBar','ccOver'].forEach(id=>{ const el=document.getElementById(id); if(el) el.remove(); });
   document.body.classList.remove('in-circuit');
 }
-function leaveCircuit(){ if(inCircuit){ inCircuit=false; if(window.AEA_CIRCUIT) AEA_CIRCUIT.pause(PAGE); } stopCircuitBar(); }
+function leaveCircuit(){ qf=null; if(inCircuit){ inCircuit=false; if(window.AEA_CIRCUIT) AEA_CIRCUIT.pause(PAGE); } stopCircuitBar(); }
 // The bar along the bottom: station, game, time left, Stop
 function circuitBar(cur){
   const C=window.AEA_CIRCUIT, zh=SIDE==='zh', run=C.active(SIDE); stopCircuitBar(); if(!run) return;
@@ -2398,6 +2441,7 @@ function circuitBar(cur){
 }
 // The station's time is up: show its score, then go on to the next station (or the results)
 function stationOver(){
+  qf=null;
   if(ccTick){ clearInterval(ccTick); ccTick=null; }
   if(circuitFinish){ try{ circuitFinish(); }catch(e){ console.warn(e); } circuitFinish=null; }   // mark a half-done long task
   if(circuitStop){ circuitStop(); circuitStop=null; }   // stop an arcade game
@@ -2410,7 +2454,7 @@ function stationOver(){
     <p class="cc-sub">${T(`${r.answered} answer${r.answered===1?'':'s'}${r.pts?` · +${r.pts} point${r.pts===1?'':'s'}`:''}`, `作答 ${r.answered} 次${r.pts?` · +${r.pts} 积分`:''}`)}</p>
     <button class="btn" id="ccNext">${out.next ? T('Next station','下一站')+' →' : T('See your results','查看结果')+' →'}</button><p class="cc-auto" id="ccAuto"></p></div>`;
   document.body.appendChild(over);
-  let n=4, gone=false, cd=null;
+  let n=3, gone=false, cd=null;
   const go=()=>{ if(gone) return; gone=true; clearInterval(cd);
     if(!out.next){ inCircuit=false; location.href=C.resultsUrl(SIDE); return; }
     if(C.norm(out.next)===C.norm(PAGE)){ over.remove(); circuitStation(); }
