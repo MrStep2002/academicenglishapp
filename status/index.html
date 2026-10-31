@@ -102,10 +102,10 @@ const SECTIONS = [
     {key:'invaders', name:'Word Invaders', src:'words', min:6, circuit:'arcade', link:'invaders'},
     {key:'snake', name:'Word Snake', src:'words', min:6, circuit:'', link:'snake'}]],
   ['Chinese side', [
-    {key:'zhwords', name:'Word games (7)', src:'zhwords', min:4, circuit:'', zh:true},
+    {key:'zhwords', name:'Word games (8)', src:'zhwords', min:4, circuit:'', zh:true},
     {key:'zhbuild', name:'Build the sentence', src:'zhbuilds', min:1, circuit:'', zh:true}]],
 ];
-const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
+const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
   reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences'};
 
 async function loadSubject(href){
@@ -138,6 +138,7 @@ function count(s, zhFolders){
     words:{lv:perLevel(words), total:words.length},
     syn:{lv:perLevel(words.filter(w=>w.synonyms)), total:words.filter(w=>w.synonyms).length},
     gaps:{lv:perLevel(T.gaps, wordLevel), total:(T.gaps||[]).length},
+    builds:{lv:perLevel(builds, wordLevel), total:builds.length},
     errors:{lv:perLevel(T.errors), total:(T.errors||[]).length, extra:`${(T.errors||[]).reduce((n,r)=>n+((r.text||'').match(err)||[]).length,0)} mistakes`},
     tf:{lv:perLevel(T.tf, wordLevel), total:(T.tf||[]).length},
     'right-wrong':{lv:perLevel(T['right-wrong'], wordLevel), total:(T['right-wrong']||[]).length},
