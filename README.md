@@ -43,8 +43,8 @@ Homepage → **English** or **Chinese version 中文版**
 
 | Category | Games (shown only when the subject has content for them) |
 |---|---|
-| Vocabulary | Match the meaning, Synonym groups, Word or meaning |
-| Grammar | Fill the gap, Spot the error, True or false, Right or wrong (`right-wrong.csv`). Build the sentence moved to the Chinese version (25 Oct) |
+| Vocabulary | Match the meaning (meanings and synonym groups mixed, 31 Oct), Word or meaning, True or false |
+| Grammar | Fill the gap, Grammar: Write or Wrong (`right-wrong.csv`), Spot the error (back in Grammar 31 Oct). Build the sentence moved to the Chinese version (25 Oct) |
 | Reading (desktop only) | In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
 | Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
 
@@ -60,7 +60,7 @@ Site content page: `status/index.html` (academicenglishapp.com/status/, not link
 
 Daily Circuit (English side, 25 Oct): five stations, 4 minutes: a short game (45 s), a long game (45 s), an arcade game (60 s), a long game (45 s), a short game (45 s). Each game in `GAMES` has `form: 'short'` or `'long'` (change it there to move a game); a station picks a game of its kind from any of the student's subjects at their level, never the same game twice when there is a choice. No long game at their level in any subject (e.g. on a phone, where reading games are off): a short game instead. Time up in the middle of a long game: what the student has done is marked (Spot the error: each mistake found counts at the station, without counting against their level; Complete the text: the filled gaps are marked). The Chinese side keeps five one-minute stations. Plan in `en/engine/circuit.js` (`EN_PLAN`).
 
-Switching a game off for one topic: add `data-hide="syn"` to the topic page's `<div id="app">` (the game's key; several keys with spaces between them). The game disappears from that page's menu and its Daily Circuit, and its content stays in the CSV files. Keys: match, syn, meaning, gap, error, tf, rw, passage, own, read, question. Academic English Essentials hides Synonym groups (`data-hide="syn"`, 25 Oct).
+Switching a game off for one topic: add e.g. `data-hide="tf"` to the topic page's `<div id="app">` (the game's key; several keys with spaces between them). The game disappears from that page's menu and its Daily Circuit, and its content stays in the CSV files. `data-hide="syn"` keeps Match the meaning to meanings only (no synonym groups); Essentials uses it. Keys: match, syn, meaning, gap, error, tf, rw, passage, own, read, question. Academic English Essentials hides Synonym groups (`data-hide="syn"`, 25 Oct).
 
 After changing `en/engine/app.js` or `styles.css`, change the `?v=` number after them in every topic page (one search-and-replace), so students' browsers fetch the new version instead of an old saved copy.
 

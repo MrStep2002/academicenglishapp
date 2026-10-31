@@ -209,8 +209,8 @@ const POINTS = {
 };
 const POINT_KIND = {zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage', listen:'passage'};
-const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Synonym groups, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it'], ['grammar','Fill the gap, True or false, Right or wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
+const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
+  ['type','Type it'], ['grammar','Fill the gap, True or false, Grammar: Write or Wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -369,15 +369,18 @@ const CATS = {
 // form: short (one quick answer at a time) or long (read something, then several answers): the Daily Circuit's
 // short and long stations choose from these. A game with no form (Read and answer) is never in the circuit.
 // Columns (26 Oct, teacher): True or false moved from Grammar to Vocabulary, Spot the error from Grammar to Reading.
-// Reading games are for computers only, except the ones marked phone:true (Spot the error, which always worked on phones).
+// 31 Oct (teacher): Spot the error back in Grammar ("its natural home"); Right or wrong renamed "Grammar: Write or Wrong".
+// Reading games are for computers only, except the ones marked phone:true.
 const GAMES = [
-  {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair words with their meanings. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch('def')},
-  {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
+  // Match the meaning (31 Oct, teacher): Synonym groups merged in. The right-hand column mixes meanings and synonym groups
+  // (a word with synonyms shows either). data-hide="syn" on a topic page keeps it to meanings only (Essentials).
+  {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair each word with its meaning or with a group of words that mean something similar. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch(matchMode())},
+  // {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
   {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>pick(S.tf), min:1, run:()=>playTF()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'rw',       form:'short', cat:'grammar', name:'Right or wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
-  {key:'error',    form:'long', cat:'reading', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
+  {key:'rw',       form:'short', cat:'grammar', name:'Grammar: Write or Wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
@@ -388,6 +391,8 @@ const GAMES = [
 const phoneOff = g => PHONE && !!CATS[g.cat].desktop && !g.phone;
 // Games switched off on this page: data-hide="syn" (a game's key; several with spaces or commas). Its content stays in the files.
 const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
+// Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
+const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
 const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'tf',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
 
@@ -544,31 +549,38 @@ function settle(ok, card, st, deck, item, next){
 }
 
 // ---------- VOCABULARY: Match the meaning / Synonym groups ----------
+// mode: 'def' (meanings), 'syn' (synonym groups) or 'mix' (each word on the board shows one or the other, chosen as it is dealt)
 function playMatch(mode, withZh){
-  const game=withZh ? {key:'zhmatch', name:'Match the meaning', items:zhWords} : GAMES.find(g=>g.key===(mode==='def'?'match':'syn'));
+  const game=withZh ? {key:'zhmatch', name:'Match the meaning', items:zhWords} : GAMES.find(g=>g.key===(mode==='syn'?'syn':'match'));
   const PER=5, REFILL_AT=3;
   const p=game.items(), deck=Deck(p), st=Stats(game.key);
   if(withZh) zhShell(T('Match the meaning','单词配释义'), T('Tap a word, then its English meaning. Matched pairs turn grey; after three, new pairs appear.','点击单词，再点击它的英文释义。配好的会变灰，配好三对后会出现新的单词。'));
-  else shell(game, mode==='def'?'Tap a word, then its meaning. Matched pairs turn grey; after three, new pairs take their place.':'Tap a word, then the group that means something similar. Matched pairs turn grey; after three, new pairs take their place.');
+  else shell(game, mode==='def'?'Tap a word, then its meaning. Matched pairs turn grey; after three, new pairs take their place.'
+    : mode==='mix'?'Tap a word, then its meaning or the group of words that means something similar. Matched pairs turn grey; after three, new pairs take their place.'
+    :'Tap a word, then the group that means something similar. Matched pairs turn grey; after three, new pairs take their place.');
   st.draw();
-  const clash=(w,on)=>on.some(o=>o.id===w.id || areAlike(o.id,w.id) || o.w===w.w || (mode==='syn' && o.syn.some(s=>w.syn.includes(s))));
+  const kind=new Map(), kindOf=w=>kind.get(w.id)||(mode==='syn'?'syn':'def');
+  const synClash=(a,b)=>!!(a.syn&&b.syn&&a.syn.some(s=>b.syn.includes(s))) || !!(a.syn&&a.syn.includes(b.w)) || !!(b.syn&&b.syn.includes(a.w));
+  const clash=(w,on)=>on.some(o=>o.id===w.id || areAlike(o.id,w.id) || o.w===w.w || (mode!=='def' && synClash(o,w)));
   const draw=(n,on)=>{ const out=[],skip=[]; let guard=0;
     while(out.length<n && guard++<400){ const w=deck.next(); if(clash(w,[...on,...out])) skip.push(w); else out.push(w); }
-    skip.forEach(w=>deck.retry(w)); return out; };
-  const right = w => mode==='def' ? esc(w.def) : w.syn.map(s=>`<span>${esc(s)}</span>`).join('');
+    skip.forEach(w=>deck.retry(w));
+    if(mode==='mix') out.forEach(w=>kind.set(w.id, w.syn&&w.syn.length&&Math.random()<.5 ? 'syn' : 'def'));
+    return out; };
+  const right = w => kindOf(w)==='def' ? esc(w.def) : w.syn.map(s=>`<span>${esc(s)}</span>`).join('');
   const L=new Array(PER).fill(null), R=new Array(PER).fill(null);
   const first=draw(PER,[]); const lo=shuffle([...Array(PER).keys()]), ro=shuffle([...Array(PER).keys()]);
   first.forEach((w,i)=>{ L[lo[i]]=w; R[ro[i]]=w; });
-  const card=showCard(`<p class="instr">${mode==='def'?'Match each word to its meaning':'Match each word to its synonym group'}</p>
+  const card=showCard(`<p class="instr">${withZh||mode==='def'?'Match each word to its meaning':mode==='mix'?'Match each word to its meaning or its synonyms':'Match each word to its synonym group'}</p>
     <div class="match"><div class="col left">${L.map((_,i)=>`<button class="tile word" data-side="L" data-slot="${i}"></button>`).join('')}</div>
-    <div class="col right">${R.map((_,i)=>`<button class="tile ${mode}" data-side="R" data-slot="${i}"></button>`).join('')}</div></div>
+    <div class="col right">${R.map((_,i)=>`<button class="tile ${mode==='syn'?'syn':'def'}" data-side="R" data-slot="${i}"></button>`).join('')}</div></div>
     <p class="toast" id="toast" aria-live="polite"></p>`);
   const tiles=side=>[...card.querySelectorAll(`.tile[data-side="${side}"]`)];
   // Matched pairs stay on the board, greyed out. Once three pairs are greyed, those three are replaced together.
   const spentL=new Set(), spentR=new Set();
   const paint=fresh=>{
     tiles('L').forEach((t,i)=>{ const w=L[i], sp=spentL.has(i); t.className='tile word'+(w?'':' gone')+(sp?' spent':'')+(w&&fresh&&fresh.includes(w)?' fresh':''); t.innerHTML=w?esc(w.w)+(withZh&&ZH[w.id]?`<small class="tile-zh" lang="zh-CN">${esc(ZH[w.id])}</small>`:''):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
-    tiles('R').forEach((t,i)=>{ const w=R[i], sp=spentR.has(i); t.className='tile '+mode+(w?'':' gone')+(sp?' spent':'');  /* new meanings are not highlighted: that would give them away */ t.innerHTML=w?right(w):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
+    tiles('R').forEach((t,i)=>{ const w=R[i], sp=spentR.has(i); t.className='tile '+(w?kindOf(w):'def')+(w?'':' gone')+(sp?' spent':'');  /* new meanings are not highlighted: that would give them away */ t.innerHTML=w?right(w):''; t.dataset.id=w?w.id:''; t.disabled=!w||sp; });
   };
   paint(first);
   let sel=null; const wrongOn=new Set();
@@ -2352,7 +2364,7 @@ function route(){
   if(h.startsWith('play-')){
     const a=ARCADE.find(x=>x.key===h.slice(5));   // arcade games (not on the menu yet)
     if(a) return a.items().length>=a.min ? a.run() : menu();
-    const g=GAMES.find(x=>x.key===h.slice(5));
+    const g=GAMES.find(x=>x.key===(h==='play-syn'?'match':h.slice(5)));   // Synonym groups is now part of Match the meaning
     if(g && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min) return g.run();
     return category(g?g.cat:'vocab');
   }

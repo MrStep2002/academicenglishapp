@@ -132,17 +132,17 @@ ess-tf-130,A2,"In the example “List three features of a newspaper front page.�
 ess-tf-131,B1,"In the example “Cutting down forests can lead to flooding.”, “lead to” means “give evidence that an idea is true.”",FALSE,"“lead to” means cause something to happen as a result, not give evidence that an idea is true."
 ess-tf-132,B2,"In the example “The writer gives a convincing argument.”, “convincing” means “directly connected to the question or subject.”",FALSE,"“convincing” means making you believe that something is true, not directly connected to the question or subject."
 ess-tf-133,C1,"In the example “The short sentences convey a sense of urgency.”, “convey” means “present someone or something in a particular way.”",FALSE,"“convey” means communicate an idea or feeling, not present someone or something in a particular way."
-ess-tf-134,A1,"In academic English, “example” means “something that is known to be true.”",FALSE,“example” means one thing that shows what a group or idea is like.
+ess-tf-134,A1,"In academic English, “example” means “something that is known to be true.”",FALSE,“example” means one case of something, used to show what a whole group or type is like.
 ess-tf-135,A2,"A student who understands “list” knows that it means “write several things one after another, with no detail.”",TRUE,This is the meaning of “list”.
 ess-tf-136,B1,"In formal academic English, “support” means “give evidence that an idea is true.”",TRUE,This is the meaning of “support”.
 ess-tf-137,B2,A student who understands “convincing” knows that it means “making you believe that something is true.”,TRUE,This is the meaning of “convincing”.
 ess-tf-138,C1,"In academic analysis, “portray” means “communicate an idea or feeling.”",FALSE,“portray” means present someone or something in a particular way.
-ess-tf-139,A1,"In academic English, “example” means “one thing that shows what a group or idea is like.”",TRUE,This is the meaning of “example”.
+ess-tf-139,A1,"In academic English, “example” means “one case of something, used to show what a whole group or type is like.”",TRUE,This is the meaning of “example”.
 ess-tf-140,A2,"The word or phrase “suggest (in a question)” means “put forward a possible idea, reason or answer.”",TRUE,This is the meaning of “suggest (in a question)”.
 ess-tf-141,B1,"In formal academic English, “support” means “give reasons to show that an idea is right.”",FALSE,“support” means give evidence that an idea is true.
 ess-tf-142,B2,"In academic discussion, “tend to” means “usually do or be something.”",TRUE,This is the meaning of “tend to”.
 ess-tf-143,C1,"In academic analysis, “portray” means “present someone or something in a particular way.”",TRUE,This is the meaning of “portray”.
-ess-tf-144,A1,"In the example “Wind power is an example of renewable energy.”, “example” means “something that is known to be true.”",FALSE,"“example” means one thing that shows what a group or idea is like, not something that is known to be true."
+ess-tf-144,A1,"In the example “Wind power is an example of renewable energy.”, “example” means “something that is known to be true.”",FALSE,"“example” means one case of something, used to show what a whole group or type is like, not something that is known to be true."
 ess-tf-145,A2,The word or phrase “suggest (in a question)” means “introduces your own opinion.”,FALSE,"“suggest (in a question)” means put forward a possible idea, reason or answer."
 ess-tf-146,B1,"In the example “This evidence supports the theory.”, “support” means “give evidence that an idea is true.”",TRUE,“support” means give evidence that an idea is true. The sentence uses it in that sense.
 ess-tf-147,B2,"In academic discussion, “tend to” means “appear to be true, from what we can see.”",FALSE,“tend to” means usually do or be something.
@@ -194,22 +194,22 @@ ess-tf-192,B2,"In academic discussion, “contrast” means “draw attention to
 ess-tf-193,C1,"In the example “The notice gives an explicit warning about the danger.”, “explicit” means “suggested without being stated directly.”",FALSE,"“explicit” means stated clearly and directly, not suggested without being stated directly."
 ess-tf-194,A1,"In academic English, “important” means “correct; matching the facts.”",FALSE,“important” means having a big effect or value.
 ess-tf-195,A2,The word or phrase “for example” means “introduces an idea that contrasts with the one before.”,FALSE,“for example” means introduces an example to support a point.
-ess-tf-196,B1,"In formal academic English, “evidence” means “facts or information that show something is true.”",TRUE,This is the meaning of “evidence”.
+ess-tf-196,B1,"In formal academic English, “evidence” means “facts or information that prove a claim is true.”",TRUE,This is the meaning of “evidence”.
 ess-tf-197,B2,"In academic discussion, “contrast” means “pass a message or feeling to the audience.”",FALSE,“contrast” means draw attention to differences.
 ess-tf-198,C1,"In academic analysis, “implicit” means “stated clearly and directly.”",FALSE,“implicit” means suggested without being stated directly.
 ess-tf-199,A1,"In academic English, “important” means “having a big effect or value.”",TRUE,This is the meaning of “important”.
 ess-tf-200,A2,"In the example “Some energy sources are renewable, for example wind and solar power.”, “for example” means “introduces an example to support a point.”",TRUE,“for example” means introduces an example to support a point. The sentence uses it in that sense.
-ess-tf-201,B1,"In formal academic English, “evidence” means “one of the things that causes or influences a situation.”",FALSE,“evidence” means facts or information that show something is true.
+ess-tf-201,B1,"In formal academic English, “evidence” means “one of the things that causes or influences a situation.”",FALSE,“evidence” means facts or information that prove a claim is true.
 ess-tf-202,B2,"In the example “The writer contrasts the noisy street with the silent house.”, “contrast” means “draw attention to differences.”",TRUE,“contrast” means draw attention to differences. The sentence uses it in that sense.
 ess-tf-203,C1,"In academic analysis, “implicit” means “suggested without being stated directly.”",TRUE,This is the meaning of “implicit”.
 ess-tf-204,A1,"In the example “Water is important for all living things.”, “important” means “correct; matching the facts.”",FALSE,"“important” means having a big effect or value, not correct; matching the facts."
 ess-tf-205,A2,"In the example “Some energy sources are renewable, for example wind and solar power.”, “for example” means “introduces an idea that contrasts with the one before.”",FALSE,"“for example” means introduces an example to support a point, not introduces an idea that contrasts with the one before."
-ess-tf-206,B1,"In the example “There is strong evidence that exercise improves mood.”, “evidence” means “facts or information that show something is true.”",TRUE,“evidence” means facts or information that show something is true. The sentence uses it in that sense.
+ess-tf-206,B1,"In the example “There is strong evidence that exercise improves mood.”, “evidence” means “facts or information that prove a claim is true.”",TRUE,“evidence” means facts or information that prove a claim is true. The sentence uses it in that sense.
 ess-tf-207,B2,"In the example “The writer contrasts the noisy street with the silent house.”, “contrast” means “pass a message or feeling to the audience.”",FALSE,"“contrast” means draw attention to differences, not pass a message or feeling to the audience."
 ess-tf-208,C1,"In the example “There is an implicit threat in his promise to “remember this”.”, “implicit” means “stated clearly and directly.”",FALSE,"“implicit” means suggested without being stated directly, not stated clearly and directly."
 ess-tf-209,A1,"In academic English, “true” means “having a big effect or value.”",FALSE,“true” means correct; matching the facts.
 ess-tf-210,A2,A student who understands “for example” knows that it means “introduces an example to support a point.”,TRUE,This is the meaning of “for example”.
-ess-tf-211,B1,"In the example “There is strong evidence that exercise improves mood.”, “evidence” means “one of the things that causes or influences a situation.”",FALSE,"“evidence” means facts or information that show something is true, not one of the things that causes or influences a situation."
+ess-tf-211,B1,"In the example “There is strong evidence that exercise improves mood.”, “evidence” means “one of the things that causes or influences a situation.”",FALSE,"“evidence” means facts or information that prove a claim is true, not one of the things that causes or influences a situation."
 ess-tf-212,B2,A student who understands “contrast” knows that it means “draw attention to differences.”,TRUE,This is the meaning of “contrast”.
 ess-tf-213,C1,"In academic analysis, “reinforce” means “give particular importance or attention to something.”",FALSE,“reinforce” means make an existing idea or stereotype stronger.
 ess-tf-214,A1,"In academic English, “true” means “correct; matching the facts.”",TRUE,This is the meaning of “true”.
@@ -219,7 +219,7 @@ ess-tf-217,B2,"In academic discussion, “tone” means “the attitude expresse
 ess-tf-218,C1,"In academic analysis, “reinforce” means “make an existing idea or stereotype stronger.”",TRUE,This is the meaning of “reinforce”.
 ess-tf-219,A1,"In the example “This statement is only partly true.”, “true” means “having a big effect or value.”",FALSE,"“true” means correct; matching the facts, not having a big effect or value."
 ess-tf-220,A2,The word or phrase “cause” means “change or influence something.”,FALSE,"“cause” means make something happen, often something bad."
-ess-tf-221,B1,"In formal academic English, “factor” means “facts or information that show something is true.”",FALSE,“factor” means one of the things that causes or influences a situation.
+ess-tf-221,B1,"In formal academic English, “factor” means “facts or information that prove a claim is true.”",FALSE,“factor” means one of the things that causes or influences a situation.
 ess-tf-222,B2,"In academic discussion, “tone” means “a person's feelings or opinions about something.”",FALSE,“tone” means the attitude expressed through language.
 ess-tf-223,C1,"In the example “Images like this reinforce the idea that men should be strong.”, “reinforce” means “give particular importance or attention to something.”",FALSE,"“reinforce” means make an existing idea or stereotype stronger, not give particular importance or attention to something."
 ess-tf-224,A1,"In academic English, “answer” means “why something happens or is done.”",FALSE,“answer” means what you say or write in reply to a question.
@@ -229,7 +229,7 @@ ess-tf-227,B2,"In the example “The phrase “another brilliant idea” creates
 ess-tf-228,C1,"In academic analysis, “prioritise” means “give particular importance or attention to something.”",FALSE,“prioritise” means decide what should receive the most attention.
 ess-tf-229,A1,"In academic English, “answer” means “what you say or write in reply to a question.”",TRUE,This is the meaning of “answer”.
 ess-tf-230,A2,"In the example “Smoking can cause serious illness.”, “cause” means “change or influence something.”",FALSE,"“cause” means make something happen, often something bad, not change or influence something."
-ess-tf-231,B1,"In the example “Cost is a key factor in the decision.”, “factor” means “facts or information that show something is true.”",FALSE,"“factor” means one of the things that causes or influences a situation, not facts or information that show something is true."
+ess-tf-231,B1,"In the example “Cost is a key factor in the decision.”, “factor” means “facts or information that prove a claim is true.”",FALSE,"“factor” means one of the things that causes or influences a situation, not facts or information that prove a claim is true."
 ess-tf-232,B2,"In the example “The phrase “another brilliant idea” creates a sarcastic tone.”, “tone” means “a person's feelings or opinions about something.”",FALSE,"“tone” means the attitude expressed through language, not a person's feelings or opinions about something."
 ess-tf-233,C1,"In academic analysis, “prioritise” means “decide what should receive the most attention.”",TRUE,This is the meaning of “prioritise”.
 ess-tf-234,A1,"In the example “Use evidence from the image in your answer.”, “answer” means “why something happens or is done.”",FALSE,"“answer” means what you say or write in reply to a question, not why something happens or is done."

@@ -84,15 +84,14 @@ function perLevel(rows, wordLevel){ const c=[0,0,0,0,0,0];
 // min: how many items a level needs before the game plays there
 const SECTIONS = [
   ['Vocabulary', [
-    {key:'match', name:'Match the meaning', src:'words', min:6, circuit:'short'},
-    {key:'syn', name:'Synonym groups', src:'syn', min:6, circuit:'short'},
+    {key:'match', name:'Match the meaning (with synonym groups)', src:'words', min:6, circuit:'short'},
     {key:'meaning', name:'Word or meaning', src:'words', min:4, circuit:'short'},
     {key:'tf', name:'True or false', src:'tf', min:1, circuit:'short'}]],
   ['Grammar', [
     {key:'gap', name:'Fill the gap', src:'gaps', min:1, circuit:'short'},
-    {key:'rw', name:'Right or wrong', src:'right-wrong', min:1, circuit:'short'}]],
-  ['Reading (computers only, except Spot the error)', [
-    {key:'error', name:'Spot the error', src:'errors', min:1, circuit:'long'},
+    {key:'rw', name:'Grammar: Write or Wrong', src:'right-wrong', min:1, circuit:'short'},
+    {key:'error', name:'Spot the error', src:'errors', min:1, circuit:'long'}]],
+  ['Reading (computers only)', [
     {key:'read', name:'Complete the text', src:'reads', min:1, circuit:'long'},
     {key:'own', name:'In your own words', src:'extracts', min:1, circuit:'long'},
     {key:'question', name:'Answer the question', src:'questions', min:1, circuit:'long'}]],
@@ -210,7 +209,7 @@ async function main(){
     <tr><td><b>Total</b></td><td class="n"><b>${fmt(totalWords)}</b></td><td class="n"><b>${fmt(total)}</b></td><td></td><td></td><td></td></tr></tbody></table></div>
     <ul class="notes"><li>All levels / Some levels / None yet count the ${SECTIONS.slice(0,3).reduce((n,x)=>n+x[1].length,0)} games on the English topic pages (Vocabulary, Grammar, Reading).</li>
     <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately below.</li>
-    <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning, Synonym groups and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>`;
+    <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>`;
   counted.forEach(({s,k})=>{
     html+=`<h2 id="${esc(s.folder)}">${esc(s.name)}</h2><p class="meta">${fmt(k.words)} words · ${fmt(k.items)} items · <span class="k">${esc(s.folder)}</span>${s.hide.length?` · switched off on its page: ${esc(s.hide.join(', '))}`:''}${zhFolders.has(s.folder)?'':' · no Chinese page'}</p>${subjectTable(s,k)}`;
   });

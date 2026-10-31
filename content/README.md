@@ -23,12 +23,12 @@ The Chinese version uses only `words.csv` (and its `zh` column).
 
 | File | Games |
 |---|---|
-| `words.csv` | Match the meaning, Synonym groups, Word or meaning, and every Chinese-version game |
+| `words.csv` | Match the meaning (meanings and synonym groups), Word or meaning, and every Chinese-version game |
 | `gaps.csv` | Fill the gap |
 | `builds.csv` | Build the sentence (Chinese version only: see the sentence in Chinese, build it in English) |
 | `errors.csv` | Spot the error |
 | `tf.csv` | True or false |
-| `right-wrong.csv` | Right or wrong (is the sentence right, or does it have a mistake?) |
+| `right-wrong.csv` | Grammar: Write or Wrong (is the sentence right, or does it have a mistake?) |
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
 | `extracts.csv` | In your own words |
@@ -85,7 +85,7 @@ Required columns are in **bold**.
 | pos | Part of speech: noun, verb, adjective… (Word or meaning prefers wrong answers with the same pos). |
 | **meaning** | A short, clear meaning in English. |
 | example | An example sentence. |
-| synonyms | Words with a similar meaning, separated by `;`. Words with synonyms appear in Synonym groups. |
+| synonyms | Words with a similar meaning, separated by `;`. In Match the meaning, a word with synonyms sometimes shows its synonym group instead of its meaning. |
 | zh | The Chinese meaning. Needed for the Chinese version (words without it are left out there). |
 | group | A word group, e.g. `Command words 指令词`. Odd one out uses it (three from one group, one from another). |
 | similar | Words in this file so close in meaning that they must never be wrong answers for this word, separated by `;`. |
@@ -133,7 +133,7 @@ Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chi
 
 - **answer**: `TRUE` or `FALSE`.
 
-### right-wrong.csv (Right or wrong)
+### right-wrong.csv (Grammar: Write or Wrong)
 
 `id,level,statement,answer,explanation` and, if you like, `correction`
 
