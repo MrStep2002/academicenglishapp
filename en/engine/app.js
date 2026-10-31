@@ -81,7 +81,7 @@ function notesRow(r){
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
-  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[]};
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[]};
   const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
   const lv=(file,r)=>{ const v=(r.level||'').trim();
     if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
@@ -158,6 +158,9 @@ function buildSubject(T){
     const v=(r.level||'').trim(), level=v && levelNum(v)!=null ? v : '';
     if(v && !level) warn('knowledge',r,`level "${v}" not recognised, so it is used at every level`);
     S.gk.push({id:r.id||('gk-'+(i+1)), level, q:r.question, opts:[r.correct,...wrong], why:r.explanation||''}); });
+  // Must-know general knowledge (content/general/knowledge.csv, the same columns; 1 Nov 2026): every level, every topic page
+  (T.general||[]).forEach((r,i)=>{ const wrong=wrongs(r); if(!r.question||!r.correct||!wrong.length) return;
+    S.must.push({id:r.id||('gen-gk-'+(i+1)), level:'', q:r.question, opts:[r.correct,...wrong], why:r.explanation||''}); });
   // In your own words: each [underlined] word has word, correct, wrong1-3 (the first) or wordN, correctN, wrong1_N… (the Nth)
   (T.extracts||[]).forEach(r=>{ const n=(String(r.extract||'').match(/\[[^\]]+\]/g)||[]).length, qs=[], wids=[];
     for(let k=1;k<=9;k++){ const a=k===1?'':String(k), b=k===1?'':'_'+k; if(!r['correct'+a]) break; qs.push([r['correct'+a], wrongs(r,b)]); wids.push(ref1('extracts',r,r['word'+a])); }
@@ -195,6 +198,8 @@ let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
   const jobs=(dir ? (SIDE==='zh' ? ['words','builds'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  // Must-know general knowledge for everyone (content/general/, 1 Nov 2026): one round in every Daily Circuit quick-fire station
+  if(dir) jobs.push(['general', ROOT+'content/general/knowledge.csv']);
   if(CFG.reading) jobs.push(['reading', CFG.reading]);
   if(jobs.some(j=>j[0]==='reading')) readingState='loading';
   if(jobs.length) $app.innerHTML='<p class="notice loading">Loading…</p>';
@@ -233,7 +238,7 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
-  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong, General knowledge'], ['build','Build the sentence, Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
@@ -468,6 +473,7 @@ function qfPlay(g){
 }
 function qfSwitch(){
   if(!qf || !inCircuit) return;
+  if(qf.round++===qf.mustAt) return qfPlay(MUST_GAME);   // the station's must-know round
   const others=qf.pool.filter(g=>g.key!==qf.game), fresh=others.filter(g=>!qf.recent.includes(g.key)), from=fresh.length ? fresh : others.length ? others : qf.pool;
   qfPlay(from[Math.floor(Math.random()*from.length)]);
 }
@@ -659,7 +665,7 @@ function showCard(html){
   return card;
 }
 function autoNext(card, next, ms){
-  if(qf) return qfNext(next, QF_RIGHT_MS);   // Daily Circuit quick-fire: straight on
+  if(qf) return qfNext(next, ms||QF_RIGHT_MS);   // Daily Circuit quick-fire: straight on (unless the game asks for time to read)
   const dur=ms||AUTO_MS, bar=document.createElement('div'); bar.className='auto'; bar.innerHTML='<i></i>';
   bar.style.setProperty('--dur', dur+'ms'); card.appendChild(bar);
   requestAnimationFrame(()=>requestAnimationFrame(()=>bar.classList.add('run')));
@@ -668,8 +674,8 @@ function autoNext(card, next, ms){
   card.addEventListener('click', e=>{ if(!e.target.closest('button')) fire(); });
   keyHandler = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fire(); } };
 }
-function manualNext(card, next, label){
-  if(qf) return qfNext(next, QF_WRONG_MS);   // Daily Circuit quick-fire: the answer for half a second, then on
+function manualNext(card, next, label, ms){
+  if(qf) return qfNext(next, ms ? ms+600 : QF_WRONG_MS);   // Daily Circuit quick-fire: the answer for half a second, then on
   const row=document.createElement('div'); row.className='next-row';
   row.innerHTML=`<button class="btn">${label||T('Next','下一个')+' →'}</button>`; card.appendChild(row);
   const b=row.querySelector('button'); b.onclick=next; b.focus({preventScroll:true});
@@ -698,7 +704,7 @@ const fbOk = (fb, html) => fb.innerHTML=`<div class="feedback ok"><span class="v
 const fbNo = (fb, answer, html) => fb.innerHTML=`<div class="feedback no"><span class="verdict">${T(`Not quite.${answer?` The answer is ${esc(answer)}.`:''}`, `不对。${answer?`答案是 ${esc(answer)}。`:''}`)}</span>${String(html||'').replace(/<span><\/span>/g,'')}</div>`;
 // After an answer: right → move on by itself; wrong → explain, wait, and bring the item back later.
 function settle(ok, card, st, deck, item, next, ms){   // ms: how long before moving on after a right answer (default AUTO_MS)
-  if(ok){ st.hit(item); autoNext(card, next, ms); } else { st.miss(item); deck.retry(item); manualNext(card, next); }
+  if(ok){ st.hit(item); autoNext(card, next, ms); } else { st.miss(item); deck.retry(item); manualNext(card, next, undefined, ms); }
 }
 
 // ---------- VOCABULARY: Save the mouse (hangman with the logo mouse, 31 Oct, teacher) ----------
@@ -1133,12 +1139,16 @@ function playQuestion(){
 }
 
 // ---------- GAMES: General knowledge (knowledge.csv) ----------
-function playGK(){
-  const game=GAMES.find(g=>g.key==='gk'), items=game.items(), deck=Deck(items), st=Stats('gk');
-  shell(game,'Choose the right answer. Correct answers move on by themselves.'); st.draw();
+// Must-know (1 Nov 2026, teacher: "general knowledge questions that are considered must know that will appear in all the
+// Daily Circuits"): content/general/knowledge.csv, played as General knowledge. Not on the menus: the Daily Circuit plays
+// one round of it (three questions) in every quick-fire station, on both sides (qfSwitch).
+const MUST_GAME = {key:'must', cat:'games', name:'Must-know', zh:'必知常识', items:()=>S.must, min:1, run:()=>playGK(true)};
+function playGK(must){
+  const game=must ? MUST_GAME : GAMES.find(g=>g.key==='gk'), items=game.items(), deck=Deck(items), st=Stats(game.key);
+  shell(game, T('Choose the right answer. Correct answers move on by themselves.','选出正确答案。答对后会自动进入下一题。')); st.draw();
   const step=()=>{
     const q=deck.next(), long=q.opts.some(o=>String(o).length>32);
-    mcCard({instr:'General knowledge', promptHtml:`<p class="gk-q">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:long?'long':'',
+    mcCard({instr:must ? T('Must-know','必知常识') : 'General knowledge', promptHtml:`<p class="gk-q">${esc(q.q)}</p>`, options:q.opts, answer:q.opts[0], optClass:long?'long':'',
       onResult:(ok,card,fb)=>{ const why=q.why?`<span>${rich(q.why)}</span>`:'';
         ok?fbOk(fb,why):fbNo(fb,q.opts[0],why); settle(ok,card,st,deck,q,step,AUTO_MS*2); }});   // time to read the fact
   };
@@ -2412,7 +2422,7 @@ function circuitStation(){
     cur=C.begin({path:PAGE, topic:CFG.name||'', game:g.key, name:g.name, zh:g.zh||''});
   }
   circuitBar(cur);
-  if(quick){ qf={pool:games, game:null, n:0, recent:[]}; return qfSwitch(); }
+  if(quick){ qf={pool:games, game:null, n:0, recent:[], round:0, mustAt:S.must.length ? Math.floor(Math.random()*3) : -1}; return qfSwitch(); }
   games.find(g=>g.key===cur.game).run();
 }
 function stopCircuitBar(){
@@ -2672,6 +2682,8 @@ function route(){
     GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
     return playPassage();
   }
+  // #play-must: the must-know questions on their own (not on any menu; a link to try them, 1 Nov 2026)
+  if(h==='play-must' && S.must.length) return MUST_GAME.run();
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
     if(h==='learn') return zhLevelWords().length>=4 ? playLearn() : zhMenu();

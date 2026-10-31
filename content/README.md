@@ -59,6 +59,14 @@ choose another level to push themselves.
 - A game with nothing at the chosen level says "None at this level yet".
 - A row with no level, or a level the site doesn't recognise, is used at every level. The checker (below) lists these.
 
+## content/general/ (everyone)
+
+Things every student should know, whatever they study (1 Nov 2026). Every topic page loads them; they are not a topic of
+their own.
+
+- **knowledge.csv**: must-know general knowledge, the same columns as a topic's knowledge.csv (below). Every Daily Circuit
+  quick-fire station plays one round of three of these questions, on the English and the Chinese side. No levels.
+
 ## Rules for every file
 
 - The first row is the headings, spelt exactly as below. The order of the columns doesn't matter.
