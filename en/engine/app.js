@@ -210,7 +210,7 @@ const POINTS = {
 const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong'], ['build','Build the sentence (中文版), Spot the error, In your own words'],
+  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong'], ['build','Build the sentence, Spot the error, In your own words'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -309,7 +309,7 @@ function toastLevel(msg){ const t=document.createElement('div'); t.className='lv
 // The games use the student's own level for this topic. A student can choose another level to push themselves;
 // that choice is saved for this topic until they press "Use my level" (or their level reaches it).
 const MIN_LEVEL = 6;
-const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
 const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
 const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
 let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
@@ -392,6 +392,8 @@ const GAMES = [
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
+  // Build the sentence back on the English side (31 Oct, teacher: "put it in the Reading column"); playable on phones
+  {key:'build',    form:'short', cat:'reading', phone:true, name:'Build the sentence', blurb:'Put the coloured pieces in order to build the sentence. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
   {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     form:'long', cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   {key:'question', form:'long', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
@@ -717,15 +719,19 @@ const ROLES={topic:'Who or what',verb:'Verb',detail:'Detail',link:'Linking word'
 // Build the sentence: on the Chinese version since 25 Oct (off the English side). The Chinese sentence (builds.csv, zh column)
 // is shown at the top; students build it in English from the coloured pieces, avoiding the trap pieces.
 const ROLES_ZH={topic:'主语',verb:'动词',detail:'细节',link:'连接词',judge:'评价',hedge:'委婉语'};
+// Both sides (31 Oct): the Chinese side shows the sentence in Chinese; the English side shows its goal (builds.csv goal column)
 function playBuild(){
-  const game=ZH_GAMES.find(g=>g.key==='zhbuild'), items=zhBuilds(), deck=Deck(items), st=Stats('zhbuild');
-  zhShell(T(game.name, game.zh), T('Tap the pieces in order. Tap a placed piece to send it back.','按顺序点击词块，点击已放好的词块可以退回。')); st.draw();
+  const zh=SIDE==='zh', game=zh ? ZH_GAMES.find(g=>g.key==='zhbuild') : GAMES.find(g=>g.key==='build');
+  const items=zh ? zhBuilds() : pick(S.builds), deck=Deck(items), st=Stats(zh?'zhbuild':'build');
+  if(zh) zhShell(T(game.name, game.zh), T('Tap the pieces in order. Tap a placed piece to send it back.','按顺序点击词块，点击已放好的词块可以退回。'));
+  else shell(game, 'Tap the pieces in order. Tap a placed piece to send it back.');
+  st.draw();
   const step=()=>{
     const b=deck.next();
     const pieces=shuffle([...b.tiles.map((t,i)=>({t:t[0],r:t[1],k:'t'+i})), ...(b.decoys||[]).map((t,i)=>({t:t[0],r:t[1],k:'d'+i,decoy:true}))]);
     const usedRoles=[...new Set(b.tiles.map(t=>t[1]))];
-    const card=showCard(`<p class="instr">${T('Build this sentence in English','用英文组成这个句子')}</p>
-      <p class="zh-sentence" lang="zh-CN">${esc(b.zh)}</p>
+    const card=showCard((zh ? `<p class="instr">${T('Build this sentence in English','用英文组成这个句子')}</p>
+      <p class="zh-sentence" lang="zh-CN">${esc(b.zh)}</p>` : `<p class="instr">Build the sentence</p><p class="build-goal">${esc(b.goal||'Put the pieces in order.')}</p>`)+`
       <div class="answer" id="ans" aria-label="Your sentence"></div>
       <div class="pool" id="pool">${pieces.map(p=>`<button class="piece r-${p.r}" data-k="${p.k}">${esc(p.t)}</button>`).join('')}</div>
       <div class="rolekey">${usedRoles.map(r=>`<span class="r-${r}">${T(ROLES[r]||r, ROLES_ZH[r]||'')}</span>`).join('')}</div>

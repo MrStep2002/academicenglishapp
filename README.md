@@ -44,8 +44,8 @@ Homepage → **English** or **Chinese version 中文版**
 | Category | Games (shown only when the subject has content for them) |
 |---|---|
 | Vocabulary | Match the meaning (meanings and synonym groups mixed, 31 Oct), Word or meaning, True or false |
-| Grammar | Fill the gap, SPAG: Right or Wrong (`right-wrong.csv`), Spot the error (back in Grammar 31 Oct). Build the sentence moved to the Chinese version (25 Oct) |
-| Reading (desktop only) | In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
+| Grammar | Fill the gap, SPAG: Right or Wrong (`right-wrong.csv`), Spot the error (back in Grammar 31 Oct). Build the sentence moved to the Chinese version (25 Oct), and is back in Reading on the English side too (31 Oct) |
+| Reading (desktop only; Build the sentence also on phones) | Build the sentence (`builds.csv`, back on the English side 31 Oct), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
 | Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
