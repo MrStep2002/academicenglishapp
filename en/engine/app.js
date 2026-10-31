@@ -409,23 +409,23 @@ const GAME_ROW = {games: {name:'Games'}};
 const GAMES = [
   // Match the meaning (31 Oct, teacher): Synonym groups merged in. The right-hand column mixes meanings and synonym groups
   // (a word with synonyms shows either). data-hide="syn" on a topic page keeps it to meanings only (Essentials).
-  {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair each word with its meaning or with a group of words that mean something similar. Cleared pairs are replaced, so it keeps going.', items:()=>pick(S.words), min:6, run:()=>playMatch(matchMode())},
+  {key:'match',    form:'short', cat:'vocab',   name:'Match the meaning', blurb:'Pair each word with its meaning or with words close in meaning.', items:()=>pick(S.words), min:6, run:()=>playMatch(matchMode())},
   // {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
-  {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or see a meaning and choose the word.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
-  {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Decide quickly whether each statement about the language is right.', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
-  {key:'mouse',    cat:'vocab',   name:'Save the mouse',   blurb:'Guess the word from its meaning, one letter at a time. Every wrong letter and the mouse loses a piece.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
-  {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or does it have a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or the other way round.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
+  {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Read each statement and decide quickly: true or false?', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
+  {key:'mouse',    cat:'games',   name:'Save the mouse',   blurb:'Guess the word one letter at a time before the mouse disappears.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
+  {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
+  {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or is there a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   // Build the sentence back on the English side (31 Oct, teacher: "put it in the Reading column"); playable on phones
-  {key:'build',    form:'short', cat:'reading', phone:true, name:'Build the sentence', blurb:'Put the coloured pieces in order to build the sentence. Watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
-  {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does the writer mean by each underlined word, in context?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
+  {key:'build',    form:'short', cat:'reading', phone:true, name:'Build the sentence', blurb:'Put the coloured pieces in order, and watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
+  {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does each underlined word mean here?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     form:'long', cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   // General knowledge (31 Oct, teacher): "things connected to the topic but more about cultural capital". In the Games
   // row across the bottom; plays on phones; no form, so not in the Daily Circuit.
-  {key:'gk',       cat:'games', phone:true, name:'General knowledge', blurb:'Questions about the wider world of this topic. Four answers: one is right.', items:()=>pick(S.gk), min:1, run:()=>playGK()},
+  {key:'gk',       cat:'games', phone:true, name:'General knowledge', blurb:'Questions about the wider world of this topic. One answer is right.', items:()=>pick(S.gk), min:1, run:()=>playGK()},
   {key:'question', form:'long', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
 // A game that can't be played on this device: a Reading game on a phone (unless it is marked phone:true)
@@ -499,7 +499,7 @@ function menuCompact(){
       return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
         ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}${rest}</section>`; }).join('')}
   </div>
-  ${(()=>{ const all=gamesIn('games');
+  ${(()=>{ const ROW=['gk','mouse','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
       ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
@@ -517,10 +517,10 @@ function levelLine(){
 }
 // One game on a menu: its name, what it is, and the student's best streak (greyed when the level has too few items)
 function gameCard(g){
-  const n=g.items().length, off=n<g.min, best=store.get('streak:'+g.key,0);
+  const n=g.items().length, off=n<g.min, best=store.get((g.arcade?'best:':'streak:')+g.key,0);
   return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
     <h3>${g.name}</h3><p>${g.blurb}</p>
-    <span class="best">${off?(n?'Not enough at this level yet':'None at this level yet'):best?'Best streak: '+best:'Not played yet'}</span></a>`;
+    <span class="best">${off?(n?'Not enough at this level yet':'None at this level yet'):best?(g.arcade?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`;
 }
 
 // ---------- CATEGORY: list of games ----------
@@ -1295,11 +1295,11 @@ function partialCredit(game, item, right, wrong, parts){
 // Every arcade game asks the same question: a meaning at the top, and the student goes for its word among a few on the
 // board. The words are this topic's, at the student's level. The first go at each meaning is recorded like any other
 // answer (word points, word stages, level). A game lasts one minute and never ends early: a mistake costs length or
-// points, not the game. Not on the topic menus yet: open one by adding #play-snake, #play-whack or #play-invaders to an English topic page's address.
+// points, not the game. On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
 const ARCADE = [
   {key:'snake', name:'Word Snake', blurb:'Steer the snake into the word that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
-  {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up and drop again. Tap the one that matches the meaning before it goes.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
-  {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'The words come down in formation. Fire at the one that matches the meaning before they land.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
+  {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up from holes. Tap the one that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
+  {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'Words march down the screen. Shoot the one that fits the meaning.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];
 // The shared question: the word to find, and the words on the board with it (the same part of speech where possible,
 // never two that are alike). Same choice of wrong answers as Word or meaning.
