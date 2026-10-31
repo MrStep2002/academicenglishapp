@@ -181,15 +181,13 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 [data-ui="zh"] .cc-panel h2 .t-zh{font-weight:700}
 
 /* Topic lists, 31 Oct 2026 (teacher: less scrolling, room for many more topics): Academic English Essentials stays a
-   full-width bar; the subjects sit side by side in .subjects, one column each (3–4 across on a computer, wrapping
-   as subjects are added; one column on a phone), with compact topic tiles and no descriptions. */
-.subjects { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 22px 14px; align-items: start; }
-.subjects .topic-group { min-width: 0; gap: 8px; }
-.subjects .topic-group h2 { margin: 0; padding-bottom: 6px; border-bottom: 2px solid var(--line); }
-.subjects .topics { gap: 8px; }
-.subjects .topic { min-height: 60px; padding: 8px 8px 8px 16px; border-radius: 16px; gap: 8px; }
+   full-width bar; each subject keeps its full-width heading, and its topics (Advertising, Film, News…) sit underneath
+   in three columns as compact tiles with no descriptions (one column on a phone). Inside <div class="subjects">. */
+.subjects { display: flex; flex-direction: column; gap: 24px; }
+.subjects .topics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.subjects .topic { min-height: 60px; padding: 8px 10px 8px 18px; border-radius: 16px; gap: 8px; }
 .subjects .topic-link::after { border-radius: 16px; }
-.subjects .topic-name { font-size: 1rem; line-height: 1.25; }
+.subjects .topic-name { font-size: 1.02rem; line-height: 1.25; }
 .topic-note { font-size: .78rem; color: var(--muted); }
 .subjects .sw { min-width: 52px; gap: 3px; padding: 2px; }
 .subjects .sw-track { width: 36px; height: 20px; }
@@ -198,4 +196,4 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 .subjects .sw-text { font-size: .6rem; }
 .subjects .topic-go { width: 32px; height: 32px; border-radius: 10px; }
 .subjects .topic-go svg { width: 18px; height: 18px; }
-@media (max-width: 619px) { .subjects { grid-template-columns: 1fr; gap: 18px; } }
+@media (max-width: 619px) { .subjects .topics { grid-template-columns: 1fr; } }
