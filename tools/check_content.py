@@ -18,10 +18,10 @@ CODES = re.compile(r'^([ABC])([12])(\+)?$')
 NAMES = {'foundation': 1, 'foundation+': 2, 'intermediate': 3, 'intermediate+': 4, 'advanced': 5}
 LEVEL_NAMES = ['', 'Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced']
 MIN_LEVEL = 6   # the same number as MIN_LEVEL in en/engine/app.js
-OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3'}   # columns a file may leave out
+OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3', 'list'}   # columns a file may leave out
 
 HEADS = {
-    'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note'],
+    'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note', 'list'],   # list: optional, see content/README.md
     'gaps': ['id', 'level', 'sentence', 'answer', 'wrong1', 'wrong2', 'wrong3', 'explanation', 'focus', 'word'],
     'builds': ['id', 'level', 'goal', 'zh', 'pieces', 'decoys', 'also_right', 'explanation'],   # Build the sentence: Chinese version only
     'errors': ['id', 'level', 'title', 'text'],
@@ -203,6 +203,12 @@ def check_folder(folder, all_word_ids):
             print('  ' + LEVEL_NAMES[b].ljust(15) + ''.join(str(n).rjust(12) for n in row) + ('   ' + flag if flag else '') + (f'   ({zh} with Chinese)' if any_zh else ''))
     else:
         print('  (no content yet)')
+    if words and any(w.get('list') for w in words):   # word lists (data-list on a page decides which list its word games deal)
+        lists = {}
+        for w in words:
+            for l in [x.strip().lower() for x in w.get('list', '').split(';') if x.strip()] or ['(no list: dealt on every page)']:
+                lists[l] = lists.get(l, 0) + 1
+        print('  words.csv lists: ' + ', '.join(f'{k} {v}' for k, v in sorted(lists.items())))
     if words:
         no_zh = sum(1 for w in words if not w.get('zh'))
         if no_zh and no_zh < len(words): print(f'  {no_zh} word(s) have no Chinese (zh): the Chinese version leaves them out.')

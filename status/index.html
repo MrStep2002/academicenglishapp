@@ -113,17 +113,27 @@ async function loadSubject(href){
   if(!app || !app.dataset.content) return null;
   const d=app.dataset, dir=new URL(d.content.replace(/\/*$/,'/'), pageUrl).href;
   const T={}; await Promise.all(FILES.map(f=>getCSV(dir+f+'.csv').then(rows=>{ T[f]=rows; })));
+  // Word lists (31 Oct): a page with data-list counts only the words its word games deal; with data-linked, only the
+  // Fill the gap rows linked to those words. Every word still links content (T.allWords). See content/README.md.
+  T.allWords=T.words;
+  const want=String(d.list||'').split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+  if(want.length && T.words){
+    T.words=T.words.filter(w=>{ const l=String(w.list||'').split(';').map(x=>x.trim().toLowerCase()).filter(Boolean); return !l.length || l.some(x=>want.includes(x)); });
+    if(d.linked){ const on=new Set(T.words.flatMap(w=>[String(w.word||'').toLowerCase(), String(w.id||'').toLowerCase()]));
+      T.gaps=(T.gaps||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
+      ['builds','errors','tf','right-wrong','reads','questions','extracts'].forEach(k=>{ T[k]=[]; }); }
+  }
   return {name:d.name||href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T};
 }
 
 // Counts for one subject: per source, the items per level and a line saying what they are
 function count(s, zhFolders){
-  const T=s.T, words=(T.words||[]).filter(w=>w.word && w.meaning);
-  const wordLevel={}; words.forEach(w=>{ const b=band(w.level); if(b){ wordLevel[w.word.toLowerCase()]=b; wordLevel[(w.id||'').toLowerCase()]=b; } });
-  const known=v=>{ v=String(v||'').trim().toLowerCase(); return !!wordLevel[v] || words.some(w=>w.word.toLowerCase()===v || (w.id||'').toLowerCase()===v); };
+  const T=s.T, words=(T.words||[]).filter(w=>w.word && w.meaning), allWords=(T.allWords||T.words||[]).filter(w=>w.word && w.meaning);
+  const wordLevel={}; allWords.forEach(w=>{ const b=band(w.level); if(b){ wordLevel[w.word.toLowerCase()]=b; wordLevel[(w.id||'').toLowerCase()]=b; } });
+  const known=v=>{ v=String(v||'').trim().toLowerCase(); return !!wordLevel[v] || allWords.some(w=>w.word.toLowerCase()===v || (w.id||'').toLowerCase()===v); };
   const err=/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/g, key=/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
   // Complete the text: any word or form can be a gap; it is linked to words.csv when it is a word there or a simple form of one
-  const byWord={}; words.forEach(w=>{ byWord[w.word.toLowerCase()]=(w.pos||'').toLowerCase(); });
+  const byWord={}; allWords.forEach(w=>{ byWord[w.word.toLowerCase()]=(w.pos||'').toLowerCase(); });
   const NEED={s:['noun','verb'], ed:['verb'], ing:['verb']};
   const linked=v=>{ const t=String(v||'').trim().toLowerCase(); if(t in byWord) return true; const tries=[], add=(b,k)=>{ if(b.length>=2) tries.push([b,k]); };
     if(/ies$/.test(t)) add(t.slice(0,-3)+'y','s'); if(/es$/.test(t)) add(t.slice(0,-2),'s'); if(/[^s]s$/.test(t)) add(t.slice(0,-1),'s');

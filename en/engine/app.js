@@ -6,7 +6,7 @@
 // The site's top folder, worked out from where this file lives (en/engine/app.js), so links work on any host and from a local copy
 const ROOT = ((document.currentScript && document.currentScript.src) || '/en/engine/app.js').replace(/en\/engine\/app\.js([?#].*)?$/, '');
 const $app = document.getElementById('app');
-const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd, data-hide
+const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd, data-hide, data-list, data-linked
 const KEY = CFG.store || (CFG.content||'').replace(/\/+$/,'').split('/').pop() || 'topic';   // where this page's progress is saved
 const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
 // Chinese side: instructions in ONE language at a time (26 Oct; teacher: both languages together "look super messy").
@@ -93,7 +93,8 @@ function buildSubject(T){
     if(ids.has(r.id)) return warn('words',r,'skipped: this id is used twice'); ids.add(r.id);
     const syn=listOf(r.synonyms);
     S.words.push({id:r.id, level:lv('words',r), w:r.word, pos:r.pos||'', def:r.meaning, ex:r.example||'', syn:syn.length?syn:undefined,
-      zh:r.zh||'', group:r.group||'', note:r.note||'', sim:listOf(r.similar), acc:listOf(r.accept)}); });
+      zh:r.zh||'', group:r.group||'', note:r.note||'', sim:listOf(r.similar), acc:listOf(r.accept),
+      lists:listOf(r.list).map(s=>s.toLowerCase())}); });
   const byId=Object.fromEntries(S.words.map(w=>[w.id,w])), byText={};
   S.words.forEach(w=>{ const k=w.w.toLowerCase(); (byText[k]=byText[k]||[]).push(w.id); });
   const refs=v=>byId[v] ? [v] : (byText[String(v).trim().toLowerCase()]||[]);
@@ -160,6 +161,22 @@ function buildSubject(T){
       S.passages=T.reading.filter(r=>{ const miss=need.filter(k=>!r[k]); if(miss.length){ warn('reading',r,'skipped: missing '+miss.join(', ')); return false; } return true; })
         .map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, qs:questionsOf(r)})); }
   }
+  // Word lists (31 Oct 2026; Representation first: key terms, describing words, academic words).
+  // words.csv may have a "list" column: one or more list names, separated by ;  (e.g. "key" or "key; describing").
+  // data-list on a page names the list(s) its WORD games deal (Match, Word or meaning, True or false cards made from words,
+  // Save the mouse, arcade games, every Chinese word game and the words that flow in). A word with no list is dealt everywhere.
+  // Every word, on any list, still links content: a gap's meaning after Check, a Complete the text word, word progress.
+  // So content written for any list keeps working on the main page.
+  // data-linked="yes" on a page: its other games use only content linked to its own words (Fill the gap rows whose word
+  // is on the page); everything else stays on the main page. Used by Describing people.
+  S.allWords=S.words;
+  const want=String(CFG.list||'').split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+  if(want.length){
+    S.words=S.words.filter(w=>!w.lists.length || w.lists.some(l=>want.includes(l)));
+    if(CFG.linked){ const on=new Set(S.words.map(w=>w.id));
+      S.gaps=S.gaps.filter(g=>g.wid && on.has(g.wid));
+      ['builds','errors','tf','rw','reads','questions','extracts'].forEach(k=>{ S[k]=[]; }); }
+  }
   return S;
 }
 // Load the page's files, then start. The Chinese version only needs the words, and builds.csv for Build the sentence.
@@ -185,7 +202,7 @@ function boot(){
 }
 
 function main(S){
-const byId = Object.fromEntries(S.words.map(w=>[w.id,w]));
+const byId = Object.fromEntries((S.allWords||S.words).map(w=>[w.id,w]));   // every word, on any list (see data-list)
 const alikeOf = {}; (S.alike||[]).forEach((g,i)=>g.forEach(id=>{ (alikeOf[id]=alikeOf[id]||new Set()).add(i); }));
 const areAlike = (a,b) => { const A=alikeOf[a], B=alikeOf[b]; if(!A||!B) return false; for(const x of A) if(B.has(x)) return true; return false; };
 

@@ -76,7 +76,7 @@ Required columns are in **bold**.
 
 ### words.csv
 
-`id,level,word,pos,meaning,example,synonyms,zh,group,similar,accept,note`
+`id,level,word,pos,meaning,example,synonyms,zh,group,similar,accept,note,list`
 
 | Column | |
 |---|---|
@@ -91,6 +91,21 @@ Required columns are in **bold**.
 | similar | Words in this file so close in meaning that they must never be wrong answers for this word, separated by `;`. |
 | accept | Words Type it also accepts for this meaning, separated by `;`. |
 | note | For teachers. Not shown. |
+| list | Optional. Which word list(s) the word is on, separated by `;`, e.g. `key` or `key; describing`. A page with `data-list` deals only its list's words in the word games (see "Word lists" below). A word with no list is dealt on every page. |
+
+#### Word lists (31 Oct 2026)
+
+One folder can hold more than one word list, so two pages can share the same content. Representation has three:
+`key` (media key terms: the Representation page), `describing` (adjectives for describing people: the Describing people
+page) and `academic` (general academic words that students practise in Essentials; they stay in the file only so the
+gaps and texts written around them keep their meanings).
+
+- `data-list="key"` on a topic page: Match the meaning, Word or meaning, the True or false cards made from words, Save the mouse,
+  the arcade games, and every Chinese word game (including the words that flow in) use only words on that list.
+- Every word in the file, on any list, still links content: the meaning after Check in Fill the gap and Complete the text,
+  and the word's progress. Word progress is saved by id, so a word moves on wherever it is answered.
+- `data-linked="yes"` as well: the page's other games use only content linked to its own words (Fill the gap rows whose
+  `word` is on the list). Everything else (true/false rows, texts, Spot the error…) stays on the main page.
 
 ### gaps.csv (Fill the gap)
 
