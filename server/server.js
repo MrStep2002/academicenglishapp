@@ -2,7 +2,8 @@
 // Students log in with the fun name and password their teacher gave them; their saved progress (the same data the
 // games keep in the browser) is copied to the server, so it follows them to any device. Teachers make classes and
 // accounts and see each student's points, level and last activity. Reports (31 Oct 2026): anyone can report a question
-// after a wrong answer; the teacher keeps it or removes it from the games (see "reports" below).
+// after a wrong answer; the teacher keeps it or removes it from the games (see "reports" below). Suggestions box (3 Nov 2026):
+// logged-in students send ideas from the topic lists; the teacher reads them on the teacher page (see "suggestions box").
 // No packages to install: plain Node.js 22.13+ (http, crypto and the built-in SQLite). Caddy sits in front and adds HTTPS.
 // Run: node server/server.js   (settings come from the environment: PORT, DB_PATH, ALLOWED_ORIGINS, SCHOOL_TZ, BACKUP_DIR)
 'use strict';
@@ -576,6 +577,65 @@ route('POST', '/api/teacher/reports/decide', (req, body) => {
   db.prepare(`INSERT INTO report_items (topic, game, item, status, decided, teacher_id) VALUES (?,?,?,?,?,?)
     ON CONFLICT(topic, game, item) DO UPDATE SET status = excluded.status, decided = excluded.decided, teacher_id = excluded.teacher_id`)
     .run(topic, game, item, body.status, now(), u.id);
+  return {ok: true};
+});
+
+// ---------- suggestions box (3 Nov 2026) ----------
+// A student asked for a suggestions box. At the bottom of both topic lists (en/engine/suggest.js), a logged-in student
+// chooses what kind of idea it is and writes it (up to 500 characters); the teacher sees their fun name and class.
+// Logged-in students only (teacher's choice), 3 a day each. A browser logged in on the teacher page can send one too
+// (to try it out): it shows as "You", with no limit. Teacher page (#/suggestions): New and Done, Delete, spreadsheet.
+const KINDS = ['game', 'topic', 'problem', 'other'];
+const SUGGESTIONS_A_DAY = 3, SUGGESTION_MAX = 500;
+
+route('POST', '/api/suggest', (req, body) => {
+  const u = reporter(req);
+  if (!u) throw new Oops(401, 'Please log in to send a suggestion. 请先登录再提建议。');
+  const kind = String(body.kind || ''), text = clip(body.text, SUGGESTION_MAX);
+  if (!KINDS.includes(kind)) throw new Oops(400, 'Choose what your idea is about. 请选择建议类型。');
+  if (text.length < 3) throw new Oops(400, 'Please write your idea. 请写下你的建议。');
+  const t = now(), day = dayKey(t);
+  if (u.role === 'student') {
+    const n = db.prepare("SELECT COUNT(*) AS n FROM suggestions WHERE role = 'student' AND user_id = ? AND day = ?").get(u.id, day).n;
+    if (n >= SUGGESTIONS_A_DAY) throw new Oops(429, `You can send ${SUGGESTIONS_A_DAY} suggestions a day. Thank you for your ideas! 每天最多可以提${SUGGESTIONS_A_DAY}条建议，谢谢你的想法！`);
+    db.prepare('UPDATE students SET last_seen = ? WHERE id = ?').run(t, u.id);
+  }
+  db.prepare('INSERT INTO suggestions (kind, text, side, page, role, user_id, day, created) VALUES (?,?,?,?,?,?,?,?)')
+    .run(kind, text, body.side === 'zh' ? 'zh' : 'en', clip(body.page, 120), u.role, u.id, day, t);
+  const left = u.role === 'student' ? SUGGESTIONS_A_DAY - db.prepare("SELECT COUNT(*) AS n FROM suggestions WHERE role = 'student' AND user_id = ? AND day = ?").get(u.id, day).n : null;
+  return {ok: true, left};
+});
+
+// The teacher's list: new (oldest first, so nothing waits too long) and done (the last 300)
+route('GET', '/api/teacher/suggestions', req => {
+  const u = who(req, 'teacher');
+  const seen = {};
+  const from = r => {
+    const k = r.role + r.user_id;
+    if (seen[k]) return seen[k];
+    if (r.role === 'teacher') return (seen[k] = r.user_id === u.id ? {name: 'You', classes: ''} : {name: (db.prepare('SELECT name FROM teachers WHERE id = ?').get(r.user_id) || {}).name || '?', classes: ''});
+    const s = db.prepare('SELECT name FROM students WHERE id = ?').get(r.user_id);
+    const cls = db.prepare('SELECT c.name FROM class_members m JOIN classes c ON c.id = m.class_id WHERE m.student_id = ? ORDER BY c.name').all(r.user_id).map(c => c.name);
+    return (seen[k] = s ? {name: s.name, classes: cls.join(', ')} : {name: '(account deleted)', classes: ''});
+  };
+  const out = r => Object.assign({id: r.id, kind: r.kind, text: r.text, side: r.side, page: r.page, created: r.created, status: r.status, done: r.done}, from(r));
+  return {
+    new: db.prepare("SELECT * FROM suggestions WHERE status = 'new' ORDER BY created").all().map(out),
+    done: db.prepare("SELECT * FROM suggestions WHERE status = 'done' ORDER BY done DESC LIMIT 300").all().map(out),
+  };
+});
+// Done, or back to New
+route('POST', '/api/teacher/suggestions/:id/status', (req, body, p) => {
+  who(req, 'teacher');
+  if (!['new', 'done'].includes(body.status)) throw new Oops(400, 'Choose Done or New.');
+  const r = db.prepare('UPDATE suggestions SET status = ?, done = ? WHERE id = ?').run(body.status, body.status === 'done' ? now() : null, +p.id);
+  if (!r.changes) throw new Oops(404, 'That suggestion is not there any more.');
+  return {ok: true};
+});
+// Delete (a silly one, or one you've copied somewhere else)
+route('POST', '/api/teacher/suggestions/:id/delete', (req, body, p) => {
+  who(req, 'teacher');
+  db.prepare('DELETE FROM suggestions WHERE id = ?').run(+p.id);
   return {ok: true};
 });
 

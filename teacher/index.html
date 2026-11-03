@@ -9,7 +9,7 @@
 <meta name="robots" content="noindex">
 <title>Teacher · Academic English App</title>
 <link rel="stylesheet" href="../css/fonts.css">
-<link rel="stylesheet" href="../css/home.css?v=2026-11-01a">
+<link rel="stylesheet" href="../css/home.css?v=2026-11-03a">
 <style>
   .home { max-width: 1040px; }
   .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
@@ -98,6 +98,11 @@
   .rep-comments { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
   .rep-btns { display: flex; gap: 8px; flex-wrap: wrap; }
   .rep-count { margin-left: 4px; }
+  /* Suggestions (3 Nov 2026) */
+  .sg-card { gap: 8px; padding: 16px 18px; }
+  .sg-card p { margin: 0; }
+  .sg-said { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 1.05rem; line-height: 1.45; }
+  .sg-kindtag { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: .82rem; font-weight: 700; background: var(--bg); border: 1.5px solid var(--line); }
 </style>
 </head>
 <body>
@@ -116,7 +121,8 @@
    {token, name, keep, until}. Since 26 Oct the login doesn't stay for 30 days unless the teacher ticks "Keep me logged in"
    (for their own computer): otherwise it ends after 2 hours without using this page, so a student on a classroom computer
    can't open the teacher page later. Logins saved before then (no "until") end the next time the page is opened.
-   Reports (31 Oct 2026): #/reports lists the questions reported in the games; Keep or Remove each one. */
+   Reports (31 Oct 2026): #/reports lists the questions reported in the games; Keep or Remove each one.
+   Suggestions (3 Nov 2026): #/suggestions lists the ideas students sent from the suggestions box on the topic lists. */
 (function(){
 'use strict';
 var API = (function(){ var a = ''; try { a = localStorage.getItem('aea:api') || ''; } catch (e) {} return (a || 'https://api.academicenglishapp.com').replace(/\/+$/, ''); })();
@@ -193,10 +199,11 @@ function showClasses(){
   call('/api/teacher/classes').then(function(r){
     view.innerHTML =
       '<div class="spread" style="margin-bottom:14px"><p class="note">' + (r.classes.length ? 'Choose a class to see its students.' : 'No classes yet. Make your first one.') + '</p>' +
-      '<span class="rep-btns"><a class="btn alt" href="#/reports">Reports<span id="repn" class="rep-count"></span></a><a class="btn" href="#/new">+ New class</a></span></div>' +
+      '<span class="rep-btns"><a class="btn alt" href="#/suggestions">Suggestions<span id="sgn" class="rep-count"></span></a><a class="btn alt" href="#/reports">Reports<span id="repn" class="rep-count"></span></a><a class="btn" href="#/new">+ New class</a></span></div>' +
       '<div class="classes">' + r.classes.map(function(c){
         return '<a class="class-card" href="#/class/' + c.id + '"><b>' + esc(c.name) + '</b><span>' + c.students + ' student' + (c.students === 1 ? '' : 's') + '</span></a>'; }).join('') + '</div>';
     call('/api/teacher/reports').then(function(x){ var n = document.getElementById('repn'); if (n && x.open.length) n.textContent = ' (' + x.open.length + ' to check)'; }).catch(function(){});
+    call('/api/teacher/suggestions').then(function(x){ var n = document.getElementById('sgn'); if (n && x.new.length) n.textContent = ' (' + x.new.length + ' new)'; }).catch(function(){});
   }).catch(function(x){ view.innerHTML = '<p class="err">' + esc(x.message) + '</p>'; });
 }
 
@@ -648,6 +655,69 @@ function showReports(){
   }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
 }
 
+// ---------- suggestions (3 Nov 2026) ----------
+// A student asked for a suggestions box: logged-in students send ideas from the bottom of the topic lists (3 a day each).
+// New: oldest first. Done: you've read it or acted on it (the last 300). Delete: for silly ones.
+var KIND_NAMES = {game: '🎮 A new game', topic: '📚 A new topic or words', problem: "🔧 Something isn't working", other: '💬 Something else'};
+var sgData = null;
+function sgTab(){ return location.hash === '#/suggestions/done' ? 'done' : 'new'; }
+function sgCard(x, tab){
+  return '<div class="card sg-card">' +
+    '<div class="spread"><span class="sg-kindtag">' + esc(KIND_NAMES[x.kind] || x.kind) + '</span>' +
+      '<span class="note">' + when(x.created) + (x.side === 'zh' ? ' · Chinese version' : '') + '</span></div>' +
+    '<p class="sg-said">' + esc(x.text) + '</p>' +
+    '<p class="note">From <b>' + esc(x.name) + '</b>' + (x.classes ? ' · ' + esc(x.classes) : '') +
+      (tab === 'done' && x.done ? ' · done ' + when(x.done) : '') + '</p>' +
+    '<div class="rep-btns">' + (tab === 'new'
+      ? '<button class="btn small" data-sg="done" data-id="' + x.id + '">Done ✓</button>'
+      : '<button class="btn small alt" data-sg="new" data-id="' + x.id + '">Move back to New</button>') +
+      '<button class="btn small alt" data-sg="delete" data-id="' + x.id + '">Delete</button></div>' +
+    '</div>';
+}
+function sgCsv(){
+  var q = function(v){ v = String(v == null ? '' : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+  var d = function(t){ return t ? new Date(t).toLocaleString('en-GB') : ''; };
+  var rows = [['Status', 'About', 'Suggestion', 'From', 'Class', 'Version', 'Sent', 'Done']];
+  [['new', 'New'], ['done', 'Done']].forEach(function(t){
+    (sgData[t[0]] || []).forEach(function(x){
+      rows.push([t[1], (KIND_NAMES[x.kind] || x.kind).replace(/^\S+\s/, ''), x.text, x.name, x.classes, x.side === 'zh' ? 'Chinese' : 'English', d(x.created), d(x.done)]);
+    });
+  });
+  var text = '﻿' + rows.map(function(r){ return r.map(q).join(','); }).join('\r\n');
+  var a = document.createElement('a'), url = URL.createObjectURL(new Blob([text], {type: 'text/csv;charset=utf-8'}));
+  var now = new Date();
+  a.href = url; a.download = 'suggestions-' + now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0') + '.csv';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function showSuggestions(){
+  setTitle('Suggestions'); header();
+  var tab = sgTab();
+  call('/api/teacher/suggestions').then(function(r){
+    sgData = r;
+    var list = r[tab] || [], tabs = [['new', 'New', r.new.length], ['done', 'Done', r.done.length]];
+    var intro = tab === 'new'
+      ? 'Ideas students sent from the suggestions box at the bottom of the topic lists, oldest first. Press <b>Done</b> when you have read it or acted on it.'
+      : 'Suggestions you have marked done (the last 300).';
+    view.innerHTML =
+      '<div class="spread" style="margin-bottom:14px"><a class="backlink" href="#/">← All classes</a>' +
+        '<button class="btn small alt" type="button" id="csv"' + (r.new.length + r.done.length ? '' : ' disabled') + '>Download as spreadsheet</button></div>' +
+      '<nav class="tabs">' + tabs.map(function(t){ return '<a href="#/suggestions' + (t[0] === 'new' ? '' : '/done') + '"' + (t[0] === tab ? ' aria-current="page"' : '') + '>' + t[1] + ' (' + t[2] + ')</a>'; }).join('') + '</nav>' +
+      '<p class="note" style="margin-bottom:14px">' + intro + '</p>' +
+      '<p class="err" id="err" hidden></p>' +
+      (list.length ? '<div class="reps">' + list.map(function(x){ return sgCard(x, tab); }).join('') + '</div>'
+        : '<p class="note">' + (tab === 'new' ? 'No new suggestions.' : 'None yet.') + '</p>');
+    document.getElementById('csv').onclick = sgCsv;
+    Array.prototype.forEach.call(view.querySelectorAll('[data-sg]'), function(b){
+      b.onclick = function(){
+        var what = b.getAttribute('data-sg'), id = b.getAttribute('data-id');
+        if (what === 'delete' && !confirm('Delete this suggestion? It can\'t be brought back.')) return;
+        b.disabled = true;
+        call('/api/teacher/suggestions/' + id + (what === 'delete' ? '/delete' : '/status'), what === 'delete' ? {} : {status: what}).then(showSuggestions).catch(fail());
+      };
+    });
+  }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← All classes</a></p><p class="err">' + esc(x.message) + '</p>'; });
+}
+
 function route(){
   stopLive();
   if (!auth()) return showLogin();
@@ -659,6 +729,7 @@ function route(){
   if ((m = /^#\/class\/(\d+)\/existing$/.exec(h))) return showExisting(m[1]);
   if ((m = /^#\/game\/(\d+)$/.exec(h))) return showGame(m[1]);
   if (/^#\/reports(\/(removed|kept))?$/.test(h)) return showReports();
+  if (h === '#/suggestions' || h === '#/suggestions/done') return showSuggestions();
   showClasses();
 }
 addEventListener('hashchange', route);

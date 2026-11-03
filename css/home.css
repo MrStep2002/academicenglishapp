@@ -232,3 +232,37 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
   .top-row .cc-box-actions .cc-btn, .ess-actions .cc-btn { white-space: normal; }
 }
 .ess-sub { color: var(--muted); font-size: .92rem; }
+
+/* Suggestions box (3 Nov 2026, a student's idea): at the bottom of the topic lists, filled in by en/engine/suggest.js */
+.suggest { background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 16px 18px; margin-top: 8px; }
+.suggest:empty { display: none; }
+.sg-top { display: flex; align-items: center; gap: 12px 16px; flex-wrap: wrap; }
+.sg-icon { flex: none; width: 44px; height: 44px; border-radius: 12px; background: var(--hi); display: grid; place-items: center; font-size: 1.4rem; }
+.sg-text { flex: 1 1 260px; min-width: 0; }
+.sg-title { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.12rem; line-height: 1.2; letter-spacing: -.01em; color: var(--ink); }
+.sg-sub { margin: 2px 0 0; color: var(--muted); font-size: .92rem; }
+.sg-action { flex: 0 1 auto; display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; }
+.sg-action .cc-btn { padding: 10px 18px; }
+.sg-form { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.sg-k { margin: 0; font-weight: 700; font-size: .95rem; }
+.sg-kinds { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-bottom: 4px; }
+@media (max-width: 759px) { .sg-kinds { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.sg-kind { font: inherit; font-size: .92rem; font-weight: 700; text-align: left; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line);
+  background: var(--bg); color: var(--ink); cursor: pointer; line-height: 1.25; }
+.sg-kind:hover { border-color: var(--muted); }
+.sg-kind[aria-pressed="true"] { border-color: var(--ess); background: var(--ess-soft); }
+.sg-kind:focus-visible, .sg-t:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
+.sg-t { font: inherit; width: 100%; min-height: 104px; resize: vertical; padding: 10px 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg); color: var(--ink); }
+.sg-t:focus { border-color: var(--ess); }
+.sg-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 14px; flex-wrap: wrap; }
+.sg-who { font-size: .88rem; color: var(--muted); }
+.sg-who b { color: var(--ink); }
+.sg-count { font-size: .8rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sg-btns { justify-content: flex-start; }
+.sg-msg { margin: 0; font-size: .95rem; color: var(--muted); }
+.sg-msg:empty { display: none; }
+.sg-msg.ok { color: var(--ess); font-weight: 700; }
+.sg-msg.err { color: #c0392b; font-weight: 700; }
+.sg-msg:focus { outline: none; }
+@media (prefers-color-scheme: dark) { .sg-msg.err { color: #ff8a78; } }
+@media (max-width: 479px) { .sg-action { width: 100%; } .sg-action .cc-btn { width: 100%; justify-content: center; text-align: center; } }

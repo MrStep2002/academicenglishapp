@@ -70,6 +70,16 @@ function open(file = DB_PATH) {
       topic TEXT NOT NULL, game TEXT NOT NULL, item TEXT NOT NULL, status TEXT NOT NULL, decided INTEGER NOT NULL, teacher_id INTEGER,
       PRIMARY KEY (topic, game, item));
   `);
+  // Suggestions box (3 Nov 2026): a logged-in student sends an idea from the bottom of the topic lists (a new game, a new
+  // topic, something not working, something else). The teacher page lists them: New, then Done.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS suggestions (
+      id INTEGER PRIMARY KEY, kind TEXT NOT NULL, text TEXT NOT NULL, side TEXT, page TEXT,
+      role TEXT NOT NULL, user_id INTEGER NOT NULL, day TEXT NOT NULL, created INTEGER NOT NULL,
+      status TEXT NOT NULL DEFAULT 'new', done INTEGER);
+    CREATE INDEX IF NOT EXISTS suggestions_user_day ON suggestions(role, user_id, day);
+    CREATE INDEX IF NOT EXISTS suggestions_status ON suggestions(status, created);
+  `);
   return db;
 }
 

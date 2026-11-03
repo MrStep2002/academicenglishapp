@@ -113,6 +113,21 @@ sudo bash /opt/aea/server/update.sh
 - Tables: `reports` (one row per report; `ip` is a hash, only used for the limit) and `report_items` (the teacher's
   decision on each question). Added automatically when the updated server starts, so `update.sh` is all that's needed.
 
+## Suggestions box (3 Nov 2026)
+
+- A student asked for one. At the bottom of both topic lists (`en/index.html`, `zh/index.html`; the box is filled in by
+  `en/engine/suggest.js`) a logged-in student chooses what the idea is about (**A new game**, **A new topic or words**,
+  **Something isn't working**, **Something else**) and writes it (up to 500 characters). Not logged in: the button goes
+  to the login page. The box tells the student their teacher will see their fun name.
+- Limit: 3 a day for each student. A browser logged in on the teacher page can send one too, to try it out (shown as
+  "You", no limit).
+- Teacher page → **Suggestions** (`#/suggestions`), next to Reports, with the number of new ones: **New** (oldest first)
+  and **Done** (the last 300). Each shows the student's fun name and classes, when, and whether it came from the
+  Chinese version. **Done** / **Move back to New**, **Delete**, **Download as spreadsheet**.
+- Routes: `POST /api/suggest {kind, text, side, page}` (student or teacher login), `GET /api/teacher/suggestions`,
+  `POST /api/teacher/suggestions/:id/status {status: new|done}`, `POST /api/teacher/suggestions/:id/delete`.
+- Table: `suggestions`. Added automatically when the updated server starts, so `update.sh` is all that's needed.
+
 ## Data and backups
 
 - Database: `/var/lib/aea/aea.db`. A copy is made every day in `/var/lib/aea/backups/` (the last 14 are kept).
