@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1D43D1">
+<title>BIBA Cycle Planner</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231D43D1'/%3E%3Ctext x='16' y='23' font-family='Arial' font-weight='700' font-size='19' fill='white' text-anchor='middle'%3E6%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="fonts/fonts.css">
+<style>
+/* Layout: one bold "today" band (the cycle day as a big numeral), quiet tabs, then a period × day grid built like the school's own sheet. */
+:root {
+  --paper: #ECEFF3;
+  --surface: #FFFFFF;
+  --sunk: #F4F6F9;
+  --ink: #131925;
+  --muted: #5A6476;
+  --line: #D2D8E0;
+  --accent: #1D43D1;
+  --accent-ink: #FFFFFF;
+  --accent-soft: #DCE4FF;
+  --holiday: #B42330;
+  --holiday-soft: #FBE3E5;
+  --workday: #1F7A4D;
+  --workday-soft: #DDF2E6;
+  --c1-bg: #D3EFE8; --c1-fg: #0B6655;
+  --c2-bg: #FBE9C4; --c2-fg: #835300;
+  --c3-bg: #E8DCF7; --c3-fg: #643A99;
+  --c4-bg: #D5E6FA; --c4-fg: #1B5BA3;
+  --c5-bg: #F8DAE2; --c5-fg: #9E2D4B;
+  --c6-bg: #E2EBC8; --c6-fg: #4F6410;
+  --c0-bg: #E2E6EC; --c0-fg: #465165;
+  --shadow: 0 1px 2px rgba(19,25,37,.06), 0 8px 24px rgba(19,25,37,.08);
+  --f-display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --f-body: "Schibsted Grotesk", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0E1218; --surface: #161B24; --sunk: #121720; --ink: #E5E9F0; --muted: #97A1B3; --line: #283040;
+    --accent: #7D9BFF; --accent-ink: #0B1020; --accent-soft: #1C2747;
+    --holiday: #FF8A8F; --holiday-soft: #3A1A1F; --workday: #6FD3A0; --workday-soft: #15301F;
+    --c1-bg: #12352E; --c1-fg: #7EDAC4; --c2-bg: #382C11; --c2-fg: #F0C26A; --c3-bg: #2C2240; --c3-fg: #C6A7EE;
+    --c4-bg: #162B45; --c4-fg: #8DBBF3; --c5-bg: #3B1A25; --c5-fg: #F09AB0; --c6-bg: #283114; --c6-fg: #C0D57A;
+    --c0-bg: #212835; --c0-fg: #AEB8C8;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0E1218; --surface: #161B24; --sunk: #121720; --ink: #E5E9F0; --muted: #97A1B3; --line: #283040;
+  --accent: #7D9BFF; --accent-ink: #0B1020; --accent-soft: #1C2747;
+  --holiday: #FF8A8F; --holiday-soft: #3A1A1F; --workday: #6FD3A0; --workday-soft: #15301F;
+  --c1-bg: #12352E; --c1-fg: #7EDAC4; --c2-bg: #382C11; --c2-fg: #F0C26A; --c3-bg: #2C2240; --c3-fg: #C6A7EE;
+  --c4-bg: #162B45; --c4-fg: #8DBBF3; --c5-bg: #3B1A25; --c5-fg: #F09AB0; --c6-bg: #283114; --c6-fg: #C0D57A;
+  --c0-bg: #212835; --c0-fg: #AEB8C8;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+body { margin: 0; -webkit-font-smoothing: antialiased; }
+img { max-width: 100%; }
+body { background: var(--paper); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px 64px; display: flex; flex-direction: column; gap: 14px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--muted); }
+.label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+/* Brand row */
+.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand h1 { font-family: var(--f-display); font-weight: 800; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; }
+.brand h1 span { color: var(--accent); }
+.save-state { border: 0; background: transparent; padding: 4px 0; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.save-state i { width: 8px; height: 8px; border-radius: 50%; background: var(--workday); display: inline-block; }
+.save-state.local i { background: #C98A12; }
+.save-state.err i { background: var(--holiday); }
+.save-state.err { color: var(--holiday); }
+.save-state.wait i { background: var(--muted); }
+
+/* Today band */
+.today { background: var(--accent); color: var(--accent-ink); border-radius: 18px; padding: 18px 22px; display: grid; grid-template-columns: auto 1fr; gap: 6px 22px; align-items: center; }
+.today .num { font-family: var(--f-display); font-weight: 800; line-height: .82; font-size: 112px; letter-spacing: -.01em; display: flex; align-items: flex-start; gap: 4px; }
+.today .num small { font-size: 28px; opacity: .7; padding-top: 10px; }
+.today .num .word { font-size: 22px; writing-mode: vertical-rl; transform: rotate(180deg); letter-spacing: .14em; opacity: .85; padding-right: 2px; }
+.today .info { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.today .date { font-family: var(--f-display); font-weight: 600; font-size: 28px; letter-spacing: .02em; text-transform: uppercase; }
+.today .next { font-size: 15px; opacity: .95; }
+.today .next b { font-weight: 700; }
+.today .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.today .pick button { width: 42px; height: 42px; border-radius: 10px; border: 1.5px solid currentColor; background: transparent; font-family: var(--f-display); font-weight: 800; font-size: 22px; }
+.today .pick button:hover { background: var(--accent-ink); color: var(--accent); }
+.today .hint { font-size: 13px; opacity: .85; }
+.today .off { font-family: var(--f-display); font-weight: 800; font-size: 64px; line-height: .9; text-transform: uppercase; }
+@media (max-width: 560px) {
+  .today { padding: 14px 16px; gap: 4px 14px; }
+  .today .num { font-size: 80px; }
+  .today .date { font-size: 21px; }
+  .today .off { font-size: 44px; }
+}
+
+/* Tabs + filters */
+.bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between; }
+.tabs { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.tabs a { text-decoration: none; color: var(--muted); padding: 7px 14px; border-radius: 9px; font-weight: 600; font-size: 14px; }
+.tabs a[aria-current="page"] { background: var(--ink); color: var(--surface); }
+.tabs a:hover:not([aria-current="page"]) { color: var(--ink); }
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 5px 12px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+.chip .sw { width: 10px; height: 10px; border-radius: 3px; }
+.chip[aria-pressed="true"] { border-color: var(--ink); background: var(--ink); color: var(--surface); }
+.chip.subj { border-style: dashed; }
+.switch { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer; user-select: none; }
+.switch input { appearance: none; width: 34px; height: 20px; border-radius: 999px; background: var(--line); position: relative; margin: 0; cursor: pointer; transition: background .15s; }
+.switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.switch input:checked { background: var(--accent); }
+.switch input:checked::after { transform: translateX(14px); }
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; }
+.divider { width: 1px; height: 20px; background: var(--line); }
+
+/* Panels */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 16px; }
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.panel-head h2 { font-family: var(--f-display); font-weight: 800; font-size: 24px; letter-spacing: .02em; text-transform: uppercase; }
+.nav { display: inline-flex; gap: 6px; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; padding: 7px 12px; font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { border-color: var(--muted); }
+a.btn { text-decoration: none; color: var(--ink); }
+a.btn.primary { color: var(--accent-ink); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { color: var(--holiday); }
+.btn.ghost { border-color: transparent; background: transparent; }
+.btn[disabled] { opacity: .5; cursor: default; }
+.icon-btn { width: 34px; height: 34px; padding: 0; justify-content: center; font-size: 16px; }
+
+/* Week grid */
+.week { display: grid; grid-template-columns: 4.6rem repeat(var(--n), minmax(0, 1fr)); grid-template-rows: auto repeat(var(--p), minmax(5.4rem, auto)); gap: 0 8px; }
+.tcol, .dcol { display: grid; grid-row: 1 / -1; grid-template-rows: subgrid; gap: 6px 0; }
+.tcell { padding-top: 6px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+.tcell b { display: block; font-family: var(--f-display); font-weight: 800; font-size: 20px; color: var(--ink); line-height: 1; margin-bottom: 2px; }
+.dhead { display: flex; flex-direction: column; gap: 4px; padding-bottom: 8px; align-items: flex-start; }
+.dhead .dname { font-weight: 700; font-size: 14px; }
+.dhead .dname span { color: var(--muted); font-weight: 500; }
+.dhead.is-today .dname { color: var(--accent); }
+.daytag { border: 0; border-radius: 7px; padding: 2px 8px; font-family: var(--f-display); font-weight: 800; font-size: 15px; letter-spacing: .04em; text-transform: uppercase; background: var(--sunk); color: var(--ink); }
+.daytag.on { background: var(--ink); color: var(--surface); }
+.daytag.hol { background: var(--holiday-soft); color: var(--holiday); font-family: var(--f-body); font-size: 12px; font-weight: 700; letter-spacing: 0; text-transform: none; max-width: 100%; text-align: left; }
+.daytag.mk { background: var(--workday-soft); color: var(--workday); }
+.daytag.wk { background: transparent; color: var(--muted); font-family: var(--f-body); font-size: 12px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.dcell { border-top: 1px solid var(--line); padding-top: 6px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.dcol.off .dcell { background: repeating-linear-gradient(135deg, transparent 0 7px, var(--sunk) 7px 14px); }
+.lesson { border: 0; text-align: left; width: 100%; border-radius: 10px; padding: 8px 10px; background: var(--cbg); color: var(--ink); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.lesson:hover { filter: brightness(.97); box-shadow: var(--shadow); }
+.lesson .cls { font-weight: 700; font-size: 13px; color: var(--cfg); display: flex; justify-content: space-between; gap: 6px; }
+.lesson .meta { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.lesson .plan { font-size: 13px; font-weight: 500; overflow-wrap: anywhere; }
+.lesson .plan.empty { color: var(--muted); font-weight: 400; font-style: italic; }
+.lesson .flags { font-size: 11px; color: var(--cfg); font-weight: 600; }
+.lesson.covered { background: repeating-linear-gradient(135deg, var(--sunk) 0 6px, var(--surface) 6px 12px); border: 1px dashed var(--line); }
+.lesson.covered .cls { color: var(--muted); }
+.lesson.is-now { outline: 2px solid var(--accent); outline-offset: 1px; }
+.timeinline { display: none; }
+@media (max-width: 760px) {
+  .week { display: flex; flex-direction: column; gap: 14px; }
+  .tcol { display: none; }
+  .dcol { display: flex; flex-direction: column; gap: 6px; }
+  .dcell { border-top: 0; padding-top: 0; }
+  .dcell.empty { display: none; }
+  .dhead { flex-direction: row; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .timeinline { display: inline; }
+  .dcol.off .dcell { background: none; }
+}
+
+/* Month */
+.month { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.mdow { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 0 4px; }
+.mcell { border: 1px solid var(--line); background: var(--surface); border-radius: 10px; min-height: 104px; padding: 6px; display: flex; flex-direction: column; gap: 4px; text-align: left; min-width: 0; }
+.mcell:hover { border-color: var(--muted); }
+.mcell.out { opacity: .45; }
+.mcell.wkend { background: var(--sunk); }
+.mcell.hol { background: var(--holiday-soft); border-color: transparent; }
+.mcell.today { border: 2px solid var(--accent); }
+.mtop { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.mtop .dnum { font-weight: 700; font-size: 14px; }
+.mtag { font-family: var(--f-display); font-weight: 800; font-size: 14px; background: var(--ink); color: var(--surface); border-radius: 5px; padding: 0 6px; }
+.mtag.mk { background: var(--workday); color: var(--surface); }
+.mhol { font-size: 11px; font-weight: 600; color: var(--holiday); line-height: 1.2; overflow-wrap: anywhere; }
+.mles { font-size: 11px; line-height: 1.25; border-radius: 5px; padding: 2px 5px; background: var(--cbg); color: var(--cfg); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mles em { font-style: normal; font-weight: 400; color: var(--ink); }
+@media (max-width: 640px) {
+  .month { gap: 3px; }
+  .mcell { min-height: 64px; padding: 4px; border-radius: 7px; }
+  .mles { font-size: 0; padding: 0; height: 5px; }
+  .mhol { font-size: 9px; }
+  .mdow { font-size: 9px; padding: 0; }
+}
+
+/* List */
+.list { display: flex; flex-direction: column; gap: 18px; }
+.lday h3 { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 6px; flex-wrap: wrap; }
+.lrow { display: grid; grid-template-columns: 6.2rem 10rem minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 10px; padding: 8px 8px; }
+.lrow:hover { background: var(--sunk); }
+.lrow .t { font-family: var(--f-mono); font-size: 12px; color: var(--muted); padding-top: 2px; }
+.lrow .c { font-weight: 700; font-size: 13px; color: var(--cfg); background: var(--cbg); border-radius: 7px; padding: 2px 8px; justify-self: start; }
+.lrow .p { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.lrow .p b { font-weight: 600; }
+.lrow .p .n { font-size: 13px; color: var(--muted); white-space: pre-line; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lrow .p a { font-size: 13px; color: var(--accent); overflow-wrap: anywhere; }
+.lrow .r { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.lrow.covered .c { background: transparent; color: var(--muted); border: 1px dashed var(--line); }
+@media (max-width: 640px) {
+  .lrow { grid-template-columns: 4.4rem minmax(0, 1fr); gap: 4px 10px; }
+  .lrow .p { grid-column: 2; }
+  .lrow .r { display: none; }
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface); padding: 6px 12px; font-size: 13px; font-weight: 600; color: var(--muted); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+/* Cycle */
+.cyclewrap { overflow-x: auto; }
+.cycle { display: grid; grid-template-columns: 4.6rem repeat(var(--n), minmax(9.5rem, 1fr)); gap: 6px; min-width: 640px; }
+.cycle .ch { font-family: var(--f-display); font-weight: 800; font-size: 20px; text-transform: uppercase; padding: 4px 2px; }
+.cycle .cc { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 6px; }
+.clash { border: 1px solid var(--holiday); border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
+.clash .label { color: var(--holiday); }
+.who { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: flex-start; background: var(--surface); }
+.who button { border: 0; background: transparent; padding: 3px 8px; font-size: 11px; font-weight: 700; color: var(--muted); }
+.who button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+/* Setup */
+.setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 14px; align-items: start; }
+.setup .panel { display: flex; flex-direction: column; gap: 12px; }
+.setup h2 { font-family: var(--f-display); font-weight: 800; font-size: 22px; letter-spacing: .02em; text-transform: uppercase; }
+.setup p { margin: 0; max-width: 62ch; }
+.form { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
+.field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.field.grow { flex: 1 1 180px; }
+.field label { font-size: 12px; font-weight: 600; color: var(--muted); }
+input[type="text"], input[type="url"], input[type="date"], select, textarea { border: 1px solid var(--line); background: var(--sunk); border-radius: 9px; padding: 8px 10px; min-width: 0; width: 100%; }
+textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+.items { display: flex; flex-direction: column; border-top: 1px solid var(--line); }
+.item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.item .grow { flex: 1 1 140px; min-width: 0; }
+.pill { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 2px 8px; }
+.pill.hol { background: var(--holiday-soft); color: var(--holiday); }
+.pill.mk { background: var(--workday-soft); color: var(--workday); }
+.drop { border: 1.5px dashed var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; background: var(--sunk); }
+.drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop input[type="file"] { max-width: 100%; font-size: 13px; }
+.preview { max-height: 280px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; }
+.preview table { border-collapse: collapse; width: 100%; font-size: 13px; }
+.preview th, .preview td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.preview th { position: sticky; top: 0; background: var(--surface); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.note { font-size: 13px; color: var(--muted); }
+.err { font-size: 13px; color: var(--holiday); font-weight: 600; }
+.yr { font-size: 12px; font-weight: 700; color: var(--muted); padding: 10px 0 4px; display: flex; justify-content: space-between; align-items: center; }
+
+/* Banners */
+.banner { border-radius: 14px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; background: var(--surface); border: 1px solid var(--line); }
+.banner.warn { border-color: var(--holiday); }
+.banner .grow { flex: 1 1 260px; min-width: 0; }
+.orph { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.orph .item { border-bottom: 1px solid var(--line); }
+.orph .item:last-of-type { border-bottom: 0; }
+@media (max-width: 640px) { .divider { display: none; } }
+
+.empty-state { text-align: center; padding: 48px 16px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.empty-state h2 { font-family: var(--f-display); font-weight: 800; font-size: 30px; text-transform: uppercase; }
+
+/* Drawer */
+.scrim { position: fixed; inset: 0; background: rgba(10,14,22,.35); z-index: 40; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(460px, 100%); background: var(--surface); z-index: 41; box-shadow: var(--shadow); display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px); }
+.drawer-head { padding: 18px 20px 14px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; background: var(--cbg, var(--sunk)); }
+.drawer-head .top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.drawer-head h2 { font-family: var(--f-display); font-weight: 800; font-size: 30px; text-transform: uppercase; color: var(--cfg, var(--ink)); line-height: 1; }
+.drawer-head .meta { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.drawer-body { padding: 16px 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.drawer-foot { padding: 12px 20px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; justify-content: space-between; align-items: center; }
+.confirm { border: 1px solid var(--holiday); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; }
+.status { font-size: 12px; color: var(--muted); min-height: 1em; }
+.cover-note { font-size: 13px; background: var(--sunk); border-radius: 10px; padding: 8px 10px; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 60; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+@media (max-width: 560px) {
+  .drawer { top: auto; height: min(88%, 720px); width: 100%; border-radius: 18px 18px 0 0; padding-left: env(safe-area-inset-left, 0px); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .drawer { animation: slidein .18s ease-out; }
+  @keyframes slidein { from { transform: translateX(24px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <h1>Cycle <span>Planner</span></h1>
+    <button class="save-state wait" id="saveState" data-gosync title="Sync settings"><i></i><span>Saved in this browser</span></button>
+  </div>
+  <section class="today" id="today" aria-live="polite"></section>
+  <div class="bar">
+    <nav class="tabs" aria-label="Views">
+      <a href="#week" data-v="week">Week</a>
+      <a href="#month" data-v="month">Month</a>
+      <a href="#list" data-v="list">List</a>
+      <a href="#cycle" data-v="cycle">Cycle</a>
+      <a href="#setup" data-v="setup">Setup</a>
+    </nav>
+    <label class="switch" title="Hide the lessons someone else covers"><input type="checkbox" id="mineOnly" checked> Only lessons I teach</label>
+  </div>
+  <div class="filter-row" id="filters"></div>
+  <div id="banners"></div>
+  <main id="view"></main>
+</div>
+<div id="drawerRoot"></div>
+<div id="toastRoot"></div>
+
+<script>
+(() => {
+'use strict';
+
+/* ---------- dates ---------- */
+const pad = n => String(n).padStart(2, '0');
+const toDS = d => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`;
+const fromDS = s => { const [y, m, d] = s.split('-').map(Number); return new Date(Date.UTC(y, m - 1, d)); };
+const addDays = (s, n) => { const d = fromDS(s); d.setUTCDate(d.getUTCDate() + n); return toDS(d); };
+const dow = s => fromDS(s).getUTCDay();
+const todayDS = () => { const n = new Date(); return `${n.getFullYear()}-${pad(n.getMonth() + 1)}-${pad(n.getDate())}`; };
+const nowHM = () => { const n = new Date(); return `${pad(n.getHours())}:${pad(n.getMinutes())}`; };
+const mondayOf = s => addDays(s, -((dow(s) + 6) % 7));
+const fmt = (s, o) => fromDS(s).toLocaleDateString('en-GB', { timeZone: 'UTC', ...o });
+const fmtShort = s => fmt(s, { weekday: 'short', day: 'numeric', month: 'short' });
+const fmtLong = s => fmt(s, { weekday: 'long', day: 'numeric', month: 'long' });
+const isDS = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '');
+const schoolYearOf = s => { const [y, m] = s.split('-').map(Number); const a = m >= 8 ? y : y - 1; return `${a}–${String(a + 1).slice(2)}`; };
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => Math.random().toString(36).slice(2, 10);
+const clone = o => o == null ? o : JSON.parse(JSON.stringify(o));
+const safeUrl = u => { try { const x = new URL(u); return /^https?:$/.test(x.protocol) ? x.href : null; } catch { return null; } };
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
+let toastTimer;
+function toast(msg) {
+  const r = $('#toastRoot'); r.innerHTML = `<div class="toast" role="status">${esc(msg)}</div>`;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { r.innerHTML = ''; }, 3200);
+}
+
+/* ---------- state ---------- */
+const UI_KEY = 'cycle-planner-ui';
+const LOCAL_KEY = 'cycle-planner-data';
+const ui = Object.assign({ view: 'week', classes: [], mineOnly: true, listMode: 'upcoming' }, lsGet(UI_KEY) || {});
+const S = {
+  mode: 'loading', // 'db' | 'local'
+  timetable: null, calendar: null, prefs: null,
+  lessons: new Map(),
+  confirmed: new Set(), slow: false, error: null,
+  weekStart: mondayOf(todayDS()),
+  monthStart: todayDS().slice(0, 8) + '01',
+  listCount: 15,
+  drawer: null,
+};
+const saveUI = () => lsSet(UI_KEY, { view: ui.view, classes: ui.classes, mineOnly: ui.mineOnly, listMode: ui.listMode });
+const cal = () => S.calendar || { anchors: [], entries: [] };
+const prefs = () => S.prefs || { covered: [], coverName: 'Head' };
+const slots = () => (S.timetable && S.timetable.slots) || [];
+const periods = () => (S.timetable && S.timetable.periods) || [];
+const L = () => (S.timetable && S.timetable.cycleLength) || 6;
+
+/* ---------- storage ----------
+   Local-first: every change is saved in this browser straight away, then synced to one
+   JSON file in a private GitHub repo when a token is set. Deletions are kept as
+   tombstones so two devices can merge without bringing deleted plans back. */
+const GH_KEY = 'cycle-planner-github';
+const SYNC = { cfg: lsGet(GH_KEY), sha: null, dirty: false, busy: false, timer: null, state: 'off', msg: '', at: null };
+function persistLocal() {
+  const ok = lsSet(LOCAL_KEY, { timetable: S.timetable, calendar: S.calendar, prefs: S.prefs, lessons: Object.fromEntries(S.lessons), dirty: SYNC.dirty });
+  if (!ok) toast("This browser won't let the page save. Open it in a normal (not private) window.");
+}
+function changed() {
+  SYNC.dirty = true; persistLocal();
+  if (SYNC.cfg) { clearTimeout(SYNC.timer); SYNC.timer = setTimeout(pushRemote, 1500); setSync('pending'); }
+}
+function writeConfig(name, data) {
+  S[name] = { ...clone(data), updatedAt: Date.now() }; invalidate(); changed(); render();
+  return Promise.resolve();
+}
+function writeLesson(key, data) {
+  if (data) S.lessons.set(key, { ...data, updatedAt: Date.now() });
+  else { const [date, slotId] = key.split('__'); S.lessons.set(key, { deleted: true, date, slotId, updatedAt: Date.now() }); }
+  changed();
+  return Promise.resolve();
+}
+function snapshot() {
+  return { app: 'cycle-planner', version: 1, timetable: S.timetable, calendar: S.calendar, prefs: S.prefs, lessons: Object.fromEntries(S.lessons) };
+}
+function mergeInto(remote) {
+  // Newest edit wins, per settings document and per lesson.
+  const at = o => (o && o.updatedAt) || 0;
+  for (const k of ['timetable', 'calendar', 'prefs']) if (remote[k] && at(remote[k]) > at(S[k])) S[k] = remote[k];
+  for (const [key, r] of Object.entries(remote.lessons || {})) { const l = S.lessons.get(key); if (!l || at(r) > at(l)) S.lessons.set(key, r); }
+  // Forget tombstones after 90 days.
+  const cutoff = Date.now() - 90 * 864e5;
+  for (const [key, l] of S.lessons) if (l.deleted && at(l) < cutoff) S.lessons.delete(key);
+}
+const sameData = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+
+/* GitHub contents API */
+function ghUrl(c) { return `https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}/contents/${c.path.split('/').map(encodeURIComponent).join('/')}`; }
+async function gh(method, body, c = SYNC.cfg) {
+  let res;
+  try {
+    res = await fetch(ghUrl(c) + (method === 'GET' ? `?t=${Date.now()}` : ''), {
+      method, cache: 'no-store',
+      headers: { Authorization: `Bearer ${c.token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+  } catch (e) { const err = new Error("Can't reach GitHub right now. It will try again when you come back to the page."); err.kind = 'network'; throw err; }
+  if (res.status === 404 && method === 'GET') return null;
+  if (!res.ok) {
+    let msg = ''; try { msg = (await res.json()).message || ''; } catch {}
+    const err = new Error(
+      res.status === 401 ? 'GitHub rejected the token. It may have expired; create a new one and paste it in Setup.' :
+      res.status === 403 ? 'The token can see the repository but not write to it. Give it “Contents: Read and write” access.' :
+      res.status === 404 ? 'Repository not found. Check the owner and repository name, and that the token has access to it.' :
+      res.status === 409 || res.status === 422 ? 'conflict' : `GitHub error ${res.status}${msg ? ': ' + msg : ''}`);
+    err.status = res.status; throw err;
+  }
+  return res.json();
+}
+const b64encode = str => { const bytes = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); };
+const b64decode = b64 => { const bin = atob(String(b64).replace(/\s/g, '')); const bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i); return new TextDecoder().decode(bytes); };
+async function fetchRemote() {
+  const r = await gh('GET');
+  if (!r) { SYNC.sha = null; return null; }
+  SYNC.sha = r.sha;
+  let text = r.content ? b64decode(r.content) : null;
+  if (!text && r.download_url) text = await (await fetch(r.download_url, { cache: 'no-store' })).text();
+  try { return JSON.parse(text || '{}'); } catch { throw new Error(`${SYNC.cfg.path} in your repository isn't valid JSON. Fix or delete it on GitHub.`); }
+}
+function setSync(state, msg) { SYNC.state = state; SYNC.msg = msg || ''; if (state === 'ok') SYNC.at = new Date(); renderSaveState(); renderBanners(); if (ui.view === 'setup' && !document.activeElement?.closest?.('#view')) renderMainOnly(); }
+async function pullRemote() {
+  if (!SYNC.cfg || SYNC.busy) return;
+  SYNC.busy = true; setSync('busy');
+  try {
+    const remote = await fetchRemote();
+    const before = JSON.stringify(snapshot());
+    if (remote) mergeInto(remote);
+    if (JSON.stringify(snapshot()) !== before) { invalidate(); render(); }
+    const needsPush = !remote || !sameData(stripMeta(remote), stripMeta(snapshot()));
+    SYNC.dirty = needsPush; persistLocal();
+    SYNC.busy = false;
+    if (needsPush) await pushRemote(); else setSync('ok');
+  } catch (e) { SYNC.busy = false; setSync('error', e.message); }
+}
+const stripMeta = o => ({ timetable: o.timetable || null, calendar: o.calendar || null, prefs: o.prefs || null, lessons: o.lessons || {} });
+async function pushRemote(attempt = 0) {
+  clearTimeout(SYNC.timer);
+  if (!SYNC.cfg) return;
+  if (SYNC.busy) { SYNC.timer = setTimeout(pushRemote, 800); return; }
+  SYNC.busy = true; setSync('busy');
+  try {
+    const body = { message: `Update planner (${new Date().toISOString().slice(0, 16).replace('T', ' ')})`, content: b64encode(JSON.stringify(snapshot(), null, 1)) };
+    if (SYNC.sha) body.sha = SYNC.sha;
+    const r = await gh('PUT', body);
+    SYNC.sha = r.content.sha; SYNC.dirty = false; persistLocal();
+    SYNC.busy = false; setSync('ok');
+  } catch (e) {
+    SYNC.busy = false;
+    if (e.message === 'conflict' && attempt < 3) {
+      // Another device saved first: merge its copy, then try again.
+      try { const remote = await fetchRemote(); if (remote) { mergeInto(remote); invalidate(); render(); } } catch (e2) { setSync('error', e2.message); return; }
+      return pushRemote(attempt + 1);
+    }
+    setSync('error', e.message === 'conflict' ? 'Another device keeps saving at the same moment. Try again in a minute.' : e.message);
+  }
+}
+async function connectGitHub(c) {
+  // Check access before saving the token on this device.
+  const repoRes = await fetch(`https://api.github.com/repos/${encodeURIComponent(c.owner)}/${encodeURIComponent(c.repo)}`, { headers: { Authorization: `Bearer ${c.token}`, Accept: 'application/vnd.github+json' }, cache: 'no-store' }).catch(() => null);
+  if (!repoRes) throw new Error("Can't reach GitHub from this network right now.");
+  if (repoRes.status === 401) throw new Error('GitHub rejected that token. Check you copied all of it.');
+  if (repoRes.status === 404) throw new Error(`No repository called ${c.owner}/${c.repo} is visible to this token.`);
+  if (!repoRes.ok) throw new Error(`GitHub error ${repoRes.status}.`);
+  const repo = await repoRes.json();
+  SYNC.cfg = c; SYNC.sha = null;
+  lsSet(GH_KEY, c);
+  await pullRemote();
+  return repo.private;
+}
+function disconnectGitHub() { SYNC.cfg = null; SYNC.sha = null; try { localStorage.removeItem(GH_KEY); } catch {} setSync('off'); render(); }
+
+function initStore() {
+  const d = lsGet(LOCAL_KEY) || {};
+  S.timetable = d.timetable || null; S.calendar = d.calendar || null; S.prefs = d.prefs || null;
+  S.lessons = new Map(Object.entries(d.lessons || {}));
+  SYNC.dirty = !!d.dirty;
+  S.mode = 'local';
+  ['timetable', 'calendar', 'prefs', 'lessons'].forEach(k => S.confirmed.add(k));
+  invalidate(); render();
+  if (SYNC.cfg) pullRemote();
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && SYNC.cfg && !SYNC.dirty) pullRemote(); });
+window.addEventListener('online', () => { if (SYNC.cfg) (SYNC.dirty ? pushRemote() : pullRemote()); });
+let rq = false;
+function scheduleRender() { if (rq) return; rq = true; requestAnimationFrame(() => { rq = false; render(); }); }
+
+/* ---------- classes ---------- */
+const CLASS_TONES = ['c1', 'c2', 'c3', 'c4', 'c5', 'c6'];
+function displayName(title, grade) {
+  let t = String(title || '').replace(/^G0?(\d+)\s+/, '');
+  t = t.replace(/Eng(lish)?\s+Lang(uage)?\s+(and|&)\s+Lit(erature)?/i, 'Lang & Lit');
+  if (grade && !new RegExp('\\b' + grade).test(t)) t = `G${grade} ${t}`;
+  return t;
+}
+function subjectOf(title) {
+  if (/media/i.test(title)) return 'Media';
+  if (/lang|lit|english/i.test(title)) return 'Lang & Lit';
+  if (/mentor|tutor|homeroom/i.test(title)) return 'Mentor';
+  return 'Other';
+}
+let classIndex = null;
+function classes() {
+  if (classIndex) return classIndex;
+  const map = new Map();
+  for (const s of slots()) if (!map.has(s.title)) map.set(s.title, { title: s.title, name: displayName(s.title, s.grade), subject: subjectOf(s.title), grade: s.grade });
+  const list = [...map.values()].sort((a, b) => (a.subject === 'Mentor') - (b.subject === 'Mentor') || a.subject.localeCompare(b.subject) || (b.grade || '').localeCompare(a.grade || '') || a.name.localeCompare(b.name));
+  let i = 0;
+  for (const c of list) c.tone = c.subject === 'Mentor' ? 'c0' : CLASS_TONES[i++ % CLASS_TONES.length];
+  classIndex = { list, by: Object.fromEntries(list.map(c => [c.title, c])) };
+  return classIndex;
+}
+const cinfo = title => classes().by[title] || { title, name: title, tone: 'c0', subject: 'Other' };
+const toneStyle = title => { const t = cinfo(title).tone; return `--cbg:var(--${t}-bg);--cfg:var(--${t}-fg)`; };
+const isCovered = id => prefs().covered.includes(id);
+const coverName = () => prefs().coverName || 'Head';
+function visibleSlot(s) {
+  if (ui.mineOnly && isCovered(s.id)) return false;
+  if (ui.classes.length && !ui.classes.includes(s.title)) return false;
+  return true;
+}
+
+/* ---------- cycle engine ---------- */
+let holidayMap = new Map(), workMap = new Map(), anchors = [], memo = new Map(), slotsByDay = new Map();
+function invalidate() {
+  holidayMap = new Map(); workMap = new Map(); memo = new Map(); classIndex = null; slotsByDay = new Map();
+  for (const e of cal().entries || []) {
+    if (!isDS(e.start)) continue;
+    const end = isDS(e.end) && e.end >= e.start ? e.end : e.start;
+    for (let d = e.start, n = 0; d <= end && n < 400; d = addDays(d, 1), n++) (e.type === 'workday' ? workMap : holidayMap).set(d, e);
+  }
+  anchors = (cal().anchors || []).filter(a => isDS(a.date)).sort((a, b) => a.date.localeCompare(b.date));
+  for (const s of slots()) { if (!slotsByDay.has(s.day)) slotsByDay.set(s.day, []); slotsByDay.get(s.day).push(s); }
+  for (const arr of slotsByDay.values()) arr.sort((a, b) => a.period - b.period);
+}
+function isSchool(ds) {
+  if (workMap.has(ds)) return true;
+  if (holidayMap.has(ds)) return false;
+  const w = dow(ds); return w >= 1 && w <= 5;
+}
+function provisionalAnchor() {
+  let d = todayDS(); for (let i = 0; i < 14 && !isSchool(d); i++) d = addDays(d, 1);
+  return { date: d, day: 1, provisional: true };
+}
+function anchorFor(ds) {
+  if (!anchors.length) return provisionalAnchor();
+  let a = anchors[0];
+  for (const x of anchors) { if (x.date <= ds) a = x; else break; }
+  return a;
+}
+function cycleDay(ds) {
+  if (!isSchool(ds)) return null;
+  if (memo.has(ds)) return memo.get(ds);
+  const a = anchorFor(ds), n = L();
+  let idx;
+  if (ds >= a.date) { idx = -1; for (let d = a.date; d <= ds; d = addDays(d, 1)) if (isSchool(d)) idx++; }
+  else { idx = 0; for (let d = addDays(a.date, -1); d >= ds; d = addDays(d, -1)) if (isSchool(d)) idx--; }
+  const day = ((((a.day - 1 + idx) % n) + n) % n) + 1;
+  memo.set(ds, day); return day;
+}
+const hasAnchor = () => anchors.length > 0;
+function occurrencesOn(ds) {
+  const cd = cycleDay(ds); if (!cd) return [];
+  return (slotsByDay.get(cd) || []).map(s => ({ key: `${ds}__${s.id}`, date: ds, slot: s, day: cd }));
+}
+function occurrencesBetween(from, to) {
+  const out = []; for (let d = from; d <= to; d = addDays(d, 1)) out.push(...occurrencesOn(d)); return out;
+}
+const planOf = key => S.lessons.get(key);
+const hasContent = p => p && ((p.title || '').trim() || (p.notes || '').trim() || (p.link || '').trim());
+function occByKey(key) {
+  const [date, slotId] = key.split('__');
+  const s = slots().find(x => x.id === slotId);
+  if (!s || !isDS(date) || cycleDay(date) !== s.day) return null;
+  return { key, date, slot: s, day: s.day };
+}
+function orphans() {
+  const out = [];
+  for (const [key, p] of S.lessons) if (hasContent(p) && !occByKey(key)) out.push({ key, ...p });
+  return out.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+}
+function classSequence(title, from, days = 380) {
+  // Every lesson of this class that I teach, in order, from a date.
+  return occurrencesBetween(from, addDays(from, days)).filter(o => o.slot.title === title && !isCovered(o.slot.id));
+}
+
+/* ---------- plan shifting ---------- */
+async function movePlans(moves) {
+  // moves: [{from, to}] — write all targets, then delete sources no longer used.
+  const targets = new Set(moves.map(m => m.to));
+  const datas = moves.map(m => ({ ...m, data: clone(planOf(m.from)) }));
+  const writes = [];
+  for (const m of datas) {
+    const [date, slotId] = m.to.split('__');
+    writes.push(writeLesson(m.to, { ...m.data, date, slotId, updatedAt: Date.now() }));
+  }
+  for (const m of datas) if (!targets.has(m.from)) writes.push(writeLesson(m.from, null));
+  render();
+  await Promise.all(writes);
+}
+function pushBackFrom(title, key, extra) {
+  // Shift every plan for this class at or after `key` one lesson later. `extra` = an orphan placed into the gap.
+  const startDate = key.split('__')[0];
+  const seq = classSequence(title, startDate);
+  const i0 = Math.max(0, seq.findIndex(o => o.key === key));
+  const moves = [];
+  for (let i = i0; i < seq.length - 1; i++) if (hasContent(planOf(seq[i].key))) moves.push({ from: seq[i].key, to: seq[i + 1].key });
+  if (extra) moves.push({ from: extra, to: seq[i0].key });
+  return movePlans(moves);
+}
+function reflowOrphan(o, mode) {
+  const s = slots().find(x => x.id === o.slotId);
+  const title = o.cls || (s && s.title);
+  if (!title) { toast("This plan's class is no longer on your timetable."); return; }
+  const start = o.slotId && s ? s.start : '00:00';
+  const seq = classSequence(title, o.date && o.date > addDays(todayDS(), -400) ? o.date : todayDS());
+  const after = seq.filter(x => x.date > o.date || (x.date === o.date && x.slot.start > start));
+  if (!after.length) { toast(`No later ${cinfo(title).name} lessons found.`); return; }
+  if (mode === 'free') {
+    const free = after.find(x => !hasContent(planOf(x.key)));
+    if (!free) { toast('Every later lesson already has a plan.'); return; }
+    movePlans([{ from: o.key, to: free.key }]).then(() => toast(`Moved to ${fmtShort(free.date)}`));
+  } else {
+    pushBackFrom(title, after[0].key, o.key).then(() => toast(`Moved to ${fmtShort(after[0].date)}; later plans shifted back`));
+  }
+}
+
+/* ---------- today band ---------- */
+function renderToday() {
+  const el = $('#today'), t = todayDS();
+  if (!S.timetable) {
+    el.innerHTML = `<div class="num" aria-hidden="true"><span class="word">Day</span>–</div>
+      <div class="info"><div class="date">${esc(fmtLong(t))}</div><div class="next">${S.confirmed.has('timetable') ? 'Add your timetable in Setup to get started.' : 'Loading your timetable…'}</div></div>`;
+    return;
+  }
+  if (!hasAnchor()) {
+    const target = provisionalAnchor().date;
+    el.innerHTML = `<div class="num" aria-hidden="true"><span class="word">Day</span>?</div>
+      <div class="info"><div class="date">${target === t ? 'Which day is today?' : 'Which day is ' + esc(fmtShort(target)) + '?'}</div>
+      <div class="row pick">${Array.from({ length: L() }, (_, i) => `<button data-anchor="${i + 1}" data-date="${target}" aria-label="Day ${i + 1}">${i + 1}</button>`).join('')}</div>
+      <div class="hint">Pick once and the planner counts the cycle forward, skipping weekends and holidays.</div></div>`;
+    return;
+  }
+  const cd = cycleDay(t);
+  if (!cd) {
+    let nx = addDays(t, 1); for (let i = 0; i < 60 && !cycleDay(nx); i++) nx = addDays(nx, 1);
+    const h = holidayMap.get(t);
+    el.innerHTML = `<div class="off">${h ? esc(h.label || 'Holiday') : 'No school'}</div>
+      <div class="info"><div class="date">${esc(fmtLong(t))}</div>
+      <div class="next">Back on <b>${esc(fmtLong(nx))}</b> · Day ${cycleDay(nx) || '?'}</div></div>`;
+    return;
+  }
+  const now = nowHM();
+  const todays = occurrencesOn(t).filter(o => !isCovered(o.slot.id));
+  const cur = todays.find(o => o.slot.start <= now && now < o.slot.end);
+  const nxt = todays.find(o => o.slot.start > now);
+  const line = o => { const p = planOf(o.key); return `<b>${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}</b> · Room ${esc(o.slot.room)}${p && p.title ? ' · ' + esc(p.title) : ''}`; };
+  let next = '';
+  if (cur) next += `<div class="next">Now: ${line(cur)}</div>`;
+  if (nxt) next += `<div class="next">Next: ${line(nxt)}</div>`;
+  if (!cur && !nxt) next = `<div class="next">${todays.length ? 'No more lessons today.' : 'No lessons today.'} Tomorrow is ${(() => { let d = addDays(t, 1); for (let i = 0; i < 60 && !cycleDay(d); i++) d = addDays(d, 1); return esc(fmtShort(d)) + ' · Day ' + cycleDay(d); })()}.</div>`;
+  el.innerHTML = `<div class="num" aria-label="Day ${cd} of ${L()}"><span class="word">Day</span>${cd}<small>/${L()}</small></div>
+    <div class="info"><div class="date">${esc(fmtLong(t))}</div>${next}<div class="hint">${todays.length} lesson${todays.length === 1 ? '' : 's'} today</div></div>`;
+}
+
+/* ---------- filters ---------- */
+function renderFilters() {
+  const el = $('#filters');
+  const cl = classes().list;
+  if (!cl.length) { el.innerHTML = ''; return; }
+  const subjects = [...new Set(cl.map(c => c.subject))];
+  const sel = new Set(ui.classes);
+  const subjOn = s => { const t = cl.filter(c => c.subject === s).map(c => c.title); return t.length && t.length === sel.size && t.every(x => sel.has(x)); };
+  el.innerHTML = `<div class="filters" role="group" aria-label="Subjects">
+      <button class="chip subj" data-all aria-pressed="${!sel.size}">All classes</button>
+      ${subjects.map(s => `<button class="chip subj" data-subj="${esc(s)}" aria-pressed="${subjOn(s)}">${esc(s)}</button>`).join('')}
+    </div><span class="divider" aria-hidden="true"></span>
+    <div class="filters" role="group" aria-label="Classes">
+      ${cl.map(c => `<button class="chip" data-cls="${esc(c.title)}" aria-pressed="${sel.has(c.title)}"><span class="sw" style="background:var(--${c.tone}-fg)"></span>${esc(c.name)}</button>`).join('')}
+    </div>`;
+}
+
+/* ---------- banners ---------- */
+function renderBanners() {
+  const el = $('#banners'); let h = '';
+  if (SYNC.state === 'error' && SYNC.dirty && ui.view !== 'setup') h += `<div class="banner warn"><div class="grow"><b>Some changes aren't on GitHub yet.</b> They're saved in this browser. ${esc(SYNC.msg)}</div><button class="btn" data-syncnow>Try again</button><a class="btn ghost" href="#setup">Sync settings</a></div>`;
+  const orph = S.timetable ? orphans() : [];
+  if (orph.length && ui.view !== 'setup') {
+    h += `<div class="banner warn"><div class="orph"><div><b>${orph.length} lesson plan${orph.length > 1 ? 's have' : ' has'} lost ${orph.length > 1 ? 'their' : 'its'} lesson</b> <span class="muted">— usually because a holiday or timetable change moved things.</span></div>
+      ${orph.slice(0, 6).map(o => `<div class="item"><span class="grow"><b>${esc(o.title || 'Untitled plan')}</b> <span class="muted">· ${esc(cinfo(o.cls).name)} · was ${isDS(o.date) ? esc(fmtShort(o.date)) : '?'}</span></span>
+        <button class="btn" data-orph="shift" data-key="${esc(o.key)}" title="Put it in the next lesson and move every later plan back one">Shift plans back</button>
+        <button class="btn" data-orph="free" data-key="${esc(o.key)}">Next empty lesson</button>
+        <button class="btn ghost danger" data-orph="del" data-key="${esc(o.key)}">Delete</button></div>`).join('')}
+      ${orph.length > 6 ? `<div class="note">And ${orph.length - 6} more.</div>` : ''}</div></div>`;
+  }
+  el.innerHTML = h;
+}
+
+/* ---------- lesson chip ---------- */
+function lessonChip(o, opts = {}) {
+  const p = planOf(o.key), c = cinfo(o.slot.title), cov = isCovered(o.slot.id);
+  const now = o.date === todayDS() && o.slot.start <= nowHM() && nowHM() < o.slot.end;
+  const flags = [p && (p.notes || '').trim() ? 'Notes' : '', p && safeUrl(p.link) ? 'Link' : ''].filter(Boolean).join(' · ');
+  return `<button class="lesson${cov ? ' covered' : ''}${now ? ' is-now' : ''}" style="${toneStyle(o.slot.title)}" data-open="${esc(o.key)}">
+    <span class="cls"><span>${esc(c.name)}</span><span class="mono" style="font-weight:500">${esc(o.slot.room)}</span></span>
+    <span class="meta"><span class="timeinline">${esc(o.slot.start)}–${esc(o.slot.end)} · </span>${cov ? esc(coverName()) + ' covers' : 'P' + o.slot.period}</span>
+    ${p && (p.title || '').trim() ? `<span class="plan">${esc(p.title)}</span>` : (cov ? '' : `<span class="plan empty">Add plan</span>`)}
+    ${flags ? `<span class="flags">${flags}</span>` : ''}
+  </button>`;
+}
+function dayTag(ds, cd) {
+  if (cd) return `<button class="daytag${ds === todayDS() ? ' on' : ''}${workMap.has(ds) ? ' mk' : ''}" data-day="${ds}" title="Change this date">Day ${cd}</button>`;
+  const h = holidayMap.get(ds);
+  if (h) return `<button class="daytag hol" data-day="${ds}" title="Change this date">${esc(h.label || 'Holiday')}</button>`;
+  return `<button class="daytag wk" data-day="${ds}">Weekend</button>`;
+}
+
+/* ---------- views ---------- */
+function viewWeek() {
+  const ws = S.weekStart;
+  const days = [];
+  for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (i < 5 || workMap.has(d)) days.push(d); }
+  const P = periods();
+  const t = todayDS();
+  let cols = `<div class="tcol"><div></div>${P.map(p => `<div class="tcell"><b>P${p.n}</b><span class="mono">${esc(p.start)}<br>${esc(p.end)}</span></div>`).join('')}</div>`;
+  for (const d of days) {
+    const cd = cycleDay(d);
+    const occ = occurrencesOn(d).filter(o => visibleSlot(o.slot));
+    cols += `<div class="dcol${cd ? '' : ' off'}"><div class="dhead${d === t ? ' is-today' : ''}"><span class="dname">${esc(fmt(d, { weekday: 'short' }))} <span>${esc(fmt(d, { day: 'numeric', month: 'short' }))}</span></span>${dayTag(d, cd)}</div>`;
+    for (const p of P) {
+      const here = occ.filter(o => o.slot.period === p.n);
+      cols += `<div class="dcell${here.length ? '' : ' empty'}">${here.map(o => lessonChip(o)).join('')}</div>`;
+    }
+    cols += `</div>`;
+  }
+  const end = addDays(ws, 4);
+  return `<section class="panel"><div class="panel-head"><h2>${esc(fmt(ws, { day: 'numeric', month: 'short' }))} – ${esc(fmt(end, { day: 'numeric', month: 'short', year: 'numeric' }))}</h2>
+    <div class="nav"><button class="btn icon-btn" data-wk="-1" aria-label="Previous week">‹</button><button class="btn" data-wk="0">This week</button><button class="btn icon-btn" data-wk="1" aria-label="Next week">›</button></div></div>
+    <div class="week" style="--n:${days.length};--p:${P.length}">${cols}</div></section>`;
+}
+
+function viewMonth() {
+  const ms = S.monthStart;
+  const gridStart = mondayOf(ms);
+  const m = ms.slice(0, 7);
+  let last = ms; while (addDays(last, 1).slice(0, 7) === m) last = addDays(last, 1);
+  const gridEnd = addDays(mondayOf(last), 6);
+  const t = todayDS();
+  let cells = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(d => `<div class="mdow">${d}</div>`).join('');
+  for (let d = gridStart; d <= gridEnd; d = addDays(d, 1)) {
+    const cd = cycleDay(d), h = holidayMap.get(d), w = dow(d), wk = w === 0 || w === 6;
+    const occ = occurrencesOn(d).filter(o => visibleSlot(o.slot));
+    const cls = ['mcell', d.slice(0, 7) !== m ? 'out' : '', wk && !cd ? 'wkend' : '', h ? 'hol' : '', d === t ? 'today' : ''].filter(Boolean).join(' ');
+    cells += `<button class="${cls}" data-goweek="${d}" aria-label="${esc(fmtLong(d))}${cd ? ', Day ' + cd : ''}">
+      <span class="mtop"><span class="dnum">${Number(d.slice(8))}</span>${cd ? `<span class="mtag${workMap.has(d) ? ' mk' : ''}">D${cd}</span>` : ''}</span>
+      ${h ? `<span class="mhol">${esc(h.label || 'Holiday')}</span>` : ''}
+      ${occ.slice(0, 5).map(o => { const p = planOf(o.key); return `<span class="mles" style="${toneStyle(o.slot.title)}">${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}${p && p.title ? ` <em>${esc(p.title)}</em>` : ''}</span>`; }).join('')}
+    </button>`;
+  }
+  return `<section class="panel"><div class="panel-head"><h2>${esc(fmt(ms, { month: 'long', year: 'numeric' }))}</h2>
+    <div class="nav"><button class="btn icon-btn" data-mo="-1" aria-label="Previous month">‹</button><button class="btn" data-mo="0">This month</button><button class="btn icon-btn" data-mo="1" aria-label="Next month">›</button></div></div>
+    <div class="month">${cells}</div><p class="note" style="margin:10px 0 0">Tap a date to open its week.</p></section>`;
+}
+
+function viewList() {
+  const t = todayDS(), up = ui.listMode === 'upcoming';
+  const groups = [];
+  let d = up ? t : addDays(t, -1), guard = 0;
+  while (groups.length < S.listCount && guard++ < 500) {
+    const cd = cycleDay(d), h = holidayMap.get(d);
+    if (cd) {
+      const occ = occurrencesOn(d).filter(o => visibleSlot(o.slot));
+      if (occ.length) groups.push({ d, cd, occ });
+    } else if (h && (h.start === d || !groups.length)) groups.push({ d, hol: h });
+    d = addDays(d, up ? 1 : -1);
+  }
+  const single = ui.classes.length === 1 ? cinfo(ui.classes[0]).name : null;
+  const body = groups.map(g => {
+    if (g.hol) return `<div class="lday"><h3>${esc(fmtShort(g.d))} <span class="pill hol">${esc(g.hol.label || 'Holiday')}${g.hol.end && g.hol.end !== g.hol.start ? ' · until ' + esc(fmtShort(g.hol.end)) : ''}</span></h3></div>`;
+    return `<div class="lday"><h3>${esc(fmtLong(g.d))} <span class="daytag${g.d === t ? ' on' : ''}">Day ${g.cd}</span></h3>
+      ${g.occ.map(o => { const p = planOf(o.key) || {}, url = safeUrl(p.link), cov = isCovered(o.slot.id); return `<div class="lrow${cov ? ' covered' : ''}" style="${toneStyle(o.slot.title)}" role="button" tabindex="0" data-open="${esc(o.key)}">
+        <span class="t">${esc(o.slot.start)}–${esc(o.slot.end)}</span>
+        <span class="c">${esc(cinfo(o.slot.title).name)}</span>
+        <span class="p">${cov ? `<span class="muted">${esc(coverName())} covers this lesson</span>` : (p.title ? `<b>${esc(p.title)}</b>` : '<span class="muted">No plan yet</span>')}
+          ${p.notes ? `<span class="n">${esc(p.notes)}</span>` : ''}
+          ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-link>${esc(url.replace(/^https?:\/\//, '').slice(0, 60))}</a>` : ''}</span>
+        <span class="r">Rm ${esc(o.slot.room)}</span></div>`; }).join('')}</div>`;
+  }).join('');
+  return `<section class="panel"><div class="panel-head"><h2>${single ? esc(single) : 'Lessons'}</h2>
+    <div class="seg" role="group" aria-label="Which lessons"><button data-lm="upcoming" aria-pressed="${up}">Upcoming</button><button data-lm="past" aria-pressed="${!up}">Past</button></div></div>
+    <div class="list">${body || '<p class="muted">No lessons match these filters.</p>'}</div>
+    ${groups.length >= S.listCount ? `<div style="margin-top:14px"><button class="btn" data-more>Show more days</button></div>` : ''}</section>`;
+}
+
+function viewCycle() {
+  const P = periods(), n = L();
+  let g = `<div></div>${Array.from({ length: n }, (_, i) => `<div class="ch">Day ${i + 1}</div>`).join('')}`;
+  for (const p of P) {
+    g += `<div class="tcell"><b>P${p.n}</b><span class="mono">${esc(p.start)}<br>${esc(p.end)}</span></div>`;
+    for (let d = 1; d <= n; d++) {
+      const here = (slotsByDay.get(d) || []).filter(s => s.period === p.n);
+      const card = s => `<div class="lesson${isCovered(s.id) ? ' covered' : ''}" style="${toneStyle(s.title)}"><span class="cls"><span>${esc(cinfo(s.title).name)}</span><span class="mono" style="font-weight:500">${esc(s.room)}</span></span><span class="meta">Grade ${esc(s.grade)}${isCovered(s.id) ? ' · ' + esc(coverName()) + ' covers' : ''}</span></div>`;
+      if (here.length > 1) {
+        g += `<div class="cc"><div class="clash"><span class="label">Clash · who teaches?</span>${here.map(s => `${card(s)}<div class="who" role="group" aria-label="Who teaches ${esc(cinfo(s.title).name)}"><button data-cover="${esc(s.id)}" data-v="me" aria-pressed="${!isCovered(s.id)}">Me</button><button data-cover="${esc(s.id)}" data-v="other" aria-pressed="${isCovered(s.id)}">${esc(coverName())}</button></div>`).join('')}</div></div>`;
+      } else g += `<div class="cc">${here.map(card).join('')}</div>`;
+    }
+  }
+  return `<section class="panel"><div class="panel-head"><h2>${n}-day cycle</h2>
+    <div class="form"><div class="field"><label for="coverName">Who covers</label><input type="text" id="coverName" value="${esc(coverName())}" style="width:10rem"></div></div></div>
+    <p class="note" style="margin:0 0 12px">Where two classes share a slot, choose who teaches each. Lessons someone else covers are hidden when “Only lessons I teach” is on.</p>
+    <div class="cyclewrap"><div class="cycle" style="--n:${n}">${g}</div></div></section>`;
+}
+
+let importState = { tt: null, ttErr: '', ttName: '', hol: null, holErr: '', holText: '', holBusy: false };
+function viewSetup() {
+  const t = todayDS();
+  const c = cal();
+  const sorted = [...(c.entries || [])].sort((a, b) => a.start.localeCompare(b.start));
+  const years = {};
+  for (const e of sorted) (years[schoolYearOf(e.start)] = years[schoolYearOf(e.start)] || []).push(e);
+  const tCd = cycleDay(t);
+  let next = t; for (let i = 0; i < 30 && !isSchool(next); i++) next = addDays(next, 1);
+
+  const anchorsHtml = (c.anchors || []).slice().sort((a, b) => b.date.localeCompare(a.date)).map(a => `<div class="item"><span class="grow"><b>${esc(fmtLong(a.date))}</b> is Day ${a.day}</span><button class="btn ghost danger" data-delanchor="${esc(a.date)}">Remove</button></div>`).join('');
+
+  const holList = Object.keys(years).sort().reverse().map(y => `<div class="yr"><span>${y} school year</span><button class="btn ghost danger" data-clearyear="${esc(y)}">Clear year</button></div>
+    ${years[y].map(e => `<div class="item"><span class="pill ${e.type === 'workday' ? 'mk' : 'hol'}">${e.type === 'workday' ? 'School day' : 'Holiday'}</span><span class="grow"><b>${esc(e.label || (e.type === 'workday' ? 'Make-up day' : 'Holiday'))}</b> <span class="muted">${esc(fmtShort(e.start))}${e.end && e.end !== e.start ? ' – ' + esc(fmtShort(e.end)) : ''}</span></span><button class="btn ghost danger" data-delentry="${esc(e.id)}" aria-label="Remove ${esc(e.label || 'entry')}">Remove</button></div>`).join('')}`).join('');
+
+  const confirmClear = importState.clearYear ? `<div class="confirm">Remove every holiday and make-up day in ${esc(importState.clearYear)}?<div class="form"><button class="btn danger" data-clearyes>Remove them</button><button class="btn" data-clearno>Keep</button></div></div>` : '';
+
+  const hp = importState.hol;
+  const holPreview = hp ? `<div class="preview"><table><thead><tr><th></th><th>Dates</th><th>What</th><th>Type</th></tr></thead><tbody>
+      ${hp.map((e, i) => `<tr><td><input type="checkbox" data-hpick="${i}" ${e.keep !== false ? 'checked' : ''} aria-label="Include"></td><td class="mono">${esc(e.start)}${e.end && e.end !== e.start ? '<br>' + esc(e.end) : ''}</td><td>${esc(e.label)}</td><td><span class="pill ${e.type === 'workday' ? 'mk' : 'hol'}">${e.type === 'workday' ? 'School day' : 'Holiday'}</span></td></tr>`).join('')}
+    </tbody></table></div><div class="form"><button class="btn primary" data-holadd>Add ${hp.filter(e => e.keep !== false).length} to calendar</button><button class="btn" data-holcancel>Cancel</button></div>` : '';
+
+  const tp = importState.tt;
+  const ttPreview = tp ? `<p class="note">Found <b>${tp.slots.length} lessons</b> across a ${tp.cycleLength}-day cycle and ${tp.periods.length} periods${importState.ttName ? ' in ' + esc(importState.ttName) : ''}.</p>
+    <div class="preview"><table><thead><tr><th>Day</th><th>Period</th><th>Class</th><th>Room</th></tr></thead><tbody>${tp.slots.map(s => `<tr><td>Day ${s.day}</td><td class="mono">P${s.period} ${esc(s.start)}</td><td>${esc(displayName(s.title, s.grade))}</td><td class="mono">${esc(s.room)}</td></tr>`).join('')}</tbody></table></div>
+    <div class="form"><button class="btn primary" data-ttsave>Use this timetable</button><button class="btn" data-ttcancel>Cancel</button></div>` : '';
+
+  return `<div class="setup">
+    <section class="panel"><h2>Cycle day</h2>
+      <p>${tCd ? `Today is <b>Day ${tCd}</b>.` : `School is out today. ${esc(fmtShort(next))} is <b>Day ${cycleDay(next) || '?'}</b>.`} If the school resets or skips the cycle, set the day for that date and the planner counts on from there.</p>
+      <div class="form">
+        <div class="field"><label for="anDate">Date</label><input type="date" id="anDate" value="${tCd ? t : next}"></div>
+        <div class="field"><label for="anDay">Is cycle day</label><select id="anDay">${Array.from({ length: L() }, (_, i) => `<option value="${i + 1}" ${(tCd || cycleDay(next)) === i + 1 ? 'selected' : ''}>Day ${i + 1}</option>`).join('')}</select></div>
+        <button class="btn primary" data-setanchor>Set</button>
+      </div>
+      ${anchorsHtml ? `<div class="items">${anchorsHtml}</div>` : '<p class="note">Not set yet. The planner is guessing that today is Day 1.</p>'}
+    </section>
+
+    <section class="panel"><h2>Holidays &amp; make-up days</h2>
+      <p>Holidays are skipped, so the cycle carries on the next school day. Make-up days are weekend days when school runs, which happen around Chinese public holidays.</p>
+      <div class="form">
+        <div class="field"><label for="hStart">From</label><input type="date" id="hStart"></div>
+        <div class="field"><label for="hEnd">To</label><input type="date" id="hEnd"></div>
+        <div class="field grow"><label for="hLabel">Name</label><input type="text" id="hLabel" placeholder="Spring Festival"></div>
+        <div class="field"><label for="hType">Type</label><select id="hType"><option value="holiday">Holiday</option><option value="workday">Make-up school day</option></select></div>
+        <button class="btn primary" data-addentry>Add</button>
+      </div>
+      <div class="drop" id="holDrop">
+        <span class="label">Import a year at once</span>
+        <span class="note">Upload the school calendar (PDF, text, CSV or .ics) or paste lines like <span class="mono">2027-02-05 to 2027-02-21 Spring Festival</span>. Add “make-up” to a line for a weekend school day.</span>
+        <input type="file" id="holFile" accept=".pdf,.txt,.csv,.ics,text/plain,text/csv,text/calendar,application/pdf">
+        <textarea id="holText" rows="4" placeholder="2027-01-01 New Year's Day&#10;2027-02-05 to 2027-02-21 Spring Festival&#10;2027-02-27 make-up school day">${esc(importState.holText)}</textarea>
+        <div class="form"><button class="btn" data-holparse>Preview</button>${importState.holBusy ? '<span class="note">Reading…</span>' : ''}</div>
+        ${importState.holErr ? `<div class="err">${esc(importState.holErr)}</div>` : ''}
+        ${holPreview}
+      </div>
+      ${confirmClear}
+      <div>${holList || '<p class="note">No holidays added yet.</p>'}</div>
+    </section>
+
+    <section class="panel"><h2>Timetable</h2>
+      ${S.timetable ? `<p>${slots().length} lessons in a ${L()}-day cycle${S.timetable.source ? ', from <b>' + esc(S.timetable.source) + '</b>' : ''}${S.timetable.importedAt ? ' · imported ' + esc(fmtShort(S.timetable.importedAt.slice(0, 10))) : ''}.</p>` : '<p>No timetable yet.</p>'}
+      <div class="drop" id="ttDrop">
+        <span class="label">Upload a timetable PDF</span>
+        <span class="note">Export it from the school system with the Day 1–${L()} columns. Your plans stay attached to the same class and period.</span>
+        <input type="file" id="ttFile" accept=".pdf,application/pdf">
+        ${importState.ttBusy ? '<span class="note">Reading the PDF…</span>' : ''}
+        ${importState.ttErr ? `<div class="err">${esc(importState.ttErr)}</div>` : ''}
+        ${ttPreview}
+      </div>
+    </section>
+
+    ${syncPanel()}
+      ${orphans().length ? `<p class="note">${orphans().length} plan(s) have lost their lesson. They're listed above the other views.</p>` : ''}
+    </section>
+  </div>`;
+}
+
+function emptyView() {
+  if (!S.confirmed.has('timetable')) return `<section class="panel empty-state"><h2>Loading</h2><p class="muted">Reading your saved plans…</p></section>`;
+  return `<section class="panel empty-state"><h2>No timetable yet</h2><p class="muted">Upload your timetable PDF in Setup. If you've used the planner on another device, connect GitHub there instead and your plans will appear.</p><a class="btn primary" href="#setup">Go to Setup</a></section>`;
+}
+
+/* ---------- drawer ---------- */
+function drawerLesson(key) {
+  const o = occByKey(key) || (() => { const [date, slotId] = key.split('__'); const s = slots().find(x => x.id === slotId); return s ? { key, date, slot: s, day: cycleDay(date) } : null; })();
+  if (!o) return '';
+  const p = planOf(key) || {}, c = cinfo(o.slot.title), url = safeUrl(p.link);
+  const seq = classSequence(o.slot.title, addDays(o.date, -120), 240);
+  const i = seq.findIndex(x => x.key === key);
+  const prev = i > 0 ? seq[i - 1] : null, next = i >= 0 && i < seq.length - 1 ? seq[i + 1] : null;
+  const st = S.drawer;
+  return `<div class="scrim" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" style="${toneStyle(o.slot.title)}">
+    <div class="drawer-head"><div class="top"><h2 id="dTitle">${esc(c.name)}</h2><button class="btn icon-btn ghost" data-close aria-label="Close">✕</button></div>
+      <div class="meta">${esc(fmtLong(o.date))} · Day ${o.day || '–'} · P${o.slot.period} ${esc(o.slot.start)}–${esc(o.slot.end)} · Room ${esc(o.slot.room)}</div>
+      <div class="nav"><button class="btn" data-open="${prev ? esc(prev.key) : ''}" ${prev ? '' : 'disabled'}>‹ ${prev ? esc(fmtShort(prev.date)) : 'Previous'}</button><button class="btn" data-open="${next ? esc(next.key) : ''}" ${next ? '' : 'disabled'}>${next ? esc(fmtShort(next.date)) : 'Next'} ›</button></div>
+    </div>
+    <div class="drawer-body">
+      ${isCovered(o.slot.id) ? `<div class="cover-note">${esc(coverName())} covers this lesson. You can still keep notes for them here.</div>` : ''}
+      <div class="field"><label for="fTitle">Lesson title</label><input type="text" id="fTitle" value="${esc(p.title)}" placeholder="e.g. Camera shots and angles"></div>
+      <div class="field"><label for="fNotes">Notes</label><textarea id="fNotes" rows="8" placeholder="Objectives, activities, homework, what to pick up next time…">${esc(p.notes)}</textarea></div>
+      <div class="field"><label for="fLink">Media link</label><input type="url" id="fLink" value="${esc(p.link)}" placeholder="https://…"></div>
+      <div id="linkOut">${url ? `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Open link ↗</a>` : ''}</div>
+      ${st.confirm === 'push' ? `<div class="confirm">Move this plan and every later ${esc(c.name)} plan one lesson later?<div class="form"><button class="btn primary" data-pushyes>Shift plans back</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
+      ${st.confirm === 'clear' ? `<div class="confirm">Clear this lesson's title, notes and link?<div class="form"><button class="btn danger" data-clearplanyes>Clear plan</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
+    </div>
+    <div class="drawer-foot"><span class="status" id="dStatus">${esc(st.status || '')}</span>
+      <span class="form">${hasContent(p) ? `<button class="btn" data-push title="Didn't get through it? Shift this and later plans back one lesson">Push back</button><button class="btn ghost danger" data-clearplan>Clear</button>` : ''}<button class="btn primary" data-close>Done</button></span></div>
+  </aside>`;
+}
+function drawerDay(ds) {
+  const cd = cycleDay(ds), h = holidayMap.get(ds), w = workMap.get(ds), wk = [0, 6].includes(dow(ds));
+  return `<div class="scrim" data-close></div>
+  <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <div class="drawer-head"><div class="top"><h2 id="dTitle">${esc(fmt(ds, { weekday: 'long' }))}</h2><button class="btn icon-btn ghost" data-close aria-label="Close">✕</button></div>
+      <div class="meta">${esc(fmt(ds, { day: 'numeric', month: 'long', year: 'numeric' }))} · ${cd ? 'Day ' + cd : h ? esc(h.label || 'Holiday') : 'Weekend'}</div></div>
+    <div class="drawer-body">
+      ${cd ? `<div class="field"><span class="label">This date is cycle day</span><div class="form">${Array.from({ length: L() }, (_, i) => `<button class="btn${cd === i + 1 ? ' primary' : ''}" data-setday="${i + 1}">Day ${i + 1}</button>`).join('')}</div><span class="note">Changing it re-counts every day after this one.</span></div>` : ''}
+      ${h ? `<p>${esc(h.label || 'Holiday')} runs ${esc(fmtShort(h.start))}${h.end && h.end !== h.start ? ' – ' + esc(fmtShort(h.end)) : ''}.</p><div class="form"><button class="btn danger" data-dayrmhol="${esc(h.id)}">Remove this holiday</button></div>` : ''}
+      ${cd && !w ? `<div class="field"><label for="dHolName">Day off? Mark it as a holiday</label><div class="form"><input type="text" id="dHolName" placeholder="e.g. Sports day, Teacher training" style="flex:1 1 200px;width:auto"><button class="btn" data-dayhol>Mark as holiday</button></div><span class="note">Lessons after it move along one day.</span></div>` : ''}
+      ${w ? `<p>${esc(w.label || 'Make-up school day')}.</p><div class="form"><button class="btn danger" data-dayrmhol="${esc(w.id)}">Make it a normal weekend</button></div>` : ''}
+      ${wk && !w ? `<div class="field"><span class="label">Make-up school day</span><div class="form"><button class="btn" data-daywork>School runs this ${esc(fmt(ds, { weekday: 'long' }))}</button></div><span class="note">Used for the weekend days China swaps around public holidays.</span></div>` : ''}
+    </div>
+    <div class="drawer-foot"><span></span><button class="btn primary" data-close>Done</button></div>
+  </aside>`;
+}
+function renderDrawer() {
+  const r = $('#drawerRoot');
+  if (!S.drawer) { r.innerHTML = ''; return; }
+  const keepFocus = document.activeElement && r.contains(document.activeElement) ? document.activeElement.id : null;
+  const sel = keepFocus && document.activeElement.selectionStart != null ? [document.activeElement.selectionStart, document.activeElement.selectionEnd] : null;
+  // Don't clobber what's being typed: only re-render the drawer when not editing its fields.
+  if (S.drawer.kind === 'lesson' && keepFocus && ['fTitle', 'fNotes', 'fLink'].includes(keepFocus) && S.drawer.rendered === S.drawer.key && !S.drawer.force) return;
+  S.drawer.force = false;
+  r.innerHTML = S.drawer.kind === 'lesson' ? drawerLesson(S.drawer.key) : drawerDay(S.drawer.date);
+  S.drawer.rendered = S.drawer.key;
+  if (keepFocus) { const el = document.getElementById(keepFocus); if (el) { el.focus(); if (sel && el.setSelectionRange) try { el.setSelectionRange(sel[0], sel[1]); } catch {} } }
+}
+function openLesson(key) {
+  flushDraft();
+  S.drawer = { kind: 'lesson', key, status: '', confirm: null, force: true };
+  render();
+  setTimeout(() => { const f = document.getElementById('fTitle'); if (f && !f.value) f.focus(); }, 30);
+}
+function closeDrawer() { flushDraft(); S.drawer = null; render(); }
+let draftTimer = null;
+function readDraft() {
+  const t = document.getElementById('fTitle'); if (!t || !S.drawer || S.drawer.kind !== 'lesson') return null;
+  return { title: t.value.trim() ? t.value : '', notes: document.getElementById('fNotes').value, link: document.getElementById('fLink').value.trim() };
+}
+function flushDraft() {
+  clearTimeout(draftTimer); draftTimer = null;
+  if (!S.drawer || S.drawer.kind !== 'lesson') return;
+  const d = readDraft(); if (!d) return;
+  const key = S.drawer.key, old = planOf(key) || {};
+  if ((old.title || '') === d.title && (old.notes || '') === d.notes && (old.link || '') === d.link) return;
+  const [date, slotId] = key.split('__');
+  const s = slots().find(x => x.id === slotId);
+  const data = hasContent(d) ? { ...d, date, slotId, cls: s ? s.title : (old.cls || ''), updatedAt: Date.now() } : null;
+  writeLesson(key, data).then(() => { if (S.drawer && S.drawer.key === key) { const st = document.getElementById('dStatus'); if (st) st.textContent = 'Saved'; S.drawer.status = 'Saved'; } });
+  S.drawer.status = 'Saving…';
+  const st = document.getElementById('dStatus'); if (st) st.textContent = 'Saving…';
+  renderMainOnly();
+}
+
+/* ---------- PDF ---------- */
+let pdfReady = null;
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Could not load the PDF reader. Check your connection and try again.')); document.head.appendChild(s); }); }
+function loadPdf() {
+  if (!pdfReady) pdfReady = (async () => {
+    const base = 'vendor/';
+    await loadScript(base + 'pdf.min.js');
+    await loadScript(base + 'pdf.worker.min.js'); // loaded as a plain script so PDFs also read when the page is opened from a file
+    return window.pdfjsLib;
+  })().catch(e => { pdfReady = null; throw e; });
+  return pdfReady;
+}
+async function pdfItems(file) {
+  const lib = await loadPdf();
+  const doc = await lib.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  const pages = [];
+  for (let n = 1; n <= doc.numPages; n++) {
+    const p = await doc.getPage(n); const tc = await p.getTextContent();
+    pages.push(tc.items.filter(i => i.str != null).map(i => ({ str: i.str, x: i.transform[4], y: i.transform[5], w: i.width })));
+  }
+  return pages;
+}
+function itemsToText(pages) {
+  return pages.map(items => {
+    const lines = [];
+    for (const it of [...items].sort((a, b) => b.y - a.y || a.x - b.x)) {
+      if (!it.str.trim()) continue;
+      const ln = lines.find(l => Math.abs(l.y - it.y) < 3);
+      if (ln) ln.parts.push(it); else lines.push({ y: it.y, parts: [it] });
+    }
+    return lines.map(l => l.parts.sort((a, b) => a.x - b.x).map(p => p.str).join(' ')).join('\n');
+  }).join('\n\n');
+}
+
+/* Timetable parser: Day 1…N columns, time line then class / grade / room. */
+function parseTimetableItems(items) {
+  const TIME_RE = /^(\d{1,2}:\d{2})\s*(AM|PM)?\s*[-–]\s*(\d{1,2}:\d{2})\s*(AM|PM)?$/i;
+  const clean = items.map(i => ({ ...i, str: i.str.replace(/\s+/g, ' ').trim() })).filter(i => i.str);
+  const headers = clean.filter(i => /^Day\s*\d+$/i.test(i.str)).map(i => ({ day: parseInt(i.str.replace(/\D/g, ''), 10), cx: i.x + (i.w || 0) / 2, y: i.y }));
+  if (headers.length < 2) throw new Error('No “Day 1, Day 2…” column headings were found. Is this the cycle timetable export?');
+  const headerY = Math.min(...headers.map(h => h.y));
+  const cycleLength = Math.max(...headers.map(h => h.day));
+  const sortedH = [...headers].sort((a, b) => a.cx - b.cx);
+  const colOf = x => (sortedH.find(h => h.cx > x) || sortedH[sortedH.length - 1]).day;
+  const to24 = (t, ap) => {
+    let [h, m] = t.split(':').map(Number); ap = (ap || '').toUpperCase();
+    if (ap === 'PM' && h !== 12) h += 12; if (ap === 'AM' && h === 12) h = 0;
+    return pad(h) + ':' + pad(m);
+  };
+  const body = clean.filter(i => i.y < headerY - 2);
+  const times = body.filter(i => TIME_RE.test(i.str));
+  if (!times.length) throw new Error('No lesson times (like “8:00 AM - 9:10 AM”) were found in this PDF.');
+  const raw = [];
+  for (const t of times) {
+    const sameX = body.filter(i => Math.abs(i.x - t.x) < 3 && i.y < t.y - 1).sort((a, b) => b.y - a.y);
+    const lines = [];
+    for (const l of sameX) {
+      if (TIME_RE.test(l.str)) break;
+      const prevY = lines.length ? lines[lines.length - 1].y : t.y;
+      if (prevY - l.y > 20) break;
+      lines.push(l); if (lines.length >= 5) break;
+    }
+    const m = t.str.match(TIME_RE);
+    const strs = lines.map(l => l.str);
+    const gi = strs.findIndex(s => /^(Grade|Year|Gr\.?)\s*\d+/i.test(s));
+    let title, grade = '', room = '';
+    if (gi >= 0) { title = strs.slice(0, gi).join(' '); grade = strs[gi].replace(/[^\d]/g, ''); room = strs.slice(gi + 1).join(' '); }
+    else { title = strs[0] || 'Lesson'; room = strs.slice(1).join(' '); }
+    title = title.replace(/\s*(…|\.\.\.)$/, '').trim() || 'Lesson';
+    const mentor = title.match(/^(Mentor\s+\S+)/i); if (mentor) title = mentor[1];
+    raw.push({ day: colOf(t.x), start: to24(m[1], m[2] || m[4]), end: to24(m[3], m[4]), title, grade, room });
+  }
+  const starts = [...new Set(raw.map(r => r.start))].sort();
+  const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  const seen = new Set();
+  const slotsOut = raw.map(r => {
+    let id = `d${r.day}p${starts.indexOf(r.start) + 1}-${slug(r.title)}`; while (seen.has(id)) id += '-x'; seen.add(id);
+    return { id, day: r.day, period: starts.indexOf(r.start) + 1, start: r.start, end: r.end, title: r.title, grade: r.grade, room: r.room };
+  }).sort((a, b) => a.day - b.day || a.period - b.period || a.title.localeCompare(b.title));
+  const periodsOut = starts.map((s, i) => ({ n: i + 1, start: s, end: raw.find(r => r.start === s).end }));
+  return { cycleLength, periods: periodsOut, slots: slotsOut };
+}
+async function handleTimetableFile(file) {
+  importState.tt = null; importState.ttErr = ''; importState.ttBusy = true; importState.ttName = file.name; render();
+  try {
+    const pages = await pdfItems(file);
+    importState.tt = parseTimetableItems(pages[0]);
+  } catch (e) { importState.ttErr = e.message || 'That PDF could not be read.'; }
+  importState.ttBusy = false; render();
+}
+
+/* Holiday parsing */
+const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
+function findDates(line) {
+  const out = [];
+  const add = (idx, y, m, d) => { if (m >= 1 && m <= 12 && d >= 1 && d <= 31) out.push({ idx, ds: `${y}-${pad(m)}-${pad(d)}` }); };
+  let r;
+  const iso = /(\d{4})[-\/.年](\d{1,2})[-\/.月](\d{1,2})日?/g;
+  while ((r = iso.exec(line))) add(r.index, +r[1], +r[2], +r[3]);
+  const dmy = /\b(\d{1,2})(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?,?\s+(\d{4})/gi;
+  while ((r = dmy.exec(line))) add(r.index, +r[3], MONTHS[r[2].toLowerCase()], +r[1]);
+  const mdy = /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?\s+(\d{1,2})(?:st|nd|rd|th)?,?\s+(\d{4})/gi;
+  while ((r = mdy.exec(line))) add(r.index, +r[3], MONTHS[r[1].toLowerCase()], +r[2]);
+  return out.sort((a, b) => a.idx - b.idx).map(x => x.ds);
+}
+function parseICS(text) {
+  const out = [];
+  const unfolded = text.replace(/\r?\n[ \t]/g, '');
+  for (const ev of unfolded.split('BEGIN:VEVENT').slice(1)) {
+    const get = k => { const m = ev.match(new RegExp('^' + k + '[^:\\n]*:(.*)$', 'm')); return m ? m[1].trim() : ''; };
+    const ds = v => v && /^\d{8}/.test(v) ? `${v.slice(0, 4)}-${v.slice(4, 6)}-${v.slice(6, 8)}` : '';
+    const s = ds(get('DTSTART')); if (!s) continue;
+    let e = ds(get('DTEND')); const allDay = /DTSTART;VALUE=DATE/.test(ev) || !/T\d/.test(get('DTSTART'));
+    if (e && allDay) e = addDays(e, -1);
+    if (!e || e < s) e = s;
+    const label = get('SUMMARY').replace(/\\,/g, ',').replace(/\\n/g, ' ');
+    out.push({ start: s, end: e, label: label || 'Holiday', type: /make[- ]?up|work ?day|补班|上班/i.test(label) ? 'workday' : 'holiday' });
+  }
+  return out;
+}
+function parseHolidayText(text) {
+  if (/BEGIN:VCALENDAR/.test(text)) return parseICS(text);
+  const out = [];
+  for (const raw of text.split(/\r?\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    const ds = findDates(line); if (!ds.length) continue;
+    let label = line
+      .replace(/(\d{4})[-\/.年](\d{1,2})[-\/.月](\d{1,2})日?/g, ' ')
+      .replace(/\b\d{1,2}(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?,?\s+\d{4}/gi, ' ')
+      .replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/gi, ' ')
+      .replace(/\b(to|until|till|through|thru)\b/gi, ' ').replace(/[,;|\t–—-]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const work = /make[- ]?up|work ?day|school day|lessons run|补班|上班/i.test(line);
+    label = label.replace(/^(holiday|make[- ]?up( school)? day|workday)$/i, m => m) || (work ? 'Make-up school day' : 'Holiday');
+    const start = ds[0], end = ds[1] && ds[1] >= start ? ds[1] : start;
+    out.push({ start, end, label, type: work ? 'workday' : 'holiday' });
+  }
+  return out;
+}
+async function handleHolidayFile(file) {
+  importState.holErr = ''; importState.hol = null;
+  try {
+    if (/\.pdf$/i.test(file.name) || file.type === 'application/pdf') {
+      importState.holBusy = true; render();
+      importState.holText = itemsToText(await pdfItems(file));
+    } else importState.holText = await file.text();
+    const found = parseHolidayText(importState.holText);
+    if (found.length) importState.hol = found;
+    else importState.holErr = 'No dates were found in that file. Copy the holiday lines into the box, one per line, like 2027-02-05 to 2027-02-21 Spring Festival.';
+  } catch (e) { importState.holErr = e.message || 'That file could not be read.'; }
+  importState.holBusy = false; render();
+}
+
+/* ---------- sync UI ---------- */
+function renderSaveState() {
+  const ss = $('#saveState'); if (!ss) return;
+  const t = SYNC.at ? SYNC.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const map = {
+    off: ['local', 'Saved in this browser only'],
+    pending: ['wait', 'Saving to GitHub…'],
+    busy: ['wait', 'Syncing with GitHub…'],
+    ok: ['', `Synced to GitHub${t ? ' · ' + t : ''}`],
+    error: ['err', 'Not synced · saved in this browser'],
+  };
+  const [cls, text] = SYNC.cfg ? map[SYNC.state] || map.ok : map.off;
+  ss.className = 'save-state ' + cls; ss.querySelector('span').textContent = text;
+}
+let ghForm = { busy: false, err: '' };
+function syncPanel() {
+  const c = SYNC.cfg;
+  if (c) return `<section class="panel" id="sync"><h2>Sync with GitHub</h2>
+    <p>Plans, holidays and the timetable sync to <b class="mono">${esc(c.owner)}/${esc(c.repo)}/${esc(c.path)}</b>. Changes are saved in this browser first, so the planner keeps working when GitHub is slow or blocked, and catches up when it's back.</p>
+    <p class="${SYNC.state === 'error' ? 'err' : 'note'}">${SYNC.state === 'error' ? esc(SYNC.msg) : SYNC.state === 'ok' ? 'Up to date' + (SYNC.at ? ' as of ' + esc(SYNC.at.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })) : '') + '.' : SYNC.state === 'busy' || SYNC.state === 'pending' ? 'Syncing…' : ''}</p>
+    <div class="form"><button class="btn primary" data-syncnow>Sync now</button><button class="btn ghost danger" data-ghoff>Disconnect this device</button></div>
+    <p class="note">Disconnecting removes the token from this browser only. Your plans stay in the repository and in this browser.</p>
+  </section>`;
+  return `<section class="panel" id="sync"><h2>Sync with GitHub</h2>
+    <p>Right now plans are saved in this browser only. Connect a <b>private</b> GitHub repository to keep them safe and use the planner on your phone and laptop.</p>
+    <div class="form">
+      <div class="field grow"><label for="ghOwner">GitHub username</label><input type="text" id="ghOwner" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="your-username"></div>
+      <div class="field grow"><label for="ghRepo">Private repository</label><input type="text" id="ghRepo" autocapitalize="off" spellcheck="false" value="cycle-planner-data"></div>
+    </div>
+    <div class="field"><label for="ghToken">Access token</label><input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></div>
+    <p class="note">Use a fine-grained token limited to that one repository, with “Contents: Read and write”. It stays in this browser and is only ever sent to GitHub. The README explains how to make one.</p>
+    <div class="form"><button class="btn primary" data-ghconnect ${ghForm.busy ? 'disabled' : ''}>${ghForm.busy ? 'Connecting…' : 'Connect'}</button></div>
+    ${ghForm.err ? `<div class="err">${esc(ghForm.err)}</div>` : ''}
+  </section>`;
+}
+
+/* ---------- render ---------- */
+let lastView = null;
+function renderMainOnly() {
+  const v = $('#view');
+  if (!S.timetable && ui.view !== 'setup') { v.innerHTML = emptyView(); return; }
+  const scrollers = [...v.querySelectorAll('.cyclewrap,.preview')].map(e => e.scrollLeft);
+  v.innerHTML = ui.view === 'month' ? viewMonth() : ui.view === 'list' ? viewList() : ui.view === 'cycle' ? viewCycle() : ui.view === 'setup' ? viewSetup() : viewWeek();
+  if (lastView === ui.view) [...v.querySelectorAll('.cyclewrap,.preview')].forEach((e, i) => { if (scrollers[i]) e.scrollLeft = scrollers[i]; });
+  lastView = ui.view;
+}
+function render() {
+  // Keep focus inside main-view inputs (setup forms) across re-renders.
+  const ae = document.activeElement, inMain = ae && $('#view').contains(ae) && ae.id && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName) ? ae.id : null;
+  renderSaveState();
+  document.querySelectorAll('.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.v === ui.view ? 'page' : 'false'));
+  $('#mineOnly').checked = ui.mineOnly;
+  renderToday(); renderFilters(); renderBanners();
+  if (!inMain) renderMainOnly();
+  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken'].includes(inMain)) renderMainOnly();
+  renderDrawer();
+}
+
+/* ---------- events ---------- */
+function setView(v) { if (!['week', 'month', 'list', 'cycle', 'setup'].includes(v)) v = 'week'; ui.view = v; saveUI(); render(); }
+window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('button, a, [data-open], [data-close]');
+  if (!t) return;
+  const d = t.dataset;
+  if (t.matches('a[data-link]') || (t.tagName === 'A' && t.target === '_blank')) return;
+  if (d.close != null) { closeDrawer(); return; }
+  if (d.gosync != null) { location.hash = 'setup'; setView('setup'); setTimeout(() => { const el = document.getElementById('sync'); if (el) el.scrollIntoView({ block: 'start' }); }, 30); return; }
+  if (d.syncnow != null) { SYNC.dirty ? pushRemote() : pullRemote(); return; }
+  if (d.ghoff != null) { disconnectGitHub(); toast('Disconnected this device'); return; }
+  if (d.ghconnect != null) {
+    const owner = $('#ghOwner').value.trim().replace(/^@/, ''), repo = $('#ghRepo').value.trim().replace(/\.git$/, ''), token = $('#ghToken').value.trim();
+    if (!owner || !repo || !token) { ghForm.err = 'Fill in your username, the repository and the token.'; renderMainOnly(); return; }
+    ghForm = { busy: true, err: '' }; renderMainOnly();
+    connectGitHub({ owner, repo, token, path: 'planner.json' })
+      .then(isPrivate => { ghForm = { busy: false, err: '' }; render(); toast(isPrivate ? 'Connected to GitHub' : 'Connected. That repository is public, so anyone can read your plans; consider making it private.'); })
+      .catch(e => { ghForm = { busy: false, err: e.message }; SYNC.cfg = null; try { localStorage.removeItem(GH_KEY); } catch {} renderMainOnly(); });
+    return;
+  }
+  if (d.open != null) { if (d.open) openLesson(d.open); return; }
+  if (d.anchor) { setAnchor(d.date, +d.anchor); return; }
+  if (d.all != null) { ui.classes = []; saveUI(); render(); return; }
+  if (d.subj) { const t2 = classes().list.filter(c => c.subject === d.subj).map(c => c.title); const on = t2.length === ui.classes.length && t2.every(x => ui.classes.includes(x)); ui.classes = on ? [] : t2; saveUI(); render(); return; }
+  if (d.cls) { const i = ui.classes.indexOf(d.cls); if (i >= 0) ui.classes.splice(i, 1); else ui.classes.push(d.cls); saveUI(); render(); return; }
+  if (d.wk) { S.weekStart = d.wk === '0' ? mondayOf(todayDS()) : addDays(S.weekStart, 7 * +d.wk); render(); return; }
+  if (d.mo) {
+    if (d.mo === '0') S.monthStart = todayDS().slice(0, 8) + '01';
+    else { const [y, m] = S.monthStart.split('-').map(Number); const dt = new Date(Date.UTC(y, m - 1 + +d.mo, 1)); S.monthStart = toDS(dt); }
+    render(); return;
+  }
+  if (d.goweek) { S.weekStart = mondayOf(d.goweek); location.hash = 'week'; setView('week'); return; }
+  if (d.day) { flushDraft(); S.drawer = { kind: 'day', date: d.day, force: true }; render(); return; }
+  if (d.lm) { ui.listMode = d.lm; S.listCount = 15; saveUI(); render(); return; }
+  if (d.more != null) { S.listCount += 15; render(); return; }
+  if (d.cover) { const p = clone(prefs()); p.covered = (p.covered || []).filter(x => x !== d.cover); if (d.v === 'other') p.covered.push(d.cover); writeConfig('prefs', p); return; }
+  if (d.setanchor != null) { const dt = $('#anDate').value, dy = +$('#anDay').value; if (!isDS(dt)) { toast('Pick a date first.'); return; } setAnchor(dt, dy); return; }
+  if (d.delanchor) { const c = clone(cal()); c.anchors = (c.anchors || []).filter(a => a.date !== d.delanchor); writeConfig('calendar', c); return; }
+  if (d.addentry != null) {
+    const s = $('#hStart').value, en = $('#hEnd').value || s, lab = $('#hLabel').value.trim(), ty = $('#hType').value;
+    if (!isDS(s)) { toast('Pick a start date.'); return; }
+    if (en < s) { toast('The end date is before the start date.'); return; }
+    addEntries([{ start: s, end: en, label: lab || (ty === 'workday' ? 'Make-up school day' : 'Holiday'), type: ty }]);
+    return;
+  }
+  if (d.delentry) { const c = clone(cal()); c.entries = (c.entries || []).filter(x => x.id !== d.delentry); writeConfig('calendar', c); toast('Removed'); return; }
+  if (d.clearyear) { importState.clearYear = d.clearyear; render(); return; }
+  if (d.clearyes != null) { const y = importState.clearYear; const c = clone(cal()); c.entries = (c.entries || []).filter(x => schoolYearOf(x.start) !== y); importState.clearYear = null; writeConfig('calendar', c); toast(`Cleared ${y}`); return; }
+  if (d.clearno != null) { importState.clearYear = null; render(); return; }
+  if (d.holparse != null) {
+    importState.holText = $('#holText').value; importState.holErr = '';
+    const found = parseHolidayText(importState.holText);
+    if (found.length) importState.hol = found;
+    else importState.holErr = importState.holText.trim() ? 'No dates found. Write dates as 2027-02-05, or 5 Feb 2027.' : 'Paste some holiday lines or upload a file first.';
+    render(); return;
+  }
+  if (d.holcancel != null) { importState.hol = null; render(); return; }
+  if (d.holadd != null) { const pick = importState.hol.filter(x => x.keep !== false); importState.hol = null; importState.holText = ''; addEntries(pick); return; }
+  if (d.ttsave != null) {
+    const tt = importState.tt; importState.tt = null;
+    writeConfig('timetable', { ...tt, source: importState.ttName || 'timetable.pdf', importedAt: new Date().toISOString() });
+    const ids = new Set(tt.slots.map(s => s.id)); const p = clone(prefs()); const kept = (p.covered || []).filter(x => ids.has(x));
+    if (kept.length !== (p.covered || []).length) writeConfig('prefs', { ...p, covered: kept });
+    toast('Timetable updated'); return;
+  }
+  if (d.ttcancel != null) { importState.tt = null; render(); return; }
+  if (d.orph) {
+    const o = orphans().find(x => x.key === d.key); if (!o) return;
+    if (d.orph === 'del') { writeLesson(o.key, null); render(); toast('Plan deleted'); return; }
+    reflowOrphan(o, d.orph === 'free' ? 'free' : 'shift'); return;
+  }
+  if (d.push != null) { flushDraft(); S.drawer.confirm = 'push'; S.drawer.force = true; render(); return; }
+  if (d.pushno != null) { S.drawer.confirm = null; S.drawer.force = true; render(); return; }
+  if (d.pushyes != null) {
+    const key = S.drawer.key; const o = occByKey(key);
+    S.drawer.confirm = null;
+    if (!o) { toast('This lesson is no longer on the timetable.'); render(); return; }
+    pushBackFrom(o.slot.title, key).then(() => toast('Plans shifted back one lesson'));
+    S.drawer.force = true; render(); return;
+  }
+  if (d.clearplan != null) { flushDraft(); S.drawer.confirm = 'clear'; S.drawer.force = true; render(); return; }
+  if (d.clearplanyes != null) { writeLesson(S.drawer.key, null); S.drawer.confirm = null; S.drawer.force = true; S.drawer.status = 'Cleared'; render(); return; }
+  if (d.setday) { setAnchor(S.drawer.date, +d.setday); return; }
+  if (d.dayhol != null) { const lab = ($('#dHolName') || {}).value || ''; addEntries([{ start: S.drawer.date, end: S.drawer.date, label: lab.trim() || 'Day off', type: 'holiday' }]); S.drawer.force = true; return; }
+  if (d.daywork != null) { addEntries([{ start: S.drawer.date, end: S.drawer.date, label: 'Make-up school day', type: 'workday' }]); S.drawer.force = true; return; }
+  if (d.dayrmhol) { const c = clone(cal()); c.entries = (c.entries || []).filter(x => x.id !== d.dayrmhol); writeConfig('calendar', c); S.drawer.force = true; return; }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && S.drawer) { closeDrawer(); return; }
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.lrow[data-open]')) { e.preventDefault(); openLesson(e.target.dataset.open); }
+});
+document.addEventListener('input', e => {
+  if (['fTitle', 'fNotes', 'fLink'].includes(e.target.id)) {
+    clearTimeout(draftTimer); draftTimer = setTimeout(flushDraft, 900);
+    if (e.target.id === 'fLink') { const u = safeUrl(e.target.value.trim()); $('#linkOut').innerHTML = u ? `<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Open link ↗</a>` : ''; }
+  }
+  if (e.target.id === 'holText') importState.holText = e.target.value;
+});
+document.addEventListener('change', e => {
+  if (e.target.id === 'mineOnly') { ui.mineOnly = e.target.checked; saveUI(); render(); }
+  if (e.target.id === 'ttFile' && e.target.files[0]) handleTimetableFile(e.target.files[0]);
+  if (e.target.id === 'holFile' && e.target.files[0]) handleHolidayFile(e.target.files[0]);
+  if (e.target.dataset.hpick != null && importState.hol) { importState.hol[+e.target.dataset.hpick].keep = e.target.checked; render(); }
+  if (e.target.id === 'coverName') { const v = e.target.value.trim() || 'Head'; writeConfig('prefs', { ...clone(prefs()), coverName: v.slice(0, 30) }); }
+});
+['dragover', 'dragleave', 'drop'].forEach(type => document.addEventListener(type, e => {
+  const zone = e.target.closest && e.target.closest('.drop'); if (!zone) return;
+  e.preventDefault();
+  zone.classList.toggle('over', type === 'dragover');
+  if (type === 'drop' && e.dataTransfer.files[0]) (zone.id === 'ttDrop' ? handleTimetableFile : handleHolidayFile)(e.dataTransfer.files[0]);
+}));
+window.addEventListener('beforeunload', flushDraft);
+document.addEventListener('visibilitychange', () => { if (document.hidden) flushDraft(); });
+
+function setAnchor(date, day) {
+  const c = clone(cal()); c.anchors = (c.anchors || []).filter(a => a.date !== date); c.anchors.push({ date, day });
+  writeConfig('calendar', { anchors: c.anchors, entries: c.entries || [] });
+  toast(`${fmtShort(date)} set as Day ${day}`);
+}
+function addEntries(list) {
+  const c = clone(cal()); c.entries = c.entries || []; c.anchors = c.anchors || [];
+  let n = 0;
+  for (const e of list) {
+    if (c.entries.some(x => x.start === e.start && x.end === e.end && x.type === e.type)) continue;
+    c.entries.push({ id: uid(), start: e.start, end: e.end || e.start, label: e.label, type: e.type }); n++;
+  }
+  writeConfig('calendar', c);
+  toast(n ? `Added ${n} date${n > 1 ? 's' : ''}` : 'Those dates were already there');
+}
+
+/* ---------- boot ---------- */
+if (location.hash) ui.view = location.hash.slice(1);
+if (!['week', 'month', 'list', 'cycle', 'setup'].includes(ui.view)) ui.view = 'week';
+render();
+initStore();
+setInterval(() => { if (!S.drawer) renderToday(); }, 60000);
+})();
+</script>
+</body>
+</html>
