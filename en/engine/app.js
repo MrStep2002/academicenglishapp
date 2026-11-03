@@ -397,14 +397,20 @@ const SYL_KEY = SYL ? 'aea:science:'+(GEN.subject||KEY) : '';
 const sylChoice = () => { let c=null; try{ c=JSON.parse(localStorage.getItem(SYL_KEY)); }catch(e){}
   return c && Array.isArray(c.topics) ? {topics:c.topics.map(String), course:c.course==='core'?'core':'extended', set:true} : {topics:[], course:'extended', set:false}; };
 const sylSave = c => { try{ localStorage.setItem(SYL_KEY, JSON.stringify({topics:c.topics, course:c.course})); }catch(e){} };
-const sylMajor = code => String(code).trim().split('.')[0];
-const sylOk = (x, c) => !(x.ext && c.course==='core') && (!(x.syl||[]).length || x.syl.some(k=>c.topics.includes(sylMajor(k))));
+// A row's code and a ticked topic match when one is inside the other. Chemistry ticks whole topics (topic 2 takes 2.4);
+// Physics (4 Nov 2026) ticks subtopics (1.2 takes 1.2 and 1.2.3), and a row coded 1 belongs to every 1.x.
+const sylIn = (code, topic) => { const k=String(code).trim(), t=String(topic); return k===t || k.startsWith(t+'.') || t.startsWith(k+'.'); };
+const sylOk = (x, c) => !(x.ext && c.course==='core') && (!(x.syl||[]).length || x.syl.some(k=>c.topics.some(t=>sylIn(k, t))));
 const SYL_FULL = {};   // every row of the page, before the choice (the games read the chosen ones from S as usual)
 function sylApply(){ if(!SYL) return; const c=sylChoice(); Object.keys(SYL_FULL).forEach(k=>{ S[k]=SYL_FULL[k].filter(x=>sylOk(x, c)); }); }
 if(SYL){ ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','gk','evidence'].forEach(k=>{ SYL_FULL[k]=S[k]||[]; }); sylApply(); }
 const sylNone = () => !!SYL && !sylChoice().topics.length;
 // Topics with something to play; the others say "Coming soon"
-const SYL_LIVE = new Set(SYL ? [...Object.values(SYL_FULL).flat(), ...(S.gen||[]).flatMap(g=>g.items||[])].flatMap(x=>(x.syl||[]).map(sylMajor)) : []);
+const SYL_CODES = SYL ? [...new Set([...Object.values(SYL_FULL).flat(), ...(S.gen||[]).flatMap(g=>g.items||[])].flatMap(x=>x.syl||[]).map(k=>String(k).trim()))] : [];
+const SYL_LIVE = new Set(SYL ? SYL.map(t=>String(t.n)).filter(n=>SYL_CODES.some(k=>sylIn(k, n))) : []);
+// Topics in groups (Physics: 1.1-1.8 under 1 Motion, forces and energy…): GEN.groups names them; a group's tick box ticks all its topics
+const SYL_GROUPS = SYL && GEN.groups ? Object.fromEntries(GEN.groups.map(g=>[String(g.n), g])) : null;
+const sylGroupOf = t => String(t.n).split('.')[0];
 
 // Phone or computer: decided automatically, and checked again if the window changes size.
 const isPhone = () => {
@@ -2465,8 +2471,11 @@ function sylPicker(){
       <div class="syl-course" role="group" aria-label="${esc(TX('Your course','你的课程'))}"><span class="syl-lab">${T('Your course','你的课程')}</span>
         <button type="button" class="chip" data-course="core" aria-pressed="${c.course==='core'}">${T('Core','核心')}</button>
         <button type="button" class="chip" data-course="extended" aria-pressed="${c.course!=='core'}">${T('Extended','扩展')}</button></div>
-      <ul class="syl-list">${SYL.map(t=>{ const ok=live(t), id='syl-'+String(t.n).replace(/[^\w-]/g,'');
-        return `<li class="${ok?'':'off'}"><input type="checkbox" id="${id}" value="${esc(t.n)}"${c.topics.includes(String(t.n))?' checked':''}${ok?'':' disabled'}><label for="${id}"><span class="syl-n">${esc(t.n)}</span><span class="syl-name">${T(esc(t.name), esc(t.zh||t.name))}</span>${ok?'':`<span class="syl-soon">${T('Coming soon','即将推出')}</span>`}</label></li>`; }).join('')}</ul>
+      <ul class="syl-list${SYL_GROUPS?' grouped':''}">${SYL.map((t,i)=>{ const ok=live(t), id='syl-'+String(t.n).replace(/\./g,'-').replace(/[^\w-]/g,''), gk=sylGroupOf(t), g=SYL_GROUPS && SYL_GROUPS[gk];
+        let head='';
+        if(g && (i===0 || sylGroupOf(SYL[i-1])!==gk)){ const kids=SYL.filter(x=>sylGroupOf(x)===gk && live(x)).map(x=>String(x.n)), n=kids.filter(k=>c.topics.includes(k)).length;
+          head=`<li class="syl-head${kids.length?'':' off'}"><input type="checkbox" id="sylg-${esc(gk)}" data-group="${esc(gk)}"${kids.length && n===kids.length?' checked':''}${n && n<kids.length?' data-some="1"':''}${kids.length?'':' disabled'}><label for="sylg-${esc(gk)}"><span class="syl-n">${esc(gk)}</span><span class="syl-name">${T(esc(g.name), esc(g.zh||g.name))}</span>${kids.length?'':`<span class="syl-soon">${T('Coming soon','即将推出')}</span>`}</label></li>`; }
+        return head+`<li class="${ok?'':'off'}"><input type="checkbox" id="${id}" value="${esc(t.n)}"${c.topics.includes(String(t.n))?' checked':''}${ok?'':' disabled'}><label for="${id}"><span class="syl-n">${esc(t.n)}</span><span class="syl-name">${T(esc(t.name), esc(t.zh||t.name))}</span>${ok?'':`<span class="syl-soon">${T('Coming soon','即将推出')}</span>`}</label></li>`; }).join('')}</ul>
       <div class="syl-tools"><button type="button" class="btn alt small" data-syl="all">${T('Select all','全选')}</button><button type="button" class="btn alt small" data-syl="none">${T('Clear','清除')}</button><button type="button" class="btn small" data-syl="done">${T('Done','完成')}</button></div>
     </div></details>
     ${!c.topics.length ? `<p class="syl-start">${T('Tick at least one topic to start.','至少勾选一个主题就可以开始了。')}</p>` : ''}`;
@@ -2477,7 +2486,11 @@ function wireSyl(again){
   const redo=sel=>{ const y=window.scrollY; sylApply(); if(SIDE==='zh') store.set('zhband', null); again(); window.scrollTo(0, y);
     const f=sel && $app.querySelector(sel); if(f) f.focus({preventScroll:true}); };   // a new set of words: no "Level up" for it
   const set=(topics, course, sel)=>{ const c=sylChoice(); sylSave({topics:topics||c.topics, course:course||c.course}); sylOpen=true; redo(sel); };
-  d.querySelectorAll('.syl-list input').forEach(i=>i.onchange=()=>set([...d.querySelectorAll('.syl-list input:checked')].map(x=>x.value), null, '#'+i.id));
+  const ticked=()=>[...d.querySelectorAll('.syl-list input:not([data-group]):checked')].map(x=>x.value);
+  d.querySelectorAll('.syl-list input:not([data-group])').forEach(i=>i.onchange=()=>set(ticked(), null, '#'+i.id));
+  d.querySelectorAll('.syl-list input[data-group]').forEach(i=>{ if(i.dataset.some) i.indeterminate=true;   // some of its topics ticked
+    i.onchange=()=>{ const kids=SYL.filter(t=>sylGroupOf(t)===i.dataset.group && SYL_LIVE.has(String(t.n))).map(t=>String(t.n)), now=ticked();
+      set(i.checked ? [...new Set([...now, ...kids])] : now.filter(k=>!kids.includes(k)), null, '#'+i.id); }; });
   d.querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>set(null, b.dataset.course, `[data-course="${b.dataset.course}"]`));
   d.querySelector('[data-syl="all"]').onclick=()=>set(SYL.filter(t=>SYL_LIVE.has(String(t.n))).map(t=>String(t.n)), null, '[data-syl="all"]');
   d.querySelector('[data-syl="none"]').onclick=()=>set([], null, '[data-syl="none"]');

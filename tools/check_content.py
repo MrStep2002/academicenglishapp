@@ -21,7 +21,8 @@ MIN_LEVEL = 6   # the same number as MIN_LEVEL in en/engine/app.js
 OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3', 'list'}   # columns a file may leave out
 # Science pages (3 Nov 2026): any file may also have "syllabus" (codes such as 2.4, separated by ;) and "extended"
 # (yes = Extended only), used by the topic choice. A science folder's data tables (ions.csv, elements.csv, reactions.csv in
-# content/chemistry/) are read by its module (en/engine/chem.js), not by this checker: run the module's own check.
+# content/chemistry/; quantities.csv, waves.csv, em-uses.csv, nuclides.csv in content/physics/) are read by its module
+# (en/engine/chem.js, en/engine/phys.js), not by this checker. Physics has its own: node tools/check_physics.js
 SCIENCE = {'syllabus', 'extended'}
 
 HEADS = {

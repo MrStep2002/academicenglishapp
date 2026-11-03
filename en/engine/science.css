@@ -34,8 +34,15 @@
 .syl-tools .btn.small{margin-left:0}
 .hero p.syl-start{margin:8px 0 0;font-weight:700;color:var(--blue)}
 
+/* Topics in groups (Physics, 4 Nov 2026): each group's own tick box on a line across both columns, its topics under it */
+.syl-list li.syl-head{grid-column:1 / -1;margin-top:8px;padding-top:10px;border-top:1px solid var(--rule);border-radius:0}
+.syl-list li.syl-head:first-child{margin-top:0;padding-top:6px;border-top:0}
+.syl-list li.syl-head label{font-weight:700}
+.syl-list.grouped li:not(.syl-head){padding-left:20px}
+@media (max-width:620px){.syl-list.grouped li:not(.syl-head){padding-left:14px}}
+
 /* ---- The page's columns ---- */
-.col-chem h2::before{background:var(--r-detail,#7446c0)}
+.col-chem h2::before,.col-phys h2::before{background:var(--r-detail,#7446c0)}
 .col-explain h2::before{background:var(--good)}
 
 /* ---- A generated question ---- */
@@ -48,6 +55,8 @@
 .gen-eq{font-family:var(--f-display);font-size:clamp(23px,4.4vw,32px);line-height:1.3;margin:2px 0 4px}
 .gen-eq b{font-weight:400;color:var(--blue)}
 .gen-q .gen-zh{margin:8px 0 0}
+/* A calculation: the question as a sentence (Physics) */
+.gen-text{font-size:clamp(19px,2.6vw,22px);line-height:1.5;margin:2px 0 4px;max-width:46em}
 .gen-opts .opt span{font-size:18px}
 .gen-opts.long .opt span{font-size:17px}
 /* Subscripts and charges without stretching the line */

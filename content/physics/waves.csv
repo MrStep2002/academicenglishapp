@@ -1,0 +1,8 @@
+order,id,level,name,zh,syllabus
+1,radio,A2,radio waves,无线电波,3.3
+2,micro,A2,microwaves,微波,3.3
+3,ir,A2,infrared,红外线,3.3
+4,visible,A2,visible light,可见光,3.3
+5,uv,A2,ultraviolet,紫外线,3.3
+6,xray,A2,X-rays,X 射线,3.3
+7,gamma,A2,gamma rays,γ 射线,3.3

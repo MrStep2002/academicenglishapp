@@ -15,6 +15,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `web-design/` | English → Web design, and Chinese version → Web design |
 | `media-descriptors/` | English → Media Descriptors, and Chinese version → Media Descriptors (pages `en/describing-people/`, `zh/describing-people/`). Its own folder since 3 Nov 2026: the 32 describing words and their 81 Fill the gap rows moved here from `representation/` (same ids). `new-words.csv` holds the new descriptors still being written; the games don't read it, and each level's rows move into words.csv once written |
 | `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
+| `physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/physics/" below |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
@@ -96,6 +97,30 @@ browser console.
 
 The topic list itself (the 12 topics of 0620 and their Chinese) is in `en/engine/chem.js`. A topic with no rows yet shows
 "Coming soon". The choice is saved per student as `aea:science:chemistry`, shared by the English and Chinese pages.
+Physics ticks subtopics instead (1.2 Motion, 1.4 Density…, in six groups; a group's own tick box ticks all of it): a row
+coded `1.2` or `1.2.3` plays when 1.2 is ticked, and a row coded just `1` plays when any of 1.1–1.8 is ticked.
+
+## content/physics/ (Science, 4 Nov 2026)
+
+Built the same way as Chemistry: the usual files (words 134, gaps 62, tf 48, right-wrong 28, builds 21 with Chinese,
+evidence 6; the others heading only) with `syllabus` / `extended` columns, plus four **data tables** read by the page's
+module `en/engine/phys.js`. Its Physics column (Units, Equations, Calculate it, EM spectrum, Inside the nucleus) is made
+by rules: about 500 questions, every wrong answer a real mistake with its reason and the working, in English and Chinese.
+
+| Table | What it holds |
+|---|---|
+| `quantities.csv` | `id,level,name,zh,symbol,unit,unit_name,unit_zh,same_as,mixups,syllabus,extended`: each quantity and its unit (Units game; the units in Calculate it). `mixups`: the quantities (by id) students confuse it with, whose units are the first wrong answers; `same_as`: another way of writing the unit that is also right (pascal = N/m²), never offered as a wrong answer. A unit shared by two quantities (N, J, m, m/s, V) is never asked the other way round. |
+| `waves.csv` | `order,id,level,name,zh,syllabus`: the electromagnetic spectrum, longest wavelength first. |
+| `em-uses.csv` | `id,level,kind,text,zh,wave,not,syllabus,extended`: the uses (`kind` use) and harmful effects (`kind` harm) in 0625 3.3. `not`: waves never offered as a wrong answer for that row because a student could argue for them (mobile phones: not radio waves). |
+| `nuclides.csv` | `id,level,name,zh,symbol,z,a,decay,syllabus,extended`: nuclei for counting protons, neutrons and nucleons, and (decay `alpha` or `beta`) for "which nucleus is left?". |
+
+The **equations and the calculations** are in `en/engine/phys.js` (`EQS`): each equation in words in English and Chinese,
+its syllabus code, and for each calculation the sentence in English and Chinese with the values to use. The numbers are
+chosen so every answer is exact; a question can give a value in km, cm, g, min or mA to test converting. Special shapes
+(E = IVt, the transformer, kelvin, and the Supplement ones: Ek, ΔEp, efficiency, pressure in a liquid, pV, ΔE = mcΔθ,
+P = I²R, VpIp = VsIs, acceleration from two speeds, half-life) are written out under `specials()` and `nucleus()`.
+`tools/check_physics.js` (Node) works every answer out again independently and checks the wrong answers and reasons:
+`node tools/check_physics.js` from the repository folder (`--sample` prints some questions, `--dump file.md` lists them all).
 
 ## Rules for every file
 

@@ -1,0 +1,31 @@
+id,level,name,zh,symbol,unit,unit_name,unit_zh,same_as,mixups,syllabus,extended
+distance,A1,distance,路程,s,m,metre,米,,time; speed,1.1,
+time,A1,time,时间,t,s,second,秒,,distance; frequency,1.1,
+mass,A1,mass,质量,m,kg,kilogram,千克,,weight; density,1.3,
+weight,A2,weight,重力,W,N,newton,牛顿,,mass,1.3,
+speed,A1,speed,速率,v,m/s,metre per second,米每秒,,acceleration; distance,1.2,
+velocity,A2,velocity,速度,v,m/s,metre per second,米每秒,,acceleration,1.2,
+acceleration,B1,acceleration,加速度,a,m/s²,metre per second squared,米每二次方秒,,speed; force,1.2,
+gfs,B1,gravitational field strength,重力场强度,g,N/kg,newton per kilogram,牛每千克,,weight; force,1.3,
+density,A2,density,密度,ρ,kg/m³,kilogram per cubic metre,千克每立方米,,mass; volume; pressure,1.4,
+volume,A1,volume,体积,V,m³,cubic metre,立方米,,area; density,1.4,
+area,A1,area,面积,A,m²,square metre,平方米,,volume; pressure,1.8,
+force,A1,force,力,F,N,newton,牛顿,,mass; pressure; energy,1.5,
+moment,B1,moment of a force,力矩,,N m,newton metre,牛·米,,force; energy,1.5.2,
+spring,B2,spring constant,劲度系数,k,N/m,newton per metre,牛每米,,force; moment,1.5.1,yes
+momentum,B2,momentum,动量,p,kg m/s,kilogram metre per second,千克·米每秒,,force; energy,1.6,yes
+impulse,C1,impulse,冲量,,N s,newton second,牛·秒,kg m/s,force; moment,1.6,yes
+energy,A1,energy,能量,E,J,joule,焦耳,,power; force,1.7.1,
+work,A2,work done,功,W,J,joule,焦耳,,power; force,1.7.2,
+power,A2,power,功率,P,W,watt,瓦特,,energy; work,1.7.4,
+pressure,A2,pressure,压强,p,Pa,pascal,帕斯卡,N/m²,force; area,1.8,
+temperature,A1,temperature,温度,θ,°C,degree Celsius,摄氏度,,thermo,2.2,
+thermo,B1,thermodynamic temperature,热力学温度,T,K,kelvin,开尔文,,temperature,2.1.3,
+shc,B2,specific heat capacity,比热容,c,J/(kg °C),joule per kilogram per degree Celsius,焦每千克摄氏度,,energy; temperature,2.2.2,yes
+frequency,A2,frequency,频率,f,Hz,hertz,赫兹,,wavelength; time,3.1,
+wavelength,A2,wavelength,波长,λ,m,metre,米,,frequency,3.1,
+charge,B1,charge,电荷量,Q,C,coulomb,库仑,,current,4.2.1,yes
+current,A1,current,电流,I,A,ampere,安培,,charge; pd,4.2.2,
+pd,A2,potential difference (p.d.),电势差（电压）,V,V,volt,伏特,,current; resistance,4.2.3,
+emf,B1,electromotive force (e.m.f.),电动势,E,V,volt,伏特,,force; current,4.2.3,
+resistance,A2,resistance,电阻,R,Ω,ohm,欧姆,,pd; current,4.2.4,
