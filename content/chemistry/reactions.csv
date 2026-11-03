@@ -1,0 +1,18 @@
+id,level,reactant,zh,type,ion,acids,note
+mg,A2,magnesium,镁,metal,mg,hcl; h2so4,Nitric acid left out: with metals it does not simply give hydrogen.
+zn,B1,zinc,锌,metal,zn,hcl; h2so4,
+fe,C1,iron,铁,metal,fe2,hcl; h2so4,Iron and dilute acids give iron(II) salts.
+mgo,B1,magnesium oxide,氧化镁,oxide,mg,hcl; h2so4; hno3,
+cuo,B1,copper(II) oxide,氧化铜,oxide,cu2,hcl; h2so4; hno3,Copper(II) oxide + sulfuric acid is the usual way to make copper(II) sulfate.
+zno,B1,zinc oxide,氧化锌,oxide,zn,hcl; h2so4; hno3,
+cao,B1,calcium oxide,氧化钙,oxide,ca,hcl; hno3,Calcium sulfate is only slightly soluble: no sulfuric acid.
+fe2o3,B2,iron(III) oxide,氧化铁,oxide,fe3,hcl; h2so4,
+naoh,A2,sodium hydroxide,氢氧化钠,hydroxide,na,hcl; h2so4; hno3,
+koh,A2,potassium hydroxide,氢氧化钾,hydroxide,k,hcl; h2so4; hno3,
+caoh2,B1,calcium hydroxide,氢氧化钙,hydroxide,ca,hcl; hno3,
+mgoh2,B1,magnesium hydroxide,氢氧化镁,hydroxide,mg,hcl; h2so4; hno3,
+caco3,B1,calcium carbonate,碳酸钙,carbonate,ca,hcl; hno3,Not with sulfuric acid: insoluble calcium sulfate coats the carbonate and the reaction stops.
+na2co3,B1,sodium carbonate,碳酸钠,carbonate,na,hcl; h2so4; hno3,
+mgco3,B1,magnesium carbonate,碳酸镁,carbonate,mg,hcl; h2so4; hno3,
+cuco3,B2,copper(II) carbonate,碳酸铜,carbonate,cu2,hcl; h2so4; hno3,
+znco3,B2,zinc carbonate,碳酸锌,carbonate,zn,hcl; h2so4; hno3,

@@ -19,6 +19,10 @@ NAMES = {'foundation': 1, 'foundation+': 2, 'intermediate': 3, 'intermediate+': 
 LEVEL_NAMES = ['', 'Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced']
 MIN_LEVEL = 6   # the same number as MIN_LEVEL in en/engine/app.js
 OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3', 'list'}   # columns a file may leave out
+# Science pages (3 Nov 2026): any file may also have "syllabus" (codes such as 2.4, separated by ;) and "extended"
+# (yes = Extended only), used by the topic choice. A science folder's data tables (ions.csv, elements.csv, reactions.csv in
+# content/chemistry/) are read by its module (en/engine/chem.js), not by this checker: run the module's own check.
+SCIENCE = {'syllabus', 'extended'}
 
 HEADS = {
     'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note', 'list'],   # list: optional, see content/README.md
@@ -66,7 +70,7 @@ def check_folder(folder, all_word_ids):
         h, rows = read(path)
         missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)
                    and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL)]
-        unknown = [c for c in h if c not in head and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)]
+        unknown = [c for c in h if c not in head and c not in SCIENCE and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)]
         if missing: problems.append(f'{kind}.csv: missing column(s) {", ".join(missing)}')
         if unknown: problems.append(f'{kind}.csv: column(s) not used by the games: {", ".join(unknown)}')
         data[kind] = rows

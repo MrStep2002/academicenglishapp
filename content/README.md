@@ -13,6 +13,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `essentials/` | English → Academic English Essentials, and Chinese version → Academic English Essentials |
 | `representation/` | English → Representation, and Chinese version → Representation |
 | `web-design/` | English → Web design, and Chinese version → Web design |
+| `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions: not linked from the topic lists yet (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
@@ -66,6 +67,33 @@ their own.
 
 - **knowledge.csv**: must-know general knowledge, the same columns as a topic's knowledge.csv (below). Every Daily Circuit
   quick-fire station plays one round of three of these questions, on the English and the Chinese side. No levels.
+
+## content/chemistry/ (Science, 3 Nov 2026)
+
+The first science page. It has the usual files (words, gaps, builds, tf, right-wrong…) plus three **data tables**. The games
+in its Chemistry column (Inside the atom, Ion charge, Name it, Formula it, What's made?) are not written row by row: the
+page's module `en/engine/chem.js` makes every question from the tables, with wrong answers built from real mistakes, each
+with its reason in English and Chinese. Change a table and the questions change; check a table and you have checked
+every question made from it.
+
+| Table | What it holds |
+|---|---|
+| `ions.csv` | `id,level,kind,symbol,charge,name,zh,ion_zh,element,mixups,not_with,only_with,note`: each ion; `zh` is the part used in Chinese compound names (氯化 + 钠 = 氯化钠); `mixups` the names students confuse it with (sulfide; sulfite); `not_with` / `only_with` the cations (by id) it makes no compound with here, because the compound doesn't exist or isn't met at IGCSE. `level` = how hard the ion is: a compound's level is worked out from its two ions. |
+| `elements.csv` | `z,symbol,name,zh,mass,ar,group,period,kind,ion,level,note`: elements 1–20 and a few more; `mass` = the mass number(s) used in Inside the atom; `ion` = the usual ion's charge (blank = not used in Ion charge). |
+| `reactions.csv` | `id,level,reactant,zh,type,ion,acids,note`: what reacts with which acid in What's made? (`type` metal, oxide, hydroxide or carbonate; `ion` = the cation in the salt; `acids` = hcl; h2so4; hno3). |
+
+To check the questions after changing a table, open the page: a row the module can't use is skipped with a note in the
+browser console.
+
+### Syllabus topics: two optional columns in any file (science pages)
+
+- **syllabus**: the syllabus code(s) the row practises, e.g. `2.4` or `2.4; 3.1`. On a science page each student ticks
+  the syllabus topics they have studied or want to practise (the "Your topics" list); a row is used only when one of its
+  topics is ticked. A row with no code is always used.
+- **extended**: `yes` for Extended-only (Supplement) content. Students who choose Core never get these rows.
+
+The topic list itself (the 12 topics of 0620 and their Chinese) is in `en/engine/chem.js`. A topic with no rows yet shows
+"Coming soon". The choice is saved per student as `aea:science:chemistry`, shared by the English and Chinese pages.
 
 ## Rules for every file
 

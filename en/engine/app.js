@@ -9,6 +9,9 @@ const $app = document.getElementById('app');
 const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd, data-hide, data-list, data-linked
 const KEY = CFG.store || (CFG.content||'').replace(/\/+$/,'').split('/').pop() || 'topic';   // where this page's progress is saved
 const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
+// Generated games (Science, 3 Nov 2026): a page can load a module before this file that makes questions by rules from
+// data tables (en/engine/chem.js sets window.AEA_GEN). See GENERATED GAMES and SYLLABUS TOPICS below. Every other page: null.
+const GEN = window.AEA_GEN || null;
 // Chinese side: instructions in ONE language at a time (26 Oct; teacher: both languages together "look super messy").
 // The English / 中文 switch next to the points bar (account.js) saves 'en' or 'zh' in aea:ui-lang and sets
 // <html data-ui="en|zh">; the CSS then hides the other language. Chinese is the default. The words being learned
@@ -198,6 +201,7 @@ let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
   const jobs=(dir ? (SIDE==='zh' ? ['words','builds'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  if(dir && GEN && GEN.files) GEN.files.forEach(f=>jobs.push([f, dir+f+'.csv']));   // a science page's data tables (both sides)
   // Must-know general knowledge for everyone (content/general/, 1 Nov 2026): one round in every Daily Circuit quick-fire station
   if(dir) jobs.push(['general', ROOT+'content/general/knowledge.csv']);
   if(CFG.reading) jobs.push(['reading', CFG.reading]);
@@ -210,8 +214,19 @@ function boot(){
     if('reading' in T) readingState = T.reading ? 'ok' : 'failed';
     if(dir && !T.words){ $app.innerHTML=`<p class="notice">The games could not be loaded. They load when the site is online. <a href="${esc(CFG.back||'../index.html')}">Back</a></p>`; return; }
     const S=buildSubject(T); window.AEA_SUBJECT=S;
+    if(GEN) genPrepare(S, T);
     main(S);
   });
+}
+
+// Science pages only (GEN): every row may have a "syllabus" column (codes such as 2.4, separated by ;) and an "extended"
+// column (yes = Extended only). They are kept on the row as syl and ext for the topic choice. Then the module makes its questions.
+function genPrepare(S, T){
+  const tag=r=>({syl:listOf(r.syllabus), ext:/^(y|yes|e|ext|extended|s|supplement|true|1)$/i.test(String(r.extended||'').trim())});
+  [['words','allWords'],['gaps','gaps'],['builds','builds'],['errors','errors'],['tf','tf'],['right-wrong','rw'],['reads','reads'],['questions','questions'],['extracts','extracts'],['knowledge','gk']].forEach(([f,k])=>{
+    const by={}; (T[f]||[]).forEach(r=>{ if(r.id) by[r.id]=r; });
+    (S[k]||(k==='allWords' ? S.words : [])||[]).forEach(x=>{ const r=by[x.id]; if(r) Object.assign(x, tag(r)); }); });
+  try{ S.gen=(GEN.build && GEN.build(T)) || []; }catch(e){ console.warn('The generated games could not be made:', e); S.gen=[]; }
 }
 
 function main(S){
@@ -339,7 +354,7 @@ function toastLevel(msg){ const t=document.createElement('div'); t.className='lv
 // The games use the student's own level for this topic. A student can choose another level to push themselves;
 // that choice is saved for this topic until they press "Use my level" (or their level reaches it).
 const MIN_LEVEL = 6;
-const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]);
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]).concat((S.gen||[]).flatMap(g=>g.items||[]));   // + generated questions (science pages)
 const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
 const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
 let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
@@ -358,6 +373,26 @@ const chooseBand = b => { pickedBand = b; store.set('level', b==null ? null : LE
 const tidyChoice = () => { if(pickedBand!=null && P.known() && pickedBand===myBand()) chooseBand(null); };
 const pick = list => { const b=chosenBand(); return (list||[]).filter(x=>{ const p=playBand(x); return p==null || b==null || p===b; }); };
 const bandName = (b, zh) => { const c=LEVEL_CODES[b]; return c ? LEVEL_NAMES[c]+(zh?' '+LEVEL_ZH[c]:'') : ''; };
+
+// ---------- SYLLABUS TOPICS (Science pages, 3 Nov 2026) ----------
+// Each student ticks the syllabus topics they have studied or want to practise (teacher: the student's choice, not the
+// teacher's), and chooses Core or Extended. A row with syllabus codes is used only when one of its topics is ticked; a row
+// marked extended only on Extended. Rows without codes are always used. The choice is saved as aea:science:<subject>
+// = {topics:['2','3'], course:'extended'}, shared by the English and Chinese pages (synced to the account like every aea: key).
+// First visit: the list opens by itself and the games wait until a topic is ticked. Other pages: SYL is null, nothing changes.
+const SYL = GEN && GEN.topics ? GEN.topics : null;
+const SYL_KEY = SYL ? 'aea:science:'+(GEN.subject||KEY) : '';
+const sylChoice = () => { let c=null; try{ c=JSON.parse(localStorage.getItem(SYL_KEY)); }catch(e){}
+  return c && Array.isArray(c.topics) ? {topics:c.topics.map(String), course:c.course==='core'?'core':'extended', set:true} : {topics:[], course:'extended', set:false}; };
+const sylSave = c => { try{ localStorage.setItem(SYL_KEY, JSON.stringify({topics:c.topics, course:c.course})); }catch(e){} };
+const sylMajor = code => String(code).trim().split('.')[0];
+const sylOk = (x, c) => !(x.ext && c.course==='core') && (!(x.syl||[]).length || x.syl.some(k=>c.topics.includes(sylMajor(k))));
+const SYL_FULL = {};   // every row of the page, before the choice (the games read the chosen ones from S as usual)
+function sylApply(){ if(!SYL) return; const c=sylChoice(); Object.keys(SYL_FULL).forEach(k=>{ S[k]=SYL_FULL[k].filter(x=>sylOk(x, c)); }); }
+if(SYL){ ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','gk'].forEach(k=>{ SYL_FULL[k]=S[k]||[]; }); sylApply(); }
+const sylNone = () => !!SYL && !sylChoice().topics.length;
+// Topics with something to play; the others say "Coming soon"
+const SYL_LIVE = new Set(SYL ? [...Object.values(SYL_FULL).flat(), ...(S.gen||[]).flatMap(g=>g.items||[])].flatMap(x=>(x.syl||[]).map(sylMajor)) : []);
 
 // Phone or computer: decided automatically, and checked again if the window changes size.
 const isPhone = () => {
@@ -540,6 +575,49 @@ const GAMES = [
   {key:'gk',       cat:'games', phone:true, name:'General knowledge', blurb:'Questions about the wider world of this topic. One answer is right.', items:()=>pick(S.gk), min:1, run:()=>playGK()},
   {key:'question', form:'long', cat:'reading', name:'Answer the question', blurb:'Read an exam question and choose the answer that does what it asks.', items:()=>pick(S.questions), min:1, run:()=>playQuestion()}
 ];
+// ---------- GENERATED GAMES (Science pages, 3 Nov 2026) ----------
+// The page's module (GEN, e.g. en/engine/chem.js) makes every question from its data tables: a prompt, the answer and
+// wrong answers that are real mistakes, each with its reason. Every game is one quick choice (form short: in the Daily
+// Circuit's quick-fire and class games), plays on phones, earns grammar points, and moves the topic level like any game.
+// English side: the questions at the chosen level, or the levels next to it when that is too few (the nearest first).
+// Chinese side: up to one level above the student's level. Only questions in the ticked syllabus topics (SYLLABUS TOPICS).
+const GEN_GAMES = (S.gen||[]).map(g=>({key:g.key, cat:'chem', gen:true, form:'short', phone:true, name:g.name, zh:g.zh, blurb:g.blurb, zhBlurb:g.zhBlurb, all:g.items||[], min:g.min||4}));
+const genPool = g => { const c=SYL ? sylChoice() : null; return c ? g.all.filter(x=>sylOk(x, c)) : g.all; };
+function genItems(g){
+  const pool=genPool(g);
+  if(SIDE==='zh' && !classRun){ const top=Math.max(zhBand()||2, 2)+1, l=pool.filter(x=>(bandOf(x)??0)<=top); return l.length>=g.min ? l : pool; }
+  const b=chosenBand(); if(b==null) return pool;
+  const at=pool.filter(x=>playBand(x)===b); if(at.length>=8) return at;
+  const near=pool.filter(x=>Math.abs((playBand(x)??b)-b)<=1); return near.length>=g.min ? near : pool;
+}
+GEN_GAMES.forEach(g=>{ g.items=()=>genItems(g); g.run=()=>playGen(g); POINT_KIND[g.key]='grammar'; });
+if(SIDE!=='zh') GAMES.push(...GEN_GAMES);
+if(GEN_GAMES.length){ const ks=GEN_GAMES.map(g=>g.key); QF_GAMES.en.push(...ks); QF_GAMES.zh.push(...ks); }
+// One generated question: the prompt (the Chinese under it on the Chinese side), four answers (three wrong ones, the
+// likeliest mistakes first), and after a wrong answer the reason for the mistake that was picked.
+function playGen(g){
+  const st=Stats(g.key), deck=Deck(()=>g.items()), zh=SIDE==='zh', hint=T('Choose the right answer. Correct answers move on by themselves.','选出正确答案。答对后会自动进入下一题。');
+  if(zh) zhShell(T(esc(g.name), esc(g.zh||g.name)), hint); else shell(g, hint);
+  st.draw();
+  const step=()=>{
+    const q=deck.next(); if(!q) return;
+    const seen=new Set([q.answer]), wrong=shuffle(q.wrong).sort((a,b)=>(a.p||2)-(b.p||2)).filter(w=>!seen.has(w.h) && seen.add(w.h)).slice(0,3);
+    const opts=shuffle([{h:q.answer, ok:true}, ...wrong]);
+    const card=showCard(`<p class="instr">${T(esc(q.instr), esc(q.instrZh||q.instr))}</p><div class="gen-q">${q.html}${zh&&q.zh?`<p class="zh-under gen-zh" lang="zh-CN">${q.zh}</p>`:''}</div>
+      <div class="opts gen-opts${q.long?' long':''}">${opts.map((o,i)=>`<button class="opt" data-i="${i}"><kbd>${i+1}</kbd><span>${o.h}</span></button>`).join('')}</div><div class="fb"></div>`);
+    const btns=[...card.querySelectorAll('.opt')]; let done=false;
+    const choose=b=>{ if(done) return; done=true; const o=opts[+b.dataset.i];
+      btns.forEach(x=>{ x.disabled=true; const y=opts[+x.dataset.i]; x.classList.add(y.ok ? 'ok' : x===b ? 'no' : 'dim'); });
+      const fb=card.querySelector('.fb');
+      if(o.ok) fbOk(fb, '');
+      else fb.innerHTML=`<div class="feedback no"><span class="verdict">${T('Not quite. The answer is ','不对。答案是 ')}${q.answer}${T('.','。')}</span>${o.why?`<span>${T(o.why, o.whyZh||o.why)}</span>`:''}</div>`;
+      settle(o.ok, card, st, deck, q, step);
+    };
+    btns.forEach(b=>b.onclick=()=>choose(b));
+    keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1 && n<=btns.length) choose(btns[n-1]); };
+  };
+  step();
+}
 // A game that can't be played on this device: a Reading game on a phone (unless it is marked phone:true)
 const phoneOff = g => PHONE && !!(CATS[g.cat]||{}).desktop && !g.phone;
 // Games switched off on this page: data-hide="syn" (a game's key; several with spaces or commas). Its content stays in the files.
@@ -547,7 +625,12 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && (S[{match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk'}[g.key]]||[]).length && (g.key!=='syn' || S.words.some(w=>w.syn)));
+const ROWS = {match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk'};
+const hasRows = g => g.gen ? g.all.length>0 : ((SYL ? SYL_FULL : S)[ROWS[g.key]]||[]).length>0;
+const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
+// Science pages: why a game card is greyed (no topic ticked yet; nothing in the ticked topics; nothing at this level)
+const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' ? S.words : g.key==='tf' ? [...S.tf, ...S.words] : S[ROWS[g.key]]||[];
+const offWhy = (g, n) => sylNone() ? 'Choose your topics first' : n ? 'Not enough at this level yet' : SYL && !rowsNow(g).length ? 'None in your topics yet' : 'None at this level yet';
 
 // ---------- page frame ----------
 function frame(back, inner){
@@ -595,13 +678,13 @@ function menuCompact(){
   tidyChoice();
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Subjects'}, `
   <section class="hero hero-compact">
-    <p class="eyebrow">English games</p>
-    <h1>${esc(CFG.name||'')}</h1>
+    <p class="eyebrow">${esc(CFG.eyebrow||'English games')}</p>
+    <h1>${esc(CFG.name||'')}</h1>${sylPicker()}
     ${levelsHtml()}
     ${levelLine()}
   </section>
   <div class="cols">
-    ${Object.entries(CATS).map(([k,c])=>{
+    ${GEN && GEN.columns ? genColumns() : Object.entries(CATS).map(([k,c])=>{
       const all=gamesIn(k), games=all.filter(g=>!phoneOff(g)), off=c.desktop && PHONE && !games.length;
       const note = off ? 'Only available on desktop devices'
         : k==='reading' && readingState==='failed' ? 'The reading passages could not be loaded. They load when the site is online.'
@@ -615,7 +698,14 @@ function menuCompact(){
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
       ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
-  wireLevels(menu);
+  wireLevels(menu); wireSyl(menu);
+}
+// Science pages: the columns the page's module names (GEN.columns: e.g. Chemistry, Vocabulary, Explaining)
+function genColumns(){
+  return GEN.columns.map(col=>{ const all=(col.games||[]).map(k=>GAMES.find(g=>g.key===k)).filter(g=>g && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
+    const games=all.filter(g=>!phoneOff(g)), k=esc(col.key);
+    return `<section class="col col-${k}" aria-labelledby="col-${k}"><h2 id="col-${k}">${esc(col.name)}</h2>
+      ${all.length ? '' : '<p class="col-note">Coming soon</p>'}${games.map(gameCard).join('')}${games.length<all.length ? '<p class="col-note">The other games here are only available on desktop devices.</p>' : ''}</section>`; }).join('');
 }
 // "Your level: Advanced" in small type, then the level bar, which is also the line between the levels and the games
 function levelLine(){
@@ -632,7 +722,7 @@ function gameCard(g){
   const n=g.items().length, off=n<g.min, best=store.get((g.arcade?'best:':'streak:')+g.key,0);
   return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
     <h3>${g.name}</h3><p>${g.blurb}</p>
-    <span class="best">${off?(n?'Not enough at this level yet':'None at this level yet'):best?(g.arcade?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`;
+    <span class="best">${off?offWhy(g, n):best?(g.arcade?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`;
 }
 
 // ---------- CATEGORY: list of games ----------
@@ -1853,7 +1943,7 @@ function playInvaders(){
 
 // ---------- CHINESE SIDE (data-only="zh"): vocabulary games with Chinese support ----------
 // Chinese appears next to the key word only. Answer options are always English.
-const ZH = Object.fromEntries(S.words.filter(w=>w.zh).map(w=>[w.id,w.zh]));   // the zh column of words.csv
+const ZH = Object.fromEntries((SYL ? SYL_FULL.words : S.words).filter(w=>w.zh).map(w=>[w.id,w.zh]));   // the zh column of words.csv
 // ----- Chinese side: the student's words (31 Oct 2026, teacher) -----
 // "It doesn't really teach you the words… the learning comes through repeated use of the vocabulary, not explicit teaching."
 // No Learn the words step and no level buttons: every game uses the student's own set of words for this topic. A new
@@ -1933,6 +2023,9 @@ const ZH_GAMES = [
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', zhBlurb:'60 秒内看中文选英文，看你能答对多少个！', min:8, run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', zhBlurb:'三条命。看单词和中文，在时间用完前选出英文释义，会越来越快。', min:8, run:()=>playSurvival()}
 ];
+// Science pages (3 Nov 2026): the generated games, in their own section on the Chinese menu (zhMenu)
+const GEN_ZH = SIDE==='zh' ? GEN_GAMES.map(g=>({key:g.key, type:'chem', gen:true, name:g.name, zh:g.zh, blurb:g.blurb, zhBlurb:g.zhBlurb, run:g.run, ready:()=>g.items().length>=g.min})) : [];
+ZH_GAMES.push(...GEN_ZH);
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
 // or every word when the level has fewer). Build the sentence needs sentences with their Chinese at the level instead.
 const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
@@ -1949,10 +2042,10 @@ const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11"
 function zhMenu(){
   tidyChoice(); P.refresh(); const n=zhLevelWords().length, have=zhWords().length;
   const need=g=>zhNeed(g)-have;
-  const lockText=g=> n<4 ? T('Not enough words at this level yet','本级别单词不够')
+  const lockText=g=> sylNone() ? T('Choose your topics first','先选择主题') : n<4 ? T('Not enough words at this level yet','本级别单词不够')
     : need(g)>0 ? T(`${need(g)} more word${need(g)===1?'':'s'}`, `再学 ${need(g)} 个单词`)
     : T('Words from more groups','学习更多类别的单词');
-  const shown=ZH_GAMES.filter(g=>!g.ready || g.ready()), open=shown.filter(zhReady), locked=shown.filter(g=>!zhReady(g));
+  const shown=ZH_GAMES.filter(g=>!g.gen && (!g.ready || g.ready())), open=shown.filter(zhReady), locked=shown.filter(g=>!zhReady(g));
   // What the next words unlock: "Learn 4 words to unlock 4 games"
   const needs=n>=4 ? locked.filter(g=>need(g)>0).map(need) : [], next=needs.length ? Math.min(...needs) : 0, opens=locked.filter(g=>need(g)===next && !g.needs).length;
   const teaser=next ? T(`Learn ${next}${have?' more':''} word${next===1?'':'s'} to unlock ${opens} game${opens===1?'':'s'}.`, `再学 ${next} 个单词，解锁 ${opens} 个游戏。`) : '';
@@ -1963,14 +2056,16 @@ function zhMenu(){
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version', html:T('Chinese version','中文版')}, `
   <section class="hero hero-compact hero-zhc">
     <p class="eyebrow">${T('Chinese version','中文版')}</p>
-    <h1>${nameT(CFG.name)}</h1>
+    <h1>${nameT(CFG.name)}</h1>${sylPicker()}
     ${zhLevelLine()}
-  </section>
-  <h2 class="zh-games-h">${T('Games','游戏')}</h2>
+  </section>${GEN_ZH.length ? (()=>{ const on=GEN_ZH.filter(g=>g.ready()), off=GEN_ZH.filter(g=>!g.ready());
+    return `<h2 class="zh-games-h">${T(esc(GEN.title||'Practice'), esc(GEN.titleZh||'练习'))}</h2>${on.length ? `<div class="games">${on.map(card).join('')}</div>` : ''}
+      ${off.length ? `<div class="locks">${off.map(g=>`<div class="game-lock" aria-disabled="true">${LOCK_SVG}<span class="gl-name">${T(g.name, g.zh)}</span><span class="gl-need">${sylNone() ? T('Choose your topics first','先选择主题') : T('None in your topics yet','你选的主题里还没有')}</span></div>`).join('')}</div>` : ''}\n`; })() : ''}
+  <h2 class="zh-games-h">${GEN_ZH.length ? T('Words','词汇') : T('Games','游戏')}</h2>
   ${open.length ? `<div class="games">${open.map(card).join('')}</div>` : ''}
   ${locked.length ? `${open.length?`<p class="instr group-label">${T('Still locked','还没解锁')}</p>`:''}<div class="locks">${locked.map(tile).join('')}</div>` : ''}
   <div class="wl-link"><p>${T('See every word with its Chinese meaning.','查看所有单词和中文释义。')}</p><a class="btn alt" href="#words">${T('Word list','词汇表')}</a></div>`);
-  wireLevels(zhMenu);
+  wireLevels(zhMenu); wireSyl(zhMenu);
 }
 function zhShell(title, note){
   frame({href:'#', label:CFG.name||'Back', html:CFG.name?nameT(CFG.name):''}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
@@ -2273,6 +2368,40 @@ function levelNote(n){
   if(LEVELS.length>1) return zh ? `${words} at this level. 本级别共 ${n} 个单词。` : `${words} at this level.`;
   if(b!=null) return zh ? `${words} · ${esc(bandName(b))} ${LEVEL_ZH[LEVEL_CODES[b]]}. 共 ${n} 个单词。` : `${words} · ${esc(bandName(b))} level.`;
   return zh ? `${words}. 共 ${n} 个单词。` : `${words}.`;
+}
+// The topic choice on a science page: a closed bar says what is chosen; open, it has a tick box per syllabus topic (the
+// ones with nothing yet say "Coming soon"), Core / Extended, Select all, Clear and Done. Every change is saved at once and
+// the page is drawn again with the list still open.
+let sylOpen = null;   // null: open on a first visit or while nothing is ticked; then as the student left it
+function sylPicker(){
+  if(!SYL) return '';
+  const c=sylChoice(), open=sylOpen==null ? !c.set || !c.topics.length : sylOpen, live=t=>SYL_LIVE.has(String(t.n));
+  const on=SYL.filter(t=>c.topics.includes(String(t.n))), nLive=SYL.filter(live).length, sep=SIDE==='zh' ? T(', ','、') : ', ';
+  const sum = !on.length ? T('None chosen yet','还没有选择') : on.length===nLive && nLive>1 ? T(`All ${nLive} topics`, `全部 ${nLive} 个主题`) : on.map(t=>T(esc(t.name), esc(t.zh||t.name))).join(sep);
+  return `<details class="syl"${open?' open':''}>
+    <summary class="syl-sum"><span class="syl-k">${T('Your topics','你的主题')}</span><span class="syl-v">${sum}</span><span class="syl-c">${c.course==='core' ? T('Core','核心') : T('Extended','扩展')}</span></summary>
+    <div class="syl-panel">
+      <p class="syl-help">${T('Tick the topics you have studied or want to practise. The games use only these.','勾选你学过或想练习的主题，游戏只会用这些主题的内容。')}</p>
+      <div class="syl-course" role="group" aria-label="${esc(TX('Your course','你的课程'))}"><span class="syl-lab">${T('Your course','你的课程')}</span>
+        <button type="button" class="chip" data-course="core" aria-pressed="${c.course==='core'}">${T('Core','核心')}</button>
+        <button type="button" class="chip" data-course="extended" aria-pressed="${c.course!=='core'}">${T('Extended','扩展')}</button></div>
+      <ul class="syl-list">${SYL.map(t=>{ const ok=live(t), id='syl-'+String(t.n).replace(/[^\w-]/g,'');
+        return `<li class="${ok?'':'off'}"><input type="checkbox" id="${id}" value="${esc(t.n)}"${c.topics.includes(String(t.n))?' checked':''}${ok?'':' disabled'}><label for="${id}"><span class="syl-n">${esc(t.n)}</span><span class="syl-name">${T(esc(t.name), esc(t.zh||t.name))}</span>${ok?'':`<span class="syl-soon">${T('Coming soon','即将推出')}</span>`}</label></li>`; }).join('')}</ul>
+      <div class="syl-tools"><button type="button" class="btn alt small" data-syl="all">${T('Select all','全选')}</button><button type="button" class="btn alt small" data-syl="none">${T('Clear','清除')}</button><button type="button" class="btn small" data-syl="done">${T('Done','完成')}</button></div>
+    </div></details>
+    ${!c.topics.length ? `<p class="syl-start">${T('Tick at least one topic to start.','至少勾选一个主题就可以开始了。')}</p>` : ''}`;
+}
+function wireSyl(again){
+  if(!SYL) return; const d=$app.querySelector('details.syl'); if(!d) return;
+  d.addEventListener('toggle', ()=>{ sylOpen=d.open; });
+  const redo=sel=>{ const y=window.scrollY; sylApply(); if(SIDE==='zh') store.set('zhband', null); again(); window.scrollTo(0, y);
+    const f=sel && $app.querySelector(sel); if(f) f.focus({preventScroll:true}); };   // a new set of words: no "Level up" for it
+  const set=(topics, course, sel)=>{ const c=sylChoice(); sylSave({topics:topics||c.topics, course:course||c.course}); sylOpen=true; redo(sel); };
+  d.querySelectorAll('.syl-list input').forEach(i=>i.onchange=()=>set([...d.querySelectorAll('.syl-list input:checked')].map(x=>x.value), null, '#'+i.id));
+  d.querySelectorAll('[data-course]').forEach(b=>b.onclick=()=>set(null, b.dataset.course, `[data-course="${b.dataset.course}"]`));
+  d.querySelector('[data-syl="all"]').onclick=()=>set(SYL.filter(t=>SYL_LIVE.has(String(t.n))).map(t=>String(t.n)), null, '[data-syl="all"]');
+  d.querySelector('[data-syl="none"]').onclick=()=>set([], null, '[data-syl="none"]');
+  d.querySelector('[data-syl="done"]').onclick=()=>{ const c=sylChoice(); if(!c.set) sylSave(c); sylOpen=false; again(); };
 }
 function wireLevels(again){
   $app.querySelectorAll('.levels .chip').forEach(c=>c.onclick=()=>{ const y=window.scrollY; chooseBand(+c.dataset.band); again(); window.scrollTo(0,y); });

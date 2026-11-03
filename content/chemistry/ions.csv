@@ -1,0 +1,27 @@
+id,level,kind,symbol,charge,name,zh,ion_zh,element,mixups,not_with,only_with,note
+li,A1,cation,Li,1,lithium,锂,锂离子,lithium,,,,
+na,A1,cation,Na,1,sodium,钠,钠离子,sodium,,,,
+k,A1,cation,K,1,potassium,钾,钾离子,potassium,,,,
+mg,A1,cation,Mg,2,magnesium,镁,镁离子,magnesium,,,,
+ca,A1,cation,Ca,2,calcium,钙,钙离子,calcium,,,,
+ba,A2,cation,Ba,2,barium,钡,钡离子,barium,,,,
+zn,A2,cation,Zn,2,zinc,锌,锌离子,zinc,,,,
+ag,A2,cation,Ag,1,silver,银,银离子,silver,,,,
+al,A2,cation,Al,3,aluminium,铝,铝离子,aluminium,,,,
+cu2,A2,cation,Cu,2,copper(II),铜,铜离子,copper,,,,"Copper(I) is not in 0620, but the name still needs (II)."
+fe2,B1,cation,Fe,2,iron(II),亚铁,亚铁离子,iron,,,,亚 marks the lower charge: 氯化亚铁 = iron(II) chloride.
+fe3,B1,cation,Fe,3,iron(III),铁,铁离子,iron,,,,
+pb2,B1,cation,Pb,2,lead(II),铅,铅离子,lead,,,,
+nh4,B1,cation,NH4,1,ammonium,铵,铵根离子,,ammonia,,,"Not a metal, but it behaves like one in salts."
+cr3,B2,cation,Cr,3,chromium(III),铬,铬离子,chromium,,,,In 0620 only in the test for Cr3+ (12.5).
+f,A2,anion,F,-1,fluoride,氟化,氟离子,fluorine,fluorate,,,
+cl,A1,anion,Cl,-1,chloride,氯化,氯离子,chlorine,chlorate,,,
+br,A1,anion,Br,-1,bromide,溴化,溴离子,bromine,bromate,,,
+i,A1,anion,I,-1,iodide,碘化,碘离子,iodine,iodate,cu2; fe3,,Copper(II) iodide and iron(III) iodide do not exist.
+o,A1,anion,O,-2,oxide,氧化,氧离子,oxygen,hydroxide,nh4,,
+s,A2,anion,S,-2,sulfide,硫化,硫离子,sulfur,sulfate; sulfite,nh4; al; fe3; cr3,,
+oh,A2,anion,OH,-1,hydroxide,氢氧化,氢氧根离子,,oxide; hydride,nh4; ag,,Silver hydroxide is not stable; ammonium hydroxide is really aqueous ammonia.
+no3,B1,anion,NO3,-1,nitrate,硝酸,硝酸根离子,nitrogen,nitrite; nitride,,,
+so4,B1,anion,SO4,-2,sulfate,硫酸,硫酸根离子,sulfur,sulfide; sulfite,,,
+co3,B1,anion,CO3,-2,carbonate,碳酸,碳酸根离子,carbon,carbide,al; fe3; cr3,,These carbonates do not exist.
+so3,B2,anion,SO3,-2,sulfite,亚硫酸,亚硫酸根离子,sulfur,sulfate; sulfide,,li; na; k; nh4; mg; ca; ba,Only with the ions where the sulfite is well known.
