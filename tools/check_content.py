@@ -36,8 +36,11 @@ HEADS = {
     'extracts': ['id', 'level', 'extract', 'word', 'correct', 'wrong1', 'wrong2', 'wrong3', 'word2', 'correct2', 'wrong1_2',
                  'wrong2_2', 'wrong3_2', 'word3', 'correct3', 'wrong1_3', 'wrong2_3', 'wrong3_3'],
     'knowledge': ['id', 'level', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],   # General knowledge (31 Oct): level optional
+    # Find the evidence (English version) / All-in English (Chinese version), 3 Nov 2026: right4, wrong4 and wrong5 may be added
+    'evidence': ['id', 'level', 'statement', 'right1', 'right2', 'right3', 'wrong1', 'wrong2', 'wrong3', 'word', 'side', 'explanation'],
 }
 KNOWLEDGE_OPTIONAL = {'level', 'wrong2', 'wrong3', 'explanation'}
+EVIDENCE_OPTIONAL = {'right2', 'right3', 'side', 'explanation'}
 ROLE = re.compile(r'^(topic|verb|detail|link|judge|hedge)\s*:\s*(.+)$', re.I)
 ERR = re.compile(r'\[([^\]|]+)\|([^\]|]+)\|([^\]]+)\]')
 
@@ -69,8 +72,9 @@ def check_folder(folder, all_word_ids):
         if not os.path.exists(path): continue
         h, rows = read(path)
         missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)
-                   and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL)]
-        unknown = [c for c in h if c not in head and c not in SCIENCE and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)]
+                   and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL) and not (kind == 'evidence' and c in EVIDENCE_OPTIONAL)]
+        unknown = [c for c in h if c not in head and c not in SCIENCE and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)
+                   and not (kind == 'evidence' and re.match(r'(right|wrong)\d$', c))]
         if missing: problems.append(f'{kind}.csv: missing column(s) {", ".join(missing)}')
         if unknown: problems.append(f'{kind}.csv: column(s) not used by the games: {", ".join(unknown)}')
         data[kind] = rows
@@ -178,6 +182,17 @@ def check_folder(folder, all_word_ids):
                 if r.get('correct') and r.get('correct') in wrongs(): say(kind, r, 'the correct answer is also a wrong answer')
                 if kind == 'questions' and r.get('command') and not r.get('question', '').lower().startswith(r['command'].lower()):
                     say(kind, r, 'the question should start with the command word')
+            elif kind == 'evidence':   # Find the evidence / All-in English (3 Nov 2026)
+                right = [r.get(f'right{k}', '') for k in range(1, 5) if r.get(f'right{k}', '')]
+                wrong = [r.get(f'wrong{k}', '') for k in range(1, 6) if r.get(f'wrong{k}', '')]
+                if not r.get('statement') or not right or len(set(wrong) - set(right)) < 2:
+                    say(kind, r, 'needs a statement, at least one right detail and two wrong ones (skipped)'); ok = False
+                both = set(right) & set(wrong)
+                if both: say(kind, r, f'the same detail is right and wrong: {"; ".join(sorted(both))}')
+                if len(set(right)) < len(right) or len(set(wrong)) < len(wrong): say(kind, r, 'the same detail is there twice')
+                side = r.get('side', '').strip().lower()
+                if side and not re.match(r'(zh|cn|chinese|en|english|both)$', side): say(kind, r, f'side "{r["side"]}": use zh (Chinese version only), en (English version only) or leave it blank (both)')
+                if r.get('word') and not known(r['word']): say(kind, r, f'word: "{r["word"]}" is not in words.csv')
             elif kind == 'extracts':
                 n = len(re.findall(r'\[[^\]]+\]', r.get('extract', '')))
                 sets = 0

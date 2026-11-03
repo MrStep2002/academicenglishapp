@@ -20,14 +20,15 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
 | `templates/` | The headings and one example row for every kind of file |
 
-Every topic folder has the same nine files. A file with only its heading row is simply empty for now.
-The Chinese version uses only `words.csv` (and its `zh` column).
+Every topic folder has the same files (the table below). A file with only its heading row is simply empty for now.
+The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (sentences with their Chinese) and `evidence.csv`.
 
 | File | Games |
 |---|---|
 | `words.csv` | Match the meaning (meanings and synonym groups), Word or meaning, and every Chinese-version game |
 | `gaps.csv` | Fill the gap |
-| `builds.csv` | Build the sentence (Chinese version only: see the sentence in Chinese, build it in English) |
+| `builds.csv` | Build the sentence (both versions; the Chinese version shows the sentence in Chinese) |
+| `evidence.csv` | Find the evidence (English version) and All-in English (Chinese version): a statement, then choose the details that show it |
 | `errors.csv` | Spot the error |
 | `tf.csv` | True or false |
 | `right-wrong.csv` | SPAG: Right or Wrong (is the sentence right, or does it have a mistake?) |
@@ -190,6 +191,36 @@ English version shows the goal. Students build the sentence in English from the 
 - also_right: another correct order, the piece texts separated by `|` (more than one: separate them with `||`).
 - explanation: **not shown at the moment** (3 Nov 2026, teacher: writing them made the sentences long-winded, and content
   comes first). Leave it blank. Explanations already in the files stay there; `BUILD_WHY` in en/engine/app.js turns them back on.
+
+### evidence.csv (Find the evidence / All-in English, 3 Nov 2026)
+
+`id,level,statement,right1,right2,right3,wrong1,wrong2,wrong3,word,side,explanation`
+
+One game, two purposes. On the Chinese version it is **All-in English** (Sentences column): word association at
+Foundation to Intermediate, everything in English. On the English version it is **Find the evidence** (Reading column,
+phones too): a step towards language analysis. The student reads the statement, chooses as many details as there are
+right ones, then presses Check. Like Note taking: chosen and right green, chosen and wrong red, missed ones with a dashed
+green border. All right = a right answer; anything else and the statement comes back later. Daily Circuit: a long station
+on both versions.
+
+Example (the teacher's, from Representation): `Explain how the advert presents the woman as wealthy.` Right: `She wears
+expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` Wrong: `She stands beside another person.` /
+`She is old.` / `She is looking directly at the camera.`
+
+- **statement**: what the details must show. At Foundation, a plain sentence (`The man in the advert is rich.`); from
+  Intermediate, the exam frame (`Explain how the advert presents…`). The game adds "Choose the 3 details that show this".
+- **right1** (to right3): the details that show it. The number filled in is the number to choose. A right4 column may be added.
+- **wrong1, wrong2** (to wrong3): details that don't. Neutral (could be in the same text but show nothing: `Her dress is
+  blue.`) or evidence of something else (`She hides behind the other dancers.` shows shy, not confident). **Never arguable**:
+  if a student could make a case for it, change it. wrong4 and wrong5 may be added.
+- word: the word the statement is about, from `words.csv` (e.g. `wealthy`). Optional: after Check its meaning is shown and the
+  student's progress with the word moves on.
+- side: `zh` = Chinese version only, `en` = English version only, blank = both.
+- explanation: optional, shown after Check. Usually best left blank.
+- Keep the detail words at or below the row's level (caviar is hard at Foundation). The details are shuffled on screen.
+- First rows: `media-descriptors/evidence.csv` (9: three each at Foundation, Foundation+ and Intermediate; each statement
+  hangs on one of its adjectives). des-ev-007 is the teacher's example; the others are Claude's drafts to check. Every other
+  topic folder has the file with its heading row only. Example rows: `templates/evidence.csv`.
 
 ### errors.csv (Spot the error)
 

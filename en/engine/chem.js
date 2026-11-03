@@ -277,7 +277,7 @@ window.AEA_GEN = {
   columns: [
     {key:'chem',    name:'Chemistry',  games:['chatom', 'chion', 'chname', 'chformula', 'chmade']},
     {key:'vocab',   name:'Vocabulary', games:['match', 'meaning', 'tf']},
-    {key:'explain', name:'Explaining', games:['gap', 'rw', 'build', 'error']}
+    {key:'explain', name:'Explaining', games:['gap', 'rw', 'build', 'evidence', 'error']}
   ],
   build(T){
     const D=readTables(T), K=compounds(D);

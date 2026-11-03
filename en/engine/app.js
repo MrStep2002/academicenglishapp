@@ -84,7 +84,7 @@ function notesRow(r){
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
-  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[]};
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[], evidence:[]};
   const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
   const lv=(file,r)=>{ const v=(r.level||'').trim();
     if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
@@ -119,6 +119,17 @@ function buildSubject(T){
     const alt=String(r.also_right||'').split('||').map(a=>a.split('|').map(s=>s.trim()).filter(Boolean)).filter(a=>a.length);
     alt.forEach(a=>{ if(a.length!==tiles.length || a.some(t=>!tiles.some(x=>x[0]===t))) warn('builds',r,'also_right should use exactly the same pieces'); });
     S.builds.push({id:r.id, level:lv('builds',r), goal:r.goal||'', zh:r.zh||'', tiles, decoys:pieces(r,r.decoys), alt, why:r.explanation||''}); });
+  // Find the evidence (English version) and All-in English (Chinese version), evidence.csv (3 Nov 2026, teacher): a statement
+  // about a media text ("Explain how the advert presents the woman as wealthy.") and details; the student chooses the details
+  // that show it. right1-right4: the details that do; wrong1-wrong5: details that don't (neutral, or evidence of something
+  // else). Shuffled together; the student chooses as many as there are right ones. Optional: word (the word the statement is
+  // about: its meaning after Check and the student's progress with it), side (zh = Chinese version only, en = English version
+  // only, blank = both) and explanation (shown after Check; usually best left blank).
+  (T.evidence||[]).forEach(r=>{ const right=[...new Set([1,2,3,4].map(k=>r['right'+k]).filter(Boolean))], wrong=[...new Set([1,2,3,4,5].map(k=>r['wrong'+k]).filter(Boolean))].filter(x=>!right.includes(x));
+    if(!r.statement || !right.length || wrong.length<2) return warn('evidence',r,'skipped: it needs a statement, at least one right detail and two wrong ones');
+    const side=String(r.side||'').trim().toLowerCase(), only=/^(zh|cn|chinese)/.test(side) ? 'zh' : /^(en|english)/.test(side) ? 'en' : '';
+    if(only && only!==SIDE) return;
+    S.evidence.push({id:r.id, level:lv('evidence',r), s:r.statement, right, wrong, wid:ref1('evidence',r,r.word), why:r.explanation||''}); });
   (T.errors||[]).forEach(r=>{ if(!/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/.test(r.text||'')) return warn('errors',r,'skipped: the text needs at least one [wrong|right|why]');
     S.errors.push({id:r.id, level:lv('errors',r), title:r.title||'', text:r.text}); });
   (T.tf||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), t=/^(true|t|yes|y)$/.test(a);
@@ -188,19 +199,20 @@ function buildSubject(T){
   if(want.length){
     S.words=S.words.filter(w=>!w.lists.length || w.lists.some(l=>want.includes(l)));
     if(CFG.linked){ const on=new Set(S.words.map(w=>w.id));
-      S.gaps=S.gaps.filter(g=>g.wid && on.has(g.wid));
+      S.gaps=S.gaps.filter(g=>g.wid && on.has(g.wid)); S.evidence=S.evidence.filter(g=>g.wid && on.has(g.wid));
       ['builds','errors','tf','rw','reads','questions','extracts','gk'].forEach(k=>{ S[k]=[]; }); }
   }
   return S;
 }
-// Load the page's files, then start. The Chinese version only needs the words, and builds.csv for Build the sentence.
+// Load the page's files, then start. The Chinese version only needs the words, builds.csv for Build the sentence and
+// evidence.csv for All-in English.
 // A topic folder's files. Reading passages are not among them: the Reading Comprehension pages load theirs with data-reading
 // (Read and answer on the topic pages was replaced by Close reading, and the empty reading.csv files were removed, 25 Oct).
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'];
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence'];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
-  const jobs=(dir ? (SIDE==='zh' ? ['words','builds'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  const jobs=(dir ? (SIDE==='zh' ? ['words','builds','evidence'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
   if(dir && GEN && GEN.files) GEN.files.forEach(f=>jobs.push([f, dir+f+'.csv']));   // a science page's data tables (both sides)
   // Must-know general knowledge for everyone (content/general/, 1 Nov 2026): one round in every Daily Circuit quick-fire station
   if(dir) jobs.push(['general', ROOT+'content/general/knowledge.csv']);
@@ -223,7 +235,7 @@ function boot(){
 // column (yes = Extended only). They are kept on the row as syl and ext for the topic choice. Then the module makes its questions.
 function genPrepare(S, T){
   const tag=r=>({syl:listOf(r.syllabus), ext:/^(y|yes|e|ext|extended|s|supplement|true|1)$/i.test(String(r.extended||'').trim())});
-  [['words','allWords'],['gaps','gaps'],['builds','builds'],['errors','errors'],['tf','tf'],['right-wrong','rw'],['reads','reads'],['questions','questions'],['extracts','extracts'],['knowledge','gk']].forEach(([f,k])=>{
+  [['words','allWords'],['gaps','gaps'],['builds','builds'],['errors','errors'],['tf','tf'],['right-wrong','rw'],['reads','reads'],['questions','questions'],['extracts','extracts'],['knowledge','gk'],['evidence','evidence']].forEach(([f,k])=>{
     const by={}; (T[f]||[]).forEach(r=>{ if(r.id) by[r.id]=r; });
     (S[k]||(k==='allWords' ? S.words : [])||[]).forEach(x=>{ const r=by[x.id]; if(r) Object.assign(x, tag(r)); }); });
   try{ S.gen=(GEN.build && GEN.build(T)) || []; }catch(e){ console.warn('The generated games could not be made:', e); S.gen=[]; }
@@ -253,9 +265,9 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
-  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong, General knowledge'], ['build','Build the sentence, Spot the error, In your own words'],
+  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong, General knowledge'], ['build','Build the sentence, Spot the error, In your own words, Find the evidence, All-in English'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -268,7 +280,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={mouse:.05, zhmouse:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05};   // chance of a lucky guess
+  const GUESS={mouse:.05, zhmouse:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -354,7 +366,7 @@ function toastLevel(msg){ const t=document.createElement('div'); t.className='lv
 // The games use the student's own level for this topic. A student can choose another level to push themselves;
 // that choice is saved for this topic until they press "Use my level" (or their level reaches it).
 const MIN_LEVEL = 6;
-const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages'].flatMap(k=>S[k]||[]).concat((S.gen||[]).flatMap(g=>g.items||[]));   // + generated questions (science pages)
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages','evidence'].flatMap(k=>S[k]||[]).concat((S.gen||[]).flatMap(g=>g.items||[]));   // + generated questions (science pages)
 const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
 const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
 let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
@@ -389,7 +401,7 @@ const sylMajor = code => String(code).trim().split('.')[0];
 const sylOk = (x, c) => !(x.ext && c.course==='core') && (!(x.syl||[]).length || x.syl.some(k=>c.topics.includes(sylMajor(k))));
 const SYL_FULL = {};   // every row of the page, before the choice (the games read the chosen ones from S as usual)
 function sylApply(){ if(!SYL) return; const c=sylChoice(); Object.keys(SYL_FULL).forEach(k=>{ S[k]=SYL_FULL[k].filter(x=>sylOk(x, c)); }); }
-if(SYL){ ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','gk'].forEach(k=>{ SYL_FULL[k]=S[k]||[]; }); sylApply(); }
+if(SYL){ ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','gk','evidence'].forEach(k=>{ SYL_FULL[k]=S[k]||[]; }); sylApply(); }
 const sylNone = () => !!SYL && !sylChoice().topics.length;
 // Topics with something to play; the others say "Coming soon"
 const SYL_LIVE = new Set(SYL ? [...Object.values(SYL_FULL).flat(), ...(S.gen||[]).flatMap(g=>g.items||[])].flatMap(x=>(x.syl||[]).map(sylMajor)) : []);
@@ -568,6 +580,8 @@ const GAMES = [
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   // Build the sentence back on the English side (31 Oct, teacher: "put it in the Reading column"); playable on phones
   {key:'build',    form:'short', cat:'reading', phone:true, name:'Build the sentence', blurb:'Put the coloured pieces in order, and watch out for trap pieces.', items:()=>pick(S.builds), min:1, run:()=>playBuild()},
+  // Find the evidence (3 Nov 2026): All-in English's mechanic on the English version, for language analysis (evidence.csv)
+  {key:'evidence', form:'long', cat:'reading', phone:true, name:'Find the evidence', blurb:'Read what the task says, then choose the details that show it.', items:()=>pick(S.evidence), min:1, run:()=>playEvidence()},
   {key:'own',      form:'long', cat:'reading', name:'In your own words', blurb:'Paper 1 style: what does each underlined word mean here?', items:()=>pick(S.extracts), min:1, run:()=>playOwn()},
   {key:'read',     form:'long', cat:'reading', name:'Complete the text', blurb:'Read a short text and put the key words into the gaps.', items:()=>pick(S.reads), min:1, run:()=>playRead()},
   // General knowledge (31 Oct, teacher): "things connected to the topic but more about cultural capital". In the Games
@@ -625,7 +639,7 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const ROWS = {match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk'};
+const ROWS = {match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence'};
 const hasRows = g => g.gen ? g.all.length>0 : ((SYL ? SYL_FULL : S)[ROWS[g.key]]||[]).length>0;
 const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
 // Science pages: why a game card is greyed (no topic ticked yet; nothing in the ticked topics; nothing at this level)
@@ -1333,6 +1347,46 @@ function playNotes(){
   step();
 }
 
+// ---------- FIND THE EVIDENCE (English version) / ALL-IN ENGLISH (Chinese version), 3 Nov 2026 ----------
+// Teacher: "I present a sentence and the student has to pick sentences, in English, that match the initial statement…
+// it requires them to make connections between words and their broader meanings." On the Chinese version (All-in English,
+// A1–B1) it is word association; on the English version (Find the evidence) the same mechanic is a step towards language
+// analysis. A statement, then the right and wrong details shuffled; the student chooses as many as there are right ones,
+// then Check: chosen and right green, chosen and wrong red, missed ones with a dashed green border (Note taking's marks).
+// All right = a right answer; anything else = a wrong one (the statement comes back later). Content: evidence.csv.
+const zhEvidence = () => pick(S.evidence);
+function playEvidence(){
+  const zh=SIDE==='zh', key=zh ? 'zhevidence' : 'evidence', st=Stats(key), deck=Deck(()=>pick(S.evidence));
+  const hint=T('Read the statement, choose the details that show it, then press Check.','读句子，选出能说明它的细节，然后点“检查”。');
+  if(zh) zhShell(T('All-in English','全英文练习'), hint); else shell(GAMES.find(g=>g.key==='evidence'), hint);
+  st.draw();
+  const step=()=>{
+    const r=deck.next(); if(!r) return;
+    const opts=shuffle([...r.right.map(t=>({t, ok:true})), ...r.wrong.map(t=>({t, ok:false}))]), n=r.right.length, picked=new Set();
+    const long=opts.some(o=>o.t.length>44), chosen=k=>T(`${k} of ${n} chosen`, `已选 ${k} / ${n}`);
+    const card=showCard(`<p class="instr">${n===1 ? T('Choose the detail that shows this','选出能说明这一点的细节') : T(`Choose the ${n} details that show this`, `选出能说明这一点的 ${n} 个细节`)}</p>
+      <p class="statement ev-statement">${esc(r.s)}</p>
+      <div class="opts notes${long?' long':''}">${opts.map((o,i)=>`<button class="opt" data-i="${i}" aria-pressed="false"><kbd>${i+1}</kbd><span>${esc(o.t)}</span></button>`).join('')}</div>
+      <div class="next-row check-row"><span class="pick-n" id="pickN">${chosen(0)}</span><button class="btn" id="check" disabled>${T('Check','检查')}</button></div><div class="fb"></div>`);
+    const btns=[...card.querySelectorAll('.opt')], chk=card.querySelector('#check'), pn=card.querySelector('#pickN'); let done=false;
+    const toggle=b=>{ if(done) return; const i=+b.dataset.i;
+      if(picked.has(i)) picked.delete(i); else { if(picked.size>=n) return; picked.add(i); }
+      b.setAttribute('aria-pressed', picked.has(i)); pn.innerHTML=chosen(picked.size); chk.disabled=picked.size!==n; };
+    const check=()=>{ if(done || picked.size!==n) return; done=true; card.querySelector('.check-row').remove();
+      const got=[...picked].filter(i=>opts[i].ok).length, ok=got===n;
+      btns.forEach(b=>{ const i=+b.dataset.i, good=opts[i].ok; b.disabled=true;
+        b.classList.add(picked.has(i) ? (good?'ok':'no') : (good?'missed':'dim')); });
+      const w=r.wid && byId[r.wid], more=(r.why ? `<span>${rich(r.why)}</span>` : '')+wordNote(w);
+      const fb=card.querySelector('.fb');
+      if(ok) fbOk(fb, more);
+      else fbNo(fb, '', `<span>${T(`You found ${got} of ${n}. ${n-got===1 ? 'The one' : 'The ones'} with a dashed green border ${n-got===1 ? 'was' : 'were'} missed.`, `你找到了 ${got} / ${n} 个。绿色虚线框的是漏掉的细节。`)}</span>${more}`);
+      settle(ok, card, st, deck, r, step, AUTO_MS*2); };
+    btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
+    keyHandler=e=>{ const k=parseInt(e.key,10); if(k>=1 && k<=btns.length) toggle(btns[k-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
+  };
+  step();
+}
+
 // ---------- LISTENING (en/listening/, data-format="listening", built 26 Oct) ----------
 // A test is a script the student never sees while answering. The browser's own voice reads it aloud (speechSynthesis:
 // no audio files, nothing to upload) and the student answers multiple-choice questions on what they heard.
@@ -2020,6 +2074,8 @@ const ZH_GAMES = [
   {key:'zhtype',   type:'practice',  name:'Type it',            zh:'拼写单词',       blurb:'Read the meaning and the Chinese, then type the English word.', zhBlurb:'看释义和中文，拼写出英文单词。', run:()=>playType()},
   {key:'zhtf',     type:'practice',  name:'True or false',      zh:'判断对错',       blurb:'See the word and its Chinese. Does the English meaning match? Decide quickly.', zhBlurb:'看单词和中文，判断英文释义对不对，要快！', run:()=>playZhTF()},
   {key:'zhbuild',  type:'practice',  name:'Build the sentence', zh:'连词成句',       blurb:'See the sentence in Chinese, then build it in English from the coloured pieces.', zhBlurb:'看中文句子，用彩色词块拼出英文句子。', run:()=>playBuild(), ready:()=>zhBuilds().length>0, lock:'No sentences at this level yet 本级别还没有句子'},
+  // All-in English (3 Nov 2026, teacher): a statement in English, then choose the English details that match it (evidence.csv)
+  {key:'zhevidence', type:'practice', name:'All-in English',   zh:'全英文练习',     blurb:'Read a sentence in English, then choose the English details that match it.', zhBlurb:'读一句英文，选出和它相符的英文细节。', run:()=>playEvidence(), ready:()=>zhEvidence().length>0, lock:'Nothing at this level yet 本级别还没有题目'},
   // Odd one out was taken off the Chinese side on 26 Oct (teacher: replace it with Build the sentence). playOdd() is still
   // below; to bring it back, remove the // from the next line.
   // {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
@@ -2033,13 +2089,14 @@ ZH_GAMES.push(...GEN_ZH);
 // The Chinese topic page (3 Nov 2026, teacher): three columns of three games, Vocab, Sentences and Games, "a 3x3 grid so
 // it should be neat and tidy". Choose the meaning and True or false left the page ("too similar to the other stuff and there's
 // too much stuff on the page") but stay in the Daily Circuit; Speed round and Survival are not on the grid either (their
-// code is still here). Word Snake (an arcade game) is on the grid. soon: = a card that says "Coming soon".
+// code is still here). Word Snake (an arcade game) is on the grid, and All-in English (evidence.csv, 3 Nov 2026).
+// soon: = a card that says "Coming soon".
 const ZH_COLS = [
   {key:'vocab',     name:'Vocab',     zh:'词汇', games:['zh', 'zhmatch', 'zhtype']},
-  {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'soon:translate', 'soon:allin']},
+  {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'soon:translate', 'zhevidence']},
   {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'soon:wordsearch']}
 ];
-const ZH_SOON = {translate:['Translation','翻译'], allin:['All-in English','全英文练习'], wordsearch:['Wordsearch','单词搜索']};
+const ZH_SOON = {translate:['Translation','翻译'], wordsearch:['Wordsearch','单词搜索']};
 const ZH_SNAKE = {key:'snake', type:'arcade', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.',
   zhBlurb:'吃掉和释义相符的单词，咬错一口就结束。', min:6, run:()=>playSnake()};
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
@@ -2526,7 +2583,7 @@ function wordList(){
 const CIRCUIT_ARCADE = ['invaders', 'whack'];   // class games' arcade stations (Word Snake left out, teacher, 25 Oct)
 // Daily Circuit arcade stations (1 Nov 2026, teacher): two different ones per circuit, taking turns from circuit to circuit
 const DC_ARCADE = {en:['snake','whack','invaders','mouse'], zh:['snake','whack','invaders','zhmouse']};
-const ZH_CIRCUIT = {short:['zhtf'], long:['zhtype','zhbuild','zhmatch','zhmean']};
+const ZH_CIRCUIT = {short:['zhtf'], long:['zhtype','zhbuild','zhmatch','zhmean','zhevidence']};
 let ccTick = null;
 function circuitGames(kind){
   if(kind==='quick'){   // Daily Circuit quick-fire: the games that are ready here, in QF_GAMES
