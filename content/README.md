@@ -13,7 +13,8 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `essentials/` | English → Academic English Essentials, and Chinese version → Academic English Essentials |
 | `representation/` | English → Representation, and Chinese version → Representation |
 | `web-design/` | English → Web design, and Chinese version → Web design |
-| `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions: not linked from the topic lists yet (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
+| `media-descriptors/` | English → Media Descriptors, and Chinese version → Media Descriptors (pages `en/describing-people/`, `zh/describing-people/`). Its own folder since 3 Nov 2026: the 32 describing words and their 81 Fill the gap rows moved here from `representation/` (same ids). `new-words.csv` holds the new descriptors still being written; the games don't read it, and each level's rows move into words.csv once written |
+| `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
@@ -136,10 +137,11 @@ Required columns are in **bold**.
 
 #### Word lists (31 Oct 2026)
 
-One folder can hold more than one word list, so two pages can share the same content. Representation has three:
-`key` (media key terms: the Representation page), `describing` (adjectives for describing people: the Describing people
-page) and `academic` (general academic words that students practise in Essentials; they stay in the file only so the
-gaps and texts written around them keep their meanings).
+One folder can hold more than one word list, so two pages can share the same content. Representation has two:
+`key` (media key terms: the Representation page) and `academic` (general academic words that students practise in
+Essentials; they stay in the file only so the gaps and texts written around them keep their meanings). Its third list,
+`describing`, became its own folder on 3 Nov 2026 (`media-descriptors/`), because a page that borrows a list only gets the
+word games and the Fill the gap rows linked to its words, while a page with its own folder gets every game.
 
 - `data-list="key"` on a topic page: Match the meaning, Word or meaning, the True or false cards made from words, Save the mouse,
   the arcade games, and every Chinese word game (including the words that flow in) use only words on that list.
@@ -175,16 +177,19 @@ Questions about the wider world of the topic: people, places, history, ideas ("c
 
 `id,level,goal,zh,pieces,decoys,also_right,explanation`
 
-Since 25 Oct 2026 this game is on the Chinese version only. Students see the Chinese sentence and build it in English.
+Both versions (English since 31 Oct 2026, in the Reading column). The Chinese version shows the Chinese sentence; the
+English version shows the goal. Students build the sentence in English from the coloured pieces.
 
 - **zh**: the whole sentence in natural Chinese, e.g. `特写镜头清楚地展示了她的面部表情。` A sentence with no Chinese is not played.
   If there is an also_right order, the Chinese must fit it too.
-- goal: a short English note of what the sentence does, e.g. `Describe a creative choice` (for writers; students don't see it).
+- goal: a short English note of what the sentence does, e.g. `Describe a creative choice` (the English version shows it as the task).
 - **pieces**: the pieces in the right order, separated by `|`. Each starts with its colour:
   `topic:` (who or what), `verb:`, `detail:`, `link:` (linking word), `judge:` (judgement), `hedge:`.
   Example: `topic: The close-up | verb: shows | detail: her facial expression | detail: clearly.`
 - decoys: trap pieces, in the same form: `verb: show`
 - also_right: another correct order, the piece texts separated by `|` (more than one: separate them with `||`).
+- explanation: **not shown at the moment** (3 Nov 2026, teacher: writing them made the sentences long-winded, and content
+  comes first). Leave it blank. Explanations already in the files stay there; `BUILD_WHY` in en/engine/app.js turns them back on.
 
 ### errors.csv (Spot the error)
 

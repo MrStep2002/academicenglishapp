@@ -766,3 +766,18 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .report-msg{color:var(--ink-2);font-size:15px}
 .report-msg:empty{display:none}
 .report-msg.ok{color:var(--good);font-weight:700}
+
+/* Chinese topic pages, 3 Nov 2026 (teacher: "a 3x3 grid so it should be neat and tidy"): three columns of three games,
+   Vocab, Sentences and Games (ZH_COLS in app.js). A grid, not three separate columns, so each row of cards lines up.
+   One column below 820px, in the same order (each heading, then its three games). */
+.zh-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto repeat(3,auto);grid-auto-flow:column;gap:10px 22px;margin-top:30px}
+.zh-col-h{font-family:var(--f-display);font-weight:400;font-size:28px;line-height:1.1;margin:0 0 2px}
+.zh-col-h::before{content:"";display:block;width:36px;height:4px;border-radius:2px;background:var(--blue);margin-bottom:10px}
+.zh-col-sentences::before{background:var(--good)}
+.zh-col-games::before{background:var(--bad)}
+.zh-grid .game{padding:14px 16px 12px;gap:6px;border-radius:10px}
+.zh-grid .game h3{font-size:20px}
+.zh-grid .game p{font-size:14px;line-height:1.4}
+.zh-grid .game .best{margin-top:auto}   /* "Best streak" / "Not played yet" along the bottom of every card in a row */
+.zh-grid + .wl-link{margin-top:30px}
+@media (max-width:820px){.zh-grid{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-flow:row}.zh-col-h:not(:first-child){margin-top:18px}}

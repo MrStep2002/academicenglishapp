@@ -959,6 +959,7 @@ const ROLES={topic:'Who or what',verb:'Verb',detail:'Detail',link:'Linking word'
 // is shown at the top; students build it in English from the coloured pieces, avoiding the trap pieces.
 const ROLES_ZH={topic:'主语',verb:'动词',detail:'细节',link:'连接词',judge:'评价',hedge:'委婉语'};
 // Both sides (31 Oct): the Chinese side shows the sentence in Chinese; the English side shows its goal (builds.csv goal column)
+const BUILD_WHY = false;   // Build the sentence: show the explanation column after an answer? (off since 3 Nov 2026)
 function playBuild(){
   const zh=SIDE==='zh', game=zh ? ZH_GAMES.find(g=>g.key==='zhbuild') : GAMES.find(g=>g.key==='build');
   const items=zh ? zhBuilds() : pick(S.builds), deck=Deck(items), st=Stats(zh?'zhbuild':'build');
@@ -990,7 +991,10 @@ function playBuild(){
       card.querySelectorAll('.piece').forEach(p=>p.disabled=true);
       const model=b.tiles.map(t=>`<span class="piece inline r-${t[1]}">${esc(t[0])}</span>`).join(' ');
       const fb=card.querySelector('.fb');
-      if(ok) fbOk(fb, b.why?`<span>${rich(b.why)}</span>`:''); else fbNo(fb,'',`<div class="model">${model}</div>${b.why?`<span>${rich(b.why)}</span>`:''}`);
+      // Explanations are not shown (3 Nov 2026, teacher: writing them made the sentences long-winded and content is the
+      // priority; the explanation column stays in builds.csv in case they come back): set BUILD_WHY to true to show them again.
+      const why=BUILD_WHY && b.why ? `<span>${rich(b.why)}</span>` : '';
+      if(ok) fbOk(fb, why); else fbNo(fb,'',`<div class="model">${model}</div>${why}`);
       settle(ok,card,st,deck,b,step);
     };
     check.onclick=doCheck;
@@ -1508,7 +1512,7 @@ function partialCredit(game, item, right, wrong, parts){
 // early: a mistake costs length or points, not the game. Played from the Games row, Word Snake has no clock instead: it
 // goes on until a wrong word ends it (1 Nov 2026, teacher; see playSnake). On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
 const ARCADE = [
-  {key:'snake', name:'Word Snake', blurb:'Eat the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
+  {key:'snake', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
   {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up from holes. Tap the one that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
   {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'Words march down the screen. Shoot the one that fits the meaning.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];
@@ -2026,6 +2030,18 @@ const ZH_GAMES = [
 // Science pages (3 Nov 2026): the generated games, in their own section on the Chinese menu (zhMenu)
 const GEN_ZH = SIDE==='zh' ? GEN_GAMES.map(g=>({key:g.key, type:'chem', gen:true, name:g.name, zh:g.zh, blurb:g.blurb, zhBlurb:g.zhBlurb, run:g.run, ready:()=>g.items().length>=g.min})) : [];
 ZH_GAMES.push(...GEN_ZH);
+// The Chinese topic page (3 Nov 2026, teacher): three columns of three games, Vocab, Sentences and Games, "a 3x3 grid so
+// it should be neat and tidy". Choose the meaning and True or false left the page ("too similar to the other stuff and there's
+// too much stuff on the page") but stay in the Daily Circuit; Speed round and Survival are not on the grid either (their
+// code is still here). Word Snake (an arcade game) is on the grid. soon: = a card that says "Coming soon".
+const ZH_COLS = [
+  {key:'vocab',     name:'Vocab',     zh:'词汇', games:['zh', 'zhmatch', 'zhtype']},
+  {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'soon:translate', 'soon:allin']},
+  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'soon:wordsearch']}
+];
+const ZH_SOON = {translate:['Translation','翻译'], allin:['All-in English','全英文练习'], wordsearch:['Wordsearch','单词搜索']};
+const ZH_SNAKE = {key:'snake', type:'arcade', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.',
+  zhBlurb:'吃掉和释义相符的单词，咬错一口就结束。', min:6, run:()=>playSnake()};
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
 // or every word when the level has fewer). Build the sentence needs sentences with their Chinese at the level instead.
 const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
@@ -2049,9 +2065,18 @@ function zhMenu(){
   // What the next words unlock: "Learn 4 words to unlock 4 games"
   const needs=n>=4 ? locked.filter(g=>need(g)>0).map(need) : [], next=needs.length ? Math.min(...needs) : 0, opens=locked.filter(g=>need(g)===next && !g.needs).length;
   const teaser=next ? T(`Learn ${next}${have?' more':''} word${next===1?'':'s'} to unlock ${opens} game${opens===1?'':'s'}.`, `再学 ${next} 个单词，解锁 ${opens} 个游戏。`) : '';
-  const card=g=>{ const best=store.get((g.type==='challenge'?'best:':'streak:')+g.key,0);
+  const card=g=>{ const sc=g.type==='challenge' || g.type==='arcade', best=store.get((sc?'best:':'streak:')+g.key,0);
     return `<a class="game" href="#play-${g.key}">${g.type==='challenge'?`<span class="game-tag">${T('Challenge','挑战')}</span>`:''}<h3>${T(g.name, g.zh)}</h3><p>${T(g.blurb, g.zhBlurb)}</p>
-      <span class="best">${best?(g.type==='challenge'?T('Best score','最高分'):T('Best streak','最佳连对'))+': '+best:T('Not played yet','还没玩过')}</span></a>`; };
+      <span class="best">${best?(sc?T('Best score','最高分'):T('Best streak','最佳连对'))+': '+best:T('Not played yet','还没玩过')}</span></a>`; };
+  // The grid: a game that isn't open yet keeps its place, greyed, saying what opens it
+  const offCard=(name, zh, why)=>`<div class="game off" aria-disabled="true"><h3>${T(name, zh)}</h3><span class="best">${why}</span></div>`;
+  const cell=k=>{
+    if(k.startsWith('soon:')){ const s=ZH_SOON[k.slice(5)]||[k.slice(5), k.slice(5)]; return offCard(esc(s[0]), esc(s[1]), T('Coming soon','即将推出')); }
+    const g=k==='snake' ? ZH_SNAKE : ZH_GAMES.find(x=>x.key===k); if(!g) return '';
+    if(zhReady(g)) return card(g);
+    return offCard(g.name, g.zh, g.lock && n>=4 && !sylNone() ? T(...g.lock.split(/ (?=[\u3400-\u9fff])/)) : lockText(g));
+  };
+  const grid=`<div class="zh-grid">${ZH_COLS.map(c=>`<h2 class="zh-col-h zh-col-${c.key}">${T(c.name, c.zh)}</h2>${c.games.map(cell).join('')}`).join('')}</div>`;
   const tile=g=>`<div class="game-lock" aria-disabled="true">${LOCK_SVG}<span class="gl-name">${T(g.name, g.zh)}</span><span class="gl-need">${lockText(g)}</span></div>`;
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version', html:T('Chinese version','中文版')}, `
   <section class="hero hero-compact hero-zhc">
@@ -2061,9 +2086,7 @@ function zhMenu(){
   </section>${GEN_ZH.length ? (()=>{ const on=GEN_ZH.filter(g=>g.ready()), off=GEN_ZH.filter(g=>!g.ready());
     return `<h2 class="zh-games-h">${T(esc(GEN.title||'Practice'), esc(GEN.titleZh||'练习'))}</h2>${on.length ? `<div class="games">${on.map(card).join('')}</div>` : ''}
       ${off.length ? `<div class="locks">${off.map(g=>`<div class="game-lock" aria-disabled="true">${LOCK_SVG}<span class="gl-name">${T(g.name, g.zh)}</span><span class="gl-need">${sylNone() ? T('Choose your topics first','先选择主题') : T('None in your topics yet','你选的主题里还没有')}</span></div>`).join('')}</div>` : ''}\n`; })() : ''}
-  <h2 class="zh-games-h">${GEN_ZH.length ? T('Words','词汇') : T('Games','游戏')}</h2>
-  ${open.length ? `<div class="games">${open.map(card).join('')}</div>` : ''}
-  ${locked.length ? `${open.length?`<p class="instr group-label">${T('Still locked','还没解锁')}</p>`:''}<div class="locks">${locked.map(tile).join('')}</div>` : ''}
+  ${grid}
   <div class="wl-link"><p>${T('See every word with its Chinese meaning.','查看所有单词和中文释义。')}</p><a class="btn alt" href="#words">${T('Word list','词汇表')}</a></div>`);
   wireLevels(zhMenu); wireSyl(zhMenu);
 }
@@ -2816,7 +2839,7 @@ function route(){
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
     if(h==='learn') return zhLevelWords().length>=4 ? playLearn() : zhMenu();
-    const g=ZH_GAMES.find(x=>'play-'+x.key===h);
+    const g=h==='play-snake' ? ZH_SNAKE : ZH_GAMES.find(x=>'play-'+x.key===h);
     return g && zhReady(g) ? g.run() : zhMenu();
   }
   if(!h) return menu();
