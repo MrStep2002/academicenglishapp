@@ -233,6 +233,16 @@ h1::after { content: ""; display: block; width: 64px; height: 8px; background: v
 }
 .ess-sub { color: var(--muted); font-size: .92rem; }
 
+/* Top row, 3 Nov 2026 (teacher): the Daily Circuit across two of the three columns again and Essentials in the third,
+   lined up with the topic tiles below (one under the other below 820px, as before). The circuit's Start button is green;
+   Essentials has one black button, "Essentials". */
+@media (min-width: 820px) {
+  .top-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .top-row .circuit-box { grid-column: span 2; }
+}
+.top-row .cc-box-actions .cc-btn[data-circuit-go] { background: var(--ess); border-color: var(--ess); }
+.ess-actions .cc-btn:not(.alt) { background: var(--ink); border-color: var(--ink); }
+
 /* Suggestions box (3 Nov 2026, a student's idea): at the bottom of the topic lists, filled in by en/engine/suggest.js */
 .suggest { background: var(--card); border: 2px solid var(--line); border-radius: 20px; padding: 16px 18px; margin-top: 8px; }
 .suggest:empty { display: none; }
