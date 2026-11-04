@@ -241,6 +241,19 @@ a.btn.primary { color: var(--accent-ink); }
 .who button { border: 0; background: transparent; padding: 3px 8px; font-size: 11px; font-weight: 700; color: var(--muted); }
 .who button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
 
+/* Duties */
+.duty { display: flex; flex-direction: column; gap: 2px; border-radius: 9px; padding: 6px 10px; background: var(--ink); color: var(--surface); text-decoration: none; min-width: 0; }
+.duty:hover { box-shadow: var(--shadow); }
+.duty .dn { font-weight: 700; font-size: 13px; overflow-wrap: anywhere; }
+.duty .dk { font-family: var(--f-display); font-weight: 800; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; opacity: .65; margin-right: 4px; }
+.duty .meta { font-family: var(--f-mono); font-size: 11px; opacity: .75; }
+.tcell.slim, .dcell.slim { padding-top: 5px; padding-bottom: 5px; }
+.tcell.slim b { font-size: 15px; }
+.mles.mduty { background: var(--ink); color: var(--surface); }
+a.lrow { text-decoration: none; color: inherit; }
+.lrow .c.dc { background: var(--ink); color: var(--surface); }
+.pill.duty { background: var(--ink); color: var(--surface); }
+
 /* Tasks */
 .tasks-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
 .tasks-add .field.title { flex: 1 1 260px; }
@@ -592,7 +605,7 @@ function classes() {
   classIndex = { list, by: Object.fromEntries(list.map(c => [c.title, c])) };
   return classIndex;
 }
-const cinfo = title => classes().by[title] || { title, name: title, tone: 'c0', subject: 'Other' };
+const cinfo = title => (title === '__duty' ? { title, name: 'Duties', tone: 'c0', subject: 'Duties' } : classes().by[title] || { title, name: title, tone: 'c0', subject: 'Other' });
 const toneStyle = title => { const t = cinfo(title).tone; return `--cbg:var(--${t}-bg);--cfg:var(--${t}-fg)`; };
 const isCovered = id => prefs().covered.includes(id);
 const coverName = () => prefs().coverName || 'Head';
@@ -734,15 +747,16 @@ function renderToday() {
   }
   const now = nowHM();
   const todays = occurrencesOn(t).filter(o => !isCovered(o.slot.id));
-  const cur = todays.find(o => o.slot.start <= now && now < o.slot.end);
-  const nxt = todays.find(o => o.slot.start > now);
-  const line = o => { const p = planOf(o.key); return `<b>${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}</b> · Room ${esc(o.slot.room)}${p && p.title ? ' · ' + esc(p.title) : ''}`; };
+  const items = [...todays.map(o => ({ start: o.slot.start, end: o.slot.end, o })), ...dutiesOn(t, true).map(x => ({ start: x.start, end: x.end, x }))].sort((a, b) => a.start.localeCompare(b.start));
+  const cur = items.find(i => i.start <= now && now < i.end);
+  const nxt = items.find(i => i.start > now);
+  const line = i => { if (i.x) return `<b>${esc(i.x.start)} Duty: ${esc(dutyLabel(i.x.duty))}</b>${i.x.duty.place ? ' · ' + esc(i.x.duty.place) : ''}`; const o = i.o, p = planOf(o.key); return `<b>${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}</b> · Room ${esc(o.slot.room)}${p && p.title ? ' · ' + esc(p.title) : ''}`; };
   let next = '';
   if (cur) next += `<div class="next">Now: ${line(cur)}</div>`;
   if (nxt) next += `<div class="next">Next: ${line(nxt)}</div>`;
   if (!cur && !nxt) next = `<div class="next">${todays.length ? 'No more lessons today.' : 'No lessons today.'} Tomorrow is ${(() => { let d = addDays(t, 1); for (let i = 0; i < 60 && !cycleDay(d); i++) d = addDays(d, 1); return esc(fmtShort(d)) + ' · Day ' + cycleDay(d); })()}.</div>`;
   el.innerHTML = `<div class="num" aria-label="Day ${cd} of ${L()}"><span class="word">Day</span>${cd}<small>/${L()}</small></div>
-    <div class="info"><div class="date">${esc(fmtLong(t))}</div>${next}<div class="hint">${todays.length} lesson${todays.length === 1 ? '' : 's'} today${dueCountHint()}</div></div>`;
+    <div class="info"><div class="date">${esc(fmtLong(t))}</div>${next}<div class="hint">${todays.length} lesson${todays.length === 1 ? '' : 's'} today${dutyHint(t)}${dueCountHint()}</div></div>`;
 }
 
 /* ---------- filters ---------- */
@@ -759,6 +773,7 @@ function renderFilters() {
     </div><span class="divider" aria-hidden="true"></span>
     <div class="filters" role="group" aria-label="Classes">
       ${cl.map(c => `<button class="chip" data-cls="${esc(c.title)}" aria-pressed="${sel.has(c.title)}"><span class="sw" style="background:var(--${c.tone}-fg)"></span>${esc(c.name)}</button>`).join('')}
+      ${duties().length && ui.view !== 'tasks' ? `<button class="chip" data-cls="${DUTY}" aria-pressed="${sel.has(DUTY)}"><span class="sw" style="background:var(--ink)"></span>Duties</button>` : ''}
     </div>`;
 }
 
@@ -805,13 +820,21 @@ function viewWeek() {
   for (let i = 0; i < 7; i++) { const d = addDays(ws, i); if (i < 5 || workMap.has(d)) days.push(d); }
   const P = periods();
   const t = todayDS();
-  let cols = `<div class="tcol"><div></div>${P.map(p => `<div class="tcell"><b>P${p.n}</b><span class="mono">${esc(p.start)}<br>${esc(p.end)}</span></div>`).join('')}</div>`;
+  const gs = gapSlots(), wkDuties = days.flatMap(d => dutiesOn(d));
+  const rows = [];
+  for (const p of P) {
+    rows.push({ kind: 'p', p });
+    for (const kind of ['break', 'lunch']) if (gs[kind] && gs[kind].after === p.n && wkDuties.some(x => dutyRowOf(x.duty) === kind)) rows.push({ kind, start: gs[kind].start, end: gs[kind].end });
+  }
+  let cols = `<div class="tcol"><div></div>${rows.map(r => r.kind === 'p' ? `<div class="tcell"><b>P${r.p.n}</b><span class="mono">${esc(r.p.start)}<br>${esc(r.p.end)}</span></div>` : `<div class="tcell slim"><b>${r.kind === 'break' ? 'Break' : 'Lunch'}</b><span class="mono">${esc(r.start)}<br>${esc(r.end)}</span></div>`).join('')}</div>`;
   for (const d of days) {
     const cd = cycleDay(d);
     const occ = occurrencesOn(d).filter(o => visibleSlot(o.slot));
     cols += `<div class="dcol${cd ? '' : ' off'}"><div class="dhead${d === t ? ' is-today' : ''}"><span class="dname">${esc(fmt(d, { weekday: 'short' }))} <span>${esc(fmt(d, { day: 'numeric', month: 'short' }))}</span></span>${dayTag(d, cd)}</div>`;
-    for (const p of P) {
-      const here = occ.filter(o => o.slot.period === p.n);
+    const dl = dutiesOn(d);
+    for (const r of rows) {
+      if (r.kind !== 'p') { const hd = dl.filter(x => dutyRowOf(x.duty) === r.kind); cols += `<div class="dcell slim${hd.length ? '' : ' empty'}">${hd.map(dutyChip).join('')}</div>`; continue; }
+      const here = occ.filter(o => o.slot.period === r.p.n);
       cols += `<div class="dcell${here.length ? '' : ' empty'}">${here.map(o => lessonChip(o)).join('')}</div>`;
     }
     cols += `</div>`;
@@ -819,7 +842,7 @@ function viewWeek() {
   const end = addDays(ws, 4);
   return `<section class="panel"><div class="panel-head"><h2>${esc(fmt(ws, { day: 'numeric', month: 'short' }))} – ${esc(fmt(end, { day: 'numeric', month: 'short', year: 'numeric' }))}</h2>
     <div class="nav"><button class="btn icon-btn" data-wk="-1" aria-label="Previous week">‹</button><button class="btn" data-wk="0">This week</button><button class="btn icon-btn" data-wk="1" aria-label="Next week">›</button></div></div>
-    <div class="week" style="--n:${days.length};--p:${P.length}">${cols}</div></section>`;
+    <div class="week" style="--n:${days.length};grid-template-rows:auto ${rows.map(r => r.kind === 'p' ? 'minmax(5.4rem, auto)' : 'auto').join(' ')}">${cols}</div></section>`;
 }
 
 function viewMonth() {
@@ -837,7 +860,7 @@ function viewMonth() {
     cells += `<button class="${cls}" data-goweek="${d}" aria-label="${esc(fmtLong(d))}${cd ? ', Day ' + cd : ''}">
       <span class="mtop"><span class="dnum">${Number(d.slice(8))}</span>${cd ? `<span class="mtag${workMap.has(d) ? ' mk' : ''}">D${cd}</span>` : ''}</span>
       ${h ? `<span class="mhol">${esc(h.label || 'Holiday')}</span>` : ''}
-      ${occ.slice(0, 5).map(o => { const p = planOf(o.key); return `<span class="mles" style="${toneStyle(o.slot.title)}">${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}${p && p.title ? ` <em>${esc(p.title)}</em>` : ''}</span>`; }).join('')}
+      ${[...occ.map(o => ({ t: o.slot.start, o })), ...dutiesOn(d).map(x => ({ t: x.start, x }))].sort((a, b) => a.t.localeCompare(b.t)).slice(0, 6).map(({ o, x }) => { if (x) return `<span class="mles mduty">${esc(x.start)} ${esc(dutyLabel(x.duty))}</span>`; const p = planOf(o.key); return `<span class="mles" style="${toneStyle(o.slot.title)}">${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}${p && p.title ? ` <em>${esc(p.title)}</em>` : ''}</span>`; }).join('')}
     </button>`;
   }
   return `<section class="panel"><div class="panel-head"><h2>${esc(fmt(ms, { month: 'long', year: 'numeric' }))}</h2>
@@ -852,8 +875,8 @@ function viewList() {
   while (groups.length < S.listCount && guard++ < 500) {
     const cd = cycleDay(d), h = holidayMap.get(d);
     if (cd) {
-      const occ = occurrencesOn(d).filter(o => visibleSlot(o.slot));
-      if (occ.length) groups.push({ d, cd, occ });
+      const occ = occurrencesOn(d).filter(o => visibleSlot(o.slot)), dl = dutiesOn(d);
+      if (occ.length || dl.length) groups.push({ d, cd, occ, dl });
     } else if (h && (h.start === d || !groups.length)) groups.push({ d, hol: h });
     d = addDays(d, up ? 1 : -1);
   }
@@ -861,13 +884,13 @@ function viewList() {
   const body = groups.map(g => {
     if (g.hol) return `<div class="lday"><h3>${esc(fmtShort(g.d))} <span class="pill hol">${esc(g.hol.label || 'Holiday')}${g.hol.end && g.hol.end !== g.hol.start ? ' · until ' + esc(fmtShort(g.hol.end)) : ''}</span></h3></div>`;
     return `<div class="lday"><h3>${esc(fmtLong(g.d))} <span class="daytag${g.d === t ? ' on' : ''}">Day ${g.cd}</span></h3>
-      ${g.occ.map(o => { const p = planOf(o.key) || {}, url = safeUrl(p.link), cov = isCovered(o.slot.id); return `<div class="lrow${cov ? ' covered' : ''}" style="${toneStyle(o.slot.title)}" role="button" tabindex="0" data-open="${esc(o.key)}">
+      ${mergeByTime(g.occ, g.dl || [], o => { const p = planOf(o.key) || {}, url = safeUrl(p.link), cov = isCovered(o.slot.id); return `<div class="lrow${cov ? ' covered' : ''}" style="${toneStyle(o.slot.title)}" role="button" tabindex="0" data-open="${esc(o.key)}">
         <span class="t">${esc(o.slot.start)}–${esc(o.slot.end)}</span>
         <span class="c">${esc(cinfo(o.slot.title).name)}</span>
         <span class="p">${cov ? `<span class="muted">${esc(coverName())} covers this lesson</span>` : (p.title ? `<b>${esc(p.title)}</b>` : '<span class="muted">No plan yet</span>')}
           ${p.notes ? `<span class="n">${esc(p.notes)}</span>` : ''}
           ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-link>${esc(url.replace(/^https?:\/\//, '').slice(0, 60))}</a>` : ''}</span>
-        <span class="r">Rm ${esc(o.slot.room)}</span></div>`; }).join('')}</div>`;
+        <span class="r">Rm ${esc(o.slot.room)}</span></div>`; })}</div>`;
   }).join('');
   return `<section class="panel"><div class="panel-head"><h2>${single ? esc(single) : 'Lessons'}</h2>
     <div class="seg" role="group" aria-label="Which lessons"><button data-lm="upcoming" aria-pressed="${up}">Upcoming</button><button data-lm="past" aria-pressed="${!up}">Past</button></div></div>
@@ -886,6 +909,12 @@ function viewCycle() {
       if (here.length > 1) {
         g += `<div class="cc"><div class="clash"><span class="label">Clash · who teaches?</span>${here.map(s => `${card(s)}<div class="who" role="group" aria-label="Who teaches ${esc(cinfo(s.title).name)}"><button data-cover="${esc(s.id)}" data-v="me" aria-pressed="${!isCovered(s.id)}">Me</button><button data-cover="${esc(s.id)}" data-v="other" aria-pressed="${isCovered(s.id)}">${esc(coverName())}</button></div>`).join('')}</div></div>`;
       } else g += `<div class="cc">${here.map(card).join('')}</div>`;
+    }
+    for (const kind of ['break', 'lunch']) {
+      const gap = gapSlots()[kind], cyc = duties().filter(du => du.repeat !== 'weekday' && dutyRowOf(du) === kind);
+      if (!gap || gap.after !== p.n || !cyc.length) continue;
+      g += `<div class="tcell slim"><b>${kind === 'break' ? 'Break' : 'Lunch'}</b><span class="mono">${esc(gap.start)}<br>${esc(gap.end)}</span></div>`;
+      for (let d = 1; d <= n; d++) g += `<div class="cc">${cyc.filter(du => du.n === d).sort((a, b) => a.start.localeCompare(b.start)).map(du => dutyChip({ duty: du, start: du.start, end: du.end })).join('')}</div>`;
     }
   }
   return `<section class="panel"><div class="panel-head"><h2>${n}-day cycle</h2>
@@ -932,6 +961,8 @@ function viewSetup() {
       ${anchorsHtml ? `<div class="items">${anchorsHtml}</div>` : '<p class="note">Not set yet. The planner is guessing that today is Day 1.</p>'}
     </section>
 
+    ${dutiesPanel()}
+
     <section class="panel"><h2>Holidays &amp; make-up days</h2>
       <p>Holidays are skipped, so the cycle carries on the next school day. Make-up days are weekend days when school runs, which happen around Chinese public holidays.</p>
       <div class="form">
@@ -970,6 +1001,69 @@ function viewSetup() {
       ${orphans().length ? `<p class="note">${orphans().length} plan(s) have lost their lesson. They're listed above the other views.</p>` : ''}
     </section>
   </div>`;
+}
+
+/* ---------- duties ---------- */
+const DUTY = '__duty';
+const toMin = t => { const [h, m] = String(t).split(':').map(Number); return h * 60 + m; };
+const fromMin = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+function gapSlots() {
+  // Break = the first long gap between periods; lunch = the longest one.
+  const P = periods(), gaps = [];
+  for (let i = 0; i < P.length - 1; i++) { const mins = toMin(P[i + 1].start) - toMin(P[i].end); if (mins >= 15) gaps.push({ after: P[i].n, start: P[i].end, end: P[i + 1].start, mins }); }
+  if (!gaps.length) return {};
+  const lunch = gaps.reduce((x, y) => (y.mins > x.mins ? y : x));
+  return { break: gaps.find(g => g !== lunch && g.start < lunch.start) || null, lunch };
+}
+function slotTimes(slot) {
+  const g = gapSlots();
+  if (slot === 'break') return g.break ? [g.break.start, g.break.end] : ['10:15', '10:40'];
+  const Ln = g.lunch || { start: '12:20', end: '13:40' };
+  const mid = fromMin(Math.round((toMin(Ln.start) + toMin(Ln.end)) / 2 / 5) * 5);
+  return slot === 'lunch1' ? [Ln.start, mid] : [mid, Ln.end];
+}
+const SLOT_NAMES = { break: 'Break', lunch1: 'Lunch · 1st half', lunch2: 'Lunch · 2nd half' };
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+const duties = () => (prefs().duties || []);
+const dutyVisible = () => !ui.classes.length || ui.classes.includes(DUTY);
+const dutyRowOf = du => (du.slot === 'break' ? 'break' : 'lunch');
+const dutyLabel = du => du.name || 'Duty';
+const repeatText = du => (du.repeat === 'weekday' ? 'Every ' + WEEKDAYS[du.n] : 'Day ' + du.n);
+function dutiesOn(ds, always) {
+  if (!always && !dutyVisible()) return [];
+  const cd = cycleDay(ds); if (!cd) return [];
+  return duties().filter(du => (du.repeat === 'weekday' ? dow(ds) === du.n : cd === du.n))
+    .map(du => ({ duty: du, date: ds, start: du.start, end: du.end })).sort((a, b) => a.start.localeCompare(b.start));
+}
+function dutyChip(x) {
+  return `<a class="duty" href="#setup" data-goduties title="Edit duties in Settings"><span class="dn"><span class="dk">Duty</span>${esc(dutyLabel(x.duty))}</span><span class="meta">${esc(x.start)}–${esc(x.end)}${x.duty.place ? ' · ' + esc(x.duty.place) : ''}</span></a>`;
+}
+const dutyListRow = x => `<a class="lrow" href="#setup" data-goduties><span class="t">${esc(x.start)}–${esc(x.end)}</span><span class="c dc">Duty</span><span class="p"><b>${esc(dutyLabel(x.duty))}</b>${x.duty.place ? `<span class="n">${esc(x.duty.place)}</span>` : ''}</span><span class="r"></span></a>`;
+function mergeByTime(occ, dl, fn) {
+  return [...occ.map(o => ({ t: o.slot.start, h: fn(o) })), ...dl.map(x => ({ t: x.start, h: dutyListRow(x) }))]
+    .sort((a, b) => a.t.localeCompare(b.t)).map(i => i.h).join('');
+}
+function dutyHint(ds) { const n = dutiesOn(ds, true).length; return n ? ` · ${n} dut${n > 1 ? 'ies' : 'y'}` : ''; }
+let dutyForm = { name: '', place: '', repeat: 'cycle:1', slot: 'break' };
+function dutiesPanel() {
+  const list = duties().slice().sort((a, b) => (a.repeat === b.repeat ? 0 : a.repeat === 'weekday' ? 1 : -1) || a.n - b.n || a.start.localeCompare(b.start));
+  const [s0, e0] = slotTimes(dutyForm.slot);
+  const opts = [...Array.from({ length: L() }, (_, i) => [`cycle:${i + 1}`, `Day ${i + 1}`]), ...[1, 2, 3, 4, 5].map(w => [`weekday:${w}`, `Every ${WEEKDAYS[w]}`])];
+  return `<section class="panel" id="duties"><h2>Duties</h2>
+    <p>Duties get their own Break and Lunch rows on the timetable. A row only appears in a week when you have a duty in it.</p>
+    ${list.length ? `<div class="items">${list.map(du => `<div class="item"><span class="pill duty">${esc(repeatText(du))}</span><span class="grow"><b>${esc(dutyLabel(du))}</b> <span class="muted">${esc(SLOT_NAMES[du.slot] || '')} · ${esc(du.start)}–${esc(du.end)}${du.place ? ' · ' + esc(du.place) : ''}</span></span><button class="btn ghost danger" data-delduty="${esc(du.id)}">Remove</button></div>`).join('')}</div>` : '<p class="note">No duties yet.</p>'}
+    <div class="form">
+      <div class="field grow"><label for="duName">Duty</label><input type="text" id="duName" value="${esc(dutyForm.name)}" placeholder="e.g. Playground" maxlength="60"></div>
+      <div class="field grow"><label for="duPlace">Where (optional)</label><input type="text" id="duPlace" value="${esc(dutyForm.place)}" placeholder="e.g. Canteen" maxlength="60"></div>
+    </div>
+    <div class="form">
+      <div class="field"><label for="duRepeat">Repeats</label><select id="duRepeat">${opts.map(([v, l]) => `<option value="${v}" ${dutyForm.repeat === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="duSlot">When</label><select id="duSlot">${Object.entries(SLOT_NAMES).map(([k, l]) => `<option value="${k}" ${dutyForm.slot === k ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+      <div class="field"><label for="duStart">From</label><input type="time" id="duStart" value="${s0}"></div>
+      <div class="field"><label for="duEnd">To</label><input type="time" id="duEnd" value="${e0}"></div>
+      <button class="btn primary" data-addduty>Add duty</button>
+    </div>
+  </section>`;
 }
 
 /* ---------- tasks ---------- */
@@ -1023,7 +1117,8 @@ let clearArmed = false;
 function viewTasks() {
   const td = todayDS();
   let list = liveTasks();
-  if (ui.classes.length) list = list.filter(t => ui.classes.includes(t.cls));
+  const cf = ui.classes.filter(c => c !== DUTY);
+  if (cf.length) list = list.filter(t => cf.includes(t.cls));
   const open = list.filter(t => !t.done), done = list.filter(t => t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
   const byDue = (a, b) => (a.due || '').localeCompare(b.due || '') || (a.createdAt || 0) - (b.createdAt || 0);
   const groups = [
@@ -1033,8 +1128,8 @@ function viewTasks() {
     ['Later', open.filter(t => t.due > addDays(mondayOf(td), 6)).sort(byDue), ''],
     ['No due date', open.filter(t => !t.due).sort(byDue), ''],
   ].filter(g => g[1].length);
-  const defaultCls = taskDraft.cls || (ui.classes.length === 1 ? ui.classes[0] : '');
-  const single = ui.classes.length === 1 ? cinfo(ui.classes[0]).name : null;
+  const defaultCls = taskDraft.cls || (cf.length === 1 ? cf[0] : '');
+  const single = cf.length === 1 ? cinfo(cf[0]).name : null;
   return `<section class="panel"><div class="panel-head"><h2>${single ? esc(single) + ' tasks' : 'Tasks'}</h2>
       <span class="note">${open.length} to do${done.length ? ` · ${done.length} done` : ''}</span></div>
     <div class="tasks-add">
@@ -1357,7 +1452,7 @@ function render() {
   $('#filters').hidden = ui.view === 'setup';
   renderToday(); renderFilters(); renderBanners();
   if (!inMain) renderMainOnly();
-  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken', 'tTitle', 'tCls', 'tDue', 'teTitle', 'teCls', 'teDue'].includes(inMain)) renderMainOnly();
+  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken', 'tTitle', 'tCls', 'tDue', 'teTitle', 'teCls', 'teDue', 'duName', 'duPlace', 'duRepeat', 'duSlot', 'duStart', 'duEnd'].includes(inMain)) renderMainOnly();
   renderDrawer();
 }
 
@@ -1371,6 +1466,17 @@ document.addEventListener('click', e => {
   const d = t.dataset;
   if (t.matches('a[data-link]') || (t.tagName === 'A' && t.target === '_blank')) return;
   if (d.close != null) { closeDrawer(); return; }
+  if (d.goduties != null) { e.preventDefault(); flushDraft(); S.drawer = null; location.hash = 'setup'; setView('setup'); setTimeout(() => { const el = document.getElementById('duties'); if (el) el.scrollIntoView({ block: 'start' }); }, 30); return; }
+  if (d.addduty != null) {
+    const name = $('#duName').value.trim(), [rt, rn] = $('#duRepeat').value.split(':'), slot = $('#duSlot').value, start = $('#duStart').value, end = $('#duEnd').value;
+    if (!name) { toast('Give the duty a name, like Playground or Canteen.'); $('#duName').focus(); return; }
+    if (!/^\d{2}:\d{2}$/.test(start) || !/^\d{2}:\d{2}$/.test(end) || end <= start) { toast('Check the times: the end must be after the start.'); return; }
+    const pr = clone(prefs());
+    pr.duties = [...(pr.duties || []), { id: uid(), name: name.slice(0, 60), place: $('#duPlace').value.trim().slice(0, 60), repeat: rt === 'weekday' ? 'weekday' : 'cycle', n: +rn, slot, start, end }];
+    dutyForm = { name: '', place: '', repeat: $('#duRepeat').value, slot };
+    writeConfig('prefs', pr); toast(`Added ${name}`); return;
+  }
+  if (d.delduty) { const pr = clone(prefs()); const du = (pr.duties || []).find(x => x.id === d.delduty); pr.duties = (pr.duties || []).filter(x => x.id !== d.delduty); writeConfig('prefs', pr); toast(`Removed ${du ? dutyLabel(du) : 'duty'}`); return; }
   if (d.tadd != null) {
     const ok = addTask($('#tTitle').value, $('#tCls').value, $('#tDue').value);
     if (ok) { taskDraft = { title: '', cls: $('#tCls').value, due: '' }; renderMainOnly(); const f = $('#tTitle'); if (f) f.focus(); }
@@ -1500,6 +1606,8 @@ document.addEventListener('input', e => {
   }
   if (e.target.id === 'holText') importState.holText = e.target.value;
   if (e.target.id === 'tTitle') taskDraft.title = e.target.value;
+  if (e.target.id === 'duName') dutyForm.name = e.target.value;
+  if (e.target.id === 'duPlace') dutyForm.place = e.target.value;
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'mineOnly') { ui.mineOnly = e.target.checked; saveUI(); render(); }
@@ -1510,6 +1618,8 @@ document.addEventListener('change', e => {
     if (e.target.checked) toast('Done');
   }
   if (e.target.id === 'tCls') taskDraft.cls = e.target.value;
+  if (e.target.id === 'duRepeat') dutyForm.repeat = e.target.value;
+  if (e.target.id === 'duSlot') { dutyForm.slot = e.target.value; const [a, b] = slotTimes(dutyForm.slot); $('#duStart').value = a; $('#duEnd').value = b; }
   if (e.target.id === 'tDue') taskDraft.due = e.target.value;
   if (e.target.id === 'ttFile' && e.target.files[0]) handleTimetableFile(e.target.files[0]);
   if (e.target.id === 'holFile' && e.target.files[0]) handleHolidayFile(e.target.files[0]);

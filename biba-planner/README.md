@@ -1,6 +1,6 @@
 # Cycle Planner
 
-A planner for a six-day timetable cycle. It shows lessons by week, month, list or cycle, skips holidays, handles weekend make-up days and cover swaps, keeps a title, notes and a media link for every lesson, and has a task list.
+A planner for a six-day timetable cycle. It shows lessons by week, month, list or cycle, skips holidays, handles weekend make-up days and cover swaps, keeps a title, notes and a media link for every lesson, and has a task list and your duties.
 
 It is a plain static website with no build step and no server code. Your plans are saved in the browser straight away and synced to a JSON file in a **private** GitHub repository, so the same plans appear on every device.
 
@@ -51,6 +51,7 @@ Copy this whole folder to any web server that serves static files (IIS, Apache, 
 
 - **Which day is it?** The planner counts school days from the date you set, skipping weekends and holidays. If the school resets or skips a day, tap a date's *Day* label in Week view and set it.
 - **Settings:** the cog in the top right opens Settings (cycle day, holidays, timetable, GitHub sync).
+- **Duties:** add them in Settings → *Duties*. Pick the cycle day (or a weekday) and Break, Lunch 1st half or Lunch 2nd half; the times fill in from your timetable and can be changed. A Break or Lunch row only appears in a week that has a duty in it. The *Duties* chip filters to just your duties.
 - **Tasks:** the Tasks tab lists to-dos grouped into Overdue, Today, This week, Later and No due date. Give a task a class and press **Next lesson** to make it due at that class's next lesson. Tasks due in a lesson also appear when you open that lesson, and the lesson shows "1 task" in the Week view.
 - **Holidays:** Settings → *Holidays & make-up days*. Add them one by one, upload the school calendar (PDF, text, CSV or .ics), or paste lines like `2027-02-05 to 2027-02-21 Spring Festival`. Put "make-up" in a line for a weekend school day.
 - **Cover swaps:** in the Cycle view, any slot with two classes asks who teaches each. "Only lessons I teach" hides the ones someone else covers.
