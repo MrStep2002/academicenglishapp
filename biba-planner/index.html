@@ -237,6 +237,12 @@ a.btn.primary { color: var(--accent-ink); }
 .cycle .cc { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--line); padding-top: 6px; }
 .clash { border: 1px solid var(--holiday); border-radius: 12px; padding: 6px; display: flex; flex-direction: column; gap: 6px; }
 .clash .label { color: var(--holiday); }
+.strand-btn { align-self: flex-start; border: 1px dashed var(--line); background: var(--surface); color: var(--muted); border-radius: 8px; padding: 2px 8px; font-size: 11px; font-weight: 700; }
+.strand-btn.set { border-style: solid; color: var(--ink); }
+.strand-edit { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--sunk); }
+.strand-edit input { width: 7rem; padding: 4px 8px; font-size: 12px; }
+.strand-edit .chip, .strand-edit .btn { padding: 3px 9px; font-size: 12px; }
+.sd { font-weight: 600; opacity: .8; }
 .who { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: flex-start; background: var(--surface); }
 .who button { border: 0; background: transparent; padding: 3px 8px; font-size: 11px; font-weight: 700; color: var(--muted); }
 .who button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
@@ -413,7 +419,7 @@ function toast(msg) {
 /* ---------- state ---------- */
 const UI_KEY = 'cycle-planner-ui';
 const LOCAL_KEY = 'cycle-planner-data';
-const ui = Object.assign({ view: 'week', classes: [], mineOnly: true, listMode: 'upcoming', showDone: false }, lsGet(UI_KEY) || {});
+const ui = Object.assign({ view: 'week', classes: [], mineOnly: true, listMode: 'upcoming', showDone: false, strand: '' }, lsGet(UI_KEY) || {});
 const VIEWS = ['week', 'month', 'list', 'cycle', 'tasks', 'setup'];
 let returnView = 'week';
 const S = {
@@ -427,7 +433,7 @@ const S = {
   listCount: 15,
   drawer: null,
 };
-const saveUI = () => lsSet(UI_KEY, { view: ui.view, classes: ui.classes, mineOnly: ui.mineOnly, listMode: ui.listMode, showDone: ui.showDone });
+const saveUI = () => lsSet(UI_KEY, { view: ui.view, classes: ui.classes, mineOnly: ui.mineOnly, listMode: ui.listMode, showDone: ui.showDone, strand: ui.strand });
 const cal = () => S.calendar || { anchors: [], entries: [] };
 const prefs = () => S.prefs || { covered: [], coverName: 'Head' };
 const slots = () => (S.timetable && S.timetable.slots) || [];
@@ -449,7 +455,10 @@ function changed() {
   if (SYNC.cfg) { clearTimeout(SYNC.timer); SYNC.timer = setTimeout(pushRemote, 1500); setSync('pending'); }
 }
 function writeConfig(name, data) {
-  S[name] = { ...clone(data), updatedAt: Date.now() }; invalidate(); changed(); render();
+  const apply = () => { S[name] = { ...clone(data), updatedAt: Date.now() }; invalidate(); };
+  const moved = name === 'calendar' && S.timetable ? followLessons(apply) : (apply(), 0);
+  changed(); render();
+  if (moved) setTimeout(() => toast(`${moved} plan${moved > 1 ? 's' : ''} moved along with ${moved > 1 ? 'their lessons' : 'its lesson'}`), 1600);
   return Promise.resolve();
 }
 function writeLesson(key, data) {
@@ -558,7 +567,7 @@ async function connectGitHub(c) {
   if (!repoRes.ok) throw new Error(`GitHub error ${repoRes.status}.`);
   const repo = await repoRes.json();
   SYNC.cfg = c; SYNC.sha = null;
-  lsSet(GH_KEY, c);
+  lsSet(GH_KEY, c); lsSet(GH_LAST_KEY, { owner: c.owner, repo: c.repo });
   await pullRemote();
   return repo.private;
 }
@@ -609,9 +618,20 @@ const cinfo = title => (title === '__duty' ? { title, name: 'Duties', tone: 'c0'
 const toneStyle = title => { const t = cinfo(title).tone; return `--cbg:var(--${t}-bg);--cfg:var(--${t}-fg)`; };
 const isCovered = id => prefs().covered.includes(id);
 const coverName = () => prefs().coverName || 'Head';
+/* Strands: a slot can carry a label (Language / Literature, Theory / Practical). The lessons stay one class, but each
+   strand is its own sequence for Previous/Next, Push back and Pull forward. Saved in prefs.strands {slotId: name}. */
+const strandOf = slotId => ((prefs().strands || {})[slotId] || '');
+const realClasses = () => ui.classes.filter(c => c !== '__duty');
+function strandsOfClass(title) { return [...new Set(slots().filter(x => x.title === title).map(x => strandOf(x.id)).filter(Boolean))].sort(); }
+function strandChoices(title) {
+  const sub = subjectOf(title), preset = sub === 'Lang & Lit' ? ['Language', 'Literature'] : sub === 'Media' ? ['Theory', 'Practical'] : [];
+  return [...new Set([...preset, ...strandsOfClass(title)])];
+}
 function visibleSlot(s) {
   if (ui.mineOnly && isCovered(s.id)) return false;
   if (ui.classes.length && !ui.classes.includes(s.title)) return false;
+  const cf = realClasses();
+  if (ui.strand && cf.length === 1 && s.title === cf[0] && strandOf(s.id) !== ui.strand) return false;
   return true;
 }
 
@@ -674,10 +694,77 @@ function orphans() {
   for (const [key, p] of S.lessons) if (hasContent(p) && !occByKey(key)) out.push({ key, ...p });
   return out.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 }
+/* Plans follow their lessons. Plans are saved against a date and slot, so when a holiday, an extra school day or a new
+   cycle day moves the cycle, each class-and-strand's plans are moved to keep their place in that class's run of lessons
+   (the 3rd Literature lesson after the change stays the 3rd). Tasks due at a lesson move with it in the same way. */
+const seqKeyOf = slot => `${slot.title}|${strandOf(slot.id)}|${isCovered(slot.id) ? 1 : 0}`;
+function followLessons(apply) {
+  const live = [...S.lessons].filter(([k, p]) => hasContent(p));
+  const tasks = liveTasks().filter(t => t.cls && isDS(t.due));
+  const dates = [...live.map(([k]) => k.split('__')[0]), ...tasks.map(t => t.due)].filter(isDS);
+  if (!dates.length) { apply(); return 0; }
+  const from = dates.reduce((a, b) => (a < b ? a : b)), to = addDays(dates.reduce((a, b) => (a > b ? a : b)), 120);
+  const snap = () => { const days = new Map(), occ = occurrencesBetween(from, to); for (let d = from; d <= to; d = addDays(d, 1)) days.set(d, cycleDay(d)); return { days, occ }; };
+  const before = snap(); apply(); const after = snap();
+  let change = null; for (const [d, cd] of before.days) if (after.days.get(d) !== cd) { change = d; break; }
+  if (!change) return 0;
+  const group = occ => { const m = new Map(); for (const o of occ) if (o.date >= change) { const k = seqKeyOf(o.slot); if (!m.has(k)) m.set(k, []); m.get(k).push(o); } return m; };
+  const oldG = group(before.occ), newG = group(after.occ);
+  const moves = [];
+  for (const [key, p] of live) {
+    if (key.split('__')[0] < change) continue;
+    const old = before.occ.find(o => o.key === key); if (!old) continue;   // already lost before this change: leave it
+    const k = seqKeyOf(old.slot), i = oldG.get(k).indexOf(old), dest = (newG.get(k) || [])[i];
+    if (dest && dest.key !== key) moves.push({ from: key, to: dest.key, data: p });
+  }
+  const targets = new Set(moves.map(m => m.to));
+  for (const m of moves) if (!targets.has(m.from)) writeLesson(m.from, null);
+  for (const m of moves) { const [date, slotId] = m.to.split('__'); writeLesson(m.to, { ...m.data, date, slotId }); }
+  // Tasks due at a lesson of their class (the class's lessons that I teach) move to the same lesson's new date.
+  const mine = (occ, cls) => occ.filter(o => o.date >= change && o.slot.title === cls && !isCovered(o.slot.id));
+  for (const t of tasks) {
+    if (t.due < change) continue;
+    const oldL = mine(before.occ, t.cls), i = oldL.findIndex(o => o.date === t.due);
+    if (i < 0) continue;
+    const nl = mine(after.occ, t.cls)[i];
+    if (nl && nl.date !== t.due) S.tasks.set(t.id, { ...t, due: nl.date, updatedAt: Date.now() });
+  }
+  return moves.length;
+}
+function restoreOrphans() {
+  // Plans that lost their lesson before plans followed automatically: put each class-and-strand's plans back onto its
+  // lessons in their original order, starting from the first one that lost its place.
+  const groups = new Map();
+  for (const o of orphans()) {
+    const slot = slots().find(x => x.id === o.slotId) || slots().find(x => o.key.endsWith('__' + x.id));
+    if (!slot || !isDS(o.date)) continue;
+    const k = seqKeyOf(slot); if (!groups.has(k)) groups.set(k, { slot, start: o.date }); if (o.date < groups.get(k).start) groups.get(k).start = o.date;
+  }
+  const moves = [];
+  for (const [k, g] of groups) {
+    const seq = strandSequence(g.slot, g.start, 500);
+    const mineKeys = new Set(seq.map(o => o.key));
+    const plans = [...S.lessons].filter(([key, p]) => {
+      if (!hasContent(p)) return false;
+      const [date, slotId] = key.split('__'); if (date < g.start) return false;
+      const sl = slots().find(x => x.id === slotId); return sl && seqKeyOf(sl) === k && (mineKeys.has(key) || !occByKey(key));
+    }).map(([key, p]) => { const sl = slots().find(x => x.id === key.split('__')[1]); return { key, p, sort: key.split('__')[0] + ' ' + sl.start }; })
+      .sort((a, b) => a.sort.localeCompare(b.sort));
+    plans.forEach((x, i) => { if (seq[i] && seq[i].key !== x.key) moves.push({ from: x.key, to: seq[i].key }); });
+  }
+  if (!moves.length) { toast('Nothing to move: those plans have no lessons left to go to.'); return; }
+  movePlans(moves).then(() => toast(`${moves.length} plan${moves.length > 1 ? 's' : ''} put back in order`));
+}
 function classSequence(title, from, days = 380) {
   // Every lesson of this class that I teach, in order, from a date.
   return occurrencesBetween(from, addDays(from, days)).filter(o => o.slot.title === title && !isCovered(o.slot.id));
 }
+function strandSequence(slot, from, days = 380) {
+  // The lessons that follow on from this slot: same class, same strand, same teacher (mine, or the covered ones).
+  const st = strandOf(slot.id), cov = isCovered(slot.id);
+  return occurrencesBetween(from, addDays(from, days)).filter(o => o.slot.title === slot.title && strandOf(o.slot.id) === st && isCovered(o.slot.id) === cov);
+}
+const seqName = slot => cinfo(slot.title).name + (strandOf(slot.id) ? ' · ' + strandOf(slot.id) : '');
 
 /* ---------- plan shifting ---------- */
 async function movePlans(moves) {
@@ -693,22 +780,34 @@ async function movePlans(moves) {
   render();
   await Promise.all(writes);
 }
-function pushBackFrom(title, key, extra) {
-  // Shift every plan for this class at or after `key` one lesson later. `extra` = an orphan placed into the gap.
+function pushBackFrom(slot, key, extra) {
+  // Shift every plan in this class and strand at or after `key` one lesson later. `extra` = an orphan placed into the gap.
   const startDate = key.split('__')[0];
-  const seq = classSequence(title, startDate);
+  const seq = strandSequence(slot, startDate);
   const i0 = Math.max(0, seq.findIndex(o => o.key === key));
   const moves = [];
   for (let i = i0; i < seq.length - 1; i++) if (hasContent(planOf(seq[i].key))) moves.push({ from: seq[i].key, to: seq[i + 1].key });
   if (extra) moves.push({ from: extra, to: seq[i0].key });
   return movePlans(moves);
 }
+async function pullForwardFrom(slot, key) {
+  // Remove this lesson's plan and move every later plan in the class and strand one lesson earlier (gaps keep their place).
+  const seq = strandSequence(slot, key.split('__')[0]);
+  const i0 = seq.findIndex(o => o.key === key); if (i0 < 0) return;
+  const moves = [];
+  for (let i = i0 + 1; i < seq.length; i++) if (hasContent(planOf(seq[i].key))) moves.push({ from: seq[i].key, to: seq[i - 1].key });
+  const targets = new Set(moves.map(m => m.to));
+  if (!targets.has(key) && hasContent(planOf(key))) await writeLesson(key, null);
+  await movePlans(moves);
+}
+const laterPlans = (slot, key) => { const seq = strandSequence(slot, key.split('__')[0]); const i0 = seq.findIndex(o => o.key === key); return i0 < 0 ? 0 : seq.slice(i0 + 1).filter(o => hasContent(planOf(o.key))).length; };
 function reflowOrphan(o, mode) {
   const s = slots().find(x => x.id === o.slotId);
   const title = o.cls || (s && s.title);
   if (!title) { toast("This plan's class is no longer on your timetable."); return; }
   const start = o.slotId && s ? s.start : '00:00';
-  const seq = classSequence(title, o.date && o.date > addDays(todayDS(), -400) ? o.date : todayDS());
+  const from = o.date && o.date > addDays(todayDS(), -400) ? o.date : todayDS();
+  const seq = s ? strandSequence(s, from) : classSequence(title, from);
   const after = seq.filter(x => x.date > o.date || (x.date === o.date && x.slot.start > start));
   if (!after.length) { toast(`No later ${cinfo(title).name} lessons found.`); return; }
   if (mode === 'free') {
@@ -716,7 +815,7 @@ function reflowOrphan(o, mode) {
     if (!free) { toast('Every later lesson already has a plan.'); return; }
     movePlans([{ from: o.key, to: free.key }]).then(() => toast(`Moved to ${fmtShort(free.date)}`));
   } else {
-    pushBackFrom(title, after[0].key, o.key).then(() => toast(`Moved to ${fmtShort(after[0].date)}; later plans shifted back`));
+    pushBackFrom(after[0].slot, after[0].key, o.key).then(() => toast(`Moved to ${fmtShort(after[0].date)}; later plans shifted back`));
   }
 }
 
@@ -750,7 +849,7 @@ function renderToday() {
   const items = [...todays.map(o => ({ start: o.slot.start, end: o.slot.end, o })), ...dutiesOn(t, true).map(x => ({ start: x.start, end: x.end, x }))].sort((a, b) => a.start.localeCompare(b.start));
   const cur = items.find(i => i.start <= now && now < i.end);
   const nxt = items.find(i => i.start > now);
-  const line = i => { if (i.x) return `<b>${esc(i.x.start)} Duty: ${esc(dutyLabel(i.x.duty))}</b>${i.x.duty.place ? ' · ' + esc(i.x.duty.place) : ''}`; const o = i.o, p = planOf(o.key); return `<b>${esc(o.slot.start)} ${esc(cinfo(o.slot.title).name)}</b> · Room ${esc(o.slot.room)}${p && p.title ? ' · ' + esc(p.title) : ''}`; };
+  const line = i => { if (i.x) return `<b>${esc(i.x.start)} Duty: ${esc(dutyLabel(i.x.duty))}</b>${i.x.duty.place ? ' · ' + esc(i.x.duty.place) : ''}`; const o = i.o, p = planOf(o.key); return `<b>${esc(o.slot.start)} ${esc(seqName(o.slot))}</b> · Room ${esc(o.slot.room)}${p && p.title ? ' · ' + esc(p.title) : ''}`; };
   let next = '';
   if (cur) next += `<div class="next">Now: ${line(cur)}</div>`;
   if (nxt) next += `<div class="next">Next: ${line(nxt)}</div>`;
@@ -774,7 +873,16 @@ function renderFilters() {
     <div class="filters" role="group" aria-label="Classes">
       ${cl.map(c => `<button class="chip" data-cls="${esc(c.title)}" aria-pressed="${sel.has(c.title)}"><span class="sw" style="background:var(--${c.tone}-fg)"></span>${esc(c.name)}</button>`).join('')}
       ${duties().length && ui.view !== 'tasks' ? `<button class="chip" data-cls="${DUTY}" aria-pressed="${sel.has(DUTY)}"><span class="sw" style="background:var(--ink)"></span>Duties</button>` : ''}
-    </div>`;
+    </div>${strandChips()}`;
+}
+
+function strandChips() {
+  const cf = realClasses(), here = cf.length === 1 && ui.view !== 'tasks' ? strandsOfClass(cf[0]) : [];
+  if (ui.strand && !here.includes(ui.strand)) ui.strand = '';
+  if (!here.length) return '';
+  return `<span class="divider" aria-hidden="true"></span><div class="filters" role="group" aria-label="Strands">
+    <button class="chip subj" data-strand="" aria-pressed="${!ui.strand}">Every strand</button>
+    ${here.map(n => `<button class="chip subj" data-strand="${esc(n)}" aria-pressed="${ui.strand === n}">${esc(n)}</button>`).join('')}</div>`;
 }
 
 /* ---------- banners ---------- */
@@ -783,9 +891,10 @@ function renderBanners() {
   if (SYNC.state === 'error' && SYNC.dirty && ui.view !== 'setup') h += `<div class="banner warn"><div class="grow"><b>Some changes aren't on GitHub yet.</b> They're saved in this browser. ${esc(SYNC.msg)}</div><button class="btn" data-syncnow>Try again</button><a class="btn ghost" href="#setup">Sync settings</a></div>`;
   const orph = S.timetable ? orphans() : [];
   if (orph.length && ui.view !== 'setup') {
-    h += `<div class="banner warn"><div class="orph"><div><b>${orph.length} lesson plan${orph.length > 1 ? 's have' : ' has'} lost ${orph.length > 1 ? 'their' : 'its'} lesson</b> <span class="muted">— usually because a holiday or timetable change moved things.</span></div>
+    h += `<div class="banner warn"><div class="orph"><div><b>${orph.length} lesson plan${orph.length > 1 ? 's are' : ' is'} on a day that no longer has ${orph.length > 1 ? 'their' : 'its'} lesson.</b> <span class="muted">A day was added or removed and the cycle moved on, but ${orph.length > 1 ? 'these plans' : 'this plan'} stayed on the old date.</span></div>
+      <div class="item"><span class="grow"><b>Put them back in order</b> <span class="muted">· each class's plans go onto its lessons in the same order as before, starting from the first one that moved.</span></span><button class="btn primary" data-orphall>Put them back in order</button></div>
       ${orph.slice(0, 6).map(o => `<div class="item"><span class="grow"><b>${esc(o.title || 'Untitled plan')}</b> <span class="muted">· ${esc(cinfo(o.cls).name)} · was ${isDS(o.date) ? esc(fmtShort(o.date)) : '?'}</span></span>
-        <button class="btn" data-orph="shift" data-key="${esc(o.key)}" title="Put it in the next lesson and move every later plan back one">Shift plans back</button>
+        <button class="btn" data-orph="shift" data-key="${esc(o.key)}" title="Put it in the next lesson and move every later plan back one">Next lesson, push rest back</button>
         <button class="btn" data-orph="free" data-key="${esc(o.key)}">Next empty lesson</button>
         <button class="btn ghost danger" data-orph="del" data-key="${esc(o.key)}">Delete</button></div>`).join('')}
       ${orph.length > 6 ? `<div class="note">And ${orph.length - 6} more.</div>` : ''}</div></div>`;
@@ -801,7 +910,7 @@ function lessonChip(o, opts = {}) {
   const flags = [p && (p.notes || '').trim() ? 'Notes' : '', p && safeUrl(p.link) ? 'Link' : '', nt ? `${nt} task${nt > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
   return `<button class="lesson${cov ? ' covered' : ''}${now ? ' is-now' : ''}" style="${toneStyle(o.slot.title)}" data-open="${esc(o.key)}">
     <span class="cls"><span>${esc(c.name)}</span><span class="mono" style="font-weight:500">${esc(o.slot.room)}</span></span>
-    <span class="meta"><span class="timeinline">${esc(o.slot.start)}–${esc(o.slot.end)} · </span>${cov ? esc(coverName()) + ' covers' : 'P' + o.slot.period}</span>
+    <span class="meta"><span class="timeinline">${esc(o.slot.start)}–${esc(o.slot.end)} · </span>${cov ? esc(coverName()) + ' covers' : 'P' + o.slot.period}${strandOf(o.slot.id) ? ' · ' + esc(strandOf(o.slot.id)) : ''}</span>
     ${p && (p.title || '').trim() ? `<span class="plan">${esc(p.title)}</span>` : (cov ? '' : `<span class="plan empty">Add plan</span>`)}
     ${flags ? `<span class="flags">${flags}</span>` : ''}
   </button>`;
@@ -880,13 +989,13 @@ function viewList() {
     } else if (h && (h.start === d || !groups.length)) groups.push({ d, hol: h });
     d = addDays(d, up ? 1 : -1);
   }
-  const single = ui.classes.length === 1 ? cinfo(ui.classes[0]).name : null;
+  const single = ui.classes.length === 1 ? cinfo(ui.classes[0]).name + (ui.strand && realClasses().length === 1 ? ' · ' + ui.strand : '') : null;
   const body = groups.map(g => {
     if (g.hol) return `<div class="lday"><h3>${esc(fmtShort(g.d))} <span class="pill hol">${esc(g.hol.label || 'Holiday')}${g.hol.end && g.hol.end !== g.hol.start ? ' · until ' + esc(fmtShort(g.hol.end)) : ''}</span></h3></div>`;
     return `<div class="lday"><h3>${esc(fmtLong(g.d))} <span class="daytag${g.d === t ? ' on' : ''}">Day ${g.cd}</span></h3>
       ${mergeByTime(g.occ, g.dl || [], o => { const p = planOf(o.key) || {}, url = safeUrl(p.link), cov = isCovered(o.slot.id); return `<div class="lrow${cov ? ' covered' : ''}" style="${toneStyle(o.slot.title)}" role="button" tabindex="0" data-open="${esc(o.key)}">
         <span class="t">${esc(o.slot.start)}–${esc(o.slot.end)}</span>
-        <span class="c">${esc(cinfo(o.slot.title).name)}</span>
+        <span class="c">${esc(cinfo(o.slot.title).name)}${strandOf(o.slot.id) ? `<span class="sd"> · ${esc(strandOf(o.slot.id))}</span>` : ''}</span>
         <span class="p">${cov ? `<span class="muted">${esc(coverName())} covers this lesson</span>` : (p.title ? `<b>${esc(p.title)}</b>` : '<span class="muted">No plan yet</span>')}
           ${p.notes ? `<span class="n">${esc(p.notes)}</span>` : ''}
           ${url ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-link>${esc(url.replace(/^https?:\/\//, '').slice(0, 60))}</a>` : ''}</span>
@@ -905,7 +1014,7 @@ function viewCycle() {
     g += `<div class="tcell"><b>P${p.n}</b><span class="mono">${esc(p.start)}<br>${esc(p.end)}</span></div>`;
     for (let d = 1; d <= n; d++) {
       const here = (slotsByDay.get(d) || []).filter(s => s.period === p.n);
-      const card = s => `<div class="lesson${isCovered(s.id) ? ' covered' : ''}" style="${toneStyle(s.title)}"><span class="cls"><span>${esc(cinfo(s.title).name)}</span><span class="mono" style="font-weight:500">${esc(s.room)}</span></span><span class="meta">Grade ${esc(s.grade)}${isCovered(s.id) ? ' · ' + esc(coverName()) + ' covers' : ''}</span></div>`;
+      const card = s => `<div class="lesson${isCovered(s.id) ? ' covered' : ''}" style="${toneStyle(s.title)}"><span class="cls"><span>${esc(cinfo(s.title).name)}</span><span class="mono" style="font-weight:500">${esc(s.room)}</span></span><span class="meta">Grade ${esc(s.grade)}${isCovered(s.id) ? ' · ' + esc(coverName()) + ' covers' : ''}</span>${s.title.match(/^mentor/i) ? '' : `<button class="strand-btn${strandOf(s.id) ? ' set' : ''}" data-strandedit="${esc(s.id)}" title="Label this lesson's strand">${strandOf(s.id) ? esc(strandOf(s.id)) + ' ✎' : '+ Strand'}</button>`}</div>${strandEdit === s.id ? strandEditor(s) : ''}`;
       if (here.length > 1) {
         g += `<div class="cc"><div class="clash"><span class="label">Clash · who teaches?</span>${here.map(s => `${card(s)}<div class="who" role="group" aria-label="Who teaches ${esc(cinfo(s.title).name)}"><button data-cover="${esc(s.id)}" data-v="me" aria-pressed="${!isCovered(s.id)}">Me</button><button data-cover="${esc(s.id)}" data-v="other" aria-pressed="${isCovered(s.id)}">${esc(coverName())}</button></div>`).join('')}</div></div>`;
       } else g += `<div class="cc">${here.map(card).join('')}</div>`;
@@ -919,10 +1028,18 @@ function viewCycle() {
   }
   return `<section class="panel"><div class="panel-head"><h2>${n}-day cycle</h2>
     <div class="form"><div class="field"><label for="coverName">Who covers</label><input type="text" id="coverName" value="${esc(coverName())}" style="width:10rem"></div></div></div>
-    <p class="note" style="margin:0 0 12px">Where two classes share a slot, choose who teaches each. Lessons someone else covers are hidden when “Only lessons I teach” is on.</p>
+    <p class="note" style="margin:0 0 12px">Where two classes share a slot, choose who teaches each. Lessons someone else covers are hidden when “Only lessons I teach” is on. Use <b>+ Strand</b> to label a slot (for example Language or Literature): the lessons stay one class, but Previous/Next, Push back and Pull forward only follow lessons with the same label.</p>
     <div class="cyclewrap"><div class="cycle" style="--n:${n}">${g}</div></div></section>`;
 }
 
+let strandEdit = null;
+function strandEditor(s) {
+  const cur = strandOf(s.id);
+  return `<div class="strand-edit" role="group" aria-label="Strand for ${esc(cinfo(s.title).name)}, Day ${s.day} P${s.period}">
+    ${strandChoices(s.title).map(n => `<button class="chip" data-strandset="${esc(s.id)}" data-sv="${esc(n)}" aria-pressed="${cur === n}">${esc(n)}</button>`).join('')}
+    <input type="text" id="strandNew" placeholder="Other label" maxlength="24" aria-label="Another strand name"><button class="btn" data-strandset="${esc(s.id)}" data-sv="__new">Set</button>
+    ${cur ? `<button class="btn ghost danger" data-strandset="${esc(s.id)}" data-sv="">No strand</button>` : ''}</div>`;
+}
 let importState = { tt: null, ttErr: '', ttName: '', hol: null, holErr: '', holText: '', holBusy: false };
 function viewSetup() {
   const t = todayDS();
@@ -1161,14 +1278,14 @@ function drawerLesson(key) {
   const o = occByKey(key) || (() => { const [date, slotId] = key.split('__'); const s = slots().find(x => x.id === slotId); return s ? { key, date, slot: s, day: cycleDay(date) } : null; })();
   if (!o) return '';
   const p = planOf(key) || {}, c = cinfo(o.slot.title), url = safeUrl(p.link);
-  const seq = classSequence(o.slot.title, addDays(o.date, -120), 240);
+  const seq = strandSequence(o.slot, addDays(o.date, -120), 240), strand = strandOf(o.slot.id), later = laterPlans(o.slot, key);
   const i = seq.findIndex(x => x.key === key);
   const prev = i > 0 ? seq[i - 1] : null, next = i >= 0 && i < seq.length - 1 ? seq[i + 1] : null;
   const st = S.drawer;
   return `<div class="scrim" data-close></div>
   <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" style="${toneStyle(o.slot.title)}">
     <div class="drawer-head"><div class="top"><h2 id="dTitle">${esc(c.name)}</h2><button class="btn icon-btn ghost" data-close aria-label="Close">✕</button></div>
-      <div class="meta">${esc(fmtLong(o.date))} · Day ${o.day || '–'} · P${o.slot.period} ${esc(o.slot.start)}–${esc(o.slot.end)} · Room ${esc(o.slot.room)}</div>
+      <div class="meta">${strand ? `<b>${esc(strand)}</b> · ` : ''}${esc(fmtLong(o.date))} · Day ${o.day || '–'} · P${o.slot.period} ${esc(o.slot.start)}–${esc(o.slot.end)} · Room ${esc(o.slot.room)}</div>
       <div class="nav"><button class="btn" data-open="${prev ? esc(prev.key) : ''}" ${prev ? '' : 'disabled'}>‹ ${prev ? esc(fmtShort(prev.date)) : 'Previous'}</button><button class="btn" data-open="${next ? esc(next.key) : ''}" ${next ? '' : 'disabled'}>${next ? esc(fmtShort(next.date)) : 'Next'} ›</button></div>
     </div>
     <div class="drawer-body">
@@ -1181,11 +1298,12 @@ function drawerLesson(key) {
         ${tasksForLesson(o).map(t => taskRow(t, true)).join('') || '<span class="note">None.</span>'}
         <div class="form"><input type="text" id="dTaskTitle" placeholder="Add a task for this lesson" style="flex:1 1 200px;width:auto" maxlength="200"><button class="btn" data-dtaskadd="${esc(o.slot.title)}" data-date="${esc(o.date)}">Add</button></div>
       </div>
-      ${st.confirm === 'push' ? `<div class="confirm">Move this plan and every later ${esc(c.name)} plan one lesson later?<div class="form"><button class="btn primary" data-pushyes>Shift plans back</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
+      ${st.confirm === 'push' ? `<div class="confirm">Move this plan and every later ${esc(seqName(o.slot))} plan one lesson later? This lesson is left empty.<div class="form"><button class="btn primary" data-pushyes>Push back</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
+      ${st.confirm === 'pull' ? `<div class="confirm">${hasContent(p) ? 'Delete this plan and move' : 'Move'} every later ${esc(seqName(o.slot))} plan one lesson earlier?<div class="form"><button class="btn primary" data-pullyes>Pull forward</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
       ${st.confirm === 'clear' ? `<div class="confirm">Clear this lesson's title, notes and link?<div class="form"><button class="btn danger" data-clearplanyes>Clear plan</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
     </div>
     <div class="drawer-foot"><span class="status" id="dStatus">${esc(st.status || '')}</span>
-      <span class="form">${hasContent(p) ? `<button class="btn" data-push title="Didn't get through it? Shift this and later plans back one lesson">Push back</button><button class="btn ghost danger" data-clearplan>Clear</button>` : ''}<button class="btn primary" data-close>Done</button></span></div>
+      <span class="form">${hasContent(p) ? `<button class="btn" data-push title="Didn't get through it? Move this and the later ${esc(seqName(o.slot))} plans one lesson later">Push back</button>` : ''}${later ? `<button class="btn" data-pull title="Lesson cancelled or dropped? Move the later ${esc(seqName(o.slot))} plans one lesson earlier">Pull forward</button>` : ''}${hasContent(p) ? `<button class="btn ghost danger" data-clearplan>Clear</button>` : ''}<button class="btn primary" data-close>Done</button></span></div>
   </aside>`;
 }
 function drawerDay(ds) {
@@ -1415,6 +1533,14 @@ function renderSaveState() {
   ss.className = 'save-state ' + cls; ss.querySelector('span').textContent = text; ss.title = text + ' (sync settings)';
 }
 let ghForm = { busy: false, err: '' };
+const GH_LAST_KEY = 'cycle-planner-github-last';
+function addressWarning() {
+  // The saved connection belongs to one address. Point out the usual ways of ending up on another one.
+  if (location.protocol === 'file:') return `<p class="err">You've opened a copy of the planner from a folder on this computer. It keeps its own separate saved data, so open the planner from your website instead.</p>`;
+  if (/^www\./i.test(location.hostname)) { const alt = location.href.replace('//www.', '//'); return `<p class="err">You're on the <b>www.</b> address. Browsers keep a separate saved connection for it. Use <a href="${esc(alt)}">${esc(alt.replace(/^https?:\/\//, ''))}</a> and bookmark that.</p>`; }
+  if (/^(localhost|127\.)/.test(location.hostname)) return `<p class="err">This is a preview copy on this computer. Its saved connection is separate from your website's.</p>`;
+  return '';
+}
 function syncPanel() {
   const c = SYNC.cfg;
   if (c) return `<section class="panel" id="sync"><h2>Sync with GitHub</h2>
@@ -1423,16 +1549,21 @@ function syncPanel() {
     <div class="form"><button class="btn primary" data-syncnow>Sync now</button><button class="btn ghost danger" data-ghoff>Disconnect this device</button></div>
     <p class="note">Disconnecting removes the token from this browser only. Your plans stay in the repository and in this browser.</p>
   </section>`;
+  const last = lsGet(GH_LAST_KEY) || {};
   return `<section class="panel" id="sync"><h2>Sync with GitHub</h2>
+    ${addressWarning()}
     <p>Right now plans are saved in this browser only. Connect a <b>private</b> GitHub repository to keep them safe and use the planner on your phone and laptop.</p>
-    <div class="form">
-      <div class="field grow"><label for="ghOwner">GitHub username</label><input type="text" id="ghOwner" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="your-username"></div>
-      <div class="field grow"><label for="ghRepo">Private repository</label><input type="text" id="ghRepo" autocapitalize="off" spellcheck="false" value="cycle-planner-data"></div>
-    </div>
-    <div class="field"><label for="ghToken">Access token</label><input type="password" id="ghToken" autocomplete="off" spellcheck="false" placeholder="github_pat_…"></div>
-    <p class="note">Use a fine-grained token limited to that one repository, with “Contents: Read and write”. It stays in this browser and is only ever sent to GitHub. The README explains how to make one.</p>
-    <div class="form"><button class="btn primary" data-ghconnect ${ghForm.busy ? 'disabled' : ''}>${ghForm.busy ? 'Connecting…' : 'Connect'}</button></div>
+    <form id="ghForm" method="post" action="#" autocomplete="on" style="display:flex;flex-direction:column;gap:12px">
+      <div class="form">
+        <div class="field grow"><label for="ghOwner">GitHub username</label><input type="text" id="ghOwner" name="username" autocomplete="username" autocapitalize="off" spellcheck="false" placeholder="your-username" value="${esc(last.owner || '')}"></div>
+        <div class="field grow"><label for="ghRepo">Private repository</label><input type="text" id="ghRepo" name="repository" autocomplete="off" autocapitalize="off" spellcheck="false" value="${esc(last.repo || 'cycle-planner-data')}"></div>
+      </div>
+      <div class="field"><label for="ghToken">Access token</label><input type="password" id="ghToken" name="password" autocomplete="current-password" spellcheck="false" placeholder="github_pat_…"></div>
+      <p class="note" style="margin:0">When you press Connect, let your browser <b>save the password</b>: next time it fills the token in for you. The connection is remembered for <b class="mono">${esc(location.protocol === 'file:' ? 'this file' : location.host)}</b> in this browser.</p>
+      <div class="form"><button type="submit" class="btn primary" data-ghconnect ${ghForm.busy ? 'disabled' : ''}>${ghForm.busy ? 'Connecting…' : 'Connect'}</button></div>
+    </form>
     ${ghForm.err ? `<div class="err">${esc(ghForm.err)}</div>` : ''}
+    <p class="note">Use a fine-grained token limited to that one repository, with “Contents: Read and write”. It stays in this browser and is only ever sent to GitHub. The README explains how to make one.</p>
   </section>`;
 }
 
@@ -1456,8 +1587,8 @@ function render() {
   $('#mineSwitch').hidden = ui.view === 'tasks' || ui.view === 'setup';
   $('#filters').hidden = ui.view === 'setup';
   renderToday(); renderFilters(); renderBanners();
-  if (!inMain) renderMainOnly();
-  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken', 'tTitle', 'tCls', 'tDue', 'teTitle', 'teCls', 'teDue', 'duName', 'duPlace', 'duRepeat', 'duSlot', 'duStart', 'duEnd'].includes(inMain)) renderMainOnly();
+  if (!inMain || lastView !== ui.view) renderMainOnly();
+  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken', 'tTitle', 'tCls', 'tDue', 'teTitle', 'teCls', 'teDue', 'duName', 'duPlace', 'duRepeat', 'duSlot', 'duStart', 'duEnd', 'strandNew'].includes(inMain)) renderMainOnly();
   renderDrawer();
 }
 
@@ -1520,7 +1651,8 @@ document.addEventListener('click', e => {
   if (d.gosync != null) { location.hash = 'setup'; setView('setup'); setTimeout(() => { const el = document.getElementById('sync'); if (el) el.scrollIntoView({ block: 'start' }); }, 30); return; }
   if (d.syncnow != null) { SYNC.dirty ? pushRemote() : pullRemote(); return; }
   if (d.ghoff != null) { disconnectGitHub(); toast('Disconnected this device'); return; }
-  if (d.ghconnect != null) {
+  if (d.ghconnect != null) return; // handled by the form's submit event, so password managers see a real sign-in
+  if (false) {
     const owner = $('#ghOwner').value.trim().replace(/^@/, ''), repo = $('#ghRepo').value.trim().replace(/\.git$/, ''), token = $('#ghToken').value.trim();
     if (!owner || !repo || !token) { ghForm.err = 'Fill in your username, the repository and the token.'; renderMainOnly(); return; }
     ghForm = { busy: true, err: '' }; renderMainOnly();
@@ -1532,6 +1664,15 @@ document.addEventListener('click', e => {
   if (d.open != null) { if (d.open) openLesson(d.open); return; }
   if (d.anchor) { setAnchor(d.date, +d.anchor); return; }
   if (d.all != null) { ui.classes = []; saveUI(); render(); return; }
+  if (d.strand != null) { ui.strand = d.strand; saveUI(); render(); return; }
+  if (d.strandedit) { strandEdit = strandEdit === d.strandedit ? null : d.strandedit; renderMainOnly(); const f = document.getElementById('strandNew'); if (f && strandEdit) f.focus({ preventScroll: true }); return; }
+  if (d.strandset) {
+    const v = d.sv === '__new' ? ($('#strandNew').value || '').trim().slice(0, 24) : d.sv;
+    if (d.sv === '__new' && !v) { toast('Type a name for the strand first.'); return; }
+    const pr = clone(prefs()); pr.strands = { ...(pr.strands || {}) };
+    if (v) pr.strands[d.strandset] = v; else delete pr.strands[d.strandset];
+    strandEdit = null; writeConfig('prefs', pr); toast(v ? `Labelled ${v}` : 'Strand removed'); return;
+  }
   if (d.subj) { const t2 = classes().list.filter(c => c.subject === d.subj).map(c => c.title); const on = t2.length === ui.classes.length && t2.every(x => ui.classes.includes(x)); ui.classes = on ? [] : t2; saveUI(); render(); return; }
   if (d.cls) { const i = ui.classes.indexOf(d.cls); if (i >= 0) ui.classes.splice(i, 1); else ui.classes.push(d.cls); saveUI(); render(); return; }
   if (d.wk) { S.weekStart = d.wk === '0' ? mondayOf(todayDS()) : addDays(S.weekStart, 7 * +d.wk); render(); return; }
@@ -1576,6 +1717,7 @@ document.addEventListener('click', e => {
     toast('Timetable updated'); return;
   }
   if (d.ttcancel != null) { importState.tt = null; render(); return; }
+  if (d.orphall != null) { restoreOrphans(); return; }
   if (d.orph) {
     const o = orphans().find(x => x.key === d.key); if (!o) return;
     if (d.orph === 'del') { writeLesson(o.key, null); render(); toast('Plan deleted'); return; }
@@ -1587,7 +1729,15 @@ document.addEventListener('click', e => {
     const key = S.drawer.key; const o = occByKey(key);
     S.drawer.confirm = null;
     if (!o) { toast('This lesson is no longer on the timetable.'); render(); return; }
-    pushBackFrom(o.slot.title, key).then(() => toast('Plans shifted back one lesson'));
+    pushBackFrom(o.slot, key).then(() => toast(`${seqName(o.slot)} plans pushed back one lesson`));
+    S.drawer.force = true; render(); return;
+  }
+  if (d.pull != null) { flushDraft(); S.drawer.confirm = 'pull'; S.drawer.force = true; render(); return; }
+  if (d.pullyes != null) {
+    const key = S.drawer.key; const o = occByKey(key);
+    S.drawer.confirm = null;
+    if (!o) { toast('This lesson is no longer on the timetable.'); render(); return; }
+    pullForwardFrom(o.slot, key).then(() => { toast(`${seqName(o.slot)} plans pulled forward one lesson`); if (S.drawer) { S.drawer.force = true; render(); } });
     S.drawer.force = true; render(); return;
   }
   if (d.clearplan != null) { flushDraft(); S.drawer.confirm = 'clear'; S.drawer.force = true; render(); return; }
@@ -1597,8 +1747,21 @@ document.addEventListener('click', e => {
   if (d.daywork != null) { addEntries([{ start: S.drawer.date, end: S.drawer.date, label: 'Extra school day', type: 'workday' }]); S.drawer.force = true; return; }
   if (d.dayrmhol) { const c = clone(cal()); c.entries = (c.entries || []).filter(x => x.id !== d.dayrmhol); writeConfig('calendar', c); S.drawer.force = true; return; }
 });
+document.addEventListener('submit', e => {
+  if (e.target.id !== 'ghForm') return;
+  e.preventDefault();
+  const owner = $('#ghOwner').value.trim().replace(/^@/, ''), repo = $('#ghRepo').value.trim().replace(/\.git$/, ''), token = $('#ghToken').value.trim();
+  if (!owner || !repo || !token) { ghForm.err = 'Fill in your username, the repository and the token.'; renderMainOnly(); return; }
+  ghForm = { busy: true, err: '' };
+  const btn = e.target.querySelector('[data-ghconnect]'); if (btn) { btn.disabled = true; btn.textContent = 'Connecting…'; }
+  connectGitHub({ owner, repo, token, path: 'planner.json' })
+    .then(isPrivate => { ghForm = { busy: false, err: '' }; render(); toast(isPrivate ? 'Connected to GitHub' : 'Connected. That repository is public, so anyone can read your plans; consider making it private.'); })
+    .catch(err => { ghForm = { busy: false, err: err.message }; SYNC.cfg = null; try { localStorage.removeItem(GH_KEY); } catch {} renderMainOnly(); });
+});
 document.addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.id === 'tTitle') { e.preventDefault(); $('[data-tadd]').click(); return; }
+  if (e.key === 'Enter' && e.target.id === 'strandNew') { e.preventDefault(); const b = document.querySelector('[data-sv="__new"]'); if (b) b.click(); return; }
+  if (e.key === 'Escape' && strandEdit) { strandEdit = null; renderMainOnly(); return; }
   if (e.key === 'Enter' && e.target.id === 'dTaskTitle') { e.preventDefault(); $('[data-dtaskadd]').click(); return; }
   if (e.key === 'Enter' && ['teTitle', 'teDue'].includes(e.target.id)) { e.preventDefault(); $('[data-tsave]').click(); return; }
   if (e.key === 'Escape' && taskEdit) { taskEdit = null; renderMainOnly(); return; }
