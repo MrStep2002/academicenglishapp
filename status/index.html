@@ -34,6 +34,14 @@
 .st .notes li{margin:3px 0}
 .st .err{color:var(--bad)}
 .st .scroll{overflow-x:auto}
+/* Areas (4 Nov 2026): one button per area of the topic list; only the chosen area's files are read */
+.st .areas{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
+.st .areas button{font:inherit;font-size:14px;font-weight:700;padding:7px 14px;border-radius:999px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
+.st .areas button:hover{border-color:var(--ink)}
+.st .areas button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.st td.wait{color:var(--ink-2);font-size:13px;text-align:left}
+.st .area-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:44px 0 -18px;padding-top:10px;border-top:2px solid var(--rule)}
+.st .retry{margin-left:6px;font-size:13px;padding:2px 10px}
 @media (max-width:640px){.st td.n,.st th.n{width:auto;padding:6px 4px}.st .k{display:none}}
 </style>
 </head>
@@ -41,8 +49,9 @@
 <div class="wrap st" id="st">
   <p class="mono">Academic English App · not linked from the site</p>
   <h1>Site content</h1>
-  <p class="sub">Every subject, every game it could have, and how many questions each game has at each level. Counted from the content files each time this page loads: refresh to see the latest.</p>
-  <div class="when"><span id="when">Counting…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
+  <p class="sub">Every subject, every game it could have, and how many questions each game has at each level. Choose an area: only its files are read, so it loads quickly. Counted from the content files each time: refresh to see the latest.</p>
+  <div class="areas" id="areas" role="group" aria-label="Area"></div>
+  <div class="when"><span id="when">Reading the topic list…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
   <div id="out"><p class="notice loading">Reading the content files…</p></div>
 </div>
 <script>
@@ -71,8 +80,26 @@ function parseCSV(text){
 // 1-5 for a level (A1…C1, "+" = the same level; or a name), null if it has none
 function band(v){ v=String(v||'').trim(); if(!v) return null; const n=BY_NAME[v.toLowerCase().replace(/\s+/g,'')]; if(n) return n;
   const m=v.toUpperCase().match(/^([ABC])([12])\+?$/); return m ? Math.min(5, {A:0,B:2,C:4}[m[1]] + (+m[2])) : null; }
-const get = url => fetch(url, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); });
-const getCSV = url => get(url).then(parseCSV, ()=>null);   // null: the file is missing
+// Fetching (4 Nov 2026): at most 6 files at a time, so on a slow connection the first subjects finish early instead of
+// every file crawling in together. A file that fails is tried twice more; after that its subject shows an error with a
+// Try again button (before, a subject whose page failed to load vanished from the page without a word, and a file that
+// failed counted as empty). A missing file (404) is simply empty.
+const LIMIT=6; let active=0; const queue=[];
+const slot=()=>new Promise(res=>{ if(active<LIMIT){ active++; res(); } else queue.push(res); });
+const free=()=>{ const next=queue.shift(); if(next) next(); else active--; };
+async function get(url){
+  for(let i=0;;i++){
+    await slot();
+    try{ const r=await fetch(url, {cache:'no-cache'});
+      if(r.status===404){ const e=new Error('missing: '+url.slice(ROOT.length)); e.missing=true; throw e; }
+      if(!r.ok) throw new Error('error '+r.status+' for '+url.slice(ROOT.length));
+      return await r.text(); }
+    catch(e){ if(e.missing || i>=2) throw e; }
+    finally{ free(); }
+    await new Promise(res=>setTimeout(res, 800*(i+1)));
+  }
+}
+const getCSV = url => get(url).then(parseCSV, e=>{ if(e.missing) return null; throw e; });   // null: the file is missing
 const getDoc = url => get(url).then(t=>new DOMParser().parseFromString(t, 'text/html'));
 
 // Rows per level: [F, F+, I, I+, A, no level]. An item without a level of its own takes its word's level, as in the games.
@@ -111,11 +138,19 @@ const SECTIONS = [
 const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
   reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements'};
 
-async function loadSubject(href){
-  const pageUrl=new URL(href, ROOT+'en/').href, doc=await getDoc(pageUrl), app=doc.getElementById('app');
-  if(!app || !app.dataset.content) return null;
-  const d=app.dataset, dir=new URL(d.content.replace(/\/*$/,'/'), pageUrl).href;
-  const T={}; await Promise.all(FILES.map(f=>getCSV(dir+f+'.csv').then(rows=>{ T[f]=rows; })));
+// One subject: its page (for its content folder and settings), its Chinese page if the Chinese topic list has one at the
+// same address, and its files. A planned topic (no page yet) has only a folder. new-words.csv: words still being written.
+async function loadSubject(t, zhHrefs){
+  let d={}, pageUrl=null, dir;
+  if(t.href){
+    pageUrl=new URL(t.href, ROOT+'en/').href; const app=(await getDoc(pageUrl)).getElementById('app');
+    if(!app || !app.dataset.content) throw new Error('no content folder on '+t.href);
+    d=app.dataset; dir=new URL(d.content.replace(/\/*$/,'/'), pageUrl).href;
+  } else dir=ROOT+t.folder;
+  const zhUrl=t.href && zhHrefs.has(t.href) ? new URL(t.href, ROOT+'zh/').href : null;
+  const zhCheck=zhUrl ? getDoc(zhUrl).then(doc=>{ const z=doc.getElementById('app');
+    return !!(z && z.dataset.content && new URL(z.dataset.content.replace(/\/*$/,'/'), zhUrl).href===dir); }) : Promise.resolve(false);
+  const T={}; const [hasZh]=await Promise.all([zhCheck, ...FILES.concat(['new-words']).map(f=>getCSV(dir+f+'.csv').then(rows=>{ T[f]=rows; }))]);
   // Word lists (31 Oct): a page with data-list counts only the words its word games deal; with data-linked, only the
   // Fill the gap rows linked to those words. Every word still links content (T.allWords). See content/README.md.
   T.allWords=T.words;
@@ -127,11 +162,12 @@ async function loadSubject(href){
       T.evidence=(T.evidence||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
       ['builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'].forEach(k=>{ T[k]=[]; }); }
   }
-  return {name:d.name||href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T};
+  return {name:d.name||t.name||t.href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T,
+    hasZh, planned:!t.href, toWrite:(T['new-words']||[]).filter(r=>r.word).length};
 }
 
 // Counts for one subject: per source, the items per level and a line saying what they are
-function count(s, zhFolders){
+function count(s){
   const T=s.T, words=(T.words||[]).filter(w=>w.word && w.meaning), allWords=(T.allWords||T.words||[]).filter(w=>w.word && w.meaning);
   const wordLevel={}; allWords.forEach(w=>{ const b=band(w.level); if(b){ wordLevel[w.word.toLowerCase()]=b; wordLevel[(w.id||'').toLowerCase()]=b; } });
   const known=v=>{ v=String(v||'').trim().toLowerCase(); return !!wordLevel[v] || allWords.some(w=>w.word.toLowerCase()===v || (w.id||'').toLowerCase()===v); };
@@ -169,7 +205,7 @@ function count(s, zhFolders){
     evidence:{lv:perLevel(evEn, wordLevel), total:evEn.length},
     zhevidence:{lv:perLevel(evZh, wordLevel), total:evZh.length},
   };
-  const hasZh=zhFolders.has(s.folder);
+  const hasZh=!!s.hasZh;
   const rows=[], tally={all:0, some:0, none:0, off:0};
   SECTIONS.forEach(([sect, games])=>{
     rows.push({sect});
@@ -205,53 +241,130 @@ function subjectTable(s, k){
 async function readingComp(){
   const hub=new URL('en/reading-comprehension/index.html', ROOT).href, doc=await getDoc(hub);
   const links=[...doc.querySelectorAll('a.topic')].map(a=>new URL(a.getAttribute('href'), hub).href);
-  const out=[];
-  for(const url of links){ const d=(await getDoc(url)).getElementById('app'); if(!d || !d.dataset.reading) continue;
+  const out=await Promise.all(links.map(async url=>{ const d=(await getDoc(url)).getElementById('app'); if(!d || !d.dataset.reading) return null;
     const rows=await getCSV(new URL(d.dataset.reading, url).href)||[];
     const qs=rows.reduce((n,r)=>n+['question','question2','question3'].filter(k=>r[k]).length,0);
-    out.push({name:d.dataset.name||url, lv:perLevel(rows), total:rows.length, qs, notes:d.dataset.format==='notes'}); }
-  return out;
+    return {name:d.dataset.name||url, lv:perLevel(rows), total:rows.length, qs, notes:d.dataset.format==='notes'}; }));
+  return out.filter(Boolean);
+}
+function readingTable(rc){
+  return `<div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>
+    ${rc.map(r=>{ const ok=r.lv.slice(0,5).map(x=>x>0), all=ok.every(Boolean), some=ok.some(Boolean);
+      return `<tr><td><b>${esc(r.name)}</b></td>${r.lv.slice(0,5).map((x,i)=>`<td class="n${ok[i]?'':' gap'}">${x||'–'}</td>`).join('')}
+      <td class="tot">${fmt(r.total)} passages${r.notes?'':` · ${fmt(r.qs)} questions`}</td><td class="s s-${all?'all':some?'some':'none'}">${all?'All levels':some?'Some levels':'None yet'}</td></tr>`; }).join('')}
+    </tbody></table></div>`;
+}
+
+// ---- Areas (4 Nov 2026) ----
+// The page used to read every file on the site (about 100) before showing anything: half a minute from China, and more
+// with every topic. It is now split into the areas of the English topic list (Essentials, English Language, Media,
+// Science…), found from en/index.html, so a new area or topic appears here by itself. Only the chosen area's files are
+// read, and each subject fills in as soon as its own files are in. "Everything" still counts the whole site.
+// The area is kept in the address (status/?area=media), so an area can be bookmarked; the page also remembers the last one.
+
+// Topics being written that have no page on the topic list yet, counted from their folder. Each is left out by itself
+// once a topic on the list links to its page address, so the line can stay until it is tidied away.
+const PLANNED = [
+  {name:'Advertising', area:'Media', folder:'content/advertising/', page:'advertising/index.html'},
+];
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const SAVE='aea-status-area';
+
+function findAreas(en){
+  const areas=[], linked=new Set([...en.querySelectorAll('a.topic-link')].map(a=>a.getAttribute('href').split('#')[0]));
+  const add=(name, topics, reading)=>{ const a={key:slug(name), name, topics, reading}; areas.push(a); return a; };
+  const ess=en.querySelector('.ess-card a.cc-btn:not(.alt)');
+  if(ess) add('Essentials', [{href:ess.getAttribute('href').split('#')[0], name:'Academic English Essentials'}], false);
+  en.querySelectorAll('section.topic-group').forEach(sec=>{
+    const h=sec.querySelector('h2'), name=h ? h.textContent.trim() : 'Other';
+    const topics=[...sec.querySelectorAll('a.topic-link')].map(a=>({href:a.getAttribute('href').split('#')[0], name:a.textContent.trim()}));
+    const reading=[...sec.querySelectorAll('a.topic')].some(a=>/reading-comprehension\//.test(a.getAttribute('href')||''));
+    if(topics.length || reading) add(name, topics, reading);
+  });
+  PLANNED.filter(p=>!linked.has(p.page)).forEach(p=>{
+    const a=areas.find(x=>x.name.toLowerCase()===p.area.toLowerCase()) || add(p.area, [], false);
+    a.topics.push({name:p.name, folder:p.folder});
+  });
+  return areas;
+}
+
+const cellsFor=k=>`<td class="n s s-all">${k.tally.all}</td><td class="n s s-some">${k.tally.some}</td><td class="n s s-none">${k.tally.none}${k.tally.off?` <span class="k">(+${k.tally.off} off)</span>`:''}</td>`;
+
+let RUN=0;
+async function show(key, areas, zhHrefs){
+  const run=++RUN, t0=performance.now(), out=document.getElementById('out'), when=document.getElementById('when');
+  const chosen = key==='all' ? areas : areas.filter(a=>a.key===key);
+  try{ localStorage.setItem(SAVE, key); }catch(e){}
+  const u=new URL(location.href); u.searchParams.set('area', key); u.hash=''; history.replaceState(null, '', u.href);
+  document.querySelectorAll('#areas button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.area===key)));
+  const subs=[]; chosen.forEach(a=>a.topics.forEach(t=>subs.push({...t, area:a.name})));
+  const reading=chosen.some(a=>a.reading), many=chosen.length>1;
+  const nGames=SECTIONS.slice(0,4).reduce((n,x)=>n+x[1].length,0);
+
+  let rows='', body='', lastArea=null;
+  subs.forEach((t,i)=>{
+    if(many && t.area!==lastArea){ rows+=`<tr class="sect"><td colspan="6">${esc(t.area)}</td></tr>`; body+=`<p class="area-h">${esc(t.area)}</p>`; lastArea=t.area; }
+    rows+=`<tr id="sum-${i}"><td><a href="#sub-${i}">${esc(t.name)}</a>${t.folder?' <span class="k">no page yet</span>':''}</td><td class="n wait" colspan="5">counting…</td></tr>`;
+    body+=`<section id="sub-${i}"><h2>${esc(t.name)}</h2><p class="meta">Counting…</p></section>`;
+  });
+  if(reading){ if(many){ rows+=`<tr class="sect"><td colspan="6">Reading Comprehension</td></tr>`; body+=`<p class="area-h">Reading Comprehension</p>`; }
+    rows+=`<tr><td><a href="#rc">Reading Comprehension</a></td><td class="n" colspan="5"><span class="k">passages: see below</span></td></tr>`;
+    body+=`<section id="rc"><h2>Reading Comprehension</h2><p class="meta">Counting…</p></section>`; }
+  out.innerHTML=`<h2>Summary</h2><div class="scroll"><table><thead><tr><th>Subject</th><th class="n">Words</th><th class="n">Items</th>
+    <th class="n" title="English games playable at every level">All levels</th><th class="n">Some levels</th><th class="n">None yet</th></tr></thead>
+    <tbody id="sumBody">${rows}<tr id="sumTot"><td><b>Total</b></td><td class="n"></td><td class="n"></td><td></td><td></td><td></td></tr></tbody></table></div>
+    <ul class="notes"><li>All levels / Some levels / None yet count the ${nGames} games on the English topic pages (Vocabulary, Grammar, Reading, and the Games row).</li>
+    <li>Words: words with a meaning in <span class="k">words.csv</span>; "+ to write" are the words waiting in <span class="k">new-words.csv</span>, which the games don't read.</li>
+    <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately.</li>
+    <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>
+    ${body}
+    <ul class="notes"><li>Areas and subjects are found from the English topic list (<span class="k">en/index.html</span>): a new topic appears here once it is on that list. A topic still being written, with no page yet, can be added to <span class="k">PLANNED</span> near the bottom of this page's code.</li>
+    <li>This page counts rows; it does not check them. Run <span class="k">python3 tools/check_content.py</span> to find mistakes in the files.</li></ul>`;
+
+  const done=new Array(subs.length).fill(null); let finished=0;
+  const total=subs.length+(reading?1:0);
+  const progress=()=>{ if(run!==RUN) return; when.textContent = finished<total ? `Counting… ${finished} of ${total}`
+    : `Counted ${new Date().toLocaleString('en-GB', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})} · ${((performance.now()-t0)/1000).toFixed(1)} s`; };
+  const totals=()=>{ const got=done.filter(Boolean), tot=document.getElementById('sumTot'); if(!tot) return;
+    tot.children[1].innerHTML=`<b>${fmt(got.reduce((n,x)=>n+x.k.words,0))}</b>`; tot.children[2].innerHTML=`<b>${fmt(got.reduce((n,x)=>n+x.k.items,0))}</b>`; };
+  const one=async i=>{
+    const t=subs[i], row=document.getElementById('sum-'+i), sec=document.getElementById('sub-'+i);
+    try{
+      const s=await loadSubject(t, zhHrefs), k=count(s); if(run!==RUN) return;
+      done[i]={s,k};
+      row.innerHTML=`<td><a href="#sub-${i}">${esc(s.name)}</a>${s.planned?' <span class="k">no page yet</span>':''}</td><td class="n">${fmt(k.words)}${s.toWrite?`<br><span class="k">+${fmt(s.toWrite)} to write</span>`:''}</td><td class="n">${fmt(k.items)}</td>${cellsFor(k)}`;
+      sec.innerHTML=`<h2>${esc(s.name)}</h2><p class="meta">${fmt(k.words)} words${s.toWrite?` (+${fmt(s.toWrite)} still to write in <span class="k">new-words.csv</span>)`:''} · ${fmt(k.items)} items · <span class="k">${esc(s.folder)}</span>${s.planned?' · no page yet: not on the topic list':''}${s.hide.length?` · switched off on its page: ${esc(s.hide.join(', '))}`:''}${s.hasZh?'':' · no Chinese page'}</p>${subjectTable(s,k)}`;
+    }catch(e){ if(run!==RUN) return;
+      const msg=`Couldn't read its files (${esc(e.message||e)}). `;
+      row.innerHTML=`<td>${esc(t.name)}</td><td class="err" colspan="5">${msg}<button class="ghost retry" type="button">Try again</button></td>`;
+      sec.innerHTML=`<h2>${esc(t.name)}</h2><p class="meta err">${msg}</p>`;
+      row.querySelector('.retry').onclick=()=>{ if(run!==RUN) return; finished--; row.innerHTML=`<td>${esc(t.name)}</td><td class="n wait" colspan="5">counting…</td>`; sec.querySelector('.meta').textContent='Counting…'; progress(); one(i); };
+    }
+    finished++; totals(); progress();
+  };
+  progress();
+  const jobs=subs.map((t,i)=>one(i));
+  if(reading) jobs.push(readingComp().then(rc=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta">English side only, computers only.</p>${rc.length?readingTable(rc):'<p class="meta">No passages found.</p>'}`; },
+    e=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta err">Couldn't read its files (${esc(e.message||e)}). Refresh to try again.</p>`; })
+    .then(()=>{ finished++; progress(); }));
+  await Promise.all(jobs);
 }
 
 async function main(){
   const enUrl=ROOT+'en/index.html', zhUrl=ROOT+'zh/index.html';
   const [en, zh]=await Promise.all([getDoc(enUrl), getDoc(zhUrl).catch(()=>null)]);
-  // Topics: the bars on the English topic list, and (since 31 Oct) Academic English Essentials in the top row beside
-  // the Daily Circuit (its Start button: .ess-card, no .topic-link bar any more)
   const TOPICS='a.topic-link, .ess-card a.cc-btn:not(.alt)';
-  const hrefs=[...new Set([...en.querySelectorAll(TOPICS)].map(a=>a.getAttribute('href').split('#')[0]))];
-  const zhFolders=new Set();
-  if(zh) await Promise.all([...zh.querySelectorAll(TOPICS)].map(async a=>{ try{ const u=new URL(a.getAttribute('href'), zhUrl).href, d=(await getDoc(u)).getElementById('app');
-    if(d && d.dataset.content) zhFolders.add(new URL(d.dataset.content.replace(/\/*$/,'/'), u).href.slice(ROOT.length)); }catch(e){} }));
-  const subjects=(await Promise.all(hrefs.map(h=>loadSubject(h).catch(()=>null)))).filter(Boolean);
-  const counted=subjects.map(s=>({s, k:count(s, zhFolders)}));
-  const rc=await readingComp().catch(()=>[]);
-
-  const total=counted.reduce((n,x)=>n+x.k.items,0), totalWords=counted.reduce((n,x)=>n+x.k.words,0);
-  let html=`<h2>Summary</h2><div class="scroll"><table><thead><tr><th>Subject</th><th class="n">Words</th><th class="n">Items</th>
-    <th class="n" title="English games playable at every level">All levels</th><th class="n">Some levels</th><th class="n">None yet</th></tr></thead><tbody>
-    ${counted.map(({s,k})=>`<tr><td><a href="#${esc(s.folder)}">${esc(s.name)}</a></td><td class="n">${fmt(k.words)}</td><td class="n">${fmt(k.items)}</td>
-      <td class="n s s-all">${k.tally.all}</td><td class="n s s-some">${k.tally.some}</td><td class="n s s-none">${k.tally.none}${k.tally.off?` <span class="k">(+${k.tally.off} off)</span>`:''}</td></tr>`).join('')}
-    <tr><td><b>Total</b></td><td class="n"><b>${fmt(totalWords)}</b></td><td class="n"><b>${fmt(total)}</b></td><td></td><td></td><td></td></tr></tbody></table></div>
-    <ul class="notes"><li>All levels / Some levels / None yet count the ${SECTIONS.slice(0,4).reduce((n,x)=>n+x[1].length,0)} games on the English topic pages (Vocabulary, Grammar, Reading, and the Games row).</li>
-    <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately below.</li>
-    <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>`;
-  counted.forEach(({s,k})=>{
-    html+=`<h2 id="${esc(s.folder)}">${esc(s.name)}</h2><p class="meta">${fmt(k.words)} words · ${fmt(k.items)} items · <span class="k">${esc(s.folder)}</span>${s.hide.length?` · switched off on its page: ${esc(s.hide.join(', '))}`:''}${zhFolders.has(s.folder)?'':' · no Chinese page'}</p>${subjectTable(s,k)}`;
-  });
-  if(rc.length){
-    html+=`<h2>Reading Comprehension</h2><p class="meta">English side only, computers only.</p><div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>
-      ${rc.map(r=>{ const ok=r.lv.slice(0,5).map(x=>x>0), all=ok.every(Boolean), some=ok.some(Boolean);
-        return `<tr><td><b>${esc(r.name)}</b></td>${r.lv.slice(0,5).map((x,i)=>`<td class="n${ok[i]?'':' gap'}">${x||'–'}</td>`).join('')}
-        <td class="tot">${fmt(r.total)} passages${r.notes?'':` · ${fmt(r.qs)} questions`}</td><td class="s s-${all?'all':some?'some':'none'}">${all?'All levels':some?'Some levels':'None yet'}</td></tr>`; }).join('')}
-      </tbody></table></div>`;
-  }
-  html+=`<ul class="notes"><li>Subjects are found from the English topic list (<span class="k">en/index.html</span>); a new topic appears here once it is on that list.</li>
-    <li>This page counts rows; it does not check them. Run <span class="k">python3 tools/check_content.py</span> to find mistakes in the files.</li></ul>`;
-  document.getElementById('out').innerHTML=html;
-  document.getElementById('when').textContent='Counted '+new Date().toLocaleString('en-GB', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+  const zhHrefs=new Set(zh ? [...zh.querySelectorAll(TOPICS)].map(a=>a.getAttribute('href').split('#')[0]) : []);
+  const areas=findAreas(en);
+  const bar=document.getElementById('areas');
+  bar.innerHTML=areas.map(a=>`<button type="button" data-area="${esc(a.key)}">${esc(a.name)}</button>`).join('')+`<button type="button" data-area="all">Everything</button>`;
+  bar.onclick=e=>{ const b=e.target.closest('button[data-area]'); if(b) show(b.dataset.area, areas, zhHrefs); };
+  let key=new URL(location.href).searchParams.get('area');
+  if(!key){ try{ key=localStorage.getItem(SAVE); }catch(e){} }
+  if(key!=='all' && !areas.some(a=>a.key===key)) key=areas.length ? areas[0].key : 'all';
+  await show(key, areas, zhHrefs);
 }
-main().catch(e=>{ document.getElementById('out').innerHTML=`<p class="notice err">The content files could not be read (${esc(e.message||e)}). They load when the site is online.</p>`; });
+main().catch(e=>{ document.getElementById('out').innerHTML=`<p class="notice err">The topic list could not be read (${esc(e.message||e)}). The files load when the site is online.</p>`; });
 })();
 </script>
 </body>

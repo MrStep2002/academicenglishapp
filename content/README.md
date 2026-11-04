@@ -14,6 +14,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `representation/` | English → Representation, and Chinese version → Representation |
 | `web-design/` | English → Web design, and Chinese version → Web design |
 | `media-descriptors/` | English → Media Descriptors, and Chinese version → Media Descriptors (pages `en/describing-people/`, `zh/describing-people/`). Its own folder since 3 Nov 2026: the 32 describing words and their 81 Fill the gap rows moved here from `representation/` (same ids). `new-words.csv` holds the new descriptors still being written; the games don't read it, and each level's rows move into words.csv once written |
+| `advertising/` | Media → Advertising (started 4 Nov 2026; no page yet). Words written level by level: `words.csv` has the written ones, `new-words.csv` the rest (the games don't read it). Ids `adv:<word>`. Words also in Representation (advert, slogan, target audience, direct address, emotive language…) are separate entries here with advertising meanings and examples, on purpose |
 | `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
 | `physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/physics/" below |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
