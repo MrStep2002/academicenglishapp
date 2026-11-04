@@ -807,7 +807,7 @@ function lessonChip(o, opts = {}) {
   </button>`;
 }
 function dayTag(ds, cd) {
-  if (cd) return `<button class="daytag${ds === todayDS() ? ' on' : ''}${workMap.has(ds) ? ' mk' : ''}" data-day="${ds}" title="Change this date">Day ${cd}</button>`;
+  if (cd) return `<button class="daytag${ds === todayDS() ? ' on' : ''}${workMap.has(ds) ? ' mk' : ''}" data-day="${ds}" title="${workMap.has(ds) ? 'Extra school day. Tap to change' : 'Change this date'}">Day ${cd}${workMap.has(ds) ? ' · Extra' : ''}</button>`;
   const h = holidayMap.get(ds);
   if (h) return `<button class="daytag hol" data-day="${ds}" title="Change this date">${esc(h.label || 'Holiday')}</button>`;
   return `<button class="daytag wk" data-day="${ds}">Weekend</button>`;
@@ -936,14 +936,14 @@ function viewSetup() {
   const anchorsHtml = (c.anchors || []).slice().sort((a, b) => b.date.localeCompare(a.date)).map(a => `<div class="item"><span class="grow"><b>${esc(fmtLong(a.date))}</b> is Day ${a.day}</span><button class="btn ghost danger" data-delanchor="${esc(a.date)}">Remove</button></div>`).join('');
 
   const holList = Object.keys(years).sort().reverse().map(y => `<div class="yr"><span>${y} school year</span><button class="btn ghost danger" data-clearyear="${esc(y)}">Clear year</button></div>
-    ${years[y].map(e => `<div class="item"><span class="pill ${e.type === 'workday' ? 'mk' : 'hol'}">${e.type === 'workday' ? 'School day' : 'Holiday'}</span><span class="grow"><b>${esc(e.label || (e.type === 'workday' ? 'Make-up day' : 'Holiday'))}</b> <span class="muted">${esc(fmtShort(e.start))}${e.end && e.end !== e.start ? ' – ' + esc(fmtShort(e.end)) : ''}</span></span><button class="btn ghost danger" data-delentry="${esc(e.id)}" aria-label="Remove ${esc(e.label || 'entry')}">Remove</button></div>`).join('')}`).join('');
+    ${years[y].map(e => `<div class="item"><span class="pill ${e.type === 'workday' ? 'mk' : 'hol'}">${e.type === 'workday' ? 'Extra school day' : 'Holiday'}</span><span class="grow"><b>${esc(e.label || (e.type === 'workday' ? 'Extra school day' : 'Holiday'))}</b> <span class="muted">${esc(fmtShort(e.start))}${e.end && e.end !== e.start ? ' – ' + esc(fmtShort(e.end)) : ''}</span></span><button class="btn ghost danger" data-delentry="${esc(e.id)}" aria-label="Remove ${esc(e.label || 'entry')}">Remove</button></div>`).join('')}`).join('');
 
-  const confirmClear = importState.clearYear ? `<div class="confirm">Remove every holiday and make-up day in ${esc(importState.clearYear)}?<div class="form"><button class="btn danger" data-clearyes>Remove them</button><button class="btn" data-clearno>Keep</button></div></div>` : '';
+  const confirmClear = importState.clearYear ? `<div class="confirm">Remove every holiday and extra school day in ${esc(importState.clearYear)}?<div class="form"><button class="btn danger" data-clearyes>Remove them</button><button class="btn" data-clearno>Keep</button></div></div>` : '';
 
   const hp = importState.hol;
   const holPreview = hp ? `<div class="preview"><table><thead><tr><th></th><th>Dates</th><th>What</th><th>Type</th></tr></thead><tbody>
-      ${hp.map((e, i) => `<tr><td><input type="checkbox" data-hpick="${i}" ${e.keep !== false ? 'checked' : ''} aria-label="Include"></td><td class="mono">${esc(e.start)}${e.end && e.end !== e.start ? '<br>' + esc(e.end) : ''}</td><td>${esc(e.label)}</td><td><span class="pill ${e.type === 'workday' ? 'mk' : 'hol'}">${e.type === 'workday' ? 'School day' : 'Holiday'}</span></td></tr>`).join('')}
-    </tbody></table></div><div class="form"><button class="btn primary" data-holadd>Add ${hp.filter(e => e.keep !== false).length} to calendar</button><button class="btn" data-holcancel>Cancel</button></div>` : '';
+      ${hp.map((e, i) => `<tr><td><input type="checkbox" data-hpick="${i}" ${e.keep !== false ? 'checked' : ''} aria-label="Include"></td><td class="mono">${esc(e.start)}${e.end && e.end !== e.start ? '<br>' + esc(e.end) : ''}</td><td>${esc(e.label)}</td><td><button class="pill ${e.type === 'workday' ? 'mk' : 'hol'}" style="border:0;cursor:pointer" data-htype="${i}" title="Switch between Holiday and Extra school day">${e.type === 'workday' ? 'Extra school day ⇄' : 'Holiday ⇄'}</button></td></tr>`).join('')}
+    </tbody></table></div>${hp.some(e => e.type === 'workday' && e.keep !== false) ? `<p class="err" style="margin:0">Rows marked <b>Extra school day</b> add lessons on those weekend dates. If any of them are actually days off, tap the label to switch it to Holiday.</p>` : ''}<div class="form"><button class="btn primary" data-holadd>Add ${hp.filter(e => e.keep !== false).length} to calendar</button><button class="btn" data-holcancel>Cancel</button></div>` : '';
 
   const tp = importState.tt;
   const ttPreview = tp ? `<p class="note">Found <b>${tp.slots.length} lessons</b> across a ${tp.cycleLength}-day cycle and ${tp.periods.length} periods${importState.ttName ? ' in ' + esc(importState.ttName) : ''}.</p>
@@ -963,20 +963,20 @@ function viewSetup() {
 
     ${dutiesPanel()}
 
-    <section class="panel"><h2>Holidays &amp; make-up days</h2>
-      <p>Holidays are skipped, so the cycle carries on the next school day. Make-up days are weekend days when school runs, which happen around Chinese public holidays.</p>
+    <section class="panel"><h2>Holidays &amp; extra school days</h2>
+      <p>Holidays are skipped, so the cycle carries on the next school day. If school ever runs on a Saturday or Sunday, pick that date and choose “Extra school day”.</p>
       <div class="form">
         <div class="field"><label for="hStart">From</label><input type="date" id="hStart"></div>
         <div class="field"><label for="hEnd">To</label><input type="date" id="hEnd"></div>
         <div class="field grow"><label for="hLabel">Name</label><input type="text" id="hLabel" placeholder="Spring Festival"></div>
-        <div class="field"><label for="hType">Type</label><select id="hType"><option value="holiday">Holiday</option><option value="workday">Make-up school day</option></select></div>
+        <div class="field" id="hTypeField" hidden><label for="hType">Type</label><select id="hType"><option value="holiday">Holiday (no school)</option><option value="workday">Extra school day</option></select></div>
         <button class="btn primary" data-addentry>Add</button>
       </div>
       <div class="drop" id="holDrop">
         <span class="label">Import a year at once</span>
-        <span class="note">Upload the school calendar (PDF, text, CSV or .ics) or paste lines like <span class="mono">2027-02-05 to 2027-02-21 Spring Festival</span>. Add “make-up” to a line for a weekend school day.</span>
+        <span class="note">Upload the school calendar (PDF, text, CSV or .ics) or paste lines like <span class="mono">2027-02-05 to 2027-02-21 Spring Festival</span>. Add “extra school day” to a line if school runs on that Saturday or Sunday.</span>
         <input type="file" id="holFile" accept=".pdf,.txt,.csv,.ics,text/plain,text/csv,text/calendar,application/pdf">
-        <textarea id="holText" rows="4" placeholder="2027-01-01 New Year's Day&#10;2027-02-05 to 2027-02-21 Spring Festival&#10;2027-02-27 make-up school day">${esc(importState.holText)}</textarea>
+        <textarea id="holText" rows="4" placeholder="2027-01-01 New Year's Day&#10;2027-02-05 to 2027-02-21 Spring Festival&#10;2027-02-27 extra school day">${esc(importState.holText)}</textarea>
         <div class="form"><button class="btn" data-holparse>Preview</button>${importState.holBusy ? '<span class="note">Reading…</span>' : ''}</div>
         ${importState.holErr ? `<div class="err">${esc(importState.holErr)}</div>` : ''}
         ${holPreview}
@@ -1198,8 +1198,8 @@ function drawerDay(ds) {
       ${cd ? `<div class="field"><span class="label">This date is cycle day</span><div class="form">${Array.from({ length: L() }, (_, i) => `<button class="btn${cd === i + 1 ? ' primary' : ''}" data-setday="${i + 1}">Day ${i + 1}</button>`).join('')}</div><span class="note">Changing it re-counts every day after this one.</span></div>` : ''}
       ${h ? `<p>${esc(h.label || 'Holiday')} runs ${esc(fmtShort(h.start))}${h.end && h.end !== h.start ? ' – ' + esc(fmtShort(h.end)) : ''}.</p><div class="form"><button class="btn danger" data-dayrmhol="${esc(h.id)}">Remove this holiday</button></div>` : ''}
       ${cd && !w ? `<div class="field"><label for="dHolName">Day off? Mark it as a holiday</label><div class="form"><input type="text" id="dHolName" placeholder="e.g. Sports day, Teacher training" style="flex:1 1 200px;width:auto"><button class="btn" data-dayhol>Mark as holiday</button></div><span class="note">Lessons after it move along one day.</span></div>` : ''}
-      ${w ? `<p>${esc(w.label || 'Make-up school day')}.</p><div class="form"><button class="btn danger" data-dayrmhol="${esc(w.id)}">Make it a normal weekend</button></div>` : ''}
-      ${wk && !w ? `<div class="field"><span class="label">Make-up school day</span><div class="form"><button class="btn" data-daywork>School runs this ${esc(fmt(ds, { weekday: 'long' }))}</button></div><span class="note">Used for the weekend days China swaps around public holidays.</span></div>` : ''}
+      ${w ? `<p>${esc(w.label || 'Extra school day')}.</p><div class="form"><button class="btn danger" data-dayrmhol="${esc(w.id)}">Make it a normal weekend</button></div>` : ''}
+      ${wk && !w ? `<div class="field"><span class="label">Extra school day</span><div class="form"><button class="btn" data-daywork>School runs this ${esc(fmt(ds, { weekday: 'long' }))}</button></div><span class="note">Used for the weekend days China swaps around public holidays.</span></div>` : ''}
     </div>
     <div class="drawer-foot"><span></span><button class="btn primary" data-close>Done</button></div>
   </aside>`;
@@ -1335,6 +1335,11 @@ async function handleTimetableFile(file) {
 }
 
 /* Holiday parsing */
+function isWorkdayText(t) {
+  // "No school", "closed", "day off", 放假 always mean a holiday, even if the line also says "school day".
+  if (/\bno\s+(school|lessons|classes|students)|\bnon[- ]?school\b|\bclosed\b|\bday(s)? off\b|\bschool(s)? (is |are )?out\b|放假|休息|停课/i.test(t)) return false;
+  return /make[- ]?up|extra school day|\bwork ?days?\b|school (runs|is open|open)|lessons run|补班|上班/i.test(t);
+}
 const MONTHS = { jan: 1, feb: 2, mar: 3, apr: 4, may: 5, jun: 6, jul: 7, aug: 8, sep: 9, sept: 9, oct: 10, nov: 11, dec: 12 };
 function findDates(line) {
   const out = [];
@@ -1359,7 +1364,7 @@ function parseICS(text) {
     if (e && allDay) e = addDays(e, -1);
     if (!e || e < s) e = s;
     const label = get('SUMMARY').replace(/\\,/g, ',').replace(/\\n/g, ' ');
-    out.push({ start: s, end: e, label: label || 'Holiday', type: /make[- ]?up|work ?day|补班|上班/i.test(label) ? 'workday' : 'holiday' });
+    out.push({ start: s, end: e, label: label || 'Holiday', type: isWorkdayText(label) ? 'workday' : 'holiday' });
   }
   return out;
 }
@@ -1374,8 +1379,8 @@ function parseHolidayText(text) {
       .replace(/\b\d{1,2}(?:st|nd|rd|th)?\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?,?\s+\d{4}/gi, ' ')
       .replace(/\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sept?|Oct|Nov|Dec)[a-z]*\.?\s+\d{1,2}(?:st|nd|rd|th)?,?\s+\d{4}/gi, ' ')
       .replace(/\b(to|until|till|through|thru)\b/gi, ' ').replace(/[,;|\t–—-]+/g, ' ').replace(/\s+/g, ' ').trim();
-    const work = /make[- ]?up|work ?day|school day|lessons run|补班|上班/i.test(line);
-    label = label.replace(/^(holiday|make[- ]?up( school)? day|workday)$/i, m => m) || (work ? 'Make-up school day' : 'Holiday');
+    const work = isWorkdayText(line);
+    label = label.replace(/^(holiday|make[- ]?up( school)? day|workday)$/i, m => m) || (work ? 'Extra school day' : 'Holiday');
     const start = ds[0], end = ds[1] && ds[1] >= start ? ds[1] : start;
     out.push({ start, end, label, type: work ? 'workday' : 'holiday' });
   }
@@ -1546,7 +1551,7 @@ document.addEventListener('click', e => {
     const s = $('#hStart').value, en = $('#hEnd').value || s, lab = $('#hLabel').value.trim(), ty = $('#hType').value;
     if (!isDS(s)) { toast('Pick a start date.'); return; }
     if (en < s) { toast('The end date is before the start date.'); return; }
-    addEntries([{ start: s, end: en, label: lab || (ty === 'workday' ? 'Make-up school day' : 'Holiday'), type: ty }]);
+    addEntries([{ start: s, end: en, label: lab || (ty === 'workday' ? 'Extra school day' : 'Holiday'), type: $('#hTypeField').hidden ? 'holiday' : ty }]);
     return;
   }
   if (d.delentry) { const c = clone(cal()); c.entries = (c.entries || []).filter(x => x.id !== d.delentry); writeConfig('calendar', c); toast('Removed'); return; }
@@ -1560,6 +1565,7 @@ document.addEventListener('click', e => {
     else importState.holErr = importState.holText.trim() ? 'No dates found. Write dates as 2027-02-05, or 5 Feb 2027.' : 'Paste some holiday lines or upload a file first.';
     render(); return;
   }
+  if (d.htype != null && importState.hol) { const e2 = importState.hol[+d.htype]; e2.type = e2.type === 'workday' ? 'holiday' : 'workday'; if (e2.type === 'holiday' && /make-up school day|extra school day/i.test(e2.label)) e2.label = 'Holiday'; render(); return; }
   if (d.holcancel != null) { importState.hol = null; render(); return; }
   if (d.holadd != null) { const pick = importState.hol.filter(x => x.keep !== false); importState.hol = null; importState.holText = ''; addEntries(pick); return; }
   if (d.ttsave != null) {
@@ -1588,7 +1594,7 @@ document.addEventListener('click', e => {
   if (d.clearplanyes != null) { writeLesson(S.drawer.key, null); S.drawer.confirm = null; S.drawer.force = true; S.drawer.status = 'Cleared'; render(); return; }
   if (d.setday) { setAnchor(S.drawer.date, +d.setday); return; }
   if (d.dayhol != null) { const lab = ($('#dHolName') || {}).value || ''; addEntries([{ start: S.drawer.date, end: S.drawer.date, label: lab.trim() || 'Day off', type: 'holiday' }]); S.drawer.force = true; return; }
-  if (d.daywork != null) { addEntries([{ start: S.drawer.date, end: S.drawer.date, label: 'Make-up school day', type: 'workday' }]); S.drawer.force = true; return; }
+  if (d.daywork != null) { addEntries([{ start: S.drawer.date, end: S.drawer.date, label: 'Extra school day', type: 'workday' }]); S.drawer.force = true; return; }
   if (d.dayrmhol) { const c = clone(cal()); c.entries = (c.entries || []).filter(x => x.id !== d.dayrmhol); writeConfig('calendar', c); S.drawer.force = true; return; }
 });
 document.addEventListener('keydown', e => {
@@ -1619,6 +1625,11 @@ document.addEventListener('change', e => {
   }
   if (e.target.id === 'tCls') taskDraft.cls = e.target.value;
   if (e.target.id === 'duRepeat') dutyForm.repeat = e.target.value;
+  if (e.target.id === 'hStart' || e.target.id === 'hEnd') {
+    const st = $('#hStart').value, en = $('#hEnd').value || st;
+    let wk = false; if (isDS(st)) for (let d = st, i = 0; d <= en && i < 400; d = addDays(d, 1), i++) if ([0, 6].includes(dow(d))) wk = true;
+    $('#hTypeField').hidden = !wk; if (!wk) $('#hType').value = 'holiday';
+  }
   if (e.target.id === 'duSlot') { dutyForm.slot = e.target.value; const [a, b] = slotTimes(dutyForm.slot); $('#duStart').value = a; $('#duEnd').value = b; }
   if (e.target.id === 'tDue') taskDraft.due = e.target.value;
   if (e.target.id === 'ttFile' && e.target.files[0]) handleTimetableFile(e.target.files[0]);
@@ -1642,13 +1653,17 @@ function setAnchor(date, day) {
 }
 function addEntries(list) {
   const c = clone(cal()); c.entries = c.entries || []; c.anchors = c.anchors || [];
-  let n = 0;
+  let n = 0, skipped = 0;
   for (const e of list) {
+    if (e.type === 'workday') {
+      let wkend = false; for (let d = e.start, i = 0; d <= (e.end || e.start) && i < 400; d = addDays(d, 1), i++) if ([0, 6].includes(dow(d))) wkend = true;
+      if (!wkend) { skipped++; continue; } // a weekday is already a school day
+    }
     if (c.entries.some(x => x.start === e.start && x.end === e.end && x.type === e.type)) continue;
     c.entries.push({ id: uid(), start: e.start, end: e.end || e.start, label: e.label, type: e.type }); n++;
   }
   writeConfig('calendar', c);
-  toast(n ? `Added ${n} date${n > 1 ? 's' : ''}` : 'Those dates were already there');
+  toast(n ? `Added ${n} date${n > 1 ? 's' : ''}${skipped ? ` (skipped ${skipped} extra school day${skipped > 1 ? 's' : ''} on a weekday)` : ''}` : skipped ? 'Extra school days must be on a Saturday or Sunday.' : 'Those dates were already there');
 }
 
 /* ---------- boot ---------- */
