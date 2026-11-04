@@ -73,9 +73,15 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 .label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
 
 /* Brand row */
-.brand { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+@media (max-width: 520px) { .save-state span { display: none; } .save-state { padding: 8px; } }
 .brand h1 { font-family: var(--f-display); font-weight: 800; font-size: 26px; letter-spacing: .02em; text-transform: uppercase; }
 .brand h1 span { color: var(--accent); }
+.brand-right { display: flex; align-items: center; gap: 10px; }
+.cog { width: 40px; height: 40px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.cog:hover { color: var(--ink); border-color: var(--muted); }
+.cog svg { width: 20px; height: 20px; }
+.cog[aria-current="page"] { background: var(--ink); border-color: var(--ink); color: var(--surface); }
 .save-state { border: 0; background: transparent; padding: 4px 0; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
 .save-state i { width: 8px; height: 8px; border-radius: 50%; background: var(--workday); display: inline-block; }
 .save-state.local i { background: #C98A12; }
@@ -201,8 +207,10 @@ a.btn.primary { color: var(--accent-ink); }
 }
 
 /* List */
-.list { display: flex; flex-direction: column; gap: 18px; }
-.lday h3 { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; padding-bottom: 6px; border-bottom: 1px solid var(--line); margin-bottom: 6px; flex-wrap: wrap; }
+.list { display: flex; flex-direction: column; gap: 14px; }
+.lday { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.lday:last-child { padding-bottom: 0; border-bottom: 0; }
+.lday h3 { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; margin-bottom: 4px; flex-wrap: wrap; }
 .lrow { display: grid; grid-template-columns: 6.2rem 10rem minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; text-align: left; border: 0; background: transparent; border-radius: 10px; padding: 8px 8px; }
 .lrow:hover { background: var(--sunk); }
 .lrow .t { font-family: var(--f-mono); font-size: 12px; color: var(--muted); padding-top: 2px; }
@@ -232,6 +240,39 @@ a.btn.primary { color: var(--accent-ink); }
 .who { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; align-self: flex-start; background: var(--surface); }
 .who button { border: 0; background: transparent; padding: 3px 8px; font-size: 11px; font-weight: 700; color: var(--muted); }
 .who button[aria-pressed="true"] { background: var(--ink); color: var(--surface); }
+
+/* Tasks */
+.tasks-add { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.tasks-add .field.title { flex: 1 1 260px; }
+.tasks-add select { width: auto; max-width: 12rem; }
+.tgroup { display: flex; flex-direction: column; padding-block: 12px; border-bottom: 1px solid var(--line); }
+.tgroup:last-child { border-bottom: 0; padding-bottom: 0; }
+.tgroup h3 { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 4px; display: flex; gap: 8px; align-items: center; }
+.tgroup.late h3 { color: var(--holiday); }
+.trow { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: start; padding: 7px 4px; border-radius: 10px; }
+.trow:hover { background: var(--sunk); }
+.tcheck { appearance: none; width: 20px; height: 20px; border: 2px solid var(--muted); border-radius: 6px; margin: 1px 0 0; cursor: pointer; display: grid; place-content: center; background: var(--surface); }
+.tcheck:checked { background: var(--workday); border-color: var(--workday); }
+.tcheck:checked::after { content: ""; width: 10px; height: 5px; border: 2px solid var(--surface); border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+.tbody { min-width: 0; display: flex; flex-direction: column; gap: 3px; border: 0; background: none; padding: 0; text-align: left; cursor: pointer; }
+.tbody .tt { font-weight: 600; overflow-wrap: anywhere; }
+.trow.done .tt { text-decoration: line-through; color: var(--muted); font-weight: 500; }
+.tmeta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.tcls { font-weight: 700; font-size: 11px; border-radius: 6px; padding: 1px 7px; background: var(--cbg); color: var(--cfg); }
+.tdue.late { color: var(--holiday); font-weight: 600; }
+.tdue.due-today { color: var(--accent); font-weight: 600; }
+.tedit { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; padding: 6px 0 4px 32px; }
+.tedit .field.title { flex: 1 1 220px; }
+.tedit select { width: auto; max-width: 12rem; }
+.dtasks { display: flex; flex-direction: column; gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+.dtasks .trow { padding: 4px 0; }
+@media (max-width: 560px) {
+  .tasks-add .field, .tedit .field { flex: 1 1 140px; }
+  .tasks-add select, .tedit select { max-width: 100%; width: 100%; }
+  .tedit { padding-left: 0; }
+}
+.settings-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.settings-head h2 { font-family: var(--f-display); font-weight: 800; font-size: 30px; letter-spacing: .02em; text-transform: uppercase; }
 
 /* Setup */
 .setup { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 14px; align-items: start; }
@@ -300,7 +341,10 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
 <div class="wrap">
   <div class="brand">
     <h1>Cycle <span>Planner</span></h1>
-    <button class="save-state wait" id="saveState" data-gosync title="Sync settings"><i></i><span>Saved in this browser</span></button>
+    <div class="brand-right">
+      <button class="save-state wait" id="saveState" data-gosync title="Sync settings"><i></i><span>Saved in this browser</span></button>
+      <a class="cog" id="cog" href="#setup" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></a>
+    </div>
   </div>
   <section class="today" id="today" aria-live="polite"></section>
   <div class="bar">
@@ -309,9 +353,9 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); ou
       <a href="#month" data-v="month">Month</a>
       <a href="#list" data-v="list">List</a>
       <a href="#cycle" data-v="cycle">Cycle</a>
-      <a href="#setup" data-v="setup">Setup</a>
+      <a href="#tasks" data-v="tasks">Tasks</a>
     </nav>
-    <label class="switch" title="Hide the lessons someone else covers"><input type="checkbox" id="mineOnly" checked> Only lessons I teach</label>
+    <label class="switch" id="mineSwitch" title="Hide the lessons someone else covers"><input type="checkbox" id="mineOnly" checked> Only lessons I teach</label>
   </div>
   <div class="filter-row" id="filters"></div>
   <div id="banners"></div>
@@ -356,18 +400,21 @@ function toast(msg) {
 /* ---------- state ---------- */
 const UI_KEY = 'cycle-planner-ui';
 const LOCAL_KEY = 'cycle-planner-data';
-const ui = Object.assign({ view: 'week', classes: [], mineOnly: true, listMode: 'upcoming' }, lsGet(UI_KEY) || {});
+const ui = Object.assign({ view: 'week', classes: [], mineOnly: true, listMode: 'upcoming', showDone: false }, lsGet(UI_KEY) || {});
+const VIEWS = ['week', 'month', 'list', 'cycle', 'tasks', 'setup'];
+let returnView = 'week';
 const S = {
   mode: 'loading', // 'db' | 'local'
   timetable: null, calendar: null, prefs: null,
   lessons: new Map(),
+  tasks: new Map(),
   confirmed: new Set(), slow: false, error: null,
   weekStart: mondayOf(todayDS()),
   monthStart: todayDS().slice(0, 8) + '01',
   listCount: 15,
   drawer: null,
 };
-const saveUI = () => lsSet(UI_KEY, { view: ui.view, classes: ui.classes, mineOnly: ui.mineOnly, listMode: ui.listMode });
+const saveUI = () => lsSet(UI_KEY, { view: ui.view, classes: ui.classes, mineOnly: ui.mineOnly, listMode: ui.listMode, showDone: ui.showDone });
 const cal = () => S.calendar || { anchors: [], entries: [] };
 const prefs = () => S.prefs || { covered: [], coverName: 'Head' };
 const slots = () => (S.timetable && S.timetable.slots) || [];
@@ -381,7 +428,7 @@ const L = () => (S.timetable && S.timetable.cycleLength) || 6;
 const GH_KEY = 'cycle-planner-github';
 const SYNC = { cfg: lsGet(GH_KEY), sha: null, dirty: false, busy: false, timer: null, state: 'off', msg: '', at: null };
 function persistLocal() {
-  const ok = lsSet(LOCAL_KEY, { timetable: S.timetable, calendar: S.calendar, prefs: S.prefs, lessons: Object.fromEntries(S.lessons), dirty: SYNC.dirty });
+  const ok = lsSet(LOCAL_KEY, { timetable: S.timetable, calendar: S.calendar, prefs: S.prefs, lessons: Object.fromEntries(S.lessons), tasks: Object.fromEntries(S.tasks), dirty: SYNC.dirty });
   if (!ok) toast("This browser won't let the page save. Open it in a normal (not private) window.");
 }
 function changed() {
@@ -398,8 +445,13 @@ function writeLesson(key, data) {
   changed();
   return Promise.resolve();
 }
+function writeTask(id, data) {
+  if (data) S.tasks.set(id, { ...data, id, updatedAt: Date.now() });
+  else S.tasks.set(id, { id, deleted: true, updatedAt: Date.now() });
+  changed(); render();
+}
 function snapshot() {
-  return { app: 'cycle-planner', version: 1, timetable: S.timetable, calendar: S.calendar, prefs: S.prefs, lessons: Object.fromEntries(S.lessons) };
+  return { app: 'cycle-planner', version: 1, timetable: S.timetable, calendar: S.calendar, prefs: S.prefs, lessons: Object.fromEntries(S.lessons), tasks: Object.fromEntries(S.tasks) };
 }
 function mergeInto(remote) {
   // Newest edit wins, per settings document and per lesson.
@@ -409,6 +461,8 @@ function mergeInto(remote) {
   // Forget tombstones after 90 days.
   const cutoff = Date.now() - 90 * 864e5;
   for (const [key, l] of S.lessons) if (l.deleted && at(l) < cutoff) S.lessons.delete(key);
+  for (const [id, r] of Object.entries(remote.tasks || {})) { const l = S.tasks.get(id); if (!l || at(r) > at(l)) S.tasks.set(id, r); }
+  for (const [id, l] of S.tasks) if (l.deleted && at(l) < cutoff) S.tasks.delete(id);
 }
 const sameData = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
@@ -427,7 +481,7 @@ async function gh(method, body, c = SYNC.cfg) {
   if (!res.ok) {
     let msg = ''; try { msg = (await res.json()).message || ''; } catch {}
     const err = new Error(
-      res.status === 401 ? 'GitHub rejected the token. It may have expired; create a new one and paste it in Setup.' :
+      res.status === 401 ? 'GitHub rejected the token. It may have expired; create a new one and paste it in Settings.' :
       res.status === 403 ? 'The token can see the repository but not write to it. Give it “Contents: Read and write” access.' :
       res.status === 404 ? 'Repository not found. Check the owner and repository name, and that the token has access to it.' :
       res.status === 409 || res.status === 422 ? 'conflict' : `GitHub error ${res.status}${msg ? ': ' + msg : ''}`);
@@ -460,7 +514,7 @@ async function pullRemote() {
     if (needsPush) await pushRemote(); else setSync('ok');
   } catch (e) { SYNC.busy = false; setSync('error', e.message); }
 }
-const stripMeta = o => ({ timetable: o.timetable || null, calendar: o.calendar || null, prefs: o.prefs || null, lessons: o.lessons || {} });
+const stripMeta = o => ({ timetable: o.timetable || null, calendar: o.calendar || null, prefs: o.prefs || null, lessons: o.lessons || {}, tasks: o.tasks || {} });
 async function pushRemote(attempt = 0) {
   clearTimeout(SYNC.timer);
   if (!SYNC.cfg) return;
@@ -501,6 +555,7 @@ function initStore() {
   const d = lsGet(LOCAL_KEY) || {};
   S.timetable = d.timetable || null; S.calendar = d.calendar || null; S.prefs = d.prefs || null;
   S.lessons = new Map(Object.entries(d.lessons || {}));
+  S.tasks = new Map(Object.entries(d.tasks || {}));
   SYNC.dirty = !!d.dirty;
   S.mode = 'local';
   ['timetable', 'calendar', 'prefs', 'lessons'].forEach(k => S.confirmed.add(k));
@@ -657,7 +712,7 @@ function renderToday() {
   const el = $('#today'), t = todayDS();
   if (!S.timetable) {
     el.innerHTML = `<div class="num" aria-hidden="true"><span class="word">Day</span>–</div>
-      <div class="info"><div class="date">${esc(fmtLong(t))}</div><div class="next">${S.confirmed.has('timetable') ? 'Add your timetable in Setup to get started.' : 'Loading your timetable…'}</div></div>`;
+      <div class="info"><div class="date">${esc(fmtLong(t))}</div><div class="next">${S.confirmed.has('timetable') ? 'Add your timetable in Settings (the cog, top right) to get started.' : 'Loading your timetable…'}</div></div>`;
     return;
   }
   if (!hasAnchor()) {
@@ -687,7 +742,7 @@ function renderToday() {
   if (nxt) next += `<div class="next">Next: ${line(nxt)}</div>`;
   if (!cur && !nxt) next = `<div class="next">${todays.length ? 'No more lessons today.' : 'No lessons today.'} Tomorrow is ${(() => { let d = addDays(t, 1); for (let i = 0; i < 60 && !cycleDay(d); i++) d = addDays(d, 1); return esc(fmtShort(d)) + ' · Day ' + cycleDay(d); })()}.</div>`;
   el.innerHTML = `<div class="num" aria-label="Day ${cd} of ${L()}"><span class="word">Day</span>${cd}<small>/${L()}</small></div>
-    <div class="info"><div class="date">${esc(fmtLong(t))}</div>${next}<div class="hint">${todays.length} lesson${todays.length === 1 ? '' : 's'} today</div></div>`;
+    <div class="info"><div class="date">${esc(fmtLong(t))}</div>${next}<div class="hint">${todays.length} lesson${todays.length === 1 ? '' : 's'} today${dueCountHint()}</div></div>`;
 }
 
 /* ---------- filters ---------- */
@@ -727,7 +782,8 @@ function renderBanners() {
 function lessonChip(o, opts = {}) {
   const p = planOf(o.key), c = cinfo(o.slot.title), cov = isCovered(o.slot.id);
   const now = o.date === todayDS() && o.slot.start <= nowHM() && nowHM() < o.slot.end;
-  const flags = [p && (p.notes || '').trim() ? 'Notes' : '', p && safeUrl(p.link) ? 'Link' : ''].filter(Boolean).join(' · ');
+  const nt = tasksForLesson(o).filter(t => !t.done).length;
+  const flags = [p && (p.notes || '').trim() ? 'Notes' : '', p && safeUrl(p.link) ? 'Link' : '', nt ? `${nt} task${nt > 1 ? 's' : ''}` : ''].filter(Boolean).join(' · ');
   return `<button class="lesson${cov ? ' covered' : ''}${now ? ' is-now' : ''}" style="${toneStyle(o.slot.title)}" data-open="${esc(o.key)}">
     <span class="cls"><span>${esc(c.name)}</span><span class="mono" style="font-weight:500">${esc(o.slot.room)}</span></span>
     <span class="meta"><span class="timeinline">${esc(o.slot.start)}–${esc(o.slot.end)} · </span>${cov ? esc(coverName()) + ' covers' : 'P' + o.slot.period}</span>
@@ -865,7 +921,7 @@ function viewSetup() {
     <div class="preview"><table><thead><tr><th>Day</th><th>Period</th><th>Class</th><th>Room</th></tr></thead><tbody>${tp.slots.map(s => `<tr><td>Day ${s.day}</td><td class="mono">P${s.period} ${esc(s.start)}</td><td>${esc(displayName(s.title, s.grade))}</td><td class="mono">${esc(s.room)}</td></tr>`).join('')}</tbody></table></div>
     <div class="form"><button class="btn primary" data-ttsave>Use this timetable</button><button class="btn" data-ttcancel>Cancel</button></div>` : '';
 
-  return `<div class="setup">
+  return `<div class="settings-head"><h2>Settings</h2><a class="btn" href="#${esc(returnView)}">← Back to ${esc(returnView === 'tasks' ? 'Tasks' : returnView[0].toUpperCase() + returnView.slice(1))}</a></div><div class="setup">
     <section class="panel"><h2>Cycle day</h2>
       <p>${tCd ? `Today is <b>Day ${tCd}</b>.` : `School is out today. ${esc(fmtShort(next))} is <b>Day ${cycleDay(next) || '?'}</b>.`} If the school resets or skips the cycle, set the day for that date and the planner counts on from there.</p>
       <div class="form">
@@ -916,9 +972,93 @@ function viewSetup() {
   </div>`;
 }
 
+/* ---------- tasks ---------- */
+const liveTasks = () => [...S.tasks.values()].filter(t => !t.deleted && (t.title || '').trim());
+function tasksForLesson(o) { return liveTasks().filter(t => t.cls === o.slot.title && t.due === o.date).sort((a, b) => (a.done - b.done) || (a.createdAt || 0) - (b.createdAt || 0)); }
+function dueCountHint() {
+  const t = todayDS(), list = liveTasks().filter(x => !x.done && x.due);
+  const late = list.filter(x => x.due < t).length, today = list.filter(x => x.due === t).length;
+  const bits = [today ? `${today} task${today > 1 ? 's' : ''} due` : '', late ? `${late} overdue` : ''].filter(Boolean);
+  return bits.length ? ' · ' + bits.join(', ') : '';
+}
+function nextLessonDate(title, after) {
+  // The next lesson of this class that I teach, strictly after `after`.
+  const seq = classSequence(title, addDays(after, 1), 120);
+  return seq.length ? seq[0].date : '';
+}
+function dueLabel(t) {
+  if (!t.due) return '';
+  const td = todayDS(), d = t.due;
+  const rel = d === td ? 'today' : d === addDays(td, 1) ? 'tomorrow' : fmtShort(d);
+  if (t.done) return 'Was due ' + rel;
+  return d < td ? 'Overdue · ' + fmtShort(d) : 'Due ' + rel;
+}
+function classOptions(sel) {
+  return `<option value="">No class</option>${classes().list.map(c => `<option value="${esc(c.title)}" ${sel === c.title ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}`;
+}
+let taskEdit = null; // id being edited
+function taskRow(t, compact) {
+  const td = todayDS(), late = !t.done && t.due && t.due < td, today = !t.done && t.due === td;
+  if (!compact && taskEdit === t.id) return `<div class="trow"><input type="checkbox" class="tcheck" data-tdone="${esc(t.id)}" ${t.done ? 'checked' : ''} aria-label="Done">
+    <div class="tbody"><span class="tt">${esc(t.title)}</span></div><span></span>
+    <div class="tedit">
+      <div class="field title"><label for="teTitle">Task</label><input type="text" id="teTitle" value="${esc(t.title)}" maxlength="200"></div>
+      <div class="field"><label for="teCls">Class</label><select id="teCls">${classOptions(t.cls)}</select></div>
+      <div class="field"><label for="teDue">Due</label><input type="date" id="teDue" value="${esc(t.due || '')}"></div>
+      <button class="btn" data-tnext="te" title="Set the due date to this class's next lesson">Next lesson</button>
+      <button class="btn primary" data-tsave="${esc(t.id)}">Save</button>
+      <button class="btn" data-tcancel>Cancel</button>
+      <button class="btn ghost danger" data-tdel="${esc(t.id)}">Delete</button>
+    </div></div>`;
+  return `<div class="trow${t.done ? ' done' : ''}">
+    <input type="checkbox" class="tcheck" data-tdone="${esc(t.id)}" ${t.done ? 'checked' : ''} aria-label="Mark “${esc(t.title)}” done">
+    <button class="tbody" ${compact ? 'tabindex="-1"' : `data-tedit="${esc(t.id)}"`} title="${compact ? '' : 'Edit'}"><span class="tt">${esc(t.title)}</span>
+      ${compact ? '' : `<span class="tmeta">${t.cls ? `<span class="tcls" style="${toneStyle(t.cls)}">${esc(cinfo(t.cls).name)}</span>` : ''}${t.due ? `<span class="tdue${late ? ' late' : today ? ' due-today' : ''}">${esc(dueLabel(t))}</span>` : ''}${t.done && t.doneAt ? `<span>Done ${esc(fmtShort(new Date(t.doneAt).toISOString().slice(0, 10)))}</span>` : ''}</span>`}
+    </button>
+    ${compact ? '' : `<button class="btn ghost icon-btn" data-tdel="${esc(t.id)}" aria-label="Delete “${esc(t.title)}”" title="Delete">✕</button>`}
+  </div>`;
+}
+let taskDraft = { title: '', cls: '', due: '' };
+let clearArmed = false;
+function viewTasks() {
+  const td = todayDS();
+  let list = liveTasks();
+  if (ui.classes.length) list = list.filter(t => ui.classes.includes(t.cls));
+  const open = list.filter(t => !t.done), done = list.filter(t => t.done).sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+  const byDue = (a, b) => (a.due || '').localeCompare(b.due || '') || (a.createdAt || 0) - (b.createdAt || 0);
+  const groups = [
+    ['Overdue', open.filter(t => t.due && t.due < td).sort(byDue), 'late'],
+    ['Today', open.filter(t => t.due === td).sort(byDue), ''],
+    ['This week', open.filter(t => t.due > td && t.due <= addDays(mondayOf(td), 6)).sort(byDue), ''],
+    ['Later', open.filter(t => t.due > addDays(mondayOf(td), 6)).sort(byDue), ''],
+    ['No due date', open.filter(t => !t.due).sort(byDue), ''],
+  ].filter(g => g[1].length);
+  const defaultCls = taskDraft.cls || (ui.classes.length === 1 ? ui.classes[0] : '');
+  const single = ui.classes.length === 1 ? cinfo(ui.classes[0]).name : null;
+  return `<section class="panel"><div class="panel-head"><h2>${single ? esc(single) + ' tasks' : 'Tasks'}</h2>
+      <span class="note">${open.length} to do${done.length ? ` · ${done.length} done` : ''}</span></div>
+    <div class="tasks-add">
+      <div class="field title"><label for="tTitle">New task</label><input type="text" id="tTitle" value="${esc(taskDraft.title)}" placeholder="e.g. Mark G9 Media C storyboards" maxlength="200"></div>
+      <div class="field"><label for="tCls">Class</label><select id="tCls">${classOptions(defaultCls)}</select></div>
+      <div class="field"><label for="tDue">Due</label><input type="date" id="tDue" value="${esc(taskDraft.due)}"></div>
+      <button class="btn" data-tnext="new" title="Set the due date to this class's next lesson">Next lesson</button>
+      <button class="btn primary" data-tadd>Add task</button>
+    </div>
+    ${groups.map(([name, items, cls]) => `<div class="tgroup ${cls}"><h3>${name} <span>${items.length}</span></h3>${items.map(t => taskRow(t)).join('')}</div>`).join('')}
+    ${!open.length ? `<div class="tgroup"><p class="note" style="margin:6px 0">${list.length ? 'Everything is done.' : ui.classes.length ? 'No tasks for this class yet.' : 'No tasks yet. Add one above, or from any lesson.'}</p></div>` : ''}
+    ${done.length ? `<div class="tgroup"><h3>Done <span>${done.length}</span> <button class="btn ghost" data-tshowdone style="padding:2px 8px;font-size:12px;text-transform:none;letter-spacing:0">${ui.showDone ? 'Hide' : 'Show'}</button>${ui.showDone ? `<button class="btn ghost danger" data-tclear style="padding:2px 8px;font-size:12px;text-transform:none;letter-spacing:0">${clearArmed ? `Delete ${done.length} done task${done.length === 1 ? '' : 's'}?` : 'Clear done'}</button>${clearArmed ? '<button class="btn ghost" data-tclearno style="padding:2px 8px;font-size:12px;text-transform:none;letter-spacing:0">Keep</button>' : ''}` : ''}</h3>${ui.showDone ? done.map(t => taskRow(t)).join('') : ''}</div>` : ''}
+  </section>`;
+}
+function addTask(title, cls, due) {
+  title = (title || '').trim(); if (!title) { toast('Type the task first.'); return false; }
+  const id = 't' + Date.now().toString(36) + uid().slice(0, 4);
+  writeTask(id, { title: title.slice(0, 200), cls: cls || '', due: isDS(due) ? due : '', done: false, createdAt: Date.now() });
+  return true;
+}
+
 function emptyView() {
   if (!S.confirmed.has('timetable')) return `<section class="panel empty-state"><h2>Loading</h2><p class="muted">Reading your saved plans…</p></section>`;
-  return `<section class="panel empty-state"><h2>No timetable yet</h2><p class="muted">Upload your timetable PDF in Setup. If you've used the planner on another device, connect GitHub there instead and your plans will appear.</p><a class="btn primary" href="#setup">Go to Setup</a></section>`;
+  return `<section class="panel empty-state"><h2>No timetable yet</h2><p class="muted">Upload your timetable PDF in Settings. If you've used the planner on another device, connect GitHub there instead and your plans will appear.</p><a class="btn primary" href="#setup">Open settings</a></section>`;
 }
 
 /* ---------- drawer ---------- */
@@ -942,6 +1082,10 @@ function drawerLesson(key) {
       <div class="field"><label for="fNotes">Notes</label><textarea id="fNotes" rows="8" placeholder="Objectives, activities, homework, what to pick up next time…">${esc(p.notes)}</textarea></div>
       <div class="field"><label for="fLink">Media link</label><input type="url" id="fLink" value="${esc(p.link)}" placeholder="https://…"></div>
       <div id="linkOut">${url ? `<a class="btn" href="${esc(url)}" target="_blank" rel="noopener">Open link ↗</a>` : ''}</div>
+      <div class="dtasks"><span class="label">Tasks due this lesson</span>
+        ${tasksForLesson(o).map(t => taskRow(t, true)).join('') || '<span class="note">None.</span>'}
+        <div class="form"><input type="text" id="dTaskTitle" placeholder="Add a task for this lesson" style="flex:1 1 200px;width:auto" maxlength="200"><button class="btn" data-dtaskadd="${esc(o.slot.title)}" data-date="${esc(o.date)}">Add</button></div>
+      </div>
       ${st.confirm === 'push' ? `<div class="confirm">Move this plan and every later ${esc(c.name)} plan one lesson later?<div class="form"><button class="btn primary" data-pushyes>Shift plans back</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
       ${st.confirm === 'clear' ? `<div class="confirm">Clear this lesson's title, notes and link?<div class="form"><button class="btn danger" data-clearplanyes>Clear plan</button><button class="btn" data-pushno>Cancel</button></div></div>` : ''}
     </div>
@@ -1168,7 +1312,7 @@ function renderSaveState() {
     error: ['err', 'Not synced · saved in this browser'],
   };
   const [cls, text] = SYNC.cfg ? map[SYNC.state] || map.ok : map.off;
-  ss.className = 'save-state ' + cls; ss.querySelector('span').textContent = text;
+  ss.className = 'save-state ' + cls; ss.querySelector('span').textContent = text; ss.title = text + ' (sync settings)';
 }
 let ghForm = { busy: false, err: '' };
 function syncPanel() {
@@ -1198,7 +1342,7 @@ function renderMainOnly() {
   const v = $('#view');
   if (!S.timetable && ui.view !== 'setup') { v.innerHTML = emptyView(); return; }
   const scrollers = [...v.querySelectorAll('.cyclewrap,.preview')].map(e => e.scrollLeft);
-  v.innerHTML = ui.view === 'month' ? viewMonth() : ui.view === 'list' ? viewList() : ui.view === 'cycle' ? viewCycle() : ui.view === 'setup' ? viewSetup() : viewWeek();
+  v.innerHTML = ui.view === 'month' ? viewMonth() : ui.view === 'list' ? viewList() : ui.view === 'cycle' ? viewCycle() : ui.view === 'tasks' ? viewTasks() : ui.view === 'setup' ? viewSetup() : viewWeek();
   if (lastView === ui.view) [...v.querySelectorAll('.cyclewrap,.preview')].forEach((e, i) => { if (scrollers[i]) e.scrollLeft = scrollers[i]; });
   lastView = ui.view;
 }
@@ -1207,15 +1351,18 @@ function render() {
   const ae = document.activeElement, inMain = ae && $('#view').contains(ae) && ae.id && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName) ? ae.id : null;
   renderSaveState();
   document.querySelectorAll('.tabs a').forEach(a => a.setAttribute('aria-current', a.dataset.v === ui.view ? 'page' : 'false'));
+  $('#cog').setAttribute('aria-current', ui.view === 'setup' ? 'page' : 'false');
   $('#mineOnly').checked = ui.mineOnly;
+  $('#mineSwitch').hidden = ui.view === 'tasks' || ui.view === 'setup';
+  $('#filters').hidden = ui.view === 'setup';
   renderToday(); renderFilters(); renderBanners();
   if (!inMain) renderMainOnly();
-  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken'].includes(inMain)) renderMainOnly();
+  else if (!['anDate', 'anDay', 'hStart', 'hEnd', 'hLabel', 'hType', 'holText', 'coverName', 'ghOwner', 'ghRepo', 'ghToken', 'tTitle', 'tCls', 'tDue', 'teTitle', 'teCls', 'teDue'].includes(inMain)) renderMainOnly();
   renderDrawer();
 }
 
 /* ---------- events ---------- */
-function setView(v) { if (!['week', 'month', 'list', 'cycle', 'setup'].includes(v)) v = 'week'; ui.view = v; saveUI(); render(); }
+function setView(v) { if (!VIEWS.includes(v)) v = 'week'; if (v === 'setup' && ui.view !== 'setup') returnView = ui.view; if (v !== 'setup') returnView = v; ui.view = v; taskEdit = null; saveUI(); render(); }
 window.addEventListener('hashchange', () => setView(location.hash.slice(1)));
 
 document.addEventListener('click', e => {
@@ -1224,6 +1371,41 @@ document.addEventListener('click', e => {
   const d = t.dataset;
   if (t.matches('a[data-link]') || (t.tagName === 'A' && t.target === '_blank')) return;
   if (d.close != null) { closeDrawer(); return; }
+  if (d.tadd != null) {
+    const ok = addTask($('#tTitle').value, $('#tCls').value, $('#tDue').value);
+    if (ok) { taskDraft = { title: '', cls: $('#tCls').value, due: '' }; renderMainOnly(); const f = $('#tTitle'); if (f) f.focus(); }
+    return;
+  }
+  if (d.tnext) {
+    const pre = d.tnext === 'new' ? 't' : 'te', cls = $('#' + pre + 'Cls').value;
+    if (!cls) { toast('Choose a class first.'); return; }
+    const nd = nextLessonDate(cls, todayDS());
+    if (!nd) { toast(`No upcoming ${cinfo(cls).name} lessons found.`); return; }
+    $('#' + pre + 'Due').value = nd; if (pre === 't') taskDraft.due = nd;
+    toast(`Next ${cinfo(cls).name} lesson: ${fmtShort(nd)}`); return;
+  }
+  if (d.tedit) { taskEdit = d.tedit; renderMainOnly(); const f = $('#teTitle'); if (f) { f.focus(); f.select(); } return; }
+  if (d.tcancel != null) { taskEdit = null; renderMainOnly(); return; }
+  if (d.tsave) {
+    const t = S.tasks.get(d.tsave), title = $('#teTitle').value.trim();
+    if (!title) { toast('A task needs some text.'); return; }
+    taskEdit = null; writeTask(d.tsave, { ...t, title: title.slice(0, 200), cls: $('#teCls').value, due: isDS($('#teDue').value) ? $('#teDue').value : '' }); return;
+  }
+  if (d.tdel) { const t = S.tasks.get(d.tdel); taskEdit = null; writeTask(d.tdel, null); toast(`Deleted “${(t && t.title || '').slice(0, 40)}”`); if (S.drawer) S.drawer.force = true; return; }
+  if (d.tshowdone != null) { ui.showDone = !ui.showDone; saveUI(); renderMainOnly(); return; }
+  if (d.tclearno != null) { clearArmed = false; renderMainOnly(); return; }
+  if (d.tclear != null) {
+    if (!clearArmed) { clearArmed = true; renderMainOnly(); return; }
+    clearArmed = false;
+    const done = liveTasks().filter(t => t.done && (!ui.classes.length || ui.classes.includes(t.cls)));
+    for (const t of done) S.tasks.set(t.id, { id: t.id, deleted: true, updatedAt: Date.now() });
+    changed(); render(); toast(`Cleared ${done.length} done task${done.length === 1 ? '' : 's'}`); return;
+  }
+  if (d.dtaskadd) {
+    const inp = $('#dTaskTitle');
+    if (addTask(inp.value, d.dtaskadd, d.date)) { S.drawer.force = true; render(); const f = $('#dTaskTitle'); if (f) f.focus(); }
+    return;
+  }
   if (d.gosync != null) { location.hash = 'setup'; setView('setup'); setTimeout(() => { const el = document.getElementById('sync'); if (el) el.scrollIntoView({ block: 'start' }); }, 30); return; }
   if (d.syncnow != null) { SYNC.dirty ? pushRemote() : pullRemote(); return; }
   if (d.ghoff != null) { disconnectGitHub(); toast('Disconnected this device'); return; }
@@ -1304,6 +1486,10 @@ document.addEventListener('click', e => {
   if (d.dayrmhol) { const c = clone(cal()); c.entries = (c.entries || []).filter(x => x.id !== d.dayrmhol); writeConfig('calendar', c); S.drawer.force = true; return; }
 });
 document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'tTitle') { e.preventDefault(); $('[data-tadd]').click(); return; }
+  if (e.key === 'Enter' && e.target.id === 'dTaskTitle') { e.preventDefault(); $('[data-dtaskadd]').click(); return; }
+  if (e.key === 'Enter' && ['teTitle', 'teDue'].includes(e.target.id)) { e.preventDefault(); $('[data-tsave]').click(); return; }
+  if (e.key === 'Escape' && taskEdit) { taskEdit = null; renderMainOnly(); return; }
   if (e.key === 'Escape' && S.drawer) { closeDrawer(); return; }
   if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('.lrow[data-open]')) { e.preventDefault(); openLesson(e.target.dataset.open); }
 });
@@ -1313,9 +1499,18 @@ document.addEventListener('input', e => {
     if (e.target.id === 'fLink') { const u = safeUrl(e.target.value.trim()); $('#linkOut').innerHTML = u ? `<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">Open link ↗</a>` : ''; }
   }
   if (e.target.id === 'holText') importState.holText = e.target.value;
+  if (e.target.id === 'tTitle') taskDraft.title = e.target.value;
 });
 document.addEventListener('change', e => {
   if (e.target.id === 'mineOnly') { ui.mineOnly = e.target.checked; saveUI(); render(); }
+  if (e.target.dataset.tdone) {
+    const t = S.tasks.get(e.target.dataset.tdone); if (!t) return;
+    writeTask(t.id, { ...t, done: e.target.checked, doneAt: e.target.checked ? Date.now() : null });
+    if (S.drawer) { S.drawer.force = true; render(); }
+    if (e.target.checked) toast('Done');
+  }
+  if (e.target.id === 'tCls') taskDraft.cls = e.target.value;
+  if (e.target.id === 'tDue') taskDraft.due = e.target.value;
   if (e.target.id === 'ttFile' && e.target.files[0]) handleTimetableFile(e.target.files[0]);
   if (e.target.id === 'holFile' && e.target.files[0]) handleHolidayFile(e.target.files[0]);
   if (e.target.dataset.hpick != null && importState.hol) { importState.hol[+e.target.dataset.hpick].keep = e.target.checked; render(); }
@@ -1348,7 +1543,8 @@ function addEntries(list) {
 
 /* ---------- boot ---------- */
 if (location.hash) ui.view = location.hash.slice(1);
-if (!['week', 'month', 'list', 'cycle', 'setup'].includes(ui.view)) ui.view = 'week';
+if (!VIEWS.includes(ui.view)) ui.view = 'week';
+if (ui.view !== 'setup') returnView = ui.view;
 render();
 initStore();
 setInterval(() => { if (!S.drawer) renderToday(); }, 60000);
