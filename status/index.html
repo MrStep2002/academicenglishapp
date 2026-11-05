@@ -264,8 +264,8 @@ function readingTable(rc){
 
 // Topics being written that have no page on the topic list yet, counted from their folder. Each is left out by itself
 // once a topic on the list links to its page address, so the line can stay until it is tidied away.
+// e.g. {name:'Advertising', area:'Media', folder:'content/advertising/', page:'advertising/index.html'} (on the list until 5 Nov 2026)
 const PLANNED = [
-  {name:'Advertising', area:'Media', folder:'content/advertising/', page:'advertising/index.html'},
 ];
 const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const SAVE='aea-status-area';
