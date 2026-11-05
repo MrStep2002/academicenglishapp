@@ -1,0 +1,2295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Year 8: Lockdown</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Russo+One&family=VT323&display=swap">
+<style>
+/* Layout: a lockdown security console. A hazard-taped frame holds the status bar, the walkable viewport and the control deck; the mission log and teacher tools sit below. One dark look by choice. */
+:root {
+  --bg: #11151b;
+  --deck: #1a2029;
+  --well: #0e1217;
+  --line: #2e3845;
+  --ink: #e8edf1;
+  --muted: #98a6b4;
+  --amber: #ffb83d;
+  --alarm: #ff5a4e;
+  --ok: #53e0a8;
+  --crt: #170f04;
+  --crt-ink: #ffc35a;
+  --crt-soft: #ecd3a2;
+  --hazard: #f2c230;
+  --f-display: "Russo One", "Arial Black", Impact, sans-serif;
+  --f-body: "Atkinson Hyperlegible", "Trebuchet MS", system-ui, sans-serif;
+  --f-term: "VT323", "Courier New", ui-monospace, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body {
+  font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding-block: 22px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: radial-gradient(900px 380px at 50% -140px, rgba(255, 90, 78, .16), transparent 70%), var(--bg);
+}
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 18px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* header */
+.top { display: grid; gap: 6px; }
+.eyebrow { margin: 0; display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-term); font-size: 20px; letter-spacing: .14em; color: var(--alarm); text-transform: uppercase; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--alarm); box-shadow: 0 0 10px var(--alarm); animation: blink 1.2s steps(2) infinite; flex: none; }
+h1 { font-family: var(--f-display); font-weight: 400; font-size: clamp(30px, 6vw, 54px); line-height: 1; margin: 0; text-transform: uppercase; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 62ch; }
+
+/* console frame */
+.case { padding: 7px; border-radius: 10px; background: repeating-linear-gradient(-45deg, var(--hazard) 0 14px, #17181b 14px 28px); box-shadow: 0 24px 60px -24px #000; }
+.case-in { background: var(--deck); border-radius: 5px; overflow: hidden; }
+.statusbar { display: flex; align-items: center; gap: 10px 16px; flex-wrap: wrap; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.clock { display: grid; line-height: 1; min-width: 86px; }
+.clock .lbl { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+#clockVal { font-family: var(--f-term); font-size: 40px; color: var(--amber); font-variant-numeric: tabular-nums; }
+.clock.low #clockVal { color: var(--alarm); animation: blink 1s steps(2) infinite; }
+.clock.hit #clockVal { color: var(--alarm); }
+.objective { flex: 1 1 220px; min-width: 0; margin: 0; font-size: 15px; line-height: 1.35; }
+.objective b { color: var(--amber); font-weight: 700; }
+.frags { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.frag { width: 38px; height: 38px; display: grid; justify-items: center; align-content: center; gap: 3px; border: 1px solid var(--line); border-radius: 5px; background: var(--well); }
+.frag .d { font-family: var(--f-term); font-size: 24px; line-height: 1; color: var(--muted); }
+.frag.got { border-color: var(--ok); }
+.frag.got .d { color: var(--ok); }
+
+.screen { position: relative; background: #000; }
+canvas#view { display: block; width: 100%; max-width: 100%; height: auto; aspect-ratio: 400 / 250; image-rendering: pixelated; touch-action: none; cursor: grab; }
+canvas#view:active { cursor: grabbing; }
+canvas#mini { position: absolute; top: 8px; right: 8px; width: 124px; max-width: 30%; height: auto; image-rendering: pixelated; border: 1px solid rgba(255, 184, 61, .55); border-radius: 4px; background: rgba(5, 8, 12, .78); }
+.crosshair { position: absolute; left: 50%; top: 50%; width: 10px; height: 10px; margin: -5px 0 0 -5px; border: 2px solid rgba(232, 237, 241, .5); border-radius: 50%; pointer-events: none; }
+.crosshair.on { border-color: var(--amber); box-shadow: 0 0 8px var(--amber); }
+.warn { position: absolute; top: 8px; left: 50%; transform: translateX(-50%); font-family: var(--f-display); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: #fff; background: var(--alarm); padding: 4px 10px; border-radius: 4px; animation: blink .5s steps(2) infinite; white-space: nowrap; }
+.toast { position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); background: rgba(8, 10, 14, .9); border: 1px solid var(--amber); color: var(--ink); padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 14px; text-align: center; }
+.toast.big { font-family: var(--f-display); font-weight: 400; font-size: clamp(16px, 3.4vw, 24px); text-transform: uppercase; padding: 10px 18px; border-width: 2px; background: rgba(8, 10, 14, .94); }
+.score { position: absolute; top: 8px; left: 8px; font-family: var(--f-display); font-size: 12px; letter-spacing: .08em; color: #ffd45a; background: rgba(8, 10, 14, .82); border: 1px solid rgba(255, 212, 90, .6); padding: 4px 10px; border-radius: 4px; font-variant-numeric: tabular-nums; }
+.prompt { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); background: rgba(8, 10, 14, .88); border: 2px solid var(--amber); border-radius: 6px; padding: 7px 14px; font: 700 15px var(--f-body); color: var(--ink); cursor: pointer; text-align: center; }
+.prompt.info { border-color: var(--alarm); cursor: default; }
+.flash { position: absolute; inset: 0; pointer-events: none; opacity: 0; background: radial-gradient(circle, transparent 30%, rgba(255, 40, 30, .8)); }
+.flash.on { animation: flash .9s ease-out; }
+@keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+@keyframes blink { 50% { opacity: .35; } }
+
+.deck { display: grid; gap: 10px; padding: 12px; border-top: 1px solid var(--line); }
+.ctrl { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) minmax(0, 1.6fr); gap: 8px; }
+.ctrl button { font-family: var(--f-display); font-size: 18px; color: var(--ink); background: #232b36; border: 2px solid var(--line); border-radius: 8px; padding: 12px 0; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.ctrl button:active { background: #2e3947; }
+.ctrl .use { background: #3a2a0c; border-color: var(--amber); color: var(--amber); font-size: 15px; letter-spacing: .08em; }
+.deck-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
+.keys { margin: 0; color: var(--muted); font-size: 14px; min-width: 0; }
+kbd { font-family: var(--f-display); font-size: 11px; background: var(--amber); color: #2a1800; border-radius: 3px; padding: 1px 6px; }
+.chipbtn { font: 700 13px var(--f-body); color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 999px; padding: 5px 12px; cursor: pointer; }
+.chipbtn[aria-pressed="false"] { color: var(--muted); }
+
+/* panels under the console */
+.lower { display: grid; gap: 16px; }
+.panel { background: var(--deck); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 12px; min-width: 0; }
+.panel h2 { font-family: var(--f-display); font-weight: 400; font-size: 18px; margin: 0; }
+.log { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.log li { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; background: var(--well); border: 1px solid var(--line); border-radius: 6px; }
+.l-name { display: block; font-weight: 700; }
+.l-zone { display: block; color: var(--muted); font-size: 14px; }
+.chip { font-family: var(--f-term); font-size: 19px; line-height: 1.2; padding: 0 8px; border-radius: 4px; border: 1px solid currentColor; white-space: nowrap; }
+.chip.ok { color: var(--ok); } .chip.live { color: var(--amber); } .chip.lock { color: var(--muted); }
+
+.teacher summary { cursor: pointer; font-family: var(--f-display); font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+.teacher summary::-webkit-details-marker { display: none; }
+.teacher summary::after { content: "+"; color: var(--amber); }
+.teacher[open] summary::after { content: "−"; }
+.teacher[open] { gap: 14px; }
+.t-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.field { font: 16px var(--f-body); color: var(--ink); background: var(--well); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; flex: 1 1 140px; }
+.small-note { margin: 0; color: var(--muted); font-size: 14px; }
+.code-line { margin: 0; font-size: 15px; }
+.code-line b { font-family: var(--f-term); font-size: 32px; color: var(--ok); letter-spacing: .12em; vertical-align: middle; }
+.key-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 14px; }
+.key-list li { overflow-wrap: anywhere; }
+.key-list b { color: var(--amber); }
+.tbtn { font: 700 14px var(--f-body); color: var(--ink); background: #232b36; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+.tbtn.warnb { border-color: var(--alarm); color: var(--alarm); }
+
+/* buttons */
+.btn { font-family: var(--f-display); font-size: 15px; letter-spacing: .05em; text-transform: uppercase; background: var(--amber); color: #2a1800; border: 0; border-radius: 6px; padding: 11px 16px; cursor: pointer; box-shadow: 0 4px 0 #a86f12; }
+.btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #a86f12; }
+.btn.ghost { background: transparent; color: var(--crt-ink); border: 2px solid rgba(255, 195, 90, .45); box-shadow: none; }
+.btn.go { background: var(--ok); color: #03231a; box-shadow: 0 4px 0 #229469; }
+.btn.small { font-size: 13px; padding: 8px 12px; }
+.btn:disabled { opacity: .5; cursor: default; }
+button:focus-visible, input:focus-visible, summary:focus-visible, .prompt:focus-visible, canvas:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+/* overlay & terminal */
+.overlay { position: fixed; inset: 0; z-index: 40; display: grid; overflow-y: auto; background: rgba(6, 8, 11, .82);
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.overlay > :not(canvas) { margin: auto; }
+.term { position: relative; width: 100%; max-width: 580px; display: grid; background: var(--crt); color: var(--crt-ink); border: 2px solid #4a3a1a; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 0 0 6px #262b33, 0 0 0 8px #0b0d10, 0 30px 60px -20px #000, inset 0 0 70px rgba(255, 170, 40, .08); }
+.term::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: repeating-linear-gradient(0deg, rgba(0, 0, 0, .2) 0 1px, transparent 1px 3px); }
+.term-head { display: flex; justify-content: space-between; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 12px 18px; border-bottom: 1px dashed rgba(255, 195, 90, .3); font-family: var(--f-term); font-size: 21px; letter-spacing: .06em; }
+.term-id { display: inline-flex; align-items: center; gap: 8px; }
+.steps { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.steps li { padding: 0 8px; font-size: 17px; border: 1px solid rgba(255, 195, 90, .35); border-radius: 3px; opacity: .45; }
+.steps li.done { opacity: .85; }
+.steps li.on { opacity: 1; background: var(--crt-ink); color: var(--crt); }
+.term-body { padding: 18px; display: grid; gap: 14px; min-width: 0; }
+.term-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; padding: 10px 18px 14px; border-top: 1px dashed rgba(255, 195, 90, .3); }
+.t-clock { font-family: var(--f-term); font-size: 26px; font-variant-numeric: tabular-nums; }
+.t-label { margin: 0; font-family: var(--f-term); font-size: 19px; letter-spacing: .14em; opacity: .75; }
+.riddle { margin: 0; font-family: var(--f-term); font-size: clamp(25px, 4.8vw, 33px); line-height: 1.15; text-shadow: 0 0 10px rgba(255, 180, 60, .4); overflow-wrap: anywhere; }
+.riddle.sm { font-size: clamp(22px, 4vw, 27px); }
+.t-help { margin: 0; color: var(--crt-soft); font-size: 15px; max-width: 62ch; }
+.t-help b { color: var(--crt-ink); }
+.t-msg { margin: 0; min-height: 1.25em; font-family: var(--f-term); font-size: 23px; letter-spacing: .06em; }
+.t-msg.good { color: var(--ok); } .t-msg.bad { color: var(--alarm); }
+.answer { display: flex; gap: 8px; flex-wrap: wrap; }
+.t-in { flex: 1 1 200px; min-width: 0; font-family: var(--f-term); font-size: 26px; color: var(--crt-ink); background: #0c0702; border: 2px solid #6a5222; border-radius: 6px; padding: 4px 12px; }
+.t-in::placeholder { color: #7a6232; }
+.hint-text { margin: 0; font-size: 15px; color: var(--crt-soft); }
+.hint-text span { font-family: var(--f-term); font-size: 19px; letter-spacing: .12em; color: var(--crt); background: var(--crt-ink); padding: 0 6px; border-radius: 3px; margin-right: 6px; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.row.between { justify-content: space-between; }
+.shake { animation: shake .4s; }
+@keyframes shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+
+/* mini-games */
+.slots, .tiles { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+.slot { width: 38px; height: 50px; display: grid; place-items: center; font-family: var(--f-term); font-size: 36px; color: var(--crt-ink); background: transparent; border: 0; border-bottom: 3px solid var(--crt-ink); padding: 0; cursor: pointer; }
+.tile { width: 44px; height: 50px; font-family: var(--f-display); font-size: 22px; color: var(--crt-ink); background: #3a2a0c; border: 2px solid #8a6a2a; border-radius: 6px; cursor: pointer; }
+.tile:disabled { opacity: .18; cursor: default; }
+.simon { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 320px; justify-self: center; }
+.pad-s { --c: #fff; aspect-ratio: 1.35; display: grid; place-items: center; align-content: center; gap: 2px; border-radius: 12px; border: 3px solid #0b0d10; background: var(--c); filter: brightness(.4) saturate(.7); cursor: pointer; transition: filter .08s; font-family: var(--f-term); font-size: 22px; color: #0b0d10; }
+.pad-s.lit { filter: brightness(1.12) saturate(1.1); box-shadow: 0 0 26px var(--c); }
+.pad-s:disabled { cursor: default; }
+.t-small { margin: 0; font-family: var(--f-term); font-size: 19px; opacity: .8; text-align: center; }
+.cipher-out { margin: 0; font-family: var(--f-term); font-size: clamp(24px, 5.4vw, 36px); letter-spacing: .14em; line-height: 1.2; text-align: center; padding: 12px; background: #0c0702; border: 1px solid #5a4418; border-radius: 6px; overflow-wrap: anywhere; }
+.dial { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.dial output { font-family: var(--f-term); font-size: 32px; min-width: 4ch; text-align: center; }
+.dial input[type=range] { flex: 1 1 200px; min-width: 0; accent-color: var(--amber); }
+.dial .btn { min-width: 52px; }
+.track { position: relative; height: 56px; background: #0c0702; border: 2px solid #5a4418; border-radius: 6px; overflow: hidden; }
+.zone { position: absolute; top: 0; bottom: 0; background: rgba(83, 224, 168, .3); border-inline: 2px solid var(--ok); }
+.needle { position: absolute; top: -2px; bottom: -2px; width: 4px; margin-left: -2px; background: var(--crt-ink); box-shadow: 0 0 10px var(--crt-ink); }
+.pips { display: flex; gap: 8px; }
+.pip { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--ok); }
+.pip.on { background: var(--ok); }
+.opts { display: grid; gap: 8px; }
+.opt { text-align: left; font: 700 17px var(--f-body); color: var(--crt-ink); background: #2b2010; border: 2px solid #6a5222; border-radius: 8px; padding: 10px 14px; cursor: pointer; }
+.opt.wrong { opacity: .4; text-decoration: line-through; cursor: default; }
+.opt.right { background: var(--ok); color: #03231a; border-color: var(--ok); }
+.fragment { display: flex; align-items: center; justify-content: center; gap: 18px; padding: 8px 0; }
+.big-digit { font-family: var(--f-term); font-size: 104px; line-height: .9; color: var(--ok); text-shadow: 0 0 22px rgba(83, 224, 168, .55); }
+.kp-display { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.kp-display span { width: 46px; height: 58px; display: grid; place-items: center; font-family: var(--f-term); font-size: 44px; background: #0c0702; border: 2px solid #6a5222; border-radius: 6px; }
+.kp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 290px; justify-self: center; }
+.kp button { font-family: var(--f-display); font-size: 21px; padding: 11px 0; color: var(--crt-ink); background: #2b2010; border: 2px solid #6a5222; border-radius: 8px; cursor: pointer; }
+.kp .ent { background: var(--ok); color: #03231a; border-color: var(--ok); font-size: 14px; }
+.frag-ref { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; list-style: none; margin: 0; padding: 0; }
+.frag-ref li { display: flex; align-items: center; gap: 6px; padding: 2px 10px; border: 1px solid #5a4418; border-radius: 4px; font-family: var(--f-term); font-size: 26px; line-height: 1.2; }
+.seq { display: flex; align-items: center; justify-content: center; gap: 6px 10px; flex-wrap: wrap; padding: 14px; background: #0c0702; border: 1px solid #5a4418; border-radius: 8px; }
+.seq .arrow { font-family: var(--f-term); font-size: 28px; opacity: .6; }
+
+/* briefing card */
+.brief { width: 100%; max-width: 580px; display: grid; gap: 14px; padding: 0 22px 22px; background: var(--deck); border-radius: 10px; overflow: hidden; box-shadow: 0 0 0 1px var(--line), 0 30px 60px -20px #000; }
+.brief::before { content: ""; height: 14px; margin: 0 -22px 4px; background: repeating-linear-gradient(-45deg, var(--hazard) 0 12px, #15171a 12px 24px); }
+.brief h2 { font-family: var(--f-display); font-weight: 400; font-size: clamp(26px, 5.5vw, 38px); line-height: 1.05; margin: 0; text-transform: uppercase; text-wrap: balance; }
+.brief p { margin: 0; max-width: 62ch; }
+.b-list { margin: 0; padding-left: 20px; display: grid; gap: 4px; color: var(--muted); }
+.b-list b { color: var(--ink); }
+.b-field { display: grid; gap: 6px; }
+.b-field label { font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.b-field input { font: 700 18px var(--f-body); color: var(--ink); background: var(--well); border: 2px solid var(--line); border-radius: 6px; padding: 10px 12px; min-width: 0; }
+.brief .btn.ghost { color: var(--ink); border-color: var(--line); }
+.b-keys { font-size: 14px; color: var(--muted); }
+
+/* prize */
+.confetti { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.prize { position: relative; width: 100%; max-width: 500px; display: grid; gap: 14px; justify-items: center; text-align: center; padding: 28px 22px 24px; color: var(--ink);
+  background: radial-gradient(circle at 50% 0%, #3d2e08, #161104 72%); border: 3px solid #ffcf4a; border-radius: 16px; box-shadow: 0 0 60px rgba(255, 200, 60, .35), 0 30px 60px -20px #000; }
+.prize .t-label { color: var(--crt-soft); }
+.prize h2 { font-family: var(--f-display); font-weight: 400; font-size: clamp(34px, 8vw, 54px); line-height: 1; margin: 0; color: #ffd45a; text-shadow: 0 0 22px rgba(255, 200, 60, .55); text-transform: uppercase; }
+.team { margin: 0; font-size: 19px; }
+.team b { color: #ffd45a; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; margin: 0; }
+.stats div { background: rgba(0, 0, 0, .35); border: 1px solid #6a5222; border-radius: 8px; padding: 8px 4px; min-width: 0; }
+.stats dt { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--crt-soft); }
+.stats dd { margin: 0; font-family: var(--f-term); font-size: 32px; line-height: 1.1; color: #ffd45a; font-variant-numeric: tabular-nums; }
+.prize-msg { margin: 0; font-size: 19px; font-weight: 700; max-width: 40ch; }
+.stamp { margin: 0; font-family: var(--f-term); font-size: 19px; color: var(--crt-soft); }
+
+/* challenge board */
+.panel-head { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.board { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.mcard { display: grid; gap: 8px; align-content: start; padding: 12px; background: var(--well); border: 1px solid var(--line); border-radius: 8px; min-width: 0; }
+.mcard.ok { border-color: rgba(83, 224, 168, .55); }
+.mcard.live { border-color: rgba(255, 184, 61, .5); }
+.m-top { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.m-task { margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.mcard.lock .m-task, .mcard.live .m-task { font-weight: 400; color: var(--muted); }
+.m-bonus { margin: 0; font-size: 14px; color: var(--amber); }
+.k-meta { display: block; color: var(--muted); }
+#tFinal { color: #ffd45a; }
+
+/* challenge reveal */
+.task-head { display: flex; align-items: center; gap: 14px; }
+.task-head .riddle { flex: 1 1 auto; min-width: 0; }
+.bonus { margin: 0; font-family: var(--f-term); font-size: 23px; color: var(--ok); }
+
+/* build the puzzle */
+.blk { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-start; justify-content: center; }
+.blk-board { display: grid; flex: none; background: #0c0702; border: 2px solid #6a5222; border-radius: 4px; touch-action: none; }
+.blk-board span { box-shadow: inset 0 0 0 1px #33270e; }
+.blk-board span.f, .blk-piece span, .blk-ghost span { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .35), inset 0 2px 0 rgba(255, 255, 255, .28); }
+.blk-board span.f { cursor: grab; }
+.blk-tray { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-start; justify-content: center; flex: 1 1 180px; min-width: 0; min-height: 60px; }
+.blk-piece { position: relative; flex: none; padding: 0; background: none; border: 0; cursor: grab; touch-action: none; }
+.blk-piece span, .blk-ghost span { position: absolute; border-radius: 2px; }
+.blk-piece.lift { opacity: .2; }
+.blk-ghost { position: fixed; z-index: 100; pointer-events: none; filter: drop-shadow(0 10px 14px rgba(0, 0, 0, .55)); }
+
+/* briefing + final screen */
+.brief .b-list { color: var(--ink); }
+.b-prize { margin: 0; padding: 10px 12px; background: var(--well); border: 1px solid var(--line); border-radius: 6px; font-size: 15px; }
+.b-prize b { color: var(--amber); margin-right: 4px; }
+.final-lbl { margin: 0; font-family: var(--f-term); font-size: 24px; letter-spacing: .12em; color: var(--crt-soft); }
+.final-ch { display: grid; gap: 6px; width: 100%; padding: 14px; background: rgba(0, 0, 0, .35); border: 1px solid #6a5222; border-radius: 10px; }
+.stats.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+/* hangman */
+.hm { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 20px; }
+.hm-fig { width: 104px; height: 114px; flex: none; }
+.hm-fig line, .hm-fig circle { stroke: var(--crt-ink); stroke-width: 4; stroke-linecap: round; fill: none; }
+.hm-word { display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; flex: 1 1 240px; min-width: 0; }
+.hm-word span { width: 26px; height: 42px; display: grid; place-items: center; font-family: var(--f-term); font-size: 36px; border-bottom: 3px solid var(--crt-ink); }
+.hm-word.lost span { color: var(--alarm); }
+.hm-keys { display: grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap: 6px; }
+.hm-keys button { font-family: var(--f-display); font-size: 16px; padding: 8px 0; color: var(--crt-ink); background: #2b2010; border: 2px solid #6a5222; border-radius: 6px; cursor: pointer; }
+.hm-keys button.hit { background: rgba(83, 224, 168, .18); border-color: var(--ok); color: var(--ok); }
+.hm-keys button.miss { opacity: .3; text-decoration: line-through; }
+.hm-keys button:disabled { cursor: default; }
+
+@media (max-width: 560px) {
+  .objective { order: 3; flex-basis: 100%; }
+  .frags { margin-left: auto; gap: 4px; }
+  .frag { width: 34px; height: 34px; }
+  .ctrl { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .ctrl .use { grid-column: 1 / -1; }
+  .prompt { font-size: 13px; bottom: 8px; }
+  .term-body { padding: 14px; }
+  .kp-display span { width: 40px; height: 52px; font-size: 38px; }
+  .stats dd { font-size: 26px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dot, .warn, .clock.low #clockVal { animation: none; }
+  .shake { animation: none; }
+}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <p class="eyebrow"><span class="dot"></span>Mentor time escape room</p>
+    <h1 id="gameTitle">Year 8: Lockdown</h1>
+    <p class="lede">Find all six challenges, earn the code digits from your form teacher, and crack the vault before the clock runs out.</p>
+  </header>
+
+  <section class="case" aria-label="Game">
+    <div class="case-in">
+      <div class="statusbar">
+        <div class="clock" id="clock"><span class="lbl" id="clockLbl">Lockdown</span><span id="clockVal">30:00</span></div>
+        <p class="objective" id="objective" aria-live="polite"></p>
+        <ol class="frags" id="frags" aria-label="Challenges found"></ol>
+      </div>
+      <div class="screen">
+        <canvas id="view" width="400" height="250" aria-label="First-person view of the lab"></canvas>
+        <canvas id="mini" width="124" height="96" aria-label="Map of the rooms you've explored"></canvas>
+        <div class="crosshair" id="cross"></div>
+        <div class="warn" id="warn" hidden>Drone nearby</div>
+        <div class="score" id="score" hidden>LASER · 0 ZAPPED</div>
+        <div class="toast" id="toast" role="status" hidden></div>
+        <button class="prompt" id="prompt" type="button" hidden></button>
+        <div class="flash" id="flash"></div>
+      </div>
+      <div class="deck">
+        <div class="ctrl" aria-label="Touch controls">
+          <button id="bL" type="button" aria-label="Turn left">↺</button>
+          <button id="bF" type="button" aria-label="Walk forward">▲</button>
+          <button id="bB" type="button" aria-label="Walk back">▼</button>
+          <button id="bR" type="button" aria-label="Turn right">↻</button>
+          <button id="bE" type="button" class="use">USE</button>
+        </div>
+        <div class="deck-foot">
+          <p class="keys">Walk <kbd>W</kbd><kbd>S</kbd> or <kbd>↑</kbd><kbd>↓</kbd> · turn <kbd>←</kbd><kbd>→</kbd> or drag the view · sidestep <kbd>A</kbd><kbd>D</kbd> · use <kbd>E</kbd> or <kbd>Space</kbd></p>
+          <button class="chipbtn" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
+        </div>
+      </div>
+    </div>
+    <div class="overlay" id="overlay" hidden></div>
+  </section>
+
+  <div class="lower">
+    <section class="panel" aria-labelledby="logTitle">
+      <div class="panel-head"><h2 id="logTitle">Challenges</h2><p class="small-note">Each challenge appears here once its terminal's puzzle is solved.</p></div>
+      <ol class="board" id="logList"></ol>
+    </section>
+    <details class="panel teacher" id="teacher">
+      <summary>Teacher tools</summary>
+      <form id="pinForm" class="t-row" autocomplete="off">
+        <label class="sr" for="pinIn">Teacher PIN</label>
+        <input class="field" id="pinIn" type="password" inputmode="numeric" placeholder="Teacher PIN">
+        <button class="tbtn" type="submit">Unlock</button>
+      </form>
+      <p class="small-note" id="pinMsg">Enter the PIN to see which digit to hand out for each challenge, the vault code and the game controls. The PIN is set at the top of the game's code.</p>
+      <div id="tPanel" hidden>
+        <div style="display:grid;gap:12px">
+          <p class="code-line">Vault code: <b id="tCode"></b> &nbsp; Final code: <b id="tFinal"></b></p>
+          <ol class="key-list" id="tKey"></ol>
+          <div class="t-row">
+            <button class="tbtn" type="button" id="tPause">Pause clock</button>
+            <button class="tbtn" type="button" id="tAdd">Add 5 minutes</button>
+            <button class="tbtn" type="button" id="tSkip">Unlock next challenge</button>
+            <button class="tbtn warnb" type="button" id="tReset">Reset this device</button>
+          </div>
+          <p class="small-note">Progress saves on this computer, so the game picks up where it left off after a refresh.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  // =====================================================================
+  //  EDIT YOUR ESCAPE ROOM HERE
+  //  Each station is a terminal in the lab (up to 6, in the order teams
+  //  reach them). The team solves the on-screen puzzle ("unlock") to reveal
+  //  a real-world challenge ("task"). A room's door opens once every
+  //  terminal in that room is unlocked, so teams can get each challenge
+  //  going without waiting. When a challenge is done, the form teacher
+  //  hands over its digit.
+  //
+  //  task    the real-world challenge
+  //  bonus   optional prize line shown under the challenge
+  //  digit   the digit the form teacher hands out for this challenge (0-9)
+  //  unlock  the on-screen puzzle that reveals it. Pick one:
+  //    { type: "reaction", rounds: 4 }         space bar slider: stop the needle in the green zone
+  //    { type: "sequence", length: 7 }         press the lit buttons in order; longer and faster each round
+  //    { type: "riddle", riddle: "...", answers: ["..."], hint: "..." }
+  //    { type: "hangman", words: ["...", "..."], lives: 6 }   one word at a time; a new word if they lose
+  //    { type: "blocks" }                      fit the shapes into the square
+  //    { type: "rabbit", chaseSeconds: 30 }    chase the rabbit until it tires, then feed it a carrot
+  //    { type: "scramble", word: "MAGNET", clue: "A lab word" }
+  //    { type: "cipher", message: "THE PASSWORD IS ORBIT", shift: 5, answers: ["orbit"] }
+  //    { type: "quiz", questions: [ { q: "Question?", options: ["A", "B", "C"], answer: 2 } ] }
+  //    null                                    no puzzle: the challenge shows straight away
+  //
+  //  Each terminal has a shape: 1 circle, 2 triangle, 3 square, 4 diamond,
+  //  5 star, 6 hexagon. vaultOrder is the order the vault reads the digits,
+  //  by terminal number, and a notice in the vault room shows those shapes.
+  //  The vault code, final code and the digit for each challenge appear
+  //  under "Teacher tools" once you enter the PIN.
+  // =====================================================================
+  const GAME = {
+    title: "Year 8: Lockdown",
+    timeLimitMinutes: 30,
+    hintPenaltySeconds: 30,
+    spottedPenaltySeconds: 10,
+    securityDrones: true,
+    vaultLaser: true,          // laser practice: respawning drones to blast in the vault room while you wait for digits
+    teacherPin: "2580",
+    vaultOrder: [3, 1, 6, 4, 2, 5],
+    intro: "Your team is locked inside the lab. 6 terminals each hold one digit of the vault code. Each terminal presents a challenge. Complete the challenge and your form teacher will supply one digit of the code. Behind the final door is a final challenge.",
+    rules: [
+      "You DO NOT need to wait to complete one challenge before you start the next, so you’re advised to find them all and get going!",
+      "There are 30 minutes on the lockdown clock.",
+      "Security drones are on patrol and they will cost you time.",
+      "NO COMPUTERS, PHONES OR OTHER DEVICES."
+    ],
+    prizes: "Prizes for any form group who complete all the tasks and a top prize to the first group who do. Spot prizes are also awarded for the best entries.",
+    finalCode: "SIGMA 67",
+    finalChallenge: "Choose one member of the form who will go to the lobby and complete three bottle flips in a row. First to complete the flips, wins…",
+    stations: [
+      {
+        task: "Draw a logo for your Escape Room team.",
+        bonus: "Separate prize for the best logo.",
+        digit: "6",
+        unlock: { type: "reaction", rounds: 4 }
+      },
+      {
+        task: "Make a paper chain longer than the tallest member of your form class.",
+        bonus: "The most blinging chain wins a prize.",
+        digit: "3",
+        unlock: {
+          type: "riddle",
+          riddle: "I have keys but open no locks. I have space but no room. You can enter, but you can't go outside. What am I?",
+          answers: ["keyboard", "computer keyboard"],
+          hint: "You might be typing on one right now."
+        }
+      },
+      {
+        task: "Make two animals out of origami and two out of pipe-cleaners - each one must stand up on its own.",
+        bonus: "Best animal wins a bonus.",
+        digit: "8",
+        unlock: { type: "sequence", length: 7 }
+      },
+      {
+        task: "Complete the form that asks for countries listed from A-Z.",
+        digit: "4",
+        unlock: { type: "hangman", words: ["Rigour", "Responsibility", "Relationships", "Respect"], lives: 6 }
+      },
+      {
+        task: "Spot the difference game.",
+        bonus: "No bonus here, I'm afraid.",
+        digit: "1",
+        unlock: { type: "blocks" }
+      },
+      {
+        task: "Take a photograph of EVERY member of your form class making the BIBA sign.",
+        bonus: "Best sign wins a bonus!",
+        digit: "7",
+        unlock: { type: "rabbit", chaseSeconds: 20 }
+      }
+    ]
+  };
+  // =====================================================================
+
+  // ---------- helpers ----------
+  const $ = id => document.getElementById(id);
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const pad2 = n => String(n).padStart(2, "0");
+  function esc(s) { return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  function rng(seed) { let s = seed >>> 0; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); }
+  function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; }
+  function norm(s) { return String(s ?? "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim().replace(/^(a|an|the|my|your|some) /, ""); }
+  function matches(v, answers) {
+    const n = norm(v); if (!n) return false;
+    const squash = s => s.replace(/ /g, "").replace(/s$/, "");
+    return (Array.isArray(answers) ? answers : [answers]).some(a => { const m = norm(a); return m && (m === n || squash(m) === squash(n)); });
+  }
+
+  const SHAPE_NAMES = ["circle", "triangle", "square", "diamond", "star", "hexagon"];
+  const SHAPE_COL = ["#ff7a59", "#ffc23d", "#53e0a8", "#5cb8ff", "#c79bff", "#ff9fd2"];
+  const ZONE_NAMES = ["Reception", "Server Room", "Greenhouse", "Robotics Bay", "Control Room", "Vault"];
+  function shapeSVG(i, size, col) {
+    const paths = [
+      '<circle cx="12" cy="12" r="9"/>',
+      '<path d="M12 3 L21.5 20 H2.5 Z"/>',
+      '<rect x="4" y="4" width="16" height="16" rx="1.5"/>',
+      '<path d="M12 2 L22 12 L12 22 L2 12 Z"/>',
+      '<path d="M12 2.5 L14.7 9 L21.6 9.3 L16.2 13.6 L18 20.4 L12 16.6 L6 20.4 L7.8 13.6 L2.4 9.3 L9.3 9 Z"/>',
+      '<path d="M12 2 L20.7 7 L20.7 17 L12 22 L3.3 17 L3.3 7 Z"/>'
+    ];
+    return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" aria-hidden="true" fill="${col || SHAPE_COL[i % 6]}" style="flex:none">${paths[i % 6]}</svg>`;
+  }
+  function drawShape(g, i, cx, cy, r, col) {
+    g.fillStyle = col || SHAPE_COL[i % 6]; g.beginPath();
+    switch (i % 6) {
+      case 0: g.arc(cx, cy, r, 0, 7); break;
+      case 1: g.moveTo(cx, cy - r); g.lineTo(cx + r * 1.05, cy + r * .85); g.lineTo(cx - r * 1.05, cy + r * .85); break;
+      case 2: g.rect(cx - r * .85, cy - r * .85, r * 1.7, r * 1.7); break;
+      case 3: g.moveTo(cx, cy - r * 1.1); g.lineTo(cx + r * 1.1, cy); g.lineTo(cx, cy + r * 1.1); g.lineTo(cx - r * 1.1, cy); break;
+      case 4: for (let k = 0; k < 10; k++) { const a = -Math.PI / 2 + k * Math.PI / 5, rr = k % 2 ? r * .45 : r * 1.05; g.lineTo(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr); } break;
+      default: for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + k * Math.PI / 3; g.lineTo(cx + Math.cos(a) * r * 1.05, cy + Math.sin(a) * r * 1.05); }
+    }
+    g.closePath(); g.fill();
+  }
+
+  // ---------- config ----------
+  const stations = (GAME.stations || []).slice(0, 6).map(s => ({ ...s, challenge: s.unlock || null, digit: (String(s.digit ?? "0").replace(/\D/g, "") || "0").charAt(0) }));
+  const NS = stations.length;
+  const ORDER = (() => {
+    const used = new Set(), out = [];
+    (GAME.vaultOrder || []).forEach(n => { const i = (n | 0) - 1; if (i >= 0 && i < NS && !used.has(i)) { used.add(i); out.push(i); } });
+    for (let i = 0; i < NS; i++) if (!used.has(i)) out.push(i);
+    return out;
+  })();
+  const CODE = ORDER.map(i => stations[i].digit).join("");
+  const HINT_PEN = Math.max(0, +GAME.hintPenaltySeconds || 0);
+  const SPOT_PEN = Math.max(0, +GAME.spottedPenaltySeconds || 0);
+  const TIME0 = Math.max(1, +GAME.timeLimitMinutes || 30) * 60;
+
+  // ---------- map ----------
+  // # wall · R server rack · H hedge · C console · Q vault notice · K vault keypad
+  // floors: . reception  , server  ; greenhouse  : robotics  - control  _ vault
+  // 1-5 terminals · a-e doors (door N opens when terminal N is solved) · Z vault door
+  // S start · p plant · o crate · * hidden-item spot · $ prize chest
+  const MAP_SRC = [
+    "#####1#########################",
+    "#p.......*#,,,,,,,,,*,,,,,,,,,#",
+    "#.........#,RR,RR,RR,RR,RR,,,,#",
+    "#.........#,RR,RR,RR,RR,RR,,,,#",
+    "#..S......a,,,,,,,,,,,,,,,,,,,2",
+    "#.........#,RR,RR,RR,RR,RR,,,,#",
+    "#.....*...#,RR,RR,RR,RR,RR,,,,#",
+    "#*.......p#,,,*,,,,,,,,,,,,,,*#",
+    "############################b##",
+    "#:*:::::::::::o:#p;;;;;;;;;;;p#",
+    "#o::::::::::::::#4;HHHH;;;;;;;#",
+    "#:::::::o:::::::#;*;;;;;p;HH;;#",
+    "5:::::::::::::::c;;;;;;;;;;;;;3",
+    "#:::o:::::::o:::#;HHH;;p;HHH;;#",
+    "#o::::::::::::::#p;;;;;;;*;;;;#",
+    "#:::::::*:::::*:#;;;;*;;;;;;;p#",
+    "###d###########################",
+    "#------*-----*#_________#_____#",
+    "#-------------#_________K_____#",
+    "#-----CCC-----e_________Z__$__#",
+    "#-----CCC-----#_________#_____#",
+    "#-------------#_________#_____#",
+    "#*------------#_________#_____#",
+    "#######6###########Q###########"
+  ];
+  const MW = MAP_SRC[0].length, MH = MAP_SRC.length, NCELL = MW * MH;
+  // cell values: 0 floor · 1 wall · 2 rack · 3 hedge · 4 console · 5 notice · 6 keypad · 10-14 doors · 15 vault door · 20-24 terminals
+  const map = new Uint8Array(NCELL), zoneOf = new Int8Array(NCELL).fill(-1), solidSpr = new Uint8Array(NCELL), seen = new Uint8Array(NCELL);
+  const FLOOR_Z = { ".": 0, ",": 1, ";": 2, ":": 3, "-": 4, "_": 5 };
+  const doors = [], statics = [], spots = [], termPos = [];
+  let start = { x: 1.5, y: 1.5 }, chest = null;
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    const ch = MAP_SRC[y][x], i = y * MW + x;
+    if (ch in FLOOR_Z) { zoneOf[i] = FLOOR_Z[ch]; continue; }
+    if (ch === "#") map[i] = 1;
+    else if (ch === "R") map[i] = 2;
+    else if (ch === "H") map[i] = 3;
+    else if (ch === "C") map[i] = 4;
+    else if (ch === "Q") map[i] = 5;
+    else if (ch === "K") map[i] = 6;
+    else if (ch >= "a" && ch <= "e") { const k = ch.charCodeAt(0) - 97; map[i] = 10 + k; doors[k] = { x, y, k }; }
+    else if (ch === "Z") { map[i] = 15; doors[5] = { x, y, k: 5 }; }
+    else if (ch >= "1" && ch <= "6") { const s = +ch - 1; if (s < NS) { map[i] = 20 + s; termPos[s] = { x, y }; } else map[i] = 1; }
+    else if (ch === "S") start = { x: x + .5, y: y + .5 };
+    else if (ch === "p") { statics.push({ type: "plant", x: x + .5, y: y + .5 }); solidSpr[i] = 1; }
+    else if (ch === "o") { statics.push({ type: "crate", x: x + .5, y: y + .5 }); solidSpr[i] = 1; }
+    else if (ch === "*") spots.push({ x: x + .5, y: y + .5 });
+    else if (ch === "$") { chest = { type: "chest", x: x + .5, y: y + .5 }; statics.push(chest); solidSpr[i] = 1; }
+  }
+  const isWallCell = (x, y) => x < 0 || y < 0 || x >= MW || y >= MH || (map[y * MW + x] > 0);
+  const N4 = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  // floor cells holding sprites take their zone from a neighbouring floor
+  for (let pass = 0; pass < 2; pass++) for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    const i = y * MW + x; if (map[i] || zoneOf[i] >= 0) continue;
+    for (const [dx, dy] of N4) { const j = (y + dy) * MW + (x + dx); if (zoneOf[j] >= 0 && !isWallCell(x + dx, y + dy)) { zoneOf[i] = zoneOf[j]; break; } }
+  }
+  const zoneAt = (x, y) => { const cx = x | 0, cy = y | 0; return (cx < 0 || cy < 0 || cx >= MW || cy >= MH) ? -1 : zoneOf[cy * MW + cx]; };
+  const respawn = [], backSpawn = [];
+  respawn[0] = { x: start.x, y: start.y, a: 0 };
+  doors.forEach(d => {
+    d.v = isWallCell(d.x, d.y - 1) && isWallCell(d.x, d.y + 1); // door plane runs north-south
+    d.open = 0; d.target = 0;
+    let zmin = 9;
+    for (const [dx, dy] of N4) {
+      const nx = d.x + dx, ny = d.y + dy; if (isWallCell(nx, ny)) continue;
+      const z = zoneOf[ny * MW + nx]; if (z < 0) continue;
+      zmin = Math.min(zmin, z);
+      if (d.k < 5 && z === d.k + 1) respawn[z] = { x: nx + .5, y: ny + .5, a: Math.atan2(dy, dx) };
+      if (d.k < 5 && z === d.k) backSpawn[d.k + 1] = { x: nx + .5, y: ny + .5, a: Math.atan2(-dy, -dx) };
+    }
+    zoneOf[d.y * MW + d.x] = zmin === 9 ? 0 : zmin;
+  });
+  const stationZone = termPos.map(p => { for (const [dx, dy] of N4) { const z = zoneAt(p.x + dx + .5, p.y + dy + .5); if (z >= 0 && !isWallCell(p.x + dx, p.y + dy)) return z; } return 0; });
+  if (termPos[0]) respawn[0].a = Math.atan2(termPos[0].y + 1 - start.y, termPos[0].x + .5 - start.x);
+
+  // hidden items for "collect" challenges: spots in that terminal's room
+  const items = [];
+  for (let s = 0; s < NS; s++) {
+    const ch = stations[s].challenge;
+    if (!ch || ch.type !== "collect") continue;
+    const want = clamp((ch.count | 0) || 3, 1, 9);
+    spots.filter(p => zoneAt(p.x, p.y) === stationZone[s]).slice(0, want).forEach(p => items.push({ type: "cell", x: p.x, y: p.y, zone: stationZone[s], station: s, id: items.length, got: false }));
+  }
+  const needFor = s => items.filter(it => it.station === s).length;
+  const foundFor = s => items.filter(it => it.station === s && it.got).length;
+  const itemName = s => (stations[s].challenge && stations[s].challenge.item) || "power cell";
+  const itemsName = s => itemName(s).replace(/s$/, "") + "s";
+
+  // security drones: patrol routes through the rooms
+  // Drones follow fixed patterns so there's always a safe route to time. Only "chase" drones come after you.
+  const DRONE_PATHS = [
+    { pts: [[14.5, 4.5], [26.5, 4.5]], speed: 1.6, phase: 0 },                     // server room, main aisle
+    { pts: [[26.5, 7.5], [12.5, 7.5]], speed: 1.8, phase: 3 },                     // server room, back aisle
+    { pts: [[19.5, 12.5], [28.5, 12.5]], speed: 1.8, phase: 1, chase: true, sight: 6, chaseSpeed: 2.25, chaseTime: 12 }, // greenhouse (hunts you down)
+    { pts: [[6.5, 9.6], [6.5, 15.4]], speed: 1.35, phase: 0 },                     // robotics lanes
+    { pts: [[10.5, 15.4], [10.5, 9.6]], speed: 1.35, phase: 2.2 },
+    { pts: [[2.5, 10.5], [14.5, 10.5]], speed: 1.6, phase: 0 },                    // robotics, back and forth
+    { pts: [[14.5, 14.5], [2.5, 14.5]], speed: 1.7, phase: 4 }
+  ];
+  const drones = GAME.securityDrones === false ? [] : DRONE_PATHS.map((d, n) => {
+    const pts = d.loop ? [...d.pts, d.pts[0]] : d.pts, segs = []; let L = 0;
+    for (let i = 0; i < pts.length - 1; i++) { const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], l = Math.hypot(x1 - x0, y1 - y0); segs.push({ x0, y0, x1, y1, l, s: L }); L += l; }
+    return { type: "drone", ph: n * 1.7, speed: d.speed, phase: d.phase, loop: !!d.loop, segs, L, x: pts[0][0], y: pts[0][1], px: pts[0][0], py: pts[0][1], zone: -1, home: -1, mode: "patrol", chase: !!d.chase, sight: d.sight || 4.2, chaseSpeed: d.chaseSpeed || 1.9, chaseTime: d.chaseTime || 8, chaseT: 0, lost: 0, retT: 0, cool: 0 };
+  });
+  // where a drone's patrol route has it at time t
+  function patrolPoint(d, t) {
+    let s = t * d.speed + d.phase;
+    if (d.loop) s = ((s % d.L) + d.L) % d.L; else { const p = s % (2 * d.L); s = p < d.L ? p : 2 * d.L - p; }
+    for (let k = 0; k < d.segs.length; k++) {
+      const g = d.segs[k];
+      if (s <= g.s + g.l || k === d.segs.length - 1) { const f = g.l ? clamp((s - g.s) / g.l, 0, 1) : 0; d.px = g.x0 + (g.x1 - g.x0) * f; d.py = g.y0 + (g.y1 - g.y0) * f; break; }
+    }
+  }
+  function resetDrones() { drones.forEach(d => { patrolPoint(d, 0); d.x = d.px; d.y = d.py; d.mode = "patrol"; d.cool = 0; d.home = zoneAt(d.x, d.y); d.zone = d.home; }); }
+  resetDrones();
+
+  // ---------- state ----------
+  const KEY = "year8-lockdown-v3";
+  const SIG = CODE + "|" + stations.map(s => (s.challenge && s.challenge.type) || "-").join(",");
+  function freshState() { return { team: "", started: false, timeLeft: TIME0, stage: stations.map(() => 0), hint: stations.map(() => false), items: [], vaultOpen: false, won: false, wonAt: 0, zaps: 0, hints: 0, overtime: false, zapped: 0 }; }
+  let S = freshState();
+  const P = { x: start.x, y: start.y, a: respawn[0].a };
+  let mode = "title", paused = false, invuln = 0, worldT = 0, animT = 0;
+  let rabbit = null, taskReminder = -1;
+  let vdrones = [], booms = [], laserT = 0, fireCD = 0;
+  const carrots = [];
+  const huntActive = () => !!(rabbit && !rabbit.fed && S.stage[rabbit.i] !== 2);
+  const zoneDone = z => stations.every((s, i) => stationZone[i] !== z || S.stage[i] === 2);
+  function syncDoors(instant) {
+    doors.forEach(d => {
+      d.target = d.k === 5 ? (S.vaultOpen ? 1 : 0) : zoneDone(d.k) ? 1 : 0;
+      if (instant) d.open = d.target;
+    });
+  }
+
+  // ---------- sound ----------
+  let actx = null, muted = false;
+  function audio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+    if (actx && actx.state === "suspended") actx.resume().catch(() => {});
+    return actx;
+  }
+  function tone(freq, dur, type, vol, when, slideTo) {
+    if (muted || !actx) return;
+    const t = actx.currentTime + (when || 0), o = actx.createOscillator(), g = actx.createGain();
+    o.type = type || "square"; o.frequency.setValueAtTime(freq, t);
+    if (slideTo) o.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    g.gain.setValueAtTime(vol || .05, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + .03);
+  }
+  function noise(dur, vol, freq) {
+    if (muted || !actx) return;
+    const len = Math.max(1, (actx.sampleRate * dur) | 0), b = actx.createBuffer(1, len, actx.sampleRate), data = b.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+    const s = actx.createBufferSource(), f = actx.createBiquadFilter(), g = actx.createGain(), t = actx.currentTime;
+    s.buffer = b; f.type = "lowpass"; f.frequency.value = freq;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(f).connect(g).connect(actx.destination); s.start(t);
+  }
+  const SFX = {
+    ok() { tone(660, .12, "square", .045); tone(990, .2, "square", .045, .1); },
+    bad() { tone(150, .3, "sawtooth", .05); },
+    door() { noise(.7, .07, 900); tone(240, .6, "triangle", .05, 0, 110); },
+    pick() { [880, 1175, 1568].forEach((f, i) => tone(f, .11, "square", .035, i * .07)); },
+    zap() { noise(.4, .12, 3200); tone(900, .35, "sawtooth", .045, 0, 80); },
+    blip() { tone(1500, .05, "sine", .03); },
+    pad(i) { tone([330, 415, 494, 587][i] || 440, .3, "triangle", .08); },
+    key() { tone(1250, .035, "square", .025); },
+    vault() { [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .2, "square", .045, i * .09)); [1047, 1319, 1568].forEach(f => tone(f, .9, "triangle", .05, .5)); },
+    laser() { tone(1400, .12, "sawtooth", .035, 0, 220); },
+    boom() { noise(.35, .1, 1400); tone(160, .3, "square", .04, 0, 50); },
+    alert() { tone(880, .12, "square", .04); tone(660, .14, "square", .04, .13); tone(880, .12, "square", .04, .28); },
+    throwC() { noise(.18, .05, 2400); tone(700, .18, "sine", .03, 0, 260); },
+    munch() { for (let k = 0; k < 4; k++) tone(240 + k * 30, .05, "square", .03, k * .15); },
+    win() { [523, 659, 784, 1047, 784, 1047].forEach((f, i) => tone(f, .24, "square", .045, i * .13)); }
+  };
+
+  // ---------- textures ----------
+  const TS = 128, SS = 64;
+  function mk(size) { const c = document.createElement("canvas"); c.width = c.height = size || TS; return c; }
+  function u32(c) { return new Uint32Array(c.getContext("2d").getImageData(0, 0, c.width, c.height).data.buffer.slice(0)); }
+  function speck(g, seed, n, cols, h, y0) { const r = rng(seed); h = h || TS; y0 = y0 || 0; for (let i = 0; i < n; i++) { g.fillStyle = cols[(r() * cols.length) | 0]; g.fillRect((r() * TS) | 0, y0 + ((r() * h) | 0), 2, 2); } }
+  function hazard(g, x, y, w, h) {
+    g.save(); g.beginPath(); g.rect(x, y, w, h); g.clip();
+    g.fillStyle = "#f2c230"; g.fillRect(x, y, w, h); g.fillStyle = "#1d1f22";
+    for (let k = x - h - 16; k < x + w + 16; k += 16) { g.beginPath(); g.moveTo(k, y + h); g.lineTo(k + 8, y + h); g.lineTo(k + 8 + h, y); g.lineTo(k + h, y); g.closePath(); g.fill(); }
+    g.restore();
+  }
+  const WALL = [
+    g => { // reception
+      g.fillStyle = "#c9d0d4"; g.fillRect(0, 0, TS, TS);
+      speck(g, 11, 700, ["rgba(0,0,0,.05)", "rgba(255,255,255,.12)"], 84);
+      g.fillStyle = "#9ba6ad"; g.fillRect(0, 0, 2, 84); g.fillRect(64, 0, 2, 84); g.fillRect(0, 40, TS, 2);
+      g.fillStyle = "#e8772e"; g.fillRect(0, 84, TS, 10); g.fillStyle = "#b5551a"; g.fillRect(0, 94, TS, 2);
+      g.fillStyle = "#dfe4e7"; g.fillRect(0, 96, TS, 14);
+      g.fillStyle = "#4c565e"; g.fillRect(0, 110, TS, 18); g.fillStyle = "#5f6a73"; g.fillRect(0, 110, TS, 2);
+    },
+    g => { // server room
+      g.fillStyle = "#2a3039"; g.fillRect(0, 0, TS, TS);
+      speck(g, 12, 500, ["rgba(255,255,255,.035)", "rgba(0,0,0,.09)"]);
+      g.fillStyle = "#20262d"; g.fillRect(0, 0, 2, TS); g.fillRect(64, 0, 2, TS);
+      g.fillStyle = "#47515d"; g.fillRect(0, 10, TS, 16); g.fillStyle = "#58636f"; g.fillRect(0, 10, TS, 2);
+      ["#d9493b", "#3b8fe0", "#e2b33b", "#53e0a8"].forEach((c, i) => { g.fillStyle = c; g.fillRect(0, 14 + i * 3, TS, 2); });
+      g.fillStyle = "#1c5d9e"; g.fillRect(0, 98, TS, 3); g.fillStyle = "#6bb6ff"; for (let x = 4; x < TS; x += 16) g.fillRect(x, 98, 4, 3);
+      g.fillStyle = "#171b20"; g.fillRect(0, 110, TS, 18);
+    },
+    g => { // greenhouse glass
+      const gr = g.createLinearGradient(0, 0, 0, 96); gr.addColorStop(0, "#a6dccb"); gr.addColorStop(1, "#5f9e86"); g.fillStyle = gr; g.fillRect(0, 0, TS, 96);
+      g.fillStyle = "rgba(255,255,255,.18)"; for (const k of [0, 64]) { g.beginPath(); g.moveTo(k + 8, 92); g.lineTo(k + 18, 92); g.lineTo(k + 50, 6); g.lineTo(k + 40, 6); g.fill(); }
+      g.fillStyle = "#e8efe9"; g.fillRect(0, 0, TS, 4); g.fillRect(0, 0, 4, 96); g.fillRect(64, 0, 4, 96); g.fillRect(0, 46, TS, 3);
+      const r = rng(21); for (let i = 0; i < 46; i++) { g.fillStyle = r() < .5 ? "#2f7d43" : "#3f9a52"; g.beginPath(); g.ellipse((i * 13 + r() * 10) % TS, 96 - r() * 70 * (i % 3 ? .5 : 1), 4 + r() * 3, 2 + r() * 2, r() * 3, 0, 7); g.fill(); }
+      g.fillStyle = "#c2ab8f"; g.fillRect(0, 96, TS, 32);
+      for (let row = 0; row < 4; row++) for (let x = -32; x < TS; x += 32) { g.fillStyle = r() < .5 ? "#8b573a" : "#7c4c31"; g.fillRect(x + (row % 2 ? 16 : 0) + 1, 97 + row * 8, 30, 7); }
+    },
+    g => { // robotics bay
+      g.fillStyle = "#6a727c"; g.fillRect(0, 0, TS, TS);
+      speck(g, 13, 600, ["rgba(255,255,255,.05)", "rgba(0,0,0,.08)"]);
+      g.fillStyle = "#535a63"; g.fillRect(0, 0, 2, 98); g.fillRect(64, 0, 2, 98); g.fillRect(0, 48, TS, 2);
+      for (const x of [6, 58, 70, 122]) for (const y of [6, 42, 56, 90]) { g.fillStyle = "#454b52"; g.fillRect(x, y + 1, 3, 3); g.fillStyle = "#a2aab3"; g.fillRect(x, y, 2, 2); }
+      hazard(g, 0, 98, TS, 18);
+      g.fillStyle = "#2c3036"; g.fillRect(0, 116, TS, 12);
+    },
+    g => { // control room
+      g.fillStyle = "#1e3252"; g.fillRect(0, 0, TS, TS);
+      speck(g, 14, 500, ["rgba(255,255,255,.035)", "rgba(0,0,0,.1)"]);
+      g.fillStyle = "#172842"; g.fillRect(0, 0, 2, TS); g.fillRect(64, 0, 2, TS);
+      for (const mx of [10, 74]) {
+        g.fillStyle = "#0c1422"; g.fillRect(mx, 20, 44, 34); g.fillStyle = "#0e2c3c"; g.fillRect(mx + 3, 23, 38, 28);
+        g.strokeStyle = "#4fd0e0"; g.lineWidth = 1.5; g.beginPath(); for (let k = 0; k <= 38; k += 3) g.lineTo(mx + 3 + k, 40 + Math.sin(k * .4 + mx) * 6); g.stroke();
+        g.fillStyle = "#4fd0e0"; g.fillRect(mx + 6, 27, 14, 2);
+      }
+      ["#53e0a8", "#ffb83d", "#53e0a8", "#ff5a4e", "#5cb8ff", "#53e0a8"].forEach((c, k) => { g.fillStyle = c; g.fillRect(14 + k * 18, 68, 5, 4); });
+      g.fillStyle = "#121d30"; g.fillRect(0, 110, TS, 18);
+    },
+    g => { // vault
+      g.fillStyle = "#7b828a"; g.fillRect(0, 0, TS, TS);
+      const r = rng(15); for (let y = 0; y < TS; y++) { g.fillStyle = r() < .5 ? "rgba(255,255,255,.05)" : "rgba(0,0,0,.06)"; g.fillRect(0, y, TS, 1); }
+      g.fillStyle = "#5a6068"; g.fillRect(0, 0, TS, 2); g.fillRect(0, 64, TS, 2); g.fillRect(0, 0, 2, TS); g.fillRect(64, 0, 2, TS);
+      for (let x = 8; x < TS; x += 16) for (const y of [6, 56, 72, 120]) { g.fillStyle = "#3d4248"; g.fillRect(x + 1, y + 1, 3, 3); g.fillStyle = "#b4bbc2"; g.fillRect(x, y, 3, 3); }
+      g.fillStyle = "#b3261e"; g.fillRect(0, 86, TS, 8);
+    }
+  ];
+  const FLOOR = [
+    g => { g.fillStyle = "#aeb6bb"; g.fillRect(0, 0, TS, TS); speck(g, 31, 1000, ["#9aa3a9", "#c2c9cd", "#8e979d"]); g.fillStyle = "#8a949a"; g.fillRect(0, 0, TS, 2); g.fillRect(0, 0, 2, TS); g.fillRect(0, 64, TS, 2); g.fillRect(64, 0, 2, TS); },
+    g => { g.fillStyle = "#3a414a"; g.fillRect(0, 0, TS, TS); g.fillStyle = "#2a3037"; for (const [ox, oy] of [[0, 0], [64, 64]]) for (let y = 10; y < 56; y += 6) for (let x = 10; x < 56; x += 6) g.fillRect(ox + x, oy + y, 3, 3); g.fillStyle = "#23282e"; g.fillRect(0, 0, TS, 3); g.fillRect(0, 0, 3, TS); g.fillRect(0, 64, TS, 3); g.fillRect(64, 0, 3, TS); g.fillStyle = "#4a525c"; g.fillRect(3, 3, TS, 1); g.fillRect(3, 67, TS, 1); },
+    g => { g.fillStyle = "#5b3e2a"; g.fillRect(0, 0, TS, TS); const r = rng(41); for (let row = 0; row < 8; row++) for (let x = -32; x < TS; x += 32) { g.fillStyle = ["#8b5d3e", "#7d5236", "#94654a"][(r() * 3) | 0]; g.fillRect(x + (row % 2 ? 16 : 0) + 1, row * 16 + 1, 30, 14); } speck(g, 42, 160, ["#4f7d3a", "#6a9a48"]); },
+    g => { g.fillStyle = "#5d646c"; g.fillRect(0, 0, TS, TS); speck(g, 51, 400, ["rgba(0,0,0,.08)", "rgba(255,255,255,.05)"]); for (let y = 0; y < TS; y += 16) for (let x = 0; x < TS; x += 16) { const o = (y / 16) % 2 ? 8 : 0; g.save(); g.translate(x + o + 4, y + 8); g.rotate(-.6); g.fillStyle = "#454b52"; g.fillRect(-4, 0, 9, 2.4); g.fillStyle = "#828a93"; g.fillRect(-4, -2.4, 9, 2.4); g.restore(); } },
+    g => { g.fillStyle = "#24344f"; g.fillRect(0, 0, TS, TS); speck(g, 61, 1400, ["#2c3e5c", "#1f2d44", "#304566"]); g.fillStyle = "rgba(0,0,0,.18)"; g.fillRect(0, 0, TS, 2); g.fillRect(0, 0, 2, TS); },
+    g => { for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) { g.fillStyle = (x + y) % 2 ? "#363b43" : "#2b2f36"; g.fillRect(x * 64, y * 64, 64, 64); } g.fillStyle = "rgba(255,255,255,.05)"; g.beginPath(); g.moveTo(0, 40); g.lineTo(40, 0); g.lineTo(70, 0); g.lineTo(0, 70); g.fill(); g.fillStyle = "#8a7030"; g.fillRect(0, 0, TS, 1); g.fillRect(0, 0, 1, TS); g.fillRect(0, 64, TS, 1); g.fillRect(64, 0, 1, TS); }
+  ];
+  function panelCeil(g, base, lamp) { g.fillStyle = base; g.fillRect(0, 0, TS, TS); g.fillStyle = "rgba(0,0,0,.25)"; g.fillRect(0, 0, TS, 3); g.fillRect(0, 0, 3, TS); g.fillRect(0, 64, TS, 2); g.fillRect(64, 0, 2, TS); if (lamp) { g.fillStyle = lamp + "44"; g.fillRect(40, 12, 48, 104); g.fillStyle = lamp; g.fillRect(46, 18, 36, 92); } }
+  const CEIL = [
+    g => panelCeil(g, "#2b3137", "#f4f8fa"),
+    g => { panelCeil(g, "#1c2127"); g.fillStyle = "#2c7fd4"; g.fillRect(58, 0, 12, TS); },
+    g => { const gr = g.createLinearGradient(0, 0, TS, TS); gr.addColorStop(0, "#c6e9f3"); gr.addColorStop(1, "#97c9de"); g.fillStyle = gr; g.fillRect(0, 0, TS, TS); g.fillStyle = "#e9f1ec"; g.fillRect(0, 0, TS, 4); g.fillRect(0, 0, 4, TS); g.fillRect(0, 62, TS, 4); g.fillRect(62, 0, 4, TS); },
+    g => { panelCeil(g, "#24282d"); g.fillStyle = "rgba(255,215,106,.25)"; g.beginPath(); g.arc(64, 64, 24, 0, 7); g.fill(); g.fillStyle = "#ffd76a"; g.beginPath(); g.arc(64, 64, 13, 0, 7); g.fill(); g.strokeStyle = "#2b2f34"; g.lineWidth = 2; for (const a of [0, 1.05, 2.1]) { g.beginPath(); g.moveTo(64 + Math.cos(a) * 14, 64 + Math.sin(a) * 14); g.lineTo(64 - Math.cos(a) * 14, 64 - Math.sin(a) * 14); g.stroke(); } },
+    g => { panelCeil(g, "#18243a"); for (const [x, y] of [[32, 32], [96, 96]]) { g.fillStyle = "rgba(191,239,255,.25)"; g.beginPath(); g.arc(x, y, 14, 0, 7); g.fill(); g.fillStyle = "#bfefff"; g.beginPath(); g.arc(x, y, 7, 0, 7); g.fill(); } },
+    g => { panelCeil(g, "#1d1f24"); g.fillStyle = "rgba(255,68,51,.25)"; g.beginPath(); g.arc(64, 64, 26, 0, 7); g.fill(); g.fillStyle = "#ff4433"; g.beginPath(); g.arc(64, 64, 12, 0, 7); g.fill(); }
+  ];
+  function paint(fn) { const c = mk(), g = c.getContext("2d"); fn(g); return u32(c); }
+  function rackTex(frame) {
+    return paint(g => {
+      g.fillStyle = "#13171c"; g.fillRect(0, 0, TS, TS);
+      g.fillStyle = "#39414b"; g.fillRect(0, 0, 6, TS); g.fillRect(TS - 6, 0, 6, TS);
+      const r = rng(77);
+      for (let y = 4; y < 124; y += 12) {
+        g.fillStyle = "#1e242b"; g.fillRect(8, y, 112, 10); g.fillStyle = "#2c343d"; g.fillRect(8, y, 112, 1);
+        g.fillStyle = "#0b0e11"; for (let x = 62; x < 116; x += 4) g.fillRect(x, y + 3, 2, 5);
+        for (let j = 0; j < 5; j++) { const blink = r() < .45, base = r() < .7, col = ["#53e0a8", "#ffb83d", "#6bb6ff"][(r() * 3) | 0]; const on = blink ? (frame ? base : !base) : base; g.fillStyle = on ? col : "#20262c"; g.fillRect(12 + j * 8, y + 4, 4, 3); }
+      }
+    });
+  }
+  function hedgeTex() {
+    return paint(g => {
+      g.fillStyle = "#24532c"; g.fillRect(0, 0, TS, TS);
+      const r = rng(5), cols = ["#2f6b3a", "#3d8048", "#1d4524", "#4f9a55"];
+      for (let i = 0; i < 700; i++) { g.fillStyle = cols[(r() * 4) | 0]; g.beginPath(); g.arc(r() * TS, r() * 104, 3 + r() * 5, 0, 7); g.fill(); }
+      g.fillStyle = "#6b4a2f"; g.fillRect(0, 104, TS, 24); g.fillStyle = "#7d5838"; g.fillRect(0, 104, TS, 3); g.fillStyle = "#553a24"; g.fillRect(0, 116, TS, 2);
+    });
+  }
+  function consoleTex(frame) {
+    return paint(g => {
+      g.fillStyle = "#1a2537"; g.fillRect(0, 0, TS, TS);
+      const r = rng(91);
+      for (let k = 0; k < 3; k++) { const x = 4 + k * 41; g.fillStyle = "#0a111c"; g.fillRect(x, 10, 38, 32); g.fillStyle = "#0d2a3a"; g.fillRect(x + 2, 12, 34, 28); g.fillStyle = "#4fd0e0"; for (let b = 0; b < 5; b++) { const h = (4 + r() * 18) * (frame && b % 2 ? .55 : 1); g.fillRect(x + 5 + b * 6, 38 - h, 4, h); } }
+      g.fillStyle = "#2b3548"; g.fillRect(0, 54, TS, 50); g.fillStyle = "#3a4660"; g.fillRect(0, 54, TS, 3);
+      const cols = ["#53e0a8", "#ffb83d", "#ff5a4e", "#5cb8ff"];
+      for (let y = 64; y < 100; y += 10) for (let x = 8; x < 122; x += 12) { const c = cols[(r() * 4) | 0], blink = r() < .3; g.fillStyle = blink && frame ? "#1f2838" : c; g.fillRect(x, y, 7, 5); }
+      g.fillStyle = "#121a28"; g.fillRect(0, 104, TS, 24);
+    });
+  }
+  function clueTex() {
+    return paint(g => {
+      WALL[5](g);
+      g.fillStyle = "#15181c"; g.fillRect(8, 14, 112, 74); g.strokeStyle = "#ffb83d"; g.lineWidth = 2; g.strokeRect(9, 15, 110, 72);
+      g.fillStyle = "#ffc35a"; g.font = "13px VT323, monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText("VAULT SEQUENCE", 64, 26);
+      const n = Math.max(1, ORDER.length), w = 100 / n;
+      ORDER.forEach((si, k) => drawShape(g, si, 14 + w * k + w / 2, 54, Math.min(8, w * .32)));
+      g.fillStyle = "#ffc35a"; g.font = "10px VT323, monospace"; g.fillText("READ LEFT TO RIGHT", 64, 78);
+    });
+  }
+  function keypadTex(state) {
+    return paint(g => {
+      WALL[5](g);
+      g.fillStyle = "#1d2126"; g.fillRect(36, 12, 56, 80); g.fillStyle = "#2c3138"; g.fillRect(36, 12, 56, 3);
+      g.fillStyle = "#170f04"; g.fillRect(42, 18, 44, 14);
+      g.fillStyle = state === 2 ? "#53e0a8" : "#ffc35a"; g.font = "13px VT323, monospace"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(state === 2 ? "OPEN" : "- - - - -", 64, 25);
+      for (let rr = 0; rr < 4; rr++) for (let c = 0; c < 3; c++) { g.fillStyle = "#3b424b"; g.fillRect(44 + c * 14, 38 + rr * 12, 11, 9); g.fillStyle = "#4d555f"; g.fillRect(44 + c * 14, 38 + rr * 12, 11, 2); }
+      g.fillStyle = state === 2 ? "#53e0a8" : state === 1 ? "#ff4a3d" : "#6b1e1a"; g.fillRect(82, 86, 6, 3);
+    });
+  }
+  function doorTex(k, unlocked) {
+    return paint(g => {
+      g.fillStyle = "#3b4651"; g.fillRect(0, 0, TS, TS);
+      g.fillStyle = "#475461"; g.fillRect(8, 6, 112, 116);
+      g.fillStyle = "#2b333c"; for (let x = 16; x < TS - 8; x += 16) g.fillRect(x, 6, 2, 116);
+      hazard(g, 0, 60, TS, 18);
+      g.fillStyle = "#1d2228"; g.beginPath(); g.arc(64, 32, 17, 0, 7); g.fill();
+      g.fillStyle = "#ffb83d"; g.beginPath(); g.arc(64, 32, 14, 0, 7); g.fill();
+      g.fillStyle = "#2a1800"; g.font = "20px 'Russo One', sans-serif"; g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(String(k + 1), 64, 33);
+      g.fillStyle = unlocked ? "#53e0a8" : "#ff4a3d"; g.fillRect(48, 92, 32, 8); g.fillStyle = "rgba(255,255,255,.35)"; g.fillRect(48, 92, 32, 2);
+      g.fillStyle = "#222930"; g.fillRect(0, 0, 4, TS); g.fillRect(TS - 4, 0, 4, TS);
+    });
+  }
+  function vaultDoorTex(open) {
+    return paint(g => {
+      g.fillStyle = "#23272c"; g.fillRect(0, 0, TS, TS); g.fillStyle = "#3a3f46"; g.fillRect(4, 4, 120, 120);
+      const gr = g.createRadialGradient(54, 48, 6, 64, 62, 54); gr.addColorStop(0, "#d7dde2"); gr.addColorStop(1, "#6b737b");
+      g.fillStyle = gr; g.beginPath(); g.arc(64, 62, 52, 0, 7); g.fill();
+      g.strokeStyle = "#4b5259"; g.lineWidth = 3; g.beginPath(); g.arc(64, 62, 40, 0, 7); g.stroke();
+      for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2; g.fillStyle = "#3c4248"; g.beginPath(); g.arc(64 + Math.cos(a) * 46, 62 + Math.sin(a) * 46, 3.5, 0, 7); g.fill(); }
+      g.strokeStyle = "#2f353b"; g.lineWidth = 5;
+      for (let k = 0; k < 3; k++) { const a = k / 3 * Math.PI + .3; g.beginPath(); g.moveTo(64 - Math.cos(a) * 24, 62 - Math.sin(a) * 24); g.lineTo(64 + Math.cos(a) * 24, 62 + Math.sin(a) * 24); g.stroke(); }
+      g.lineWidth = 4; g.beginPath(); g.arc(64, 62, 24, 0, 7); g.stroke();
+      g.fillStyle = "#2f353b"; g.beginPath(); g.arc(64, 62, 7, 0, 7); g.fill();
+      g.fillStyle = open ? "#53e0a8" : "#ff4a3d"; g.fillRect(52, 117, 24, 5);
+    });
+  }
+  function termTex(i, solved, frame) {
+    return paint(g => {
+      WALL[stationZone[i]](g);
+      g.fillStyle = "#353b43"; g.fillRect(14, 80, 100, 7); g.fillStyle = "#23282e"; g.fillRect(14, 87, 100, 4);
+      g.fillStyle = "#4a525c"; g.fillRect(38, 75, 52, 5); g.fillStyle = "#2b3138"; for (let x = 40; x < 88; x += 4) g.fillRect(x, 76, 3, 1);
+      g.fillStyle = "#2a2f36"; g.fillRect(58, 70, 12, 6);
+      g.fillStyle = "#2a2f36"; g.fillRect(20, 8, 88, 64); g.fillStyle = "#16191d"; g.fillRect(24, 12, 80, 56);
+      g.fillStyle = solved ? "#062a1c" : "#1f1405"; g.fillRect(27, 15, 74, 50);
+      const ink = solved ? "#53e0a8" : "#ffc35a";
+      g.fillStyle = ink; g.textAlign = "center"; g.textBaseline = "middle";
+      g.font = "11px VT323, monospace"; g.fillText("TERMINAL " + pad2(i + 1), 64, 22);
+      if (solved) { drawShape(g, i, 64, 40, 9); g.fillStyle = ink; g.font = "10px VT323, monospace"; g.fillText("UNLOCKED", 64, 58); }
+      else { g.font = "28px VT323, monospace"; g.fillText("?", 64, 41); g.font = "10px VT323, monospace"; g.fillText(frame ? "[ ACCESS ]" : "[ ACCESS _", 64, 58); }
+      g.fillStyle = "rgba(0,0,0,.28)"; for (let y = 15; y < 65; y += 2) g.fillRect(27, y, 74, 1);
+      g.fillStyle = solved ? "#53e0a8" : frame ? "#ffb83d" : "#7a5410"; g.fillRect(96, 68, 5, 2);
+    });
+  }
+  // sprites
+  function sprite(fn) { const c = mk(SS), g = c.getContext("2d"); fn(g); return u32(c); }
+  const droneSpr = f => sprite(g => {
+    g.fillStyle = "#4d555e"; g.fillRect(8, 15, 48, 3);
+    for (const x of [9, 55]) { g.fillStyle = "#aab3bc"; g.beginPath(); g.ellipse(x, 13, 9, 2.5, 0, 0, 7); g.fill(); }
+    const gr = g.createRadialGradient(27, 26, 3, 32, 32, 19); gr.addColorStop(0, "#7d8792"); gr.addColorStop(1, "#262b31");
+    g.fillStyle = gr; g.beginPath(); g.arc(32, 33, 18, 0, 7); g.fill();
+    g.fillStyle = "#1a1e23"; g.fillRect(15, 30, 34, 4);
+    g.fillStyle = f ? "#ff3b30" : "#b8241c"; g.beginPath(); g.arc(32, 38, 7, 0, 7); g.fill();
+    g.fillStyle = "#ffd6cf"; g.beginPath(); g.arc(30, 36, 2.2, 0, 7); g.fill();
+    g.fillStyle = "#9aa3ac"; g.fillRect(31, 5, 2, 10);
+    g.fillStyle = f ? "#ff5a4e" : "#7a1d18"; g.beginPath(); g.arc(32, 5, 2.5, 0, 7); g.fill();
+    g.fillStyle = "#3a4048"; g.fillRect(24, 50, 16, 3);
+  });
+  const plantSpr = () => sprite(g => {
+    const r = rng(9), cols = ["#2f7d43", "#3f9a52", "#25663a", "#58b066"];
+    for (let k = 0; k < 12; k++) { const a = -Math.PI / 2 + (r() - .5) * 2.6, len = 14 + r() * 12; g.fillStyle = cols[k % 4]; g.beginPath(); g.ellipse(32 + Math.cos(a) * len * .6, 40 + Math.sin(a) * len * .75, 4.5, len * .5, a + Math.PI / 2, 0, 7); g.fill(); }
+    g.fillStyle = "#b9653a"; g.beginPath(); g.moveTo(20, 44); g.lineTo(44, 44); g.lineTo(40, 63); g.lineTo(24, 63); g.closePath(); g.fill();
+    g.fillStyle = "#d27b4b"; g.fillRect(18, 42, 28, 4);
+  });
+  const crateSpr = () => sprite(g => {
+    g.fillStyle = "#a77a43"; g.fillRect(8, 22, 48, 42);
+    g.strokeStyle = "#6b4a24"; g.lineWidth = 4; g.beginPath(); g.moveTo(12, 26); g.lineTo(52, 60); g.moveTo(52, 26); g.lineTo(12, 60); g.stroke();
+    g.fillStyle = "#6b4a24"; g.fillRect(8, 22, 48, 3); g.fillRect(8, 61, 48, 3); g.fillRect(8, 22, 3, 42); g.fillRect(53, 22, 3, 42);
+    g.fillStyle = "#f2c230"; g.fillRect(24, 36, 16, 10); g.fillStyle = "#1d1f22"; g.fillRect(24, 40, 16, 2);
+  });
+  const cellSpr = () => sprite(g => {
+    g.fillStyle = "#b9c1c9"; g.fillRect(27, 10, 10, 6);
+    g.fillStyle = "#1c2a22"; g.fillRect(22, 16, 20, 44);
+    g.fillStyle = "#7dff9a"; g.fillRect(24, 21, 16, 4); g.fillRect(24, 51, 16, 4);
+    g.fillStyle = "#c8ffd4"; g.beginPath(); g.moveTo(35, 27); g.lineTo(27, 40); g.lineTo(32, 40); g.lineTo(29, 49); g.lineTo(37, 35); g.lineTo(32, 35); g.closePath(); g.fill();
+    g.fillStyle = "#2d3f33"; g.fillRect(22, 58, 20, 4);
+  });
+  const chestSpr = open => sprite(g => {
+    if (open) {
+      g.fillStyle = "#5e3818"; g.fillRect(8, 10, 48, 18); g.fillStyle = "#f0c040"; g.fillRect(16, 10, 5, 18); g.fillRect(43, 10, 5, 18);
+      const r = rng(3); for (let k = 0; k < 26; k++) { g.fillStyle = r() < .5 ? "#ffd84a" : "#f0b52a"; g.beginPath(); g.arc(12 + r() * 40, 28 + r() * 8, 3.5, 0, 7); g.fill(); }
+      g.fillStyle = "#fff6c8"; g.fillRect(22, 24, 2, 6); g.fillRect(20, 26, 6, 2); g.fillRect(42, 22, 2, 6); g.fillRect(40, 24, 6, 2);
+    }
+    g.fillStyle = "#7a4a22"; g.fillRect(8, 34, 48, 28); g.fillStyle = "#94592a"; g.fillRect(10, 36, 44, 24);
+    if (!open) {
+      g.fillStyle = "#8a5426"; g.beginPath(); g.moveTo(8, 36); g.lineTo(8, 24); g.quadraticCurveTo(32, 10, 56, 24); g.lineTo(56, 36); g.closePath(); g.fill();
+      g.fillStyle = "#f0c040"; g.fillRect(16, 21, 5, 41); g.fillRect(43, 21, 5, 41); g.fillRect(28, 30, 8, 10); g.fillStyle = "#7a5a10"; g.fillRect(31, 33, 2, 4);
+    } else { g.fillStyle = "#f0c040"; g.fillRect(16, 34, 5, 28); g.fillRect(43, 34, 5, 28); }
+    g.fillStyle = "#4d2e14"; g.fillRect(8, 60, 48, 4);
+  });
+
+  const rabbitSpr = f => sprite(g => {
+    for (const [x, a] of [[25, -.18], [39, .18]]) {
+      g.save(); g.translate(x, 30); g.rotate(a);
+      g.fillStyle = "#f2efe9"; g.beginPath(); g.ellipse(0, -13, 5.5, f ? 14 : 12.5, 0, 0, 7); g.fill();
+      g.fillStyle = "#f4a7b9"; g.beginPath(); g.ellipse(0, -13, 2.6, f ? 10 : 9, 0, 0, 7); g.fill();
+      g.restore();
+    }
+    g.fillStyle = "#e7e2da"; g.beginPath(); g.ellipse(32, f ? 49 : 51, f ? 14 : 17, f ? 14 : 12.5, 0, 0, 7); g.fill();
+    g.fillStyle = "#f2efe9"; g.beginPath(); g.arc(32, 35, 11, 0, 7); g.fill();
+    g.fillStyle = "#2a1f24"; g.fillRect(27, 32, 3, 3); g.fillRect(34, 32, 3, 3);
+    g.fillStyle = "#e86a8a"; g.fillRect(31, 38, 3, 2);
+    g.fillStyle = "#bfb7ac"; g.fillRect(21, 39, 7, 1); g.fillRect(36, 39, 7, 1);
+    g.fillStyle = "#faf7f2"; for (const x of [24, 40]) { g.beginPath(); g.ellipse(x, 62, 6, 2.5, 0, 0, 7); g.fill(); }
+  });
+  const boomSpr = f => sprite(g => {
+    const R = [14, 22, 29][f], cols = [["#ff8a2a", "#ffd45a", "#fff6c8"], ["#d8402f", "#ff8a2a", "#ffd45a"], ["#5a1a12", "#d8402f", "#ff8a2a"]][f];
+    [[1, cols[0]], [.68, cols[1]], [.38, cols[2]]].forEach(([m, c]) => {
+      g.fillStyle = c; g.beginPath();
+      for (let a = 0; a < 16; a++) { const ang = a / 16 * 6.283, rr = R * m * (a % 2 ? .68 : 1); g.lineTo(32 + Math.cos(ang) * rr, 32 + Math.sin(ang) * rr); }
+      g.closePath(); g.fill();
+    });
+  });
+  const carrotSpr = () => sprite(g => {
+    g.fillStyle = "#3f9a52"; for (const a of [-.5, 0, .5]) { g.save(); g.translate(32, 22); g.rotate(a); g.beginPath(); g.ellipse(0, -8, 3, 9, 0, 0, 7); g.fill(); g.restore(); }
+    g.fillStyle = "#ff8c1a"; g.beginPath(); g.moveTo(21, 21); g.lineTo(43, 21); g.lineTo(33, 63); g.lineTo(31, 63); g.closePath(); g.fill();
+    g.fillStyle = "#d96d0c"; g.fillRect(25, 30, 7, 2); g.fillRect(32, 40, 6, 2); g.fillRect(28, 50, 5, 2);
+  });
+
+  const tex = {};
+  function buildTextures() {
+    tex.wall = WALL.map(paint); tex.floor = FLOOR.map(paint); tex.ceil = CEIL.map(paint);
+    tex.rack = [rackTex(0), rackTex(1)]; tex.hedge = hedgeTex(); tex.console = [consoleTex(0), consoleTex(1)];
+    tex.clue = clueTex(); tex.keypad = [keypadTex(0), keypadTex(1), keypadTex(2)];
+    tex.door = [0, 1, 2, 3, 4].map(k => [doorTex(k, false), doorTex(k, true)]); tex.vault = [vaultDoorTex(false), vaultDoorTex(true)];
+    tex.term = stations.map((_, i) => ({ active: [termTex(i, false, 0), termTex(i, false, 1)], solved: termTex(i, true, 0) }));
+    tex.drone = [droneSpr(0), droneSpr(1)]; tex.plant = plantSpr(); tex.crate = crateSpr(); tex.cell = cellSpr(); tex.chest = [chestSpr(false), chestSpr(true)];
+    tex.rabbit = [rabbitSpr(0), rabbitSpr(1)]; tex.carrot = carrotSpr(); tex.boom = [boomSpr(0), boomSpr(1), boomSpr(2)];
+  }
+
+  // ---------- renderer ----------
+  const RW = 400, RH = 250, HALF = RH / 2;
+  const view = $("view"), vctx = view.getContext("2d");
+  const frameImg = vctx.createImageData(RW, RH), buf = new Uint32Array(frameImg.data.buffer), zbuf = new Float32Array(RW);
+  const mini = $("mini"), mctx = mini.getContext("2d");
+  const lr = new Float32Array(6), lg = new Float32Array(6), lb = new Float32Array(6);
+  const BASE_L = [[1, 1, 1], [.8, .88, 1], [.96, 1, .9], [1, .95, .85], [.82, .9, 1], [1, .6, .56]];
+  const SPR = { drone: { scale: .5, y: -.06 }, plant: { scale: .72, ground: true }, crate: { scale: .62, ground: true }, cell: { scale: .32, ground: true, bright: true }, chest: { scale: .55, ground: true }, rabbit: { scale: .38, ground: true }, carrot: { scale: .2, ground: true, bright: true }, boom: { scale: .9, y: -.06, bright: true } };
+  let centerHit = null;
+
+  function computeLights() {
+    const alarm = S.started && !S.won && S.timeLeft < 120 ? .7 + .3 * (.5 + .5 * Math.sin(animT * 5)) : 1;
+    for (let z = 0; z < 6; z++) {
+      let [r, g, b] = BASE_L[z];
+      if (z === 3) { const f = Math.sin(animT * 17.3) + Math.sin(animT * 6.1 + 1) > 1.55 ? .55 : 1; r *= f; g *= f; b *= f; }
+      if (z === 5) { if (S.vaultOpen) { r = 1; g = .92; b = .72; } else { const p = .5 + .5 * Math.sin(animT * 3); g = .5 + .14 * p; b = .46 + .12 * p; } }
+      lr[z] = r; lg[z] = g * alarm; lb[z] = b * alarm;
+    }
+  }
+  function wallTex(v, zone, af) {
+    if (v === 1) return tex.wall[zone];
+    if (v === 2) return tex.rack[af];
+    if (v === 3) return tex.hedge;
+    if (v === 4) return tex.console[af];
+    if (v === 5) return tex.clue;
+    if (v === 6) return tex.keypad[S.vaultOpen ? 2 : af];
+    if (v >= 20) { const t = tex.term[v - 20]; return S.stage[v - 20] === 2 ? t.solved : t.active[af]; }
+    return tex.wall[zone];
+  }
+
+  function render() {
+    computeLights();
+    const af = ((animT * 2) | 0) & 1;
+    const dirX = Math.cos(P.a), dirY = Math.sin(P.a), FOV = .66, planeX = -dirY * FOV, planeY = dirX * FOV;
+    const fT = tex.floor, cT = tex.ceil;
+    // floor + ceiling
+    const rdx0 = dirX - planeX, rdy0 = dirY - planeY, rdx1 = dirX + planeX, rdy1 = dirY + planeY;
+    for (let y = HALF + 1; y < RH; y++) {
+      const rowDist = HALF / (y - HALF);
+      const stepX = rowDist * (rdx1 - rdx0) / RW, stepY = rowDist * (rdy1 - rdy0) / RW;
+      let fx = P.x + rowDist * rdx0, fy = P.y + rowDist * rdy0;
+      const fog = Math.max(.16, 1 / (1 + rowDist * rowDist * .03)), cf = fog * .9;
+      const yo = y * RW, yc = (RH - y - 1) * RW;
+      for (let x = 0; x < RW; x++) {
+        const ix = fx | 0, iy = fy | 0;
+        let z = 0;
+        if (ix >= 0 && iy >= 0 && ix < MW && iy < MH) { z = zoneOf[iy * MW + ix]; if (z < 0) z = 0; }
+        const ti = (((fy - iy) * TS) & (TS - 1)) * TS + (((fx - ix) * TS) & (TS - 1));
+        let c = fT[z][ti];
+        buf[yo + x] = 0xff000000 | ((((c >> 16) & 255) * lb[z] * fog) << 16) | ((((c >> 8) & 255) * lg[z] * fog) << 8) | ((c & 255) * lr[z] * fog);
+        c = cT[z][ti];
+        buf[yc + x] = 0xff000000 | ((((c >> 16) & 255) * lb[z] * cf) << 16) | ((((c >> 8) & 255) * lg[z] * cf) << 8) | ((c & 255) * lr[z] * cf);
+        fx += stepX; fy += stepY;
+      }
+    }
+    // walls, doors, terminals
+    centerHit = null;
+    for (let x = 0; x < RW; x++) {
+      const cam = 2 * x / RW - 1, rx = dirX + planeX * cam, ry = dirY + planeY * cam;
+      let mx = P.x | 0, my = P.y | 0, px = mx, py = my;
+      const ddx = rx === 0 ? 1e30 : Math.abs(1 / rx), ddy = ry === 0 ? 1e30 : Math.abs(1 / ry);
+      let sx, sy, sdx, sdy, side = 0, v = 1, dist = 30, tx = 0, t = null, zone = 0;
+      if (rx < 0) { sx = -1; sdx = (P.x - mx) * ddx; } else { sx = 1; sdx = (mx + 1 - P.x) * ddx; }
+      if (ry < 0) { sy = -1; sdy = (P.y - my) * ddy; } else { sy = 1; sdy = (my + 1 - P.y) * ddy; }
+      for (let n = 0; n < 90; n++) {
+        px = mx; py = my;
+        if (sdx < sdy) { sdx += ddx; mx += sx; side = 0; } else { sdy += ddy; my += sy; side = 1; }
+        if (mx < 0 || my < 0 || mx >= MW || my >= MH) { v = 1; dist = side === 0 ? sdx - ddx : sdy - ddy; t = tex.wall[0]; break; }
+        v = map[my * MW + mx];
+        if (!v) continue;
+        if (v >= 10 && v < 16) {
+          const d = doors[v - 10];
+          if (d.open >= .999) continue;
+          let tt, f;
+          if (d.v) { if (rx === 0) continue; tt = (mx + .5 - P.x) / rx; const yy = P.y + tt * ry; if (yy < my || yy >= my + 1) continue; f = yy - my; side = 0; }
+          else { if (ry === 0) continue; tt = (my + .5 - P.y) / ry; const xx = P.x + tt * rx; if (xx < mx || xx >= mx + 1) continue; f = xx - mx; side = 1; }
+          if (f < d.open || tt <= 0) continue;
+          dist = tt; tx = Math.min(TS - 1, ((f - d.open) * TS) | 0);
+          if ((d.v && rx < 0) || (!d.v && ry > 0)) tx = TS - tx - 1;
+          t = d.k === 5 ? tex.vault[S.vaultOpen ? 1 : 0] : tex.door[d.k][d.target >= 1 ? 1 : 0];
+          zone = zoneOf[py * MW + px]; if (zone < 0) zone = 0;
+          break;
+        }
+        dist = side === 0 ? sdx - ddx : sdy - ddy;
+        let wx = side === 0 ? P.y + dist * ry : P.x + dist * rx; wx -= Math.floor(wx);
+        tx = (wx * TS) | 0;
+        if (side === 0 && rx < 0) tx = TS - tx - 1;
+        if (side === 1 && ry > 0) tx = TS - tx - 1;
+        zone = zoneOf[py * MW + px]; if (zone < 0) zone = 0;
+        t = wallTex(v, zone, af);
+        break;
+      }
+      if (dist < .02) dist = .02;
+      zbuf[x] = dist;
+      if (x === RW >> 1) centerHit = { v, dist, mx, my };
+      if (!t) continue;
+      const lineH = (RH / dist) | 0;
+      const ds = Math.max(0, (-lineH / 2 + HALF) | 0), de = Math.min(RH - 1, (lineH / 2 + HALF) | 0);
+      const fog = Math.max(.2, 1 / (1 + dist * dist * .03)) * (side ? .84 : 1);
+      const fr = lr[zone] * fog, fg = lg[zone] * fog, fb = lb[zone] * fog;
+      const step = TS / lineH;
+      let tp = (ds - HALF + lineH / 2) * step;
+      for (let y = ds; y <= de; y++) {
+        const c = t[(((tp | 0) & (TS - 1)) * TS) + tx]; tp += step;
+        buf[y * RW + x] = 0xff000000 | ((((c >> 16) & 255) * fb) << 16) | ((((c >> 8) & 255) * fg) << 8) | ((c & 255) * fr);
+      }
+    }
+    // sprites
+    const list = statics.slice();
+    for (const it of items) if (!it.got) list.push(it);
+    for (const d of drones) list.push(d);
+    if (rabbit) list.push(rabbit);
+    for (const c of carrots) list.push(c);
+    for (const d of vdrones) if (d.alive) list.push(d);
+    for (const b of booms) list.push(b);
+    for (const s of list) s.d2 = (s.x - P.x) * (s.x - P.x) + (s.y - P.y) * (s.y - P.y);
+    list.sort((a, b) => b.d2 - a.d2);
+    const invDet = 1 / (planeX * dirY - dirX * planeY);
+    for (const s of list) {
+      const sx = s.x - P.x, sy = s.y - P.y;
+      const tX = invDet * (dirY * sx - dirX * sy), tY = invDet * (-planeY * sx + planeX * sy);
+      if (tY < .2) continue;
+      const def = SPR[s.type], fullH = RH / tY, h = fullH * def.scale, w = h;
+      const scrX = (RW / 2) * (1 + tX / tY);
+      let bottom;
+      if (def.ground) bottom = HALF + fullH / 2 - (s.type === "cell" ? (.06 + Math.sin(animT * 3 + s.id) * .04) : (s.lift || 0)) * fullH;
+      else bottom = HALF + def.y * fullH + Math.sin(animT * 4 + s.ph) * .03 * fullH + h / 2;
+      const top = bottom - h, left = scrX - w / 2;
+      const x0 = Math.max(0, Math.ceil(left)), x1 = Math.min(RW - 1, Math.floor(left + w));
+      const y0 = Math.max(0, Math.ceil(top)), y1 = Math.min(RH - 1, Math.floor(bottom));
+      if (x0 > x1 || y0 > y1) continue;
+      const st = s.type === "drone" ? tex.drone[s.mode === "chase" ? 1 : ((animT * 4) | 0) & 1] : s.type === "chest" ? tex.chest[S.won ? 1 : 0] : s.type === "rabbit" ? tex.rabbit[s.frame || 0] : s.type === "boom" ? tex.boom[Math.min(2, (s.t / .15) | 0)] : tex[s.type];
+      let z = zoneAt(s.x, s.y); if (z < 0) z = 0;
+      const fog = Math.max(.22, 1 / (1 + tY * tY * .03));
+      const fr = def.bright ? Math.max(.8, fog) : lr[z] * fog, fg = def.bright ? Math.max(.8, fog) : lg[z] * fog, fb = def.bright ? Math.max(.8, fog) : lb[z] * fog;
+      for (let x = x0; x <= x1; x++) {
+        if (tY >= zbuf[x]) continue;
+        const tx = (((x - left) / w) * SS) | 0; if (tx < 0 || tx >= SS) continue;
+        for (let y = y0; y <= y1; y++) {
+          const ty = (((y - top) / h) * SS) | 0; if (ty < 0 || ty >= SS) continue;
+          const c = st[ty * SS + tx];
+          if ((c >>> 24) < 128) continue;
+          buf[y * RW + x] = 0xff000000 | ((((c >> 16) & 255) * fb) << 16) | ((((c >> 8) & 255) * fg) << 8) | ((c & 255) * fr);
+        }
+      }
+    }
+    vctx.putImageData(frameImg, 0, 0);
+    if (laserOn()) {
+      const gx = RW * .62;
+      if (laserT > 0) { vctx.save(); vctx.lineCap = "round"; vctx.strokeStyle = "rgba(255,70,60,.9)"; vctx.lineWidth = 6; vctx.beginPath(); vctx.moveTo(gx, RH - 30); vctx.lineTo(RW / 2, HALF); vctx.stroke(); vctx.strokeStyle = "#fff4f0"; vctx.lineWidth = 2; vctx.stroke(); vctx.restore(); }
+      vctx.fillStyle = "#1d2228"; vctx.beginPath(); vctx.moveTo(gx - 16, RH); vctx.lineTo(gx - 7, RH - 34); vctx.lineTo(gx + 7, RH - 34); vctx.lineTo(gx + 16, RH); vctx.fill();
+      vctx.fillStyle = "#4a535e"; vctx.fillRect(gx - 5, RH - 34, 10, 22);
+      vctx.fillStyle = laserT > 0 ? "#fff4f0" : "#ff5a4e"; vctx.fillRect(gx - 3, RH - 38, 6, 6);
+    }
+    drawMini();
+    computeFocus();
+  }
+
+  const MS = 4, ZCOL = ["#4a5560", "#2f3a48", "#2f5a42", "#5a553f", "#2f3f5e", "#5a3438"];
+  function drawMini() {
+    mctx.clearRect(0, 0, mini.width, mini.height);
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+      const i = y * MW + x; if (!seen[i]) continue;
+      const v = map[i]; let c;
+      if (v === 0) c = solidSpr[i] ? "#6b7a5a" : ZCOL[Math.max(0, zoneOf[i])];
+      else if (v >= 10 && v < 16) c = doors[v - 10].target >= 1 ? "#53e0a8" : "#ff5a4e";
+      else if (v >= 20) c = S.stage[v - 20] === 2 ? "#9fd4ff" : "#3ea6ff";
+      else if (v === 6) c = S.vaultOpen ? "#53e0a8" : "#ffb83d";
+      else if (v === 5) c = "#e8edf1";
+      else c = "#7d8894";
+      mctx.fillStyle = c; mctx.fillRect(x * MS, y * MS, MS, MS);
+    }
+    for (const it of items) if (!it.got && seen[(it.y | 0) * MW + (it.x | 0)]) { mctx.fillStyle = "#9dff7a"; mctx.fillRect(it.x * MS - 1.5, it.y * MS - 1.5, 3, 3); }
+    for (const d of drones) if (seen[(d.y | 0) * MW + (d.x | 0)]) { mctx.fillStyle = "#ff3b30"; mctx.beginPath(); mctx.arc(d.x * MS, d.y * MS, 2, 0, 7); mctx.fill(); }
+    for (const d of vdrones) if (d.alive && seen[(d.y | 0) * MW + (d.x | 0)]) { mctx.fillStyle = "#ff3b30"; mctx.beginPath(); mctx.arc(d.x * MS, d.y * MS, 1.6, 0, 7); mctx.fill(); }
+    if (rabbit && seen[(rabbit.y | 0) * MW + (rabbit.x | 0)]) { mctx.fillStyle = "#ffb3c7"; mctx.beginPath(); mctx.arc(rabbit.x * MS, rabbit.y * MS, 2, 0, 7); mctx.fill(); }
+    if (chest && seen[(chest.y | 0) * MW + (chest.x | 0)]) { mctx.fillStyle = "#ffd45a"; mctx.fillRect(chest.x * MS - 2, chest.y * MS - 2, 4, 4); }
+    const cx = P.x * MS, cy = P.y * MS;
+    mctx.fillStyle = "#ffffff"; mctx.beginPath();
+    mctx.moveTo(cx + Math.cos(P.a) * 5, cy + Math.sin(P.a) * 5);
+    mctx.lineTo(cx + Math.cos(P.a + 2.5) * 3.5, cy + Math.sin(P.a + 2.5) * 3.5);
+    mctx.lineTo(cx + Math.cos(P.a - 2.5) * 3.5, cy + Math.sin(P.a - 2.5) * 3.5);
+    mctx.closePath(); mctx.fill();
+  }
+
+  // ---------- focus & prompt ----------
+  const promptEl = $("prompt"), cross = $("cross"), overlay = $("overlay"), toastEl = $("toast"), warnEl = $("warn"), flashEl = $("flash"), useBtn = $("bE");
+  let focus = null, lastPromptKey = "";
+  function computeFocus() {
+    focus = null;
+    if (mode === "walk") {
+      if (chest && S.vaultOpen) {
+        const dx = chest.x - P.x, dy = chest.y - P.y, d = Math.hypot(dx, dy);
+        let ad = Math.atan2(dy, dx) - P.a; ad = Math.atan2(Math.sin(ad), Math.cos(ad));
+        if (d < 1.8 && Math.abs(ad) < .45) focus = { kind: "chest" };
+      }
+      const h = centerHit;
+      if (!focus && h) {
+        if (h.v >= 20 && h.dist < 2.3) focus = { kind: "term", i: h.v - 20 };
+        else if (h.v === 6 && h.dist < 2.3) focus = { kind: "keypad" };
+        else if (h.v === 5 && h.dist < 3.4) focus = { kind: "clue" };
+        else if (h.v >= 10 && h.v < 16 && h.dist < 2.4 && doors[h.v - 10].target < 1) focus = { kind: "door", k: h.v - 10 };
+      }
+    }
+    const hunt = mode === "walk" && !focus && huntActive();
+    const laser = mode === "walk" && !focus && !hunt && laserOn();
+    const key = focus ? focus.kind + ":" + (focus.i ?? focus.k ?? "") + ":" + (focus.kind === "term" ? S.stage[focus.i] : S.vaultOpen + "" + S.won) : hunt ? "hunt" : laser ? "laser" : "";
+    cross.classList.toggle("on", !!focus && focus.kind !== "door");
+    if (key === lastPromptKey) return;
+    lastPromptKey = key;
+    useBtn.textContent = hunt ? "THROW" : laser ? "FIRE" : "USE";
+    if (!focus && !hunt && !laser) { promptEl.hidden = true; return; }
+    promptEl.classList.toggle("info", !!focus && focus.kind === "door");
+    promptEl.innerHTML = focus ? promptText(focus) : hunt ? "<kbd>Space</kbd> Throw a carrot" : "<kbd>Space</kbd> Fire the laser";
+    promptEl.hidden = false;
+  }
+  function promptText(f) {
+    if (f.kind === "term") { const n = f.i + 1; return S.stage[f.i] === 2 ? `<kbd>E</kbd> Read Challenge ${n} again` : `<kbd>E</kbd> Use Terminal ${n}`; }
+    if (f.kind === "keypad") return S.vaultOpen ? "<kbd>E</kbd> Vault keypad: unlocked" : "<kbd>E</kbd> Enter the vault code";
+    if (f.kind === "clue") return "<kbd>E</kbd> Read the notice";
+    if (f.kind === "chest") return S.won ? "<kbd>E</kbd> See the final challenge again" : "<kbd>E</kbd> Open the final challenge";
+    if (f.kind === "door") return f.k === 5 ? "Sealed. Enter the code at the keypad." : `Locked. Unlock every terminal in the ${ZONE_NAMES[f.k]} to open it.`;
+    return "";
+  }
+  function interact() {
+    if (mode !== "walk" || !focus) return;
+    if (focus.kind === "term") openTerminal(focus.i);
+    else if (focus.kind === "keypad") openKeypad();
+    else if (focus.kind === "clue") openClue();
+    else if (focus.kind === "chest") openFinal();
+    else if (focus.kind === "door") { SFX.bad(); toast(promptText(focus), 2000); }
+  }
+  function useAction() {
+    if (mode !== "walk") return;
+    if (focus) interact(); else if (huntActive()) throwCarrot(); else if (laserOn()) fireLaser();
+  }
+
+  let toastTimer = 0;
+  function toast(msg, ms, big) { toastEl.textContent = msg; toastEl.classList.toggle("big", !!big); toastEl.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => { toastEl.hidden = true; }, ms || 2400); }
+  function penalty(sec) {
+    if (!sec) return;
+    S.timeLeft -= sec;
+    const c = $("clock"); c.classList.add("hit"); setTimeout(() => c.classList.remove("hit"), 700);
+  }
+
+  // ---------- update ----------
+  const keys = { fwd: false, back: false, left: false, right: false, sl: false, sr: false };
+  const keymap = { KeyW: "fwd", ArrowUp: "fwd", KeyS: "back", ArrowDown: "back", ArrowLeft: "left", ArrowRight: "right", KeyA: "sl", KeyD: "sr", KeyQ: "left" };
+  function solidAt(cx, cy) {
+    if (cx < 0 || cy < 0 || cx >= MW || cy >= MH) return true;
+    const i = cy * MW + cx, v = map[i];
+    if (v === 0) return solidSpr[i] === 1;
+    if (v >= 10 && v < 16) return doors[v - 10].open < .9;
+    return true;
+  }
+  function canStand(x, y) { const r = .22; return !solidAt((x - r) | 0, (y - r) | 0) && !solidAt((x + r) | 0, (y - r) | 0) && !solidAt((x - r) | 0, (y + r) | 0) && !solidAt((x + r) | 0, (y + r) | 0); }
+  function wallAt(x, y) {
+    const cx = x | 0, cy = y | 0;
+    if (x < 0 || y < 0 || cx >= MW || cy >= MH) return true;
+    const v = map[cy * MW + cx];
+    if (!v) return false;
+    if (v >= 10 && v < 16) return doors[v - 10].open < .9;
+    return true;
+  }
+  function clearLine(x0, y0, x1, y1) {
+    const d = Math.hypot(x1 - x0, y1 - y0), n = Math.max(1, Math.ceil(d / .2));
+    for (let k = 1; k < n; k++) { const t = k / n; if (wallAt(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t)) return false; }
+    return true;
+  }
+
+  // drones patrol; one at a time gives chase when it spots you, then gives up and flies home
+  function droneCanBe(d, x, y) {
+    const cx = x | 0, cy = y | 0;
+    if (x < 0 || y < 0 || cx >= MW || cy >= MH) return false;
+    const id = cy * MW + cx;
+    return !map[id] && zoneOf[id] === d.home;
+  }
+  function droneStep(d, tx, ty, sp, dt) {
+    const dx = tx - d.x, dy = ty - d.y, dist = Math.hypot(dx, dy);
+    if (dist < 1e-3) return;
+    const step = Math.min(dist, sp * dt), nx = d.x + dx / dist * step, ny = d.y + dy / dist * step;
+    if (droneCanBe(d, nx, d.y)) d.x = nx;
+    if (droneCanBe(d, d.x, ny)) d.y = ny;
+  }
+  function moveDrones(dt) {
+    const pz = zoneAt(P.x, P.y);
+    let chaser = drones.find(d => d.mode === "chase") || null;
+    for (const d of drones) {
+      patrolPoint(d, worldT);
+      d.cool = Math.max(0, d.cool - dt);
+      const dist = Math.hypot(P.x - d.x, P.y - d.y);
+      const sees = pz === d.home && invuln <= 0 && dist < d.sight && clearLine(d.x, d.y, P.x, P.y);
+      if (d.mode === "patrol") {
+        d.x = d.px; d.y = d.py;
+        if (d.chase && sees && !chaser && d.cool <= 0) { d.mode = "chase"; d.chaseT = 0; d.lost = 0; chaser = d; SFX.alert(); }
+      } else if (d.mode === "chase") {
+        d.chaseT += dt; d.lost = sees ? 0 : d.lost + dt;
+        if (d.lost > 2 || d.chaseT > d.chaseTime || Math.hypot(d.x - d.px, d.y - d.py) > 9) { d.mode = "return"; d.retT = 0; }
+        else droneStep(d, P.x, P.y, d.chaseSpeed, dt);
+      } else {
+        d.retT += dt;
+        droneStep(d, d.px, d.py, 2.6, dt);
+        if (Math.hypot(d.x - d.px, d.y - d.py) < .2 || d.retT > 5) { d.mode = "patrol"; d.x = d.px; d.y = d.py; d.cool = 1.5; }
+      }
+      d.zone = zoneAt(d.x, d.y);
+    }
+  }
+
+  // the rabbit: lively at first and impossible to feed, then it tires out
+  const rabbitCfg = i => clamp(+((stations[i].challenge || {}).chaseSeconds ?? 30), 0, 180);
+  function spawnRabbit(i) {
+    const z = stationZone[i];
+    let best = null, bestScore = -9;
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+      const id = y * MW + x;
+      if (map[id] || solidSpr[id] || zoneOf[id] !== z) continue;
+      const cx = x + .5, cy = y + .5, d = Math.hypot(cx - P.x, cy - P.y);
+      if (d < 2 || d > 4) continue;
+      const score = ((cx - P.x) * Math.cos(P.a) + (cy - P.y) * Math.sin(P.a)) / d - Math.abs(d - 3) * .2 + Math.random() * .3;
+      if (score > bestScore) { bestScore = score; best = { x: cx, y: cy }; }
+    }
+    if (!best) best = { x: P.x, y: P.y };
+    const energy = rabbitCfg(i);
+    rabbit = { type: "rabbit", x: best.x, y: best.y, i, zone: z, st: "idle", t: .6, tx: best.x, ty: best.y, anim: 0, lift: 0, frame: 0, fed: false, energy, tired: energy <= 0, scareT: 0 };
+  }
+  function throwCarrot() {
+    if (!huntActive()) return;
+    const dx = Math.cos(P.a), dy = Math.sin(P.a);
+    if (carrots.length >= 4) carrots.shift();
+    carrots.push({ type: "carrot", x: P.x + dx * .3, y: P.y + dy * .3, z: .42, lift: .42, vx: dx * 4.5, vy: dy * 4.5, vz: 2, ground: false, t: 0 });
+    SFX.throwC();
+  }
+  const rabbitOK = (x, y) => {
+    const cx = x | 0, cy = y | 0;
+    if (x < 0 || y < 0 || cx >= MW || cy >= MH) return false;
+    const id = cy * MW + cx;
+    return !map[id] && !solidSpr[id] && zoneOf[id] === rabbit.zone;
+  };
+  function pickHop(x0, y0, ang, dist) {
+    for (const off of [0, .6, -.6, 1.2, -1.2, 1.8, -1.8, Math.PI]) {
+      const x = x0 + Math.cos(ang + off) * dist, y = y0 + Math.sin(ang + off) * dist;
+      if (rabbitOK(x, y)) return { x, y };
+    }
+    return null;
+  }
+  function updateRabbit(dt) {
+    for (let k = carrots.length - 1; k >= 0; k--) {
+      const c = carrots[k]; c.t += dt;
+      if (!c.ground) {
+        const nx = c.x + c.vx * dt, ny = c.y + c.vy * dt;
+        if (wallAt(nx, c.y)) c.vx *= -.2; else c.x = nx;
+        if (wallAt(c.x, ny)) c.vy *= -.2; else c.y = ny;
+        c.vz -= 6 * dt; c.z += c.vz * dt;
+        if (c.z <= 0) { c.z = 0; c.ground = true; c.t = 0; }
+      } else if (c.t > 8) { carrots.splice(k, 1); continue; }
+      c.lift = c.z;
+    }
+    const r = rabbit; if (!r) return;
+    r.anim += dt; r.t -= dt; r.scareT = Math.max(0, r.scareT - dt);
+    const pd = Math.hypot(P.x - r.x, P.y - r.y);
+    if (!r.tired && !r.fed && zoneAt(P.x, P.y) === r.zone) {
+      r.energy -= dt;
+      if (r.energy <= 0) { r.tired = true; r.st = "idle"; r.t = .4; SFX.blip(); toast("The rabbit is slowing down! Throw it a carrot, or run up and grab it.", 4000); syncAll(); }
+    }
+    const lively = !r.tired && !r.fed;
+    if (r.st === "eat") {
+      r.frame = 0; r.lift = Math.abs(Math.sin(r.anim * 14)) * .02;
+      if (r.t <= 0) { r.st = "idle"; r.t = .8; if (!r.fed) { r.fed = true; rabbitFed(r.i); } }
+      return;
+    }
+    if (r.tired && !r.fed && pd < .5) { r.st = "eat"; r.t = 1.1; r.frame = 0; r.lift = 0; SFX.munch(); return; }
+    let food = null, best = lively ? 1.7 : 2.4;
+    for (const c of carrots) if (c.ground) { const d = Math.hypot(c.x - r.x, c.y - r.y); if (d < best) { best = d; food = c; } }
+    if (food && lively) {
+      // far too lively to stop and eat: it bolts away from the carrot
+      if (r.st !== "flee") { const h = pickHop(r.x, r.y, Math.atan2(r.y - food.y, r.x - food.x), 2.6); if (h) { r.st = "flee"; r.tx = h.x; r.ty = h.y; } }
+      if (r.scareT <= 0) { r.scareT = 6; toast("Too lively to eat yet! Keep chasing it.", 2200); }
+      food = null;
+    }
+    if (food) { r.st = "food"; r.tx = food.x; r.ty = food.y; }
+    else if (r.st === "food") { r.st = "idle"; r.t = .3; }
+    if (!food && r.st !== "flee" && pd < (lively ? 5 : 2.2)) {
+      const h = pickHop(r.x, r.y, Math.atan2(r.y - P.y, r.x - P.x) + (Math.random() - .5) * .8, lively ? 3 + Math.random() * 1.5 : 2 + Math.random() * .6);
+      if (h) { r.st = "flee"; r.tx = h.x; r.ty = h.y; }
+    }
+    if (r.st === "idle" && r.t <= 0) {
+      const h = pickHop(r.x, r.y, Math.random() * 6.283, lively ? 1.5 + Math.random() * 2 : .8 + Math.random() * 1.2);
+      if (h) { r.st = "hop"; r.tx = h.x; r.ty = h.y; } else r.t = .5;
+    }
+    let moving = false;
+    if (r.st === "hop" || r.st === "flee" || r.st === "food") {
+      const sp = r.st === "flee" ? (lively ? 2.75 : 2) : r.st === "food" ? 2 : (lively ? 2.3 : 1.5);
+      const dx = r.tx - r.x, dy = r.ty - r.y, d = Math.hypot(dx, dy);
+      if (r.st === "food" && d < .25) { carrots.splice(carrots.indexOf(food), 1); r.st = "eat"; r.t = 1.3; r.frame = 0; r.lift = 0; SFX.munch(); return; }
+      if (d < .08) { r.st = "idle"; r.t = lively ? .05 + Math.random() * .25 : .35 + Math.random() * .7; }
+      else {
+        const step = Math.min(d, sp * dt), nx = r.x + dx / d * step, ny = r.y + dy / d * step;
+        let blocked = true;
+        if (rabbitOK(nx, r.y)) { r.x = nx; blocked = false; }
+        if (rabbitOK(r.x, ny)) { r.y = ny; blocked = false; }
+        if (blocked) { r.st = "idle"; r.t = .2; } else moving = true;
+      }
+    }
+    r.frame = moving ? 1 : 0;
+    r.lift = moving ? Math.abs(Math.sin(r.anim * (lively ? 11 : 8))) * .12 : 0;
+  }
+  function rabbitFed(i) {
+    if (S.stage[i] === 2) return;
+    taskReminder = i;
+    stationDone(i); SFX.ok();
+    toast("Go back to the screen to get your task!", 6000, true);
+  }
+
+  // the vault room is a laser range: drones keep respawning while the team waits for its digits
+  const VAULT_Z = 5, VAULT_DRONES = 8;
+  const laserOn = () => GAME.vaultLaser !== false && mode === "walk" && zoneAt(P.x, P.y) === VAULT_Z;
+  const vdCan = (x, y) => { const cx = x | 0, cy = y | 0; if (x < 0 || y < 0 || cx >= MW || cy >= MH) return false; const id = cy * MW + cx; return !map[id] && zoneOf[id] === VAULT_Z; };
+  const vSide = x => (doors[5] && x > doors[5].x ? 1 : 0);
+  function vdSpawn(d) {
+    const side = vSide(P.x), opts = [];
+    for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+      const id = y * MW + x;
+      if (map[id] || solidSpr[id] || zoneOf[id] !== VAULT_Z || vSide(x + .5) !== side) continue;
+      if (Math.hypot(x + .5 - P.x, y + .5 - P.y) < 3.5) continue;
+      opts.push([x + .5, y + .5]);
+    }
+    if (!opts.length) { d.wait = 1; return; }
+    const [x, y] = opts[(Math.random() * opts.length) | 0];
+    Object.assign(d, { x, y, tx: x, ty: y, alive: true, wait: 0, t: 0, ph: Math.random() * 6, hunt: false });
+  }
+  function boom(d) { booms.push({ type: "boom", x: d.x, y: d.y, t: 0, ph: 0 }); d.alive = false; d.wait = 1.5 + Math.random() * 1.5; SFX.boom(); }
+  function syncScore() { const el = $("score"); if (el) el.textContent = `LASER · ${S.zapped} ZAPPED`; }
+  function updateVault(dt) {
+    laserT = Math.max(0, laserT - dt); fireCD = Math.max(0, fireCD - dt);
+    for (let k = booms.length - 1; k >= 0; k--) { booms[k].t += dt; if (booms[k].t > .45) booms.splice(k, 1); }
+    if (!laserOn()) return;
+    if (!vdrones.length) for (let k = 0; k < VAULT_DRONES; k++) vdrones.push({ type: "drone", mode: "hunt", alive: false, wait: .3 + k * .4, x: 0, y: 0, ph: 0 });
+    for (const d of vdrones) {
+      if (!d.alive) { d.wait -= dt; if (d.wait <= 0) vdSpawn(d); continue; }
+      if (vSide(d.x) !== vSide(P.x)) continue;
+      d.t -= dt;
+      if (d.t <= 0) {
+        d.hunt = Math.random() < .4;
+        if (!d.hunt) { const a = Math.random() * 6.283, rr = 1.5 + Math.random() * 2.5; d.tx = d.x + Math.cos(a) * rr; d.ty = d.y + Math.sin(a) * rr; }
+        d.t = 1 + Math.random() * 1.5;
+      }
+      if (d.hunt) { d.tx = P.x; d.ty = P.y; }
+      const dx = d.tx - d.x, dy = d.ty - d.y, dist = Math.hypot(dx, dy), step = Math.min(dist, (d.hunt ? 1.5 : 1.8) * dt);
+      if (dist > .05) {
+        const nx = d.x + dx / dist * step, ny = d.y + dy / dist * step;
+        if (vdCan(nx, d.y)) d.x = nx; else d.t = 0;
+        if (vdCan(d.x, ny)) d.y = ny; else d.t = 0;
+      } else d.t = 0;
+      if (Math.hypot(P.x - d.x, P.y - d.y) < .45 && invuln <= 0) {
+        boom(d); S.zapped = Math.max(0, S.zapped - 2); invuln = 1; SFX.zap();
+        flashEl.classList.remove("on"); void flashEl.offsetWidth; flashEl.classList.add("on");
+        toast("Zapped by a drone! −2", 1600); syncScore();
+      }
+    }
+  }
+  function fireLaser() {
+    if (!laserOn() || fireCD > 0) return;
+    fireCD = .22; laserT = .09; SFX.laser();
+    const cx = Math.cos(P.a), cy = Math.sin(P.a);
+    let hit = null, best = 9;
+    for (const d of vdrones) {
+      if (!d.alive) continue;
+      const dx = d.x - P.x, dy = d.y - P.y, along = dx * cx + dy * cy;
+      if (along <= .1 || along > best || Math.abs(dx * cy - dy * cx) > .42 || !clearLine(P.x, P.y, d.x, d.y)) continue;
+      best = along; hit = d;
+    }
+    if (hit) { boom(hit); S.zapped++; syncScore(); }
+  }
+
+  let saveT = 0, warnT = 0;
+  function update(dt) {
+    animT += dt;
+    if (S.started && !S.won && !paused && mode !== "title") {
+      const before = S.timeLeft; S.timeLeft -= dt;
+      if (before > 0 && S.timeLeft <= 0 && !S.overtime) { S.overtime = true; toast("Time's up! The overtime clock is running, so keep going.", 5000); SFX.bad(); save(); }
+    }
+    if (mode === "title") P.a += dt * .12;
+    if (mode === "walk") {
+      if (!paused) worldT += dt;
+      const turn = 2.2 * dt, sp = 2.6 * dt;
+      if (keys.left) P.a -= turn;
+      if (keys.right) P.a += turn;
+      const dx = Math.cos(P.a), dy = Math.sin(P.a);
+      let mx = 0, my = 0;
+      if (keys.fwd) { mx += dx; my += dy; }
+      if (keys.back) { mx -= dx; my -= dy; }
+      if (keys.sl) { mx += dy; my -= dx; }
+      if (keys.sr) { mx -= dy; my += dx; }
+      const len = Math.hypot(mx, my);
+      if (len) { const nx = P.x + mx / len * sp, ny = P.y + my / len * sp; if (canStand(nx, P.y)) P.x = nx; if (canStand(P.x, ny)) P.y = ny; }
+      for (const d of doors) if (d.open < d.target) { if (d.open === 0) { if (d.k === 5) SFX.pick(); else SFX.door(); } d.open = Math.min(d.target, d.open + dt * .85); }
+      for (const it of items) {
+        if (it.got || Math.hypot(it.x - P.x, it.y - P.y) > .6) continue;
+        it.got = true; S.items.push(it.id); SFX.pick();
+        const n = needFor(it.station), f = foundFor(it.station);
+        toast(f >= n ? `All ${n} ${itemsName(it.station)} found! Return to Terminal ${it.station + 1}.` : `${itemName(it.station)[0].toUpperCase() + itemName(it.station).slice(1)} found: ${f} of ${n}`, 2800);
+        syncAll(); save();
+      }
+      const cx = P.x | 0, cy = P.y | 0;
+      for (let oy = -3; oy <= 3; oy++) for (let ox = -3; ox <= 3; ox++) if (ox * ox + oy * oy <= 10) { const x = cx + ox, y = cy + oy; if (x >= 0 && y >= 0 && x < MW && y < MH) seen[y * MW + x] = 1; }
+      updateRabbit(dt);
+      if (!paused) moveDrones(dt);
+      updateVault(dt);
+      // stepping through the vault door reveals the final challenge
+      if (S.vaultOpen && !S.won && doors[5] && P.x > doors[5].x + 1.2) openFinal();
+    }
+    invuln = Math.max(0, invuln - dt);
+    const pz = zoneAt(P.x, P.y);
+    let near = 99, chasing = false;
+    if (mode === "walk") for (const d of drones) {
+      if (d.mode === "chase") chasing = true;
+      if (d.zone !== pz) continue;
+      const dd = Math.hypot(d.x - P.x, d.y - P.y); near = Math.min(near, dd);
+      if (dd < .5 && invuln <= 0 && !paused) { spotted(); near = 99; chasing = false; break; }
+    }
+    const wt = chasing ? "Drone chasing you!" : "Drone nearby";
+    if (warnEl.textContent !== wt) warnEl.textContent = wt;
+    warnEl.hidden = !(chasing || near <= 3);
+    $("score").hidden = !laserOn();
+    warnT -= dt;
+    if ((chasing || near <= 3) && warnT <= 0) { SFX.blip(); warnT = .2 + Math.min(near, 3) * .25; }
+    saveT += dt; if (saveT > 2) { saveT = 0; save(); }
+    syncClock();
+  }
+  // caught: back to the room before this one (at its door), progress kept
+  function spotted() {
+    S.zaps++; penalty(SPOT_PEN); SFX.zap();
+    flashEl.classList.remove("on"); void flashEl.offsetWidth; flashEl.classList.add("on");
+    const z = zoneAt(P.x, P.y), r = (z > 0 && backSpawn[z]) || { x: start.x, y: start.y, a: respawn[0].a };
+    P.x = r.x; P.y = r.y; P.a = r.a; invuln = 2.5;
+    drones.forEach(d => { if (d.mode === "chase") { d.mode = "return"; d.retT = 0; } d.cool = 3; });
+    const back = ZONE_NAMES[Math.max(0, zoneAt(r.x, r.y))];
+    toast(`Caught by a security drone! Back to the ${back}${SPOT_PEN ? `, −${SPOT_PEN}s` : ""}.`, 3000);
+    save();
+  }
+
+  // ---------- HUD ----------
+  function fmt(t) { const a = t >= 0 ? Math.ceil(t) : Math.floor(-t); return pad2((a / 60) | 0) + ":" + pad2(a % 60); }
+  const clockTxt = t => (t >= 0 ? "" : "+") + fmt(t);
+  let lastClock = "";
+  function syncClock() {
+    const txt = clockTxt(S.timeLeft), lbl = paused ? "Paused" : S.timeLeft < 0 ? "Overtime" : "Lockdown";
+    const key = txt + lbl;
+    const tc = $("tClock"); if (tc) tc.textContent = txt;
+    if (key === lastClock) return;
+    lastClock = key;
+    $("clockVal").textContent = txt; $("clockLbl").textContent = lbl;
+    $("clock").classList.toggle("low", S.started && !S.won && S.timeLeft < 120);
+  }
+  const zoneOpen = z => z === 0 || !doors[z - 1] || doors[z - 1].target >= 1;
+  function objective() {
+    if (!S.started) return "Enter your form group to begin.";
+    if (S.won) return `<b>Final challenge unlocked!</b> The final code is ${esc(GAME.finalCode)}.`;
+    if (taskReminder >= 0) return `<b>Go back to the screen to get your task!</b> It's waiting at Terminal ${taskReminder + 1} in the ${ZONE_NAMES[stationZone[taskReminder]]}.`;
+    if (huntActive()) return rabbit.tired
+      ? "<b>The rabbit is tired!</b> Throw a carrot near it, or run up and grab it."
+      : `<b>Chase the rabbit</b> round the ${ZONE_NAMES[rabbit.zone]} until it tires out. Space throws a carrot.`;
+    const k = S.stage.findIndex(s => s < 2);
+    if (k >= 0) {
+      const ch = stations[k].challenge, z = stationZone[k], zn = ZONE_NAMES[z];
+      if (S.stage[k] === 1 && ch && ch.type === "collect") {
+        const n = needFor(k), f = foundFor(k);
+        return f >= n ? `All ${itemsName(k)} found. <b>Return to Terminal ${k + 1}.</b>` : `Find <b>${n} ${esc(itemsName(k))}</b> in the ${zn} (${f} of ${n}), then return to Terminal ${k + 1}.`;
+      }
+      const left = stations.filter((_, j) => stationZone[j] === z && S.stage[j] < 2).length, got = S.stage.filter(s => s === 2).length;
+      return (left > 1 ? `Find the <b>${left} terminals</b> hidden in the ${zn}.` : `Find <b>Terminal ${k + 1}</b> somewhere in the ${zn}.`) + (got ? ` ${got} of ${NS} challenges unlocked.` : "");
+    }
+    if (!S.vaultOpen) return `All ${NS} challenges unlocked! Collect the digits from your form teacher, then use the <b>vault keypad</b>. While you wait, blast the drones in the vault room (Space).`;
+    return "The vault is open. <b>Step through for the final challenge!</b>";
+  }
+  function syncAll() {
+    $("objective").innerHTML = objective();
+    $("frags").innerHTML = stations.map((s, i) => {
+      const got = S.stage[i] === 2;
+      return `<li class="frag${got ? " got" : ""}" aria-label="${SHAPE_NAMES[i]} challenge: ${got ? "unlocked" : "locked"}">${shapeSVG(i, 20, got ? null : "#4b5664")}</li>`;
+    }).join("");
+    const all = S.stage.every(s => s === 2);
+    const [vc, vl] = S.won ? ["ok", "Final challenge"] : S.vaultOpen ? ["ok", "Open"] : all ? ["live", "Enter code"] : ["lock", "Locked"];
+    $("logList").innerHTML = stations.map((s, i) => {
+      const st = S.stage[i];
+      const [cls, label] = st === 2 ? ["ok", "Unlocked"] : zoneOpen(stationZone[i]) && S.started ? ["live", "Find it"] : ["lock", "Locked"];
+      const body = st === 2
+        ? `<p class="m-task">${esc(s.task)}</p>${s.bonus ? `<p class="m-bonus">${esc(s.bonus)}</p>` : ""}`
+        : `<p class="m-task">Solve the puzzle at Terminal ${i + 1} to reveal this challenge.</p>`;
+      return `<li class="mcard ${cls}"><div class="m-top">${shapeSVG(i, 24, st === 2 ? null : "#4b5664")}<div><span class="l-name">Challenge ${i + 1}</span><span class="l-zone">Terminal ${i + 1} · ${ZONE_NAMES[stationZone[i]]}</span></div><span class="chip ${cls}">${label}</span></div>${body}</li>`;
+    }).join("") + `<li class="mcard ${vc}"><div class="m-top"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="${S.vaultOpen ? "#ffd45a" : "#4b5664"}" stroke-width="3"/><circle cx="12" cy="12" r="3" fill="${S.vaultOpen ? "#ffd45a" : "#4b5664"}"/></svg><div><span class="l-name">The vault</span><span class="l-zone">Behind the final door</span></div><span class="chip ${vc}">${vl}</span></div><p class="m-task">${S.won ? `The final code is ${esc(GAME.finalCode)}.` : all ? "Enter the digits from your form teacher, in the shape order on the vault room notice." : `Opens with the ${NS} digits from your form teacher.`}</p></li>`;
+    syncTeacher();
+    syncScore();
+    lastClock = "";
+  }
+
+  // ---------- overlays ----------
+  let cleanups = [], cur = 0;
+  function cleanupGame() { cleanups.forEach(f => { try { f(); } catch (e) {} }); cleanups = []; }
+  function later(fn, ms) { const id = setTimeout(fn, ms); cleanups.push(() => clearTimeout(id)); return id; }
+  function onKey(fn) { const h = e => { if (e.target && e.target.tagName === "INPUT") return; fn(e); }; window.addEventListener("keydown", h); cleanups.push(() => window.removeEventListener("keydown", h)); }
+  function shake(el) { if (!el) return; el.classList.remove("shake"); void el.offsetWidth; el.classList.add("shake"); }
+  function say(el, text, cls) { el.textContent = text; el.className = "t-msg" + (cls ? " " + cls : ""); }
+  function showOverlay(html, m) {
+    cleanupGame();
+    for (const k in keys) keys[k] = false;
+    mode = m; overlay.innerHTML = html; overlay.hidden = false; promptEl.hidden = true; lastPromptKey = ""; warnEl.hidden = true;
+    overlay.scrollTop = 0;
+  }
+  function closeOverlay() {
+    cleanupGame();
+    overlay.hidden = true; overlay.innerHTML = ""; mode = "walk"; invuln = Math.max(invuln, 1.2);
+    for (const k in keys) keys[k] = false;
+    view.focus({ preventScroll: true });
+  }
+  function focusFirst(sel) { later(() => { const el = overlay.querySelector(sel); if (el) el.focus({ preventScroll: true }); }, 60); }
+
+  // terminals
+  function openTerminal(i) { cur = i; if (taskReminder === i) { taskReminder = -1; syncAll(); } renderTerminal(); }
+  function renderTerminal() {
+    const i = cur, unlocked = S.stage[i] === 2, u = stations[i].challenge;
+    const steps = [u && u.type ? "Puzzle" : null, "Challenge"].filter(Boolean);
+    const at = unlocked ? steps.length - 1 : 0;
+    showOverlay(`
+      <div class="term" role="dialog" aria-modal="true" aria-label="Terminal ${i + 1}">
+        <div class="term-head">
+          <span class="term-id">${shapeSVG(i, 18)} TERMINAL ${pad2(i + 1)} · ${ZONE_NAMES[stationZone[i]].toUpperCase()}</span>
+          <ol class="steps">${steps.map((s, k) => `<li class="${k < at ? "done" : k === at ? "on" : ""}">${s}</li>`).join("")}</ol>
+        </div>
+        <div class="term-body" id="termBody"></div>
+        <div class="term-foot"><button class="btn ghost small" type="button" id="leaveBtn">Leave terminal</button><span class="t-clock" id="tClock">${clockTxt(S.timeLeft)}</span></div>
+      </div>`, "term");
+    $("leaveBtn").addEventListener("click", closeOverlay);
+    const body = $("termBody");
+    if (unlocked) viewTask(body, i); else viewPuzzle(body, i);
+  }
+  function stationDone(i) {
+    if (S.stage[i] === 2) return;
+    S.stage[i] = 2; syncDoors(false); syncAll(); save();
+  }
+  function viewPuzzle(body, i) {
+    const u = stations[i].challenge;
+    let fired = false;
+    const done = () => { if (fired) return; fired = true; stationDone(i); SFX.ok(); later(renderTerminal, 1000); };
+    if (!u || !u.type) { stationDone(i); viewTask(body, i); return; }
+    if (u.type === "riddle") { viewRiddle(body, i, u, done); return; }
+    const fn = GAMES[u.type];
+    if (!fn) { stationDone(i); viewTask(body, i); return; }
+    fn(body, u, done, i);
+  }
+  function viewRiddle(body, i, u, done) {
+    body.innerHTML = `
+      <p class="t-label">INCOMING RIDDLE</p>
+      <p class="riddle">${esc(u.riddle)}</p>
+      <form class="answer" id="aForm" autocomplete="off">
+        <label class="sr" for="aIn">Your answer</label>
+        <input class="t-in" id="aIn" type="text" placeholder="Type your answer" maxlength="60" spellcheck="false" autocapitalize="off">
+        <button class="btn" type="submit">Submit</button>
+      </form>
+      <p class="t-msg" id="aMsg" aria-live="polite"></p>
+      <div id="hintBox"></div>`;
+    const form = $("aForm"), input = $("aIn"), msg = $("aMsg"), hb = $("hintBox");
+    function drawHint() {
+      if (!u.hint) { hb.hidden = true; return; }
+      hb.innerHTML = S.hint[i] ? `<p class="hint-text"><span>HINT</span>${esc(u.hint)}</p>` : `<button type="button" class="btn ghost small" id="hintBtn">Show a hint${HINT_PEN ? ` (−${HINT_PEN}s)` : ""}</button>`;
+      const b = $("hintBtn");
+      if (b) b.addEventListener("click", () => { S.hint[i] = true; S.hints++; penalty(HINT_PEN); SFX.blip(); drawHint(); save(); });
+    }
+    let solved = false;
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      if (solved) return;
+      if (matches(input.value, u.answers)) { solved = true; input.disabled = true; say(msg, "ACCESS GRANTED", "good"); done(); }
+      else { say(msg, input.value.trim() ? "ACCESS DENIED. Try again." : "Type an answer first.", "bad"); SFX.bad(); shake(form); input.select(); }
+    });
+    drawHint();
+    focusFirst("#aIn");
+  }
+  function viewTask(body, i) {
+    const st = stations[i], nm = SHAPE_NAMES[i];
+    const z = stationZone[i], door = doors[z];
+    const next = door && door.target < 1
+      ? `There's another terminal hidden in the ${ZONE_NAMES[z]}. Unlock it too and the next door opens.`
+      : z + 1 >= 5 ? "The way to the vault is open. Behind the final door is a final challenge." : `The door to the ${ZONE_NAMES[z + 1]} is open. Keep exploring!`;
+    body.innerHTML = `
+      <p class="t-label">CHALLENGE ${i + 1} UNLOCKED</p>
+      <div class="task-head">${shapeSVG(i, 56)}<p class="riddle">${esc(st.task)}</p></div>
+      ${st.bonus ? `<p class="bonus">${esc(st.bonus)}</p>` : ""}
+      <p class="t-help">This is the <b>${nm}</b> challenge. When it's complete, your form teacher will give you the ${nm} digit. Write it down next to the ${nm}: you'll need it at the vault.</p>
+      <p class="t-help">${next}</p>
+      <div class="row"><button class="btn go" id="backBtn" type="button">Back to the lab</button></div>`;
+    $("backBtn").addEventListener("click", closeOverlay);
+    focusFirst("#backBtn");
+  }
+
+  // ---------- challenges ----------
+  const GAMES = {
+    blocks(el, ch, done) {
+      const N = 5, SOL = ["AAABB", "ACCBB", "DCCEB", "DDFEE", "DFFFE"];
+      const COLS = ["#ff7a59", "#ffc23d", "#53e0a8", "#5cb8ff", "#c79bff", "#ff9fd2"];
+      const tidy = cells => { const r0 = Math.min(...cells.map(c => c[0])), c0 = Math.min(...cells.map(c => c[1])); return cells.map(([r, c]) => [r - r0, c - c0]); };
+      const rot = cells => tidy(cells.map(([r, c]) => [c, -r]));
+      const groups = {};
+      SOL.forEach((row, r) => [...row].forEach((k, c) => { (groups[k] = groups[k] || []).push([r, c]); }));
+      const pieces = Object.keys(groups).map((k, n) => { let cells = tidy(groups[k]); for (let t = (Math.random() * 4) | 0; t > 0; t--) cells = rot(cells); return { id: n, cells, col: COLS[n % COLS.length], at: null }; });
+      const order = shuffle(pieces.slice());
+      const cs = (el.clientWidth || 320) >= 480 ? 44 : 36, tcs = Math.round(cs * .72);
+      const grid = new Array(N * N).fill(-1);
+      let solved = false, drag = null;
+      el.innerHTML = `
+        <p class="t-label">BUILD THE PUZZLE</p>
+        <p class="t-help">Fit every piece into the square. Drag a piece onto the grid, tap a piece to turn it, and tap a placed piece to send it back.</p>
+        <div class="blk">
+          <div class="blk-board" id="bBoard" style="grid-template-columns:repeat(${N},${cs}px);grid-auto-rows:${cs}px"></div>
+          <div class="blk-tray" id="bTray" aria-label="Puzzle pieces"></div>
+        </div>
+        <div class="row"><button class="btn ghost small" type="button" id="bReset">Start again</button></div>
+        <p class="t-msg" id="msg" aria-live="polite"></p>`;
+      const board = $("bBoard"), tray = $("bTray"), msg = $("msg");
+      const dims = p => [Math.max(...p.cells.map(c => c[0])) + 1, Math.max(...p.cells.map(c => c[1])) + 1];
+      const cellsHTML = (p, sz) => p.cells.map(([r, c]) => `<span style="left:${c * sz}px;top:${r * sz}px;width:${sz}px;height:${sz}px;background:${p.col}"></span>`).join("");
+      const fits = (p, r, c) => p.cells.every(([dr, dc]) => { const rr = r + dr, cc = c + dc; return rr >= 0 && cc >= 0 && rr < N && cc < N && grid[rr * N + cc] < 0; });
+      function draw() {
+        grid.fill(-1);
+        pieces.forEach(p => { if (p.at) p.cells.forEach(([r, c]) => { grid[(p.at[0] + r) * N + p.at[1] + c] = p.id; }); });
+        board.innerHTML = grid.map(g => g < 0 ? "<span></span>" : `<span class="f" data-p="${g}" style="background:${pieces[g].col}"></span>`).join("");
+        tray.innerHTML = order.filter(p => !p.at).map(p => { const [h, w] = dims(p); return `<button type="button" class="blk-piece" data-p="${p.id}" style="width:${w * tcs}px;height:${h * tcs}px" aria-label="Puzzle piece. Press to turn it.">${cellsHTML(p, tcs)}</button>`; }).join("");
+      }
+      const origin = () => { const r = board.getBoundingClientRect(); return { x: r.left + board.clientLeft, y: r.top + board.clientTop }; };
+      function stopListening() { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up); }
+      function begin(e, p, fromBoard, gx, gy, src) {
+        drag = { p, fromBoard, x0: e.clientX, y0: e.clientY, gx, gy, moved: false, ghost: null, src };
+        window.addEventListener("pointermove", move); window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+      }
+      function move(e) {
+        if (!drag) return;
+        if (!drag.moved) {
+          if (Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 6) return;
+          drag.moved = true;
+          if (drag.fromBoard) { drag.p.at = null; draw(); } else if (drag.src) drag.src.classList.add("lift");
+          const [h, w] = dims(drag.p), g = document.createElement("div");
+          g.className = "blk-ghost"; g.style.width = w * cs + "px"; g.style.height = h * cs + "px"; g.innerHTML = cellsHTML(drag.p, cs);
+          document.body.appendChild(g); drag.ghost = g;
+        }
+        drag.ghost.style.left = (e.clientX - drag.gx) + "px"; drag.ghost.style.top = (e.clientY - drag.gy) + "px";
+      }
+      function up(e) {
+        stopListening();
+        const d = drag; drag = null;
+        if (!d) return;
+        if (solved) { if (d.ghost) d.ghost.remove(); return; }
+        if (!d.moved) { if (d.fromBoard) d.p.at = null; else d.p.cells = rot(d.p.cells); SFX.key(); draw(); return; }
+        d.ghost.remove();
+        const o = origin(), c = Math.round((e.clientX - d.gx - o.x) / cs), r = Math.round((e.clientY - d.gy - o.y) / cs);
+        if (fits(d.p, r, c)) { d.p.at = [r, c]; SFX.key(); } else d.p.at = null;
+        draw();
+        if (grid.every(g => g >= 0)) { solved = true; say(msg, "PUZZLE COMPLETE", "good"); done(); }
+      }
+      tray.addEventListener("pointerdown", e => {
+        const b = e.target.closest(".blk-piece"); if (!b || solved) return;
+        e.preventDefault();
+        const r = b.getBoundingClientRect(), k = cs / tcs;
+        begin(e, pieces[+b.dataset.p], false, (e.clientX - r.left) * k, (e.clientY - r.top) * k, b);
+      });
+      tray.addEventListener("click", e => {
+        if (e.detail !== 0 || solved) return; // keyboard: Enter or Space turns the piece
+        const b = e.target.closest(".blk-piece"); if (!b) return;
+        const p = pieces[+b.dataset.p]; p.cells = rot(p.cells); SFX.key(); draw();
+        const nb = tray.querySelector(`[data-p="${p.id}"]`); if (nb) nb.focus({ preventScroll: true });
+      });
+      board.addEventListener("pointerdown", e => {
+        const sp = e.target.closest("span[data-p]"); if (!sp || solved) return;
+        e.preventDefault();
+        const p = pieces[+sp.dataset.p], o = origin();
+        begin(e, p, true, e.clientX - (o.x + p.at[1] * cs), e.clientY - (o.y + p.at[0] * cs), null);
+      });
+      $("bReset").addEventListener("click", () => { if (solved) return; pieces.forEach(p => { p.at = null; }); say(msg, ""); draw(); });
+      cleanups.push(() => { stopListening(); if (drag && drag.ghost) drag.ghost.remove(); drag = null; });
+      draw();
+    },
+
+    rabbit(el, ch, done, i) {
+      const zn = ZONE_NAMES[stationZone[i]], out = !!rabbit;
+      el.innerHTML = `
+        <p class="t-label">FEED THE RABBIT</p>
+        <p class="riddle">Feed the rabbit. Hit spacebar to throw a carrot.</p>
+        <p class="t-help">A very lively lab rabbit ${out ? "is" : "will be"} loose in the ${zn}. It's far too quick to stop and eat at first, so chase it round the room until it tires out. Then throw it a carrot or run up and grab it, and come back to this terminal for your challenge. On a tablet, tap <b>Throw</b>.</p>
+        <div class="row"><button class="btn go" type="button" id="relBtn">${out ? "Back to the rabbit" : "Release the rabbit"}</button></div>`;
+      $("relBtn").addEventListener("click", () => {
+        if (!rabbit) spawnRabbit(i);
+        closeOverlay(); syncAll();
+        toast("The rabbit is loose! Chase it, and press Space to throw carrots.", 3200);
+      });
+      focusFirst("#relBtn");
+    },
+
+    hangman(el, ch, done) {
+      const words = shuffle((ch.words || ["Rigour", "Responsibility", "Relationships", "Respect"]).map(w => String(w).toUpperCase().replace(/[^A-Z]/g, "")).filter(Boolean));
+      const LIVES = clamp((ch.lives | 0) || 6, 3, 10);
+      const FIG = ['<circle cx="80" cy="36" r="10"/>', '<line x1="80" y1="46" x2="80" y2="78"/>', '<line x1="80" y1="54" x2="66" y2="68"/>', '<line x1="80" y1="54" x2="94" y2="68"/>', '<line x1="80" y1="78" x2="68" y2="98"/>', '<line x1="80" y1="78" x2="92" y2="98"/>'];
+      let w = 0, guessed = new Set(), wrong = 0, state = "play";
+      function render() {
+        const word = words[w], shown = Math.min(FIG.length, Math.round(wrong * FIG.length / LIVES)), lost = state === "lost" || state === "out";
+        el.innerHTML = `
+          <p class="t-label">HANGMAN · WORD ${w + 1} OF ${words.length}</p>
+          <p class="t-help">Guess the word one letter at a time: tap the letters or type them. You can get ${LIVES} letters wrong.</p>
+          <div class="hm">
+            <svg class="hm-fig" viewBox="0 0 120 130" aria-hidden="true"><line x1="10" y1="122" x2="70" y2="122"/><line x1="30" y1="122" x2="30" y2="8"/><line x1="30" y1="8" x2="80" y2="8"/><line x1="80" y1="8" x2="80" y2="26"/>${FIG.slice(0, shown).join("")}</svg>
+            <div class="hm-word${lost ? " lost" : ""}" aria-label="${lost ? "The word was " + word : "Word to guess, " + word.length + " letters"}">${[...word].map(c => `<span>${guessed.has(c) || lost ? c : ""}</span>`).join("")}</div>
+          </div>
+          ${lost ? "" : `<div class="hm-keys" id="hmKeys">${"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(c => { const g = guessed.has(c); return `<button type="button" data-c="${c}"${g || state === "won" ? " disabled" : ""} class="${g ? (word.includes(c) ? "hit" : "miss") : ""}">${c}</button>`; }).join("")}</div>`}
+          <p class="t-msg" id="msg" aria-live="polite"></p>
+          <div id="hmMore" style="display:grid;gap:10px"></div>`;
+        const msg = $("msg"), more = $("hmMore");
+        const keysEl = $("hmKeys");
+        if (keysEl) keysEl.addEventListener("click", e => { const b = e.target.closest("button[data-c]"); if (b) guess(b.dataset.c); });
+        if (state === "won") { say(msg, "WORD FOUND", "good"); done(); }
+        else if (state === "lost") {
+          say(msg, "Out of guesses! Try the next word.", "bad");
+          more.innerHTML = `<div class="row"><button class="btn" type="button" id="hmNext">Next word</button></div>`;
+          $("hmNext").addEventListener("click", () => { w++; guessed = new Set(); wrong = 0; state = "play"; render(); });
+          focusFirst("#hmNext");
+        } else if (state === "out") {
+          say(msg, `All ${words.length} words used up.`, "bad");
+          more.innerHTML = `
+            <p class="t-help">Ask your form tutor to unlock this challenge, or have another go.</p>
+            <form class="answer" id="hmPin" autocomplete="off"><label class="sr" for="hmPinIn">Form tutor PIN</label><input class="t-in" id="hmPinIn" type="password" inputmode="numeric" placeholder="Form tutor PIN" maxlength="20"><button class="btn" type="submit">Unlock</button></form>
+            <div class="row"><button class="btn ghost small" type="button" id="hmAgain">Try the words again</button></div>`;
+          $("hmPin").addEventListener("submit", e => { e.preventDefault(); if ($("hmPinIn").value.trim() === String(GAME.teacherPin)) { state = "won"; done(); } else { SFX.bad(); shake($("hmPin")); $("hmPinIn").value = ""; } });
+          $("hmAgain").addEventListener("click", () => { shuffle(words); w = 0; guessed = new Set(); wrong = 0; state = "play"; render(); });
+        }
+      }
+      function guess(c) {
+        if (state !== "play" || guessed.has(c)) return;
+        guessed.add(c);
+        const word = words[w];
+        if (word.includes(c)) { SFX.key(); if ([...word].every(x => guessed.has(x))) state = "won"; }
+        else { wrong++; SFX.bad(); if (wrong >= LIVES) state = w + 1 < words.length ? "lost" : "out"; }
+        render();
+      }
+      onKey(e => { if (/^[a-z]$/i.test(e.key) && !e.ctrlKey && !e.metaKey && !e.altKey) { guess(e.key.toUpperCase()); e.preventDefault(); } });
+      render();
+    },
+
+    scramble(el, ch, done) {
+      const word = String(ch.word || "LOCKDOWN").toUpperCase().replace(/[^A-Z]/g, "") || "LOCKDOWN";
+      const letters = word.split("");
+      for (let t = 0; t < 20; t++) { shuffle(letters); if (letters.join("") !== word) break; }
+      const picked = []; let locked = false;
+      el.innerHTML = `
+        <p class="t-label">WORD LOCK</p>
+        <p class="t-help">${esc(ch.clue || "Unscramble the letters to make a word.")} Tap the letters in order, or type them.</p>
+        <div class="slots" id="slots"></div>
+        <div class="tiles" id="tiles">${letters.map((l, k) => `<button type="button" class="tile" data-i="${k}">${l}</button>`).join("")}</div>
+        <div class="row"><button type="button" class="btn ghost small" id="clr">Clear</button></div>
+        <p class="t-msg" id="msg" aria-live="polite"></p>`;
+      const slots = $("slots"), tiles = [...el.querySelectorAll(".tile")], msg = $("msg");
+      function draw() {
+        slots.innerHTML = letters.map((_, k) => `<button type="button" class="slot" data-k="${k}" aria-label="Letter ${k + 1}">${picked[k] != null ? letters[picked[k]] : ""}</button>`).join("");
+        tiles.forEach((t, k) => { t.disabled = picked.includes(k); });
+      }
+      function check() {
+        locked = true;
+        if (picked.map(k => letters[k]).join("") === word) { say(msg, "WORD ACCEPTED", "good"); done(); }
+        else { say(msg, "Not quite. Try again.", "bad"); SFX.bad(); shake(slots); later(() => { picked.length = 0; locked = false; draw(); }, 900); }
+      }
+      function add(k) { if (locked || picked.includes(k) || picked.length >= letters.length) return; picked.push(k); SFX.key(); draw(); if (picked.length === letters.length) check(); }
+      tiles.forEach(t => t.addEventListener("click", () => add(+t.dataset.i)));
+      slots.addEventListener("click", e => { const b = e.target.closest(".slot"); if (!b || locked) return; const k = +b.dataset.k; if (k < picked.length) { picked.splice(k, 1); draw(); } });
+      $("clr").addEventListener("click", () => { if (!locked) { picked.length = 0; draw(); } });
+      onKey(e => {
+        if (locked) return;
+        if (e.key === "Backspace") { picked.pop(); draw(); e.preventDefault(); return; }
+        const L = e.key.length === 1 ? e.key.toUpperCase() : "";
+        if (!/^[A-Z]$/.test(L)) return;
+        const k = letters.findIndex((l, j) => l === L && !picked.includes(j));
+        if (k >= 0) { add(k); e.preventDefault(); }
+      });
+      draw();
+      focusFirst(".tile");
+    },
+
+    sequence(el, ch, done) {
+      const L = clamp((ch.length | 0) || 5, 3, 9), first = Math.min(3, L);
+      const seq = Array.from({ length: L }, () => (Math.random() * 4) | 0);
+      let round = first, pos = 0, busy = true;
+      el.innerHTML = `
+        <p class="t-label">MEMORY LOCK</p>
+        <p class="t-help">Watch the lights, then repeat the pattern. Tap the pads or press keys 1 to 4. Each round is longer and faster.</p>
+        <div class="simon" id="simon">${[0, 1, 2, 3].map(p => `<button type="button" class="pad-s" data-p="${p}" style="--c:${SHAPE_COL[p]}" aria-label="Pad ${p + 1}, ${SHAPE_NAMES[p]}">${shapeSVG(p, 34, "#0b0d10")}<span>${p + 1}</span></button>`).join("")}</div>
+        <p class="t-msg" id="msg" aria-live="polite"></p>
+        <p class="t-small" id="rnd"></p>`;
+      const pads = [...el.querySelectorAll(".pad-s")], msg = $("msg"), rnd = $("rnd");
+      function lit(p, ms) { pads[p].classList.add("lit"); SFX.pad(p); later(() => pads[p].classList.remove("lit"), ms); }
+      function play() {
+        busy = true; pos = 0; pads.forEach(b => { b.disabled = true; });
+        rnd.textContent = `Pattern length ${round} of ${L}`;
+        say(msg, "Watch closely…");
+        const gap = Math.max(240, 580 - (round - first) * 80), on = Math.round(gap * .65);
+        for (let k = 0; k < round; k++) later(() => lit(seq[k], on), 500 + k * gap);
+        later(() => { busy = false; pads.forEach(b => { b.disabled = false; }); say(msg, "Your turn"); }, 500 + round * gap);
+      }
+      function press(p) {
+        if (busy) return;
+        lit(p, 200);
+        if (p !== seq[pos]) { busy = true; SFX.bad(); say(msg, "Wrong pad. Watch again.", "bad"); shake($("simon")); later(play, 1100); return; }
+        pos++;
+        if (pos === round) {
+          busy = true;
+          if (round === L) { say(msg, "PATTERN MATCHED", "good"); done(); }
+          else { round++; say(msg, "Correct! Longer and faster now…", "good"); later(play, 1000); }
+        }
+      }
+      pads.forEach(b => b.addEventListener("click", () => press(+b.dataset.p)));
+      onKey(e => { if (/^[1-4]$/.test(e.key)) { press(+e.key - 1); e.preventDefault(); } });
+      later(play, 500);
+    },
+
+    collect(el, ch, done, i) {
+      const n = needFor(i), f = foundFor(i), zn = ZONE_NAMES[stationZone[i]];
+      if (n === 0 || f >= n) { el.innerHTML = `<p class="t-label">POWER RESTORED</p><p class="riddle sm">All ${esc(itemsName(i))} connected. Booting up…</p>`; done(); return; }
+      el.innerHTML = `
+        <p class="t-label">NO POWER</p>
+        <p class="riddle sm">This terminal has lost power. Find ${n} ${esc(itemsName(i))} hidden around the ${zn}, then come back.</p>
+        <p class="t-help">Found so far: <b>${f} of ${n}</b>. They glow green, so look behind the plants and hedges. Walk over one to pick it up.</p>
+        <div class="row"><button class="btn go" type="button" id="goSearch">Start searching</button></div>`;
+      $("goSearch").addEventListener("click", closeOverlay);
+      focusFirst("#goSearch");
+    },
+
+    cipher(el, ch, done) {
+      const plain = String(ch.message || "THE PASSWORD IS ORBIT").toUpperCase();
+      const shift = (((ch.shift | 0) % 26) + 26) % 26 || 5;
+      const caesar = (s, k) => s.replace(/[A-Z]/g, c => String.fromCharCode((c.charCodeAt(0) - 65 + k) % 26 + 65));
+      const enc = caesar(plain, shift), answers = ch.answers || [plain.split(/\s+/).pop()];
+      let d = 0;
+      el.innerHTML = `
+        <p class="t-label">ENCRYPTED TRANSMISSION</p>
+        <p class="t-help">Every letter has been shifted along the alphabet. Turn the decoder dial until the message makes sense, then type the password.</p>
+        <p class="cipher-out" id="cOut"></p>
+        <div class="dial">
+          <button class="btn ghost small" type="button" id="cMinus" aria-label="Turn dial back">◀</button>
+          <output id="cVal">00</output>
+          <button class="btn ghost small" type="button" id="cPlus" aria-label="Turn dial forward">▶</button>
+          <input type="range" id="cRange" min="0" max="25" value="0" aria-label="Decoder dial">
+        </div>
+        <form class="answer" id="cForm" autocomplete="off">
+          <label class="sr" for="cIn">Password</label>
+          <input class="t-in" id="cIn" type="text" placeholder="Password" maxlength="40" spellcheck="false" autocapitalize="off">
+          <button class="btn" type="submit">Enter</button>
+        </form>
+        <p class="t-msg" id="msg" aria-live="polite"></p>`;
+      const out = $("cOut"), val = $("cVal"), range = $("cRange"), msg = $("msg");
+      function draw() { out.textContent = caesar(enc, (26 - d) % 26); val.textContent = "SHIFT " + pad2(d); range.value = d; }
+      $("cMinus").addEventListener("click", () => { d = (d + 25) % 26; SFX.key(); draw(); });
+      $("cPlus").addEventListener("click", () => { d = (d + 1) % 26; SFX.key(); draw(); });
+      range.addEventListener("input", () => { d = +range.value; draw(); });
+      let ok = false;
+      $("cForm").addEventListener("submit", e => {
+        e.preventDefault(); if (ok) return;
+        const v = $("cIn").value;
+        if (matches(v, answers)) { ok = true; say(msg, "TRANSMISSION DECODED", "good"); done(); }
+        else { say(msg, v.trim() ? "Wrong password. Keep turning the dial." : "Type the password first.", "bad"); SFX.bad(); shake($("cForm")); }
+      });
+      draw();
+      focusFirst("#cPlus");
+    },
+
+    reaction(el, ch, done) {
+      const rounds = clamp((ch.rounds | 0) || 3, 1, 6);
+      let r = 0, p = 0, dir = 1, z0 = 0, zw = 0, speed = 0, raf = 0, last = 0, wait = false;
+      el.innerHTML = `
+        <p class="t-label">LASER CALIBRATION</p>
+        <p class="t-help">Press <b>Stop</b> (or Space) while the needle is inside the green zone. Land it ${rounds} times. Each round is faster.</p>
+        <div class="track" id="track"><div class="zone" id="zone"></div><div class="needle" id="needle"></div></div>
+        <div class="row between"><div class="pips" id="pips"></div><button class="btn" type="button" id="stopBtn">Stop</button></div>
+        <p class="t-msg" id="msg" aria-live="polite"></p>`;
+      const zone = $("zone"), needle = $("needle"), msg = $("msg"), pips = $("pips");
+      function setup() {
+        zw = Math.max(.07, .22 - r * .05); z0 = .06 + Math.random() * (.88 - zw); speed = .55 + r * .28;
+        zone.style.left = (z0 * 100) + "%"; zone.style.width = (zw * 100) + "%";
+        pips.innerHTML = Array.from({ length: rounds }, (_, k) => `<span class="pip${k < r ? " on" : ""}"></span>`).join("");
+      }
+      function tick(t) {
+        const dt = last ? Math.min(.05, (t - last) / 1000) : 0; last = t;
+        if (!wait) { p += dir * speed * dt; if (p > 1) { p = 1; dir = -1; } if (p < 0) { p = 0; dir = 1; } needle.style.left = (p * 100) + "%"; }
+        raf = requestAnimationFrame(tick);
+      }
+      function stop() {
+        if (wait) return;
+        wait = true;
+        if (p >= z0 && p <= z0 + zw) {
+          r++; SFX.ok(); setup();
+          if (r >= rounds) { say(msg, "LASER CALIBRATED", "good"); done(); return; }
+          say(msg, "Locked in! Next round…", "good"); later(() => { wait = false; }, 600);
+        } else { SFX.bad(); say(msg, "Missed. Try again.", "bad"); shake($("track")); later(() => { wait = false; }, 600); }
+      }
+      $("stopBtn").addEventListener("click", stop);
+      onKey(e => { if ((e.key === " " || e.key === "Enter") && !(e.target && e.target.tagName === "BUTTON")) { e.preventDefault(); stop(); } });
+      cleanups.push(() => cancelAnimationFrame(raf));
+      setup(); raf = requestAnimationFrame(tick);
+      focusFirst("#stopBtn");
+    },
+
+    quiz(el, ch, done) {
+      const qs = (ch.questions || []).filter(q => q && q.q && Array.isArray(q.options) && q.options.length);
+      if (!qs.length) { done(); return; }
+      let k = 0;
+      function show() {
+        const q = qs[k], right = clamp((q.answer | 0) || 1, 1, q.options.length) - 1;
+        el.innerHTML = `
+          <p class="t-label">SECURITY QUESTION ${k + 1} OF ${qs.length}</p>
+          <p class="riddle sm">${esc(q.q)}</p>
+          <div class="opts">${q.options.map((o, j) => `<button type="button" class="opt" data-j="${j}">${esc(o)}</button>`).join("")}</div>
+          <p class="t-msg" id="msg" aria-live="polite"></p>`;
+        const msg = $("msg"); let lock = false;
+        el.querySelectorAll(".opt").forEach(b => b.addEventListener("click", () => {
+          if (lock || b.classList.contains("wrong")) return;
+          if (+b.dataset.j === right) {
+            lock = true; b.classList.add("right"); SFX.ok();
+            if (++k >= qs.length) { say(msg, "ALL CORRECT", "good"); done(); } else { say(msg, "Correct!", "good"); later(show, 700); }
+          } else { b.classList.add("wrong"); SFX.bad(); say(msg, "Not that one. Try again.", "bad"); }
+        }));
+        focusFirst(".opt");
+      }
+      show();
+    },
+
+    mentor(el, ch, done) {
+      el.innerHTML = `
+        <p class="t-label">MENTOR OVERRIDE</p>
+        <p class="riddle sm">${esc(ch.task || "Complete the team task your mentor sets.")}</p>
+        <p class="t-help">When your team has done this, show your mentor. They'll give you the override code.</p>
+        <form class="answer" id="mForm" autocomplete="off">
+          <label class="sr" for="mIn">Override code</label>
+          <input class="t-in" id="mIn" type="text" placeholder="Override code" maxlength="40" spellcheck="false" autocapitalize="off">
+          <button class="btn" type="submit">Enter</button>
+        </form>
+        <p class="t-msg" id="msg" aria-live="polite"></p>`;
+      let ok = false;
+      $("mForm").addEventListener("submit", e => {
+        e.preventDefault(); if (ok) return;
+        if (matches($("mIn").value, ch.password || "")) { ok = true; say($("msg"), "OVERRIDE ACCEPTED", "good"); done(); }
+        else { say($("msg"), "Override rejected. Check the code with your mentor.", "bad"); SFX.bad(); shake($("mForm")); }
+      });
+      focusFirst("#mIn");
+    }
+  };
+
+  // ---------- vault ----------
+  function openClue() {
+    showOverlay(`
+      <div class="term" role="dialog" aria-modal="true" aria-label="Vault notice">
+        <div class="term-head"><span class="term-id">NOTICE · VAULT SEQUENCE</span></div>
+        <div class="term-body">
+          <p class="t-help">Security reminder: the vault reads the code digits in this order, from left to right.</p>
+          <div class="seq">${ORDER.map((si, k) => (k ? '<span class="arrow">›</span>' : "") + shapeSVG(si, 40)).join("")}</div>
+        </div>
+        <div class="term-foot"><button class="btn ghost small" type="button" id="leaveBtn">Close</button><span class="t-clock" id="tClock"></span></div>
+      </div>`, "card");
+    $("leaveBtn").addEventListener("click", closeOverlay);
+    focusFirst("#leaveBtn");
+  }
+  function openKeypad() {
+    const L = CODE.length;
+    let entry = "", lock = S.vaultOpen;
+    showOverlay(`
+      <div class="term" role="dialog" aria-modal="true" aria-label="Vault keypad">
+        <div class="term-head"><span class="term-id">VAULT LOCK · ${L}-DIGIT CODE</span></div>
+        <div class="term-body">
+          <div class="kp-display" id="kpd" aria-live="polite"></div>
+          <p class="t-msg" id="msg" style="text-align:center"></p>
+          <div class="kp" id="kp">${["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "ENTER"].map(k => `<button type="button" data-k="${k}"${k === "ENTER" ? ' class="ent"' : ""}${k === "⌫" ? ' aria-label="Delete"' : ""}>${k}</button>`).join("")}</div>
+          <ul class="frag-ref" aria-label="The challenge shapes">${stations.map((s, i) => `<li>${shapeSVG(i, 22)}</li>`).join("")}</ul>
+        </div>
+        <div class="term-foot"><button class="btn ghost small" type="button" id="leaveBtn">Step away</button><span class="t-clock" id="tClock"></span></div>
+      </div>`, "card");
+    const kpd = $("kpd"), msg = $("msg");
+    function draw() { kpd.innerHTML = Array.from({ length: L }, (_, k) => `<span>${S.vaultOpen ? CODE[k] : entry[k] || ""}</span>`).join(""); }
+    function check() {
+      if (entry === CODE) {
+        lock = true; S.vaultOpen = true; syncDoors(false); syncAll(); save();
+        say(msg, "CODE ACCEPTED", "good"); SFX.vault();
+        const lb = $("leaveBtn"); lb.textContent = "Enter the vault"; lb.className = "btn go small"; lb.focus({ preventScroll: true });
+        draw();
+      } else {
+        lock = true; SFX.bad(); say(msg, "CODE REJECTED", "bad"); shake(kpd);
+        later(() => { entry = ""; lock = false; draw(); say(msg, ""); }, 1000);
+      }
+    }
+    function press(k) {
+      if (lock) return;
+      if (k === "⌫") { entry = entry.slice(0, -1); SFX.key(); }
+      else if (k === "ENTER") { if (entry.length === L) check(); else { say(msg, `Enter all ${L} digits`, "bad"); SFX.bad(); } return; }
+      else if (entry.length < L) { entry += k; SFX.key(); }
+      draw();
+      if (entry.length === L) check();
+    }
+    $("kp").addEventListener("click", e => { const b = e.target.closest("button"); if (b) press(b.dataset.k); });
+    onKey(e => {
+      if (/^[0-9]$/.test(e.key)) { press(e.key); e.preventDefault(); }
+      else if (e.key === "Backspace") { press("⌫"); e.preventDefault(); }
+      else if (e.key === "Enter" && !(e.target && e.target.tagName === "BUTTON")) { press("ENTER"); e.preventDefault(); }
+    });
+    $("leaveBtn").addEventListener("click", closeOverlay);
+    if (S.vaultOpen) say(msg, "VAULT UNLOCKED", "good");
+    draw();
+    focusFirst(S.vaultOpen ? "#leaveBtn" : "#kp button");
+  }
+
+  // ---------- final challenge ----------
+  function openFinal() {
+    if (!S.won) { S.won = true; S.wonAt = Date.now(); SFX.win(); syncAll(); save(); }
+    const left = S.timeLeft;
+    let when = "";
+    try { when = new Date(S.wonAt).toLocaleString(undefined, { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }); } catch (e) { when = ""; }
+    showOverlay(`
+      <canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
+      <div class="prize" role="dialog" aria-modal="true" aria-labelledby="prizeTitle">
+        <p class="final-lbl">THE FINAL CODE IS:</p>
+        <h2 id="prizeTitle">${esc(GAME.finalCode)}</h2>
+        <div class="final-ch"><p class="final-lbl">FINAL CHALLENGE:</p><p class="prize-msg">${esc(GAME.finalChallenge)}</p></div>
+        <p class="team">Form group <b>${esc(S.team)}</b></p>
+        <dl class="stats">
+          <div><dt>${left >= 0 ? "Time left" : "Overtime"}</dt><dd>${clockTxt(left)}</dd></div>
+          <div><dt>Times caught</dt><dd>${S.zaps}</dd></div>
+          <div><dt>Drones zapped</dt><dd>${S.zapped}</dd></div>
+        </dl>
+        ${when ? `<p class="stamp">Reached the vault ${esc(when)}</p>` : ""}
+        <button class="btn go" type="button" id="leaveBtn">Back to the vault</button>
+      </div>`, "card");
+    $("leaveBtn").addEventListener("click", closeOverlay);
+    confetti($("confetti"));
+    focusFirst("#leaveBtn");
+  }
+  function confetti(c) {
+    const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const dpr = Math.min(2, window.devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+    c.width = W * dpr; c.height = H * dpr;
+    const g = c.getContext("2d"); g.scale(dpr, dpr);
+    const cols = ["#ffd45a", "#ff7a59", "#53e0a8", "#5cb8ff", "#c79bff", "#ffffff"];
+    const parts = Array.from({ length: 140 }, () => ({ x: Math.random() * W, y: reduce ? Math.random() * H : -Math.random() * H, vy: 60 + Math.random() * 110, vx: (Math.random() - .5) * 50, r: Math.random() * 6, vr: (Math.random() - .5) * 8, w: 5 + Math.random() * 6, h: 3 + Math.random() * 4, c: cols[(Math.random() * cols.length) | 0] }));
+    let last = 0, raf = 0;
+    function frame(t) {
+      const dt = last ? Math.min(.05, (t - last) / 1000) : 0; last = t;
+      g.clearRect(0, 0, W, H);
+      for (const p of parts) {
+        if (!reduce) { p.y += p.vy * dt; p.x += p.vx * dt; p.r += p.vr * dt; if (p.y > H + 10) { p.y = -10; p.x = Math.random() * W; } }
+        g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); g.restore();
+      }
+      if (!reduce) raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    cleanups.push(() => cancelAnimationFrame(raf));
+  }
+
+  // ---------- title ----------
+  function titleCard() {
+    const saved = load();
+    showOverlay(`
+      <div class="brief" role="dialog" aria-modal="true" aria-labelledby="briefTitle">
+        <p class="eyebrow"><span class="dot"></span>Security alert</p>
+        <h2 id="briefTitle">${esc(GAME.title)}</h2>
+        <p>${esc(GAME.intro)}</p>
+        <ul class="b-list">${(GAME.rules || []).map(r => `<li>${esc(r)}</li>`).join("")}</ul>
+        ${GAME.prizes ? `<p class="b-prize">${esc(GAME.prizes)}</p>` : ""}
+        <div class="b-field"><label for="teamName">Form group</label><input id="teamName" type="text" maxlength="24" autocomplete="off" placeholder="e.g. 8B" value="${saved ? esc(saved.S.team) : ""}"></div>
+        <div class="row">
+          <button class="btn" type="button" id="startBtn">Start the lockdown</button>
+          ${saved ? `<button class="btn ghost" type="button" id="resumeBtn">Resume ${esc(saved.S.team || "game")} · ${clockTxt(saved.S.timeLeft)}</button>` : ""}
+        </div>
+        <p class="b-keys">Move with W A S D or the arrow keys, drag the view to look around, and press E to use things. On a tablet, use the buttons under the screen.</p>
+      </div>`, "title");
+    $("startBtn").addEventListener("click", () => {
+      const name = ($("teamName").value || "").trim().slice(0, 24) || "Mystery form";
+      resetWorld(); S.team = name; S.started = true; audio();
+      closeOverlay(); syncAll(); save();
+      toast("Find Terminal 1 in Reception. Look for the glowing screen.", 3600);
+    });
+    if (saved) $("resumeBtn").addEventListener("click", () => { applySave(saved); audio(); closeOverlay(); syncAll(); toast("Lockdown resumed.", 2000); });
+    $("teamName").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); $("startBtn").click(); } });
+    focusFirst("#teamName");
+  }
+
+  // ---------- save / load ----------
+  function save() {
+    if (!S.started) return;
+    try { localStorage.setItem(KEY, JSON.stringify({ sig: SIG, S, P: { x: P.x, y: P.y, a: P.a }, seen: Array.from(seen).join("") })); } catch (e) {}
+  }
+  function load() {
+    try { const d = JSON.parse(localStorage.getItem(KEY) || "null"); if (d && d.sig === SIG && d.S && d.S.started) return d; } catch (e) {}
+    return null;
+  }
+  function resetWorld() {
+    S = freshState();
+    P.x = start.x; P.y = start.y; P.a = respawn[0].a;
+    seen.fill(0); items.forEach(it => { it.got = false; });
+    rabbit = null; carrots.length = 0; taskReminder = -1; vdrones = []; booms = [];
+    paused = false; invuln = 0; worldT = 0; resetDrones();
+    syncDoors(true);
+  }
+  function applySave(d) {
+    resetWorld();
+    const f = freshState();
+    S = Object.assign(f, d.S);
+    S.stage = f.stage.map((_, i) => clamp((d.S.stage && d.S.stage[i]) | 0, 0, 2));
+    S.hint = f.hint.map((_, i) => !!(d.S.hint && d.S.hint[i]));
+    S.items = Array.isArray(d.S.items) ? d.S.items : [];
+    items.forEach(it => { it.got = S.items.includes(it.id); });
+    if (d.P && canStand(+d.P.x, +d.P.y)) { P.x = +d.P.x; P.y = +d.P.y; P.a = +d.P.a || 0; }
+    if (typeof d.seen === "string") for (let i = 0; i < NCELL && i < d.seen.length; i++) seen[i] = d.seen.charCodeAt(i) === 49 ? 1 : 0;
+    syncDoors(true);
+  }
+
+  // ---------- teacher tools ----------
+  let tUnlocked = false, resetArm = 0;
+  function unlockText(i) {
+    const u = stations[i].challenge;
+    if (!u || !u.type) return "no puzzle";
+    switch (u.type) {
+      case "reaction": return `space bar slider, ${clamp((u.rounds | 0) || 3, 1, 6)} hits`;
+      case "sequence": return `buttons in order, pattern of ${clamp((u.length | 0) || 5, 3, 9)}`;
+      case "riddle": return `riddle, answer <b>${esc((Array.isArray(u.answers) ? u.answers : [u.answers])[0])}</b>`;
+      case "blocks": return "fit the shapes into the square";
+      case "rabbit": return `chase the rabbit for about ${rabbitCfg(i)} seconds, then feed or grab it`;
+      case "hangman": return "hangman: " + (u.words || ["Rigour", "Responsibility", "Relationships", "Respect"]).map(w => `<b>${esc(w)}</b>`).join(", ");
+      case "scramble": return `word lock, <b>${esc(String(u.word || "").toUpperCase())}</b>`;
+      case "cipher": return `cipher, password <b>${esc((u.answers || [String(u.message || "").split(/\s+/).pop()])[0])}</b>`;
+      case "collect": return `collect ${needFor(i)} ${esc(itemsName(i))}`;
+      case "quiz": return "quiz: " + (u.questions || []).map(q => `<b>${esc((q.options || [])[clamp((q.answer | 0) || 1, 1, (q.options || [1]).length) - 1])}</b>`).join(", ");
+      case "mentor": return `override code <b>${esc(u.password)}</b>`;
+      default: return esc(u.type);
+    }
+  }
+  function syncTeacher() {
+    if (!tUnlocked) return;
+    $("tCode").textContent = CODE;
+    $("tFinal").textContent = GAME.finalCode;
+    $("tKey").innerHTML = stations.map((s, i) => `<li><b>Challenge ${i + 1}</b> (${SHAPE_NAMES[i]}, ${ZONE_NAMES[stationZone[i]]}): ${esc(s.task)} <span class="k-meta">Give digit <b>${esc(s.digit)}</b> · Puzzle: ${unlockText(i)} · ${S.stage[i] === 2 ? "unlocked" : "locked"}</span></li>`).join("");
+    $("tPause").textContent = paused ? "Resume clock" : "Pause clock";
+    const k = S.stage.findIndex(s => s < 2);
+    $("tSkip").textContent = k >= 0 ? `Unlock Challenge ${k + 1}` : S.vaultOpen ? "Vault already open" : "Open the vault";
+    $("tSkip").disabled = !S.started || (k < 0 && S.vaultOpen);
+  }
+  $("pinForm").addEventListener("submit", e => {
+    e.preventDefault();
+    if ($("pinIn").value.trim() === String(GAME.teacherPin)) { tUnlocked = true; $("pinForm").hidden = true; $("pinMsg").hidden = true; $("tPanel").hidden = false; syncTeacher(); }
+    else { $("pinMsg").textContent = "That PIN didn't match. Check the teacherPin line at the top of the code."; $("pinIn").select(); }
+  });
+  $("tPause").addEventListener("click", () => { paused = !paused; syncTeacher(); lastClock = ""; toast(paused ? "Clock paused by your form teacher." : "Clock running again.", 2200); });
+  $("tAdd").addEventListener("click", () => { S.timeLeft += 300; S.overtime = S.timeLeft <= 0; save(); lastClock = ""; toast("Your form teacher added 5 minutes.", 2200); });
+  $("tSkip").addEventListener("click", () => {
+    if (!S.started) return;
+    const k = S.stage.findIndex(s => s < 2);
+    if (k >= 0) { stationDone(k); toast(`Challenge ${k + 1} unlocked by your form teacher.`, 2400); if (mode === "term" && cur === k) renderTerminal(); }
+    else if (!S.vaultOpen) { S.vaultOpen = true; syncDoors(false); syncAll(); save(); toast("Your form teacher opened the vault.", 2400); }
+  });
+  $("tReset").addEventListener("click", () => {
+    const b = $("tReset");
+    if (!resetArm) { b.textContent = "Click again to reset"; resetArm = setTimeout(() => { resetArm = 0; b.textContent = "Reset this device"; }, 3000); return; }
+    clearTimeout(resetArm); resetArm = 0; b.textContent = "Reset this device";
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    resetWorld(); syncAll(); titleCard();
+  });
+
+  // ---------- input ----------
+  window.addEventListener("keydown", e => {
+    const tag = e.target && e.target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target.closest && e.target.closest(".teacher"))) return;
+    if (e.key === "Escape" && (mode === "term" || mode === "card")) { closeOverlay(); return; }
+    if (mode !== "walk") return;
+    if (e.code === "Space" && huntActive()) { if (tag === "BUTTON") return; e.preventDefault(); throwCarrot(); return; }
+    if (laserOn() && (e.code === "KeyF" || (e.code === "Space" && !focus))) { if (tag === "BUTTON") return; e.preventDefault(); fireLaser(); return; }
+    if (e.code === "KeyE" || e.code === "Space" || e.code === "Enter") {
+      if (tag === "BUTTON" && e.code !== "KeyE") return;
+      e.preventDefault(); interact(); return;
+    }
+    const k = keymap[e.code]; if (k) { keys[k] = true; e.preventDefault(); }
+  });
+  window.addEventListener("keyup", e => { const k = keymap[e.code]; if (k) keys[k] = false; });
+  window.addEventListener("blur", () => { for (const k in keys) keys[k] = false; });
+  promptEl.addEventListener("click", useAction);
+  function bind(id, k) {
+    const el = $(id);
+    el.addEventListener("pointerdown", e => { e.preventDefault(); if (mode === "walk") keys[k] = true; });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => el.addEventListener(ev, () => { keys[k] = false; }));
+    el.addEventListener("contextmenu", e => e.preventDefault());
+  }
+  bind("bL", "left"); bind("bF", "fwd"); bind("bB", "back"); bind("bR", "right");
+  useBtn.addEventListener("click", useAction);
+  let dragId = null, dragX = 0;
+  view.tabIndex = 0;
+  view.addEventListener("pointerdown", e => { dragId = e.pointerId; dragX = e.clientX; try { view.setPointerCapture(e.pointerId); } catch (err) {} });
+  view.addEventListener("pointermove", e => {
+    if (e.pointerId !== dragId || mode !== "walk") return;
+    const w = view.getBoundingClientRect().width || 400;
+    P.a += (e.clientX - dragX) / w * 2.4; dragX = e.clientX;
+  });
+  ["pointerup", "pointercancel"].forEach(ev => view.addEventListener(ev, e => { if (e.pointerId === dragId) dragId = null; }));
+  $("soundBtn").addEventListener("click", () => {
+    muted = !muted; const b = $("soundBtn");
+    b.textContent = muted ? "Sound off" : "Sound on"; b.setAttribute("aria-pressed", String(!muted));
+    if (!muted) audio();
+  });
+
+  // ---------- boot ----------
+  let lastT = performance.now();
+  function loop(now) {
+    const dt = Math.min(.05, (now - lastT) / 1000); lastT = now;
+    update(dt); render();
+    requestAnimationFrame(loop);
+  }
+  $("gameTitle").textContent = GAME.title;
+  buildTextures();
+  syncDoors(true);
+  syncAll();
+  titleCard();
+  requestAnimationFrame(loop);
+  if (document.fonts && document.fonts.load) Promise.all([document.fonts.load("20px VT323"), document.fonts.load("20px 'Russo One'")]).then(buildTextures).catch(() => {});
+})();
+</script>
+
+</body>
+</html>
