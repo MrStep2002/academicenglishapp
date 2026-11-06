@@ -800,37 +800,44 @@ function drawOpts(card){
   const two = q.opts.length === 2;
   box.innerHTML = q.opts.map((x, i) => '<button type="button" class="bg-opt" data-o="' + i + '" title="The team\'s answer">' + (two ? '' : '<span class="l">' + 'ABCD'[i] + '</span>') + '<span class="o">' + esc(x) + '</span></button>').join('');
   box.querySelectorAll('.bg-opt').forEach(b => b.onclick = () => reveal(+b.dataset.o));
-  if (o.revealed) paintReveal();
+  if (o.revealed || o.chosen != null || (o.out && o.out.length)) paintReveal();
 }
 function drawWho(){
   const o = P.open, card = P.card; if (!card || !card.querySelector('.bg-who')) return;
   const g = P.game, t = g.tiles[o.i], pts = ptsOf(o, t);
-  card.querySelectorAll('[data-team]').forEach(b => { const i = +b.dataset.team; b.setAttribute('aria-pressed', i === o.team); b.disabled = o.tried.includes(i); b.style.opacity = o.tried.includes(i) ? .4 : ''; });
-  const r = card.querySelector('[data-a=right]'); r.innerHTML = '✓ Right' + (o.award ? ' +' + pts : '') + ' <kbd>Y</kbd>';
+  card.querySelectorAll('[data-team]').forEach(b => { const i = +b.dataset.team, off = o.tried.includes(i) || !!o.over; b.setAttribute('aria-pressed', i === o.team && !o.over); b.disabled = off; b.style.opacity = off ? .4 : ''; });
+  const r = card.querySelector('[data-a=right]'); r.innerHTML = '✓ Right' + (o.award ? ' +' + pts : '') + ' <kbd>Y</kbd>'; r.disabled = !!o.over;   // over: nobody else can answer
   const w = card.querySelector('[data-a=wrong]'); w.innerHTML = '✗ Wrong' + (o.award && (g.cfg.wrong === 'lose' || o.wager) ? ' −' + pts : '') + ' <kbd>N</kbd>';
-  w.disabled = o.tried.length >= g.teams.length;
+  w.disabled = o.tried.length >= g.teams.length || !!o.over;
   const sw = card.querySelector('[data-a=swap]'); if (sw) sw.hidden = o.marked;   // until Right or Wrong is clicked (a disputed answer: put up another question)
 }
-// The teacher clicks the option the team chose (or Show answer): the right one goes green, a wrong choice red
+// The teacher clicks the option the team chose. Right: it goes green and the explanation shows. Wrong: only that option goes
+// red (crossed out once it's marked Wrong), so the right answer stays hidden for the next team (7 Nov 2026). Show answer: the
+// right one, at any time.
 function reveal(chosen){
   const o = P.open; if (!o || !P.card) return;
   if (!o.shown) { o.shown = true; drawOpts(); }
-  o.revealed = true; if (chosen != null) o.chosen = chosen;
-  paintReveal(); stopTimer(true); drawWho();
   const q = P.game.tiles[o.i].q;
-  if (chosen != null && !o.marked) { const ok = chosen === q.a; P.card.querySelector('[data-a=' + (ok ? 'right' : 'wrong') + ']').classList.add('hint');
+  if (chosen != null) o.chosen = chosen;
+  if (chosen == null || chosen === q.a) o.revealed = true;
+  paintReveal(); stopTimer(true); drawWho();
+  if (chosen != null && !o.over && !o.tried.includes(o.team)) { const ok = chosen === q.a; P.card.querySelector('[data-a=' + (ok ? 'right' : 'wrong') + ']').classList.add('hint');
     P.card.querySelector('[data-a=' + (ok ? 'wrong' : 'right') + ']').classList.remove('hint'); }
   fitCard();
 }
 function paintReveal(){
-  const o = P.open, q = P.game.tiles[o.i].q, card = P.card;
-  card.querySelectorAll('.bg-opt').forEach((b, i) => { b.classList.toggle('ok', i === q.a); b.classList.toggle('no', i === o.chosen && i !== q.a); b.classList.toggle('dim', i !== q.a && i !== o.chosen); });
+  const o = P.open, q = P.game.tiles[o.i].q, card = P.card, out = o.out || [], shown = !!o.revealed;
+  card.querySelectorAll('.bg-opt').forEach((b, i) => { const bad = i !== q.a && (i === o.chosen || out.includes(i));
+    b.classList.toggle('ok', shown && i === q.a); b.classList.toggle('no', bad); b.classList.toggle('out', i !== q.a && out.includes(i));
+    b.classList.toggle('dim', shown && i !== q.a && !bad); });
+  if (!shown) return;   // a wrong answer only: the gap and the explanation wait
   const gap = card.querySelector('.bg-gap'); if (gap) { gap.textContent = q.opts[q.a]; gap.classList.add('filled'); }
   card.querySelector('.bg-more').innerHTML = qMore(q);
 }
 function mark(ok){
   const o = P.open, g = P.game; if (!o || !P.card || P.busy) return;
   const t = g.tiles[o.i], pts = ptsOf(o, t), team = g.teams[o.team], said = P.card.querySelector('.bg-said');
+  if (o.over) return;   // the answer is out and nobody else can answer: close the question
   P.card.querySelectorAll('.hint').forEach(b => b.classList.remove('hint'));
   if (ok) {
     const got = o.award ? pts : 0; team.s += got;
@@ -841,14 +848,19 @@ function mark(ok){
     setTimeout(() => { if (!P) return; P.busy = false; if (o.sur && got) rewardCard(got); else finishTile({ok: true, team: o.team, pts: got}, {[o.team]: got}); }, 1100);
     return;
   }
-  if (o.tried.includes(o.team)) return;
+  if (o.tried.includes(o.team) || o.over) return;
   const lost = o.award && (g.cfg.wrong === 'lose' || o.wager != null) ? Math.min(pts, team.s) : 0;   // a Daily Double's bet is always lost
   team.s -= lost; o.tried.push(o.team); o.marked = true; o.lost = (o.lost || {}); if (lost) o.lost[o.team] = -lost;
+  const q = t.q;   // the answer they chose is out for the next team
+  if (o.chosen != null && o.chosen !== q.a && !(o.out || []).includes(o.chosen)) o.out = (o.out || []).concat(o.chosen);
+  o.chosen = null; paintReveal();
   sfx('wrong'); stopTimer(true); save(); drawScores(lost ? {[o.team]: -lost} : null);
   const left = g.teams.map((_, i) => i).filter(i => !o.tried.includes(i));
+  const one = q.opts.length === 2 || q.opts.length - (o.out || []).length <= 1;   // True or false, or only one option left: the answer is plain
   said.className = 'bg-said bad';
-  said.textContent = '✗ ' + team.name + (lost ? ' −' + lost : '') + (left.length ? '. Another team can try, or close the question.' : '. Nobody got it: show the answer, then close.');
-  if (left.length) { const after = left.find(i => i > o.team); o.team = after != null ? after : left[0]; }
+  said.textContent = '✗ ' + team.name + (lost ? ' −' + lost : '') + (!left.length ? '. Nobody got it. Here is the answer.' : one ? '. That leaves only one answer, so here it is.' : '. Another team can try, or close the question.');
+  if (!left.length || one) { o.over = true; reveal(null); }
+  else { const after = left.find(i => i > o.team); o.team = after != null ? after : left[0]; }
   P.card.querySelector('.bg-x').title = 'Close the question (Esc)';
   drawWho(); fitCard();
 }
@@ -877,7 +889,7 @@ function swapQuestion(){
   card.querySelector('.bg-meta .s').textContent = metaS(t, q);
   card.querySelector('.bg-pts').textContent = ptsLabel(o, t);
   card.querySelector('.bg-opts').className = 'bg-opts' + (q.opts.length === 2 ? ' two' : '');
-  card.querySelector('.bg-more').innerHTML = ''; o.chosen = null; o.revealed = false; o.shown = g.cfg.options !== 'hide';
+  card.querySelector('.bg-more').innerHTML = ''; o.chosen = null; o.revealed = false; o.out = []; o.over = false; o.shown = g.cfg.options !== 'hide';
   card.querySelectorAll('.hint').forEach(b => b.classList.remove('hint'));
   said.className = 'bg-said'; said.textContent = ''; drawOpts(); drawWho(); fitCard(); startTimer(secs);
 }
@@ -889,8 +901,10 @@ function fitCard(){
     const os = [...opts.querySelectorAll('.o')], two = opts.classList.contains('two');
     // the options get up to 60% of the space between the top line and the marking bar (a third for True/False), the question the rest
     const cs = getComputedStyle(card), top = card.querySelector('.bg-card-top'), mk = card.querySelector('.bg-mark');
-    const middle = card.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (top ? top.offsetHeight : 0) - (mk ? mk.offsetHeight : 0) - 3 * (parseFloat(cs.rowGap) || 0);
-    opts.style.maxHeight = Math.max(70 * u, middle * (two ? .34 : .6)) + 'px';
+    const more = card.querySelector('.bg-more'), moreH = more && more.textContent.trim() ? more.offsetHeight + (parseFloat(cs.rowGap) || 0) : 0;
+    const middle = card.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom) - (top ? top.offsetHeight : 0) - (mk ? mk.offsetHeight : 0) - 3 * (parseFloat(cs.rowGap) || 0) - moreH;
+    const rows = two ? 1 : Math.ceil(opts.querySelectorAll('.bg-opt').length / 2);
+    opts.style.maxHeight = Math.max(rows * 76 * u + (rows - 1) * 12 * u, middle * (two ? .34 : .6)) + 'px';
     let s = (two ? 54 : 34) * u; const min = 13 * u;
     os.forEach(x => { x.style.fontSize = s + 'px'; });
     for (let k = 0; k < 30 && s > min && (opts.scrollHeight > opts.clientHeight + 1 || os.some(x => x.scrollWidth > x.clientWidth + 1)); k++) { s = Math.max(min, s * .92); os.forEach(x => { x.style.fontSize = s + 'px'; }); }

@@ -166,6 +166,8 @@ html.bg-on main.home { display: none; }
 .bg-opt.no .l { background: #c0392b; color: #fff; }
 @media (prefers-color-scheme: dark) { .bg-opt.ok { background: #123a25; color: #9be7bb; } .bg-opt.no { background: #43160f; color: #ffb3a7; } }
 .bg-opt.dim { opacity: .4; }
+.bg-opt.out { opacity: .6; }   /* a wrong answer already given: crossed out for the next team */
+.bg-opt.out .o { text-decoration: line-through; text-decoration-thickness: .1em; }
 .bg-reveal-opts { grid-column: 1 / -1; justify-self: center; align-self: center; font-size: calc(24 * var(--u)); }
 .bg-more { margin: 0; text-align: center; color: var(--muted); font-size: calc(19 * var(--u)); line-height: 1.35; max-height: 4.2em; overflow: hidden; flex: none; }
 .bg-more:empty { display: none; }
