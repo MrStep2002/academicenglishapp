@@ -37,7 +37,7 @@ The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (s
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
 | `knowledge.csv` | General knowledge (Games row; no levels needed) |
-| `taboo.csv` | Don't Say It! (a board game on the teacher page: a word, four words the team can't say, four hints) |
+| `taboo.csv` | Don't Say It! and Hints (board games on the teacher page: a word, four words the team can't say, four hints) |
 | `extracts.csv` | In your own words |
 
 Longer reading passages are not in the topic folders: they are in `reading-comprehension/` (Close reading, Big idea, Note taking). The topic folders' empty `reading.csv` files (Read and answer, replaced by Close reading) were removed on 25 Oct.
@@ -192,7 +192,7 @@ Questions about the wider world of the topic: people, places, history, ideas ("c
 - Keep the right answer from standing out by length.
 - Example rows: `templates/knowledge.csv`. English pages only for now; a Chinese column can be added later.
 
-### taboo.csv (Don't Say It!, 6 Nov 2026)
+### taboo.csv (Don't Say It! and Hints, 6 Nov 2026)
 
 `id,level,word,taboo1,taboo2,taboo3,taboo4,hint1,hint2,hint3,hint4`
 
@@ -201,12 +201,18 @@ their team describes the word without saying it or any of its four forbidden wor
 every word of its `words.csv` already in it (the same id, level and word): fill in the other columns. A word plays once it
 has at least one forbidden word; the rest wait.
 
+The same file feeds **Hints**, another board game: the team sees one hint at a time and guesses the word, for 4 points on the
+first hint, 3 on the second, then 2 and 1. A word plays in Hints once it has at least two hints.
+
 - **id**, **level**, **word**: as in words.csv. Representation's page plays only its `key` words, so this game does too.
 - **taboo1** (to taboo4): the words a describer would most want to say, usually the words of its meaning. Not part of the word
   itself: that is never allowed anyway ("close-up" already rules out close and up).
-- hint1 to hint4 (optional): help for the describers, shown one at a time when the teacher presses Hint. A hint must not use
-  the word or any of its forbidden words (it couldn't be read out). Keep them short and at the word's level.
-- Filled in so far: `representation/` (its 116 key words). The checker lists any hint that uses the word or a forbidden word.
+- **hint1** to **hint4**: the clues for Hints, shown in this order, so put the hardest (the vaguest) first and the giveaway last:
+  a team that gets the word on hint 1 scores 4 points. In Don't Say It! they help the describers, shown when the teacher presses
+  Hint. A hint must not use the word itself, or any of its forbidden words (it couldn't be read out). Keep them short and at the
+  word's level.
+- Filled in so far: `representation/` (its 116 key words, hints hardest first). The checker lists any hint that uses the word or
+  a forbidden word, and counts the words ready for each game.
 
 ### gaps.csv (Fill the gap)
 

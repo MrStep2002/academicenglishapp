@@ -229,11 +229,12 @@ def check_folder(folder, all_word_ids):
                     if not wrongs(s): say(kind, r, f'word {k} has no wrong answers')
                     if r.get('word' + a) and not known(r['word' + a]): say(kind, r, f'word{a}: "{r["word" + a]}" is not in words.csv')
                 if not n or n != sets: say(kind, r, f'{n} word(s) in [brackets] but {sets} set(s) of answers (skipped)'); ok = False
-            elif kind == 'taboo':   # Don't Say It!: a word waits until it has a forbidden word; it is not on the topic pages' level buttons
+            elif kind == 'taboo':   # Don't Say It! (a word waits for a forbidden word) and Hints (two hints); not on the topic pages' level buttons
                 tb = [r.get(f'taboo{k}', '') for k in range(1, 5) if r.get(f'taboo{k}', '')]
                 if not r.get('word'): say(kind, r, 'needs a word (skipped)')
                 for m in taboo_problems(r.get('word', ''), tb, [r.get(f'hint{k}', '') for k in range(1, 5) if r.get(f'hint{k}', '')]): say(kind, r, m)
-                if tb and r.get('id') and r['id'] not in ids: say(kind, r, f'id "{r["id"]}" is not in words.csv (it still plays)')
+                nh = sum(1 for k in range(1, 5) if r.get(f'hint{k}', ''))
+                if (tb or nh >= 2) and r.get('id') and r['id'] not in ids: say(kind, r, f'id "{r["id"]}" is not in words.csv (it still plays)')
                 ok = False
             if kind == 'gaps' and r.get('word') and not known(r['word']): say(kind, r, f'word: "{r["word"]}" is not in words.csv')
             if ok and b is not None: counts.setdefault(kind, {})[b] = counts.setdefault(kind, {}).get(b, 0) + 1
@@ -294,6 +295,8 @@ def check_folder(folder, all_word_ids):
         for r in ready: by[band(r.get('level')) or 0] = by.get(band(r.get('level')) or 0, 0) + 1
         print(f'  taboo.csv: {len(ready)} of {len(taboo)} words ready for Don\'t Say It! (they have forbidden words)'
               + (': ' + ', '.join(f'{LEVEL_NAMES[b] if b else "no level"} {n}' for b, n in sorted(by.items())) if ready else '') + '.')
+        hn = [r for r in taboo if sum(1 for k in range(1, 5) if r.get(f'hint{k}')) >= 2]
+        print(f'  taboo.csv: {len(hn)} of {len(taboo)} words ready for Hints (they have two hints or more; the hardest goes first).')
     reads = data.get('reads', [])
     if reads:   # Complete the text: the word bank has only the key words and the text's own extra words
         with_extra = sum(1 for r in reads if any(r.get(k) for k in ('extra1', 'extra2', 'extra3')))

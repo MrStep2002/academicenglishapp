@@ -309,3 +309,40 @@ html.bg-on main.home { display: none; }
 .tb-w.said { background: #fde0dc; border-color: #c0392b; color: #7a1d12; }
 @media (prefers-color-scheme: dark) { .tb-w.got { background: #123a25; color: #9be7bb; } .tb-w.said { background: #43160f; color: #ffb3a7; } }
 @media (prefers-reduced-motion: reduce) { .tb-wordbox.ok, .tb-hints li, .tb-time.low .tb-secs { animation: none !important; } .tb-bar i { transition: none; } }
+
+/* Hints (6 Nov 2026): the hints one at a time with their points, the wheel for the class, the word when it's guessed */
+.hn-main { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: calc(26 * var(--u)); }
+.hn-main.wheel { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); }
+.hn-hints { width: 100%; max-width: calc(1250 * var(--u)); justify-self: center; min-width: 0; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: calc(14 * var(--u)); overflow: hidden; }
+.hn-label { margin: 0; font-weight: 700; color: var(--muted); font-size: calc(24 * var(--u)); }
+.hn-label b { background: var(--hi); color: #151935; padding: 0 .45em; border-radius: 99px; white-space: nowrap; }
+.hn-list { --hf: 40px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: calc(12 * var(--u)); }
+.hn-h { display: flex; align-items: center; gap: .55em; padding: calc(12 * var(--u)) calc(20 * var(--u)); border-radius: calc(16 * var(--u)); background: var(--web-soft); font-weight: 700; font-size: var(--hf); line-height: 1.25; }
+.hn-h.new { background: var(--hi); color: #151935; box-shadow: 0 6px 18px rgba(21,25,53,.18); animation: bg-rise .35s ease both; }
+.hn-h.wait { background: transparent; border: calc(3 * var(--u)) dashed var(--line); color: var(--muted); font-size: calc(var(--hf) * .55); padding-top: calc(6 * var(--u)); padding-bottom: calc(6 * var(--u)); }
+.hn-pts { flex: none; display: grid; place-items: center; width: 1.7em; height: 1.7em; border-radius: 50%; border: 2px solid currentColor; font-family: var(--display); font-weight: 800; font-size: .78em; line-height: 1; }
+.hn-h:not(.new):not(.wait) .hn-pts { opacity: .4; text-decoration: line-through; }
+.hn-t { min-width: 0; overflow-wrap: anywhere; }
+.hn-stopped { font-weight: 700; color: var(--muted); font-size: calc(17 * var(--u)); }
+.hn-throw { background: var(--hi); color: #151935; border-color: #151935; }
+.hn-throw:hover { background: #ffd91a; }
+.hn-wheel { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(10 * var(--u)); overflow: hidden; }
+.hn-wheelbox { position: relative; flex: none; width: 10px; height: 10px; }
+.hn-spin { width: 100%; height: 100%; }
+.hn-spin svg { display: block; width: 100%; height: 100%; }
+.hn-spin .rim { fill: var(--ink); } .hn-spin .empty { fill: var(--line); } .hn-spin .hub { fill: #fff; stroke: var(--ink); stroke-width: 3; }
+.hn-spin path { stroke: #fff; stroke-width: 1.5; }
+.hn-spin text { fill: #fff; font-family: var(--body); font-weight: 800; paint-order: stroke; stroke: rgba(0,0,0,.3); stroke-width: 2px; }
+.hn-pointer { position: absolute; left: 50%; top: -5%; width: 13%; transform: translateX(-50%); fill: var(--hi); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; filter: drop-shadow(0 3px 3px rgba(0,0,0,.25)); }
+.hn-pick { margin: 0; font-family: var(--display); font-weight: 800; font-size: calc(40 * var(--u)); line-height: 1.1; text-align: center; color: var(--tc, var(--muted)); }
+.hn-out { margin: 0; color: var(--muted); font-size: calc(17 * var(--u)); text-align: center; }
+.hn-flash { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(12 * var(--u)); padding: calc(20 * var(--u)); text-align: center; background: var(--card); cursor: pointer; overflow: hidden; animation: hn-in .3s ease both; }
+.hn-flash-w { margin: 0; max-width: 92%; font-family: var(--display); font-weight: 800; line-height: 1.02; letter-spacing: -.03em; color: var(--tc); }
+.hn-flash-l { margin: 0; font-weight: 800; font-size: calc(34 * var(--u)); color: var(--tc); }
+.hn-flash.none .hn-flash-w { color: var(--ink); } .hn-flash.none .hn-flash-l { color: var(--muted); }
+@keyframes hn-in { 0% { opacity: 0; transform: scale(.92); } 100% { opacity: 1; transform: none; } }
+.tb-w.hn-w { cursor: default; }
+.tb-w.stole { background: #fff3b8; border-color: #b08900; color: #5c4700; }
+.tb-w.miss { opacity: .8; }
+@media (prefers-color-scheme: dark) { .tb-w.stole { background: #3d3410; color: #ffe58a; } }
+@media (prefers-reduced-motion: reduce) { .hn-h.new, .hn-flash { animation: none !important; } }

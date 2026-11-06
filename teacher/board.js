@@ -51,12 +51,14 @@ const SURPRISES = {
   oops:   {icon:'💥', name:'Oops!',   blurb:'The team loses points. No question.'}
 };
 const needsQ = k => !!(SURPRISES[k] && SURPRISES[k].q);
-// The games (6 Nov 2026): Squaring Up (the tile board, named by the teacher) and Don't Say It! (Taboo-style, content/<topic>/taboo.csv)
+// The games (6 Nov 2026): Squaring Up (the tile board, named by the teacher), Don't Say It! (Taboo-style) and Hints, both from content/<topic>/taboo.csv
 const GAME_TYPES = {
   squares: {name: 'Squaring Up', blurb: 'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
-  taboo: {name: "Don't Say It!", blurb: 'One player guesses while their team describes the word without saying any of the red words. Each team plays once a round: 60, then 30, then 15 seconds.'}
+  taboo: {name: "Don't Say It!", blurb: 'One player guesses while their team describes the word without saying any of the red words. Each team plays once a round: 60, then 30, then 15 seconds.'},
+  hints: {name: 'Hints', blurb: 'Teams guess the word from its hints, shown one at a time: 4 points on the first hint, then 3, 2 and 1. A minute a turn. A word the team can\'t get goes to the wheel, which picks another team to answer.'}
 };
-const gameType = s => (s && (s.game === 'taboo' || s.kind === 'taboo')) ? 'taboo' : 'squares';
+const gameType = s => { const k = s && (s.game || s.kind); return k === 'taboo' || k === 'hints' ? k : 'squares'; };
+const wordGame = k => k === 'taboo' || k === 'hints';   // the two games played from taboo.csv, a turn at a time
 const POINTS_BY_LEVEL = {1:10, 2:15, 3:20, 4:25, 5:30};
 const MIXED = [5, 10, 15, 20, 25];
 const DEFAULTS = {title:'', topics:[], banks:['word','meaning','gap'], levels:[1,2,3,4,5], squares:20, secs:30, points:'same', options:'show',
@@ -276,8 +278,9 @@ const AEA_BOARD = window.AEA_BOARD = {
     if ((m = /^#\/board\/play\/([\w-]+)$/.exec(hash))) return play(m[1]);
     if (hash === '#/board/new') return chooser();
     if (hash === '#/board/new/squares') return form(null);
-    if (hash === '#/board/new/taboo') return tabooForm(null);
-    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) return gameType(setOf(m[1])) === 'taboo' ? tabooForm(m[1]) : form(m[1]);
+    if (hash === '#/board/new/taboo') return tabooForm(null, 'taboo');
+    if (hash === '#/board/new/hints') return tabooForm(null, 'hints');
+    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) { const k = gameType(setOf(m[1])); return wordGame(k) ? tabooForm(m[1], k) : form(m[1]); }
     return list();
   },
   stop
@@ -294,10 +297,13 @@ function list(){
     (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g && g.tiles ? g.tiles.filter(t => !t.done).length : 0;
       return '<div class="card bg-item" data-id="' + esc(s.id) + '">' +
         '<span class="bg-kind">' + esc(GAME_TYPES[gameType(s)].name) + '</span><h3>' + esc(s.title || 'Board game') + '</h3>' +
-        (g ? '<span class="bg-going">' + (g.kind === 'taboo' ? 'Game in progress: round ' + Math.min(g.round + 1, g.times.length) + ' of ' + g.times.length
+        (g ? '<span class="bg-going">' + (wordGame(g.kind) ? 'Game in progress: round ' + Math.min(g.round + 1, g.times.length) + ' of ' + g.times.length
           : 'Game in progress: ' + left + ' of ' + g.tiles.length + ' squares left') + '</span>' : '') +
         '<p class="note">' + esc(s.topics.map(topicName).join(', ') || 'No topics') + '</p>' +
-        (gameType(s) === 'taboo'
+        (gameType(s) === 'hints'
+          ? '<p class="note">' + esc(levelsText(s.levels)) + '</p>' +
+            '<p class="note">' + (s.teams || []).length + ' teams · ' + (s.times || []).length + ' turn' + ((s.times || []).length === 1 ? '' : 's') + ' each of ' + ((s.times || [])[0] || 60) + ' seconds</p>'
+          : gameType(s) === 'taboo'
           ? '<p class="note">' + esc(levelsText(s.levels)) + ' · ' + (s.replay !== false ? 'the same words each round' : 'new words each round') + '</p>' +
             '<p class="note">' + (s.teams || []).length + ' teams · rounds of ' + (s.times || []).filter(Number).join(', ') + ' seconds</p>'
           : '<p class="note">' + esc(s.banks.map(bankName).join(', ')) + ' · ' + esc(levelsText(s.levels)) + '</p>' +
@@ -463,7 +469,7 @@ function play(id){
   if (g) return mount(g);
   C.setTitle(set.title || 'Board game'); C.header();
   C.view.innerHTML = '<p class="note">Getting the questions ready…</p>';
-  if (gameType(set) === 'taboo') {
+  if (wordGame(gameType(set))) {
     tabooData(set.topics).then(data => {
       const game = newTabooGame(set, data);
       if (!game.words) { C.view.innerHTML = '<p class="err">No words are ready for this game yet. <a href="#/board/' + esc(id) + '">Change it</a></p>'; return; }
@@ -488,8 +494,8 @@ function mount(game, data){
   stop();
   P = {game, data: data || null, card: null, open: null, busy: false, keyBuf: '', sound: getJ(K_SOUND, true)};
   document.documentElement.classList.add('bg-on');
-  const taboo = game.kind === 'taboo';
-  document.title = game.title + ' · ' + GAME_TYPES[taboo ? 'taboo' : 'squares'].name;
+  const taboo = wordGame(game.kind);   // Don't Say It! or Hints
+  document.title = game.title + ' · ' + GAME_TYPES[gameType(game)].name;
   const el = P.el = document.createElement('div');
   el.className = 'bg-play';
   el.innerHTML =
@@ -501,14 +507,15 @@ function mount(game, data){
     '<div class="bg-scores" role="group" aria-label="Scores. Click a team to change its score."></div>' +
     '<p class="bg-prompt" aria-live="polite"></p>' +
     '<div class="bg-stage"><div class="bg-grid"></div></div>' +
-    (taboo ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>G</kbd> got it · <kbd>S</kbd> skip · <kbd>X</kbd> said a red word · <kbd>H</kbd> hint</p>'
+    (game.kind === 'hints' ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>Y</kbd> got it · <kbd>N</kbd> next hint · <kbd>W</kbd> the wheel · <kbd>A</kbd> show the word · On the wheel: <kbd>Space</kbd> spin, <kbd>Y</kbd> right, <kbd>N</kbd> wrong</p>'
+      : taboo ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>G</kbd> got it · <kbd>S</kbd> skip · <kbd>X</kbd> said a red word · <kbd>H</kbd> hint</p>'
       : '<p class="bg-keys">Click a square, or type its number. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>');
   document.body.appendChild(el);
   P.stage = el.querySelector('.bg-stage'); P.grid = el.querySelector('.bg-grid'); P.scores = el.querySelector('.bg-scores'); P.prompt = el.querySelector('.bg-prompt');
   el.querySelector('[data-t=sound]').onclick = () => { P.sound = !P.sound; setJ(K_SOUND, P.sound); tools(); if (P.sound) sfx('right'); };
   el.querySelector('[data-t=full]').onclick = () => { const d = document;
     if (d.fullscreenElement) d.exitFullscreen().catch(() => {}); else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(() => {}); };
-  el.querySelector('[data-t=end]').onclick = () => { if (taboo) { tPause(true); endScreen(); } else if (!P.card) endScreen(); };
+  el.querySelector('[data-t=end]').onclick = () => { if (taboo) { hFlashEnd(); tPause(true); endScreen(); } else if (!P.card) endScreen(); };
   el.querySelector('[data-t=exit]').onclick = () => { location.hash = '#/board'; };
   P.onResize = () => { sizeUp(); if (taboo) fitWord(); else { layoutGrid(); if (P.card) fitCard(); } };
   P.onKey = onKey; P.onFs = () => tools();
@@ -538,7 +545,7 @@ function drawScores(bump){
     f.className = 'bg-float'; f.textContent = (bump[i] > 0 ? '+' : '') + bump[i]; chip.appendChild(f); setTimeout(() => f.remove(), 1500); });
 }
 function drawPrompt(){
-  if (P.game.kind === 'taboo') return tPrompt();
+  if (wordGame(P.game.kind)) return tPrompt();
   const g = P.game, left = g.tiles.filter(t => !t.done).length, t = g.teams[g.turn];
   P.prompt.innerHTML = left ? '<b style="color:' + t.c + '">' + esc(t.name) + '</b>, choose a square' : 'Every square is open!';
 }
@@ -937,14 +944,14 @@ function scorePop(i, chip){
 
 // ---------- final scores ----------
 function endScreen(){
-  if (!P || (P.card && P.game.kind !== 'taboo')) return;
+  if (!P || (P.card && !wordGame(P.game.kind))) return;
   closePop();
   const g = P.game, ranked = g.teams.map((t, i) => Object.assign({i}, t)).sort((a, b) => b.s - a.s);
   const top = ranked[0].s, winners = ranked.filter(t => t.s === top);
   let place = 0;
   const rows = ranked.map((t, k) => { if (k === 0 || t.s !== ranked[k - 1].s) place = k + 1;
     return '<li class="' + (t.s === top ? 'win' : '') + '" style="--tc:' + t.c + ';animation-delay:' + (k * .12) + 's"><span class="p">' + (t.s === top ? '🏆' : place) + '</span><span class="n">' + esc(t.name) + '</span><span class="s">' + t.s + '</span></li>'; }).join('');
-  const taboo = g.kind === 'taboo', left = taboo ? (g.stage === 'over' ? 0 : 1) : g.tiles.filter(t => !t.done).length;
+  const taboo = wordGame(g.kind), left = taboo ? (g.stage === 'over' ? 0 : 1) : g.tiles.filter(t => !t.done).length;
   const end = document.createElement('div');
   end.className = 'bg-end';
   end.innerHTML = '<div class="bg-confetti" aria-hidden="true"></div>' +
@@ -958,7 +965,7 @@ function endScreen(){
     for (let k = 0; k < 90; k++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = pick(cols);
       c.style.animationDuration = (2.4 + Math.random() * 2.6) + 's'; c.style.animationDelay = (Math.random() * 1.2) + 's'; c.style.transform = 'rotate(' + Math.random() * 360 + 'deg)'; box.appendChild(c); } }
   sfx('win');
-  const back = end.querySelector('[data-e=back]'); if (back) back.onclick = () => { end.remove(); P.endEl = null; if (taboo && P.card) P.card.focus({preventScroll: true}); };
+  const back = end.querySelector('[data-e=back]'); if (back) back.onclick = () => { end.remove(); P.endEl = null; if (taboo) drawTaboo(); };
   end.querySelector('[data-e=again]').onclick = () => {
     const set = setOf(g.set); if (!set) return;
     end.querySelector('.acts').innerHTML = '<p class="sub">Getting new ' + (taboo ? 'words' : 'questions') + '…</p>';
@@ -977,6 +984,7 @@ function onKey(e){
   const k = e.key, card = P.card;
   if (P.endEl) { if (k === 'Escape') { P.endEl.remove(); P.endEl = null; e.preventDefault(); } return; }
   if (document.querySelector('.bg-pop')) { if (k === 'Escape') { closePop(); e.preventDefault(); } return; }
+  if (P.game.kind === 'hints') return hKey(e);
   if (P.game.kind === 'taboo') return tKey(e);
   if (card && P.open) {
     const isQ = !card.classList.contains('surprise');
@@ -1013,7 +1021,10 @@ function onKey(e){
 // comes up. Every team plays once a round, and the rounds get shorter (60, 30, 15 seconds). "Replay Same Words in Next Round"
 // (on by default): every word sent in round 1 comes back in the later rounds, for recall; off: new words each round.
 // Words: content/<topic>/taboo.csv (word, taboo1-4, hint1-4; a word plays once it has a forbidden word). Hints show one at a time.
+// Hints (the third game) uses the same file: a word plays there once it has at least two hints.
 const T_DEFAULTS = {game: 'taboo', title: '', topics: [], levels: [1, 2, 3, 4, 5], times: [60, 30, 15], replay: true, said: 'skip', teams: null};
+const H_DEFAULTS = {game: 'hints', title: '', topics: [], levels: [1, 2, 3, 4, 5], times: [60, 60, 60], teams: null};
+const H_MIN = 2;   // hints a word needs before Hints plays it
 const T_TOPICS = TOPICS.filter(t => !t.only);
 const loadedT = {};
 function loadTaboo(key){
@@ -1027,17 +1038,17 @@ function loadTaboo(key){
     (W || []).forEach(r => { const lists = listOf(r.list).map(x => x.toLowerCase()); on[r.id] = !t.list || !lists.length || lists.includes(t.list); });
     const items = (T || []).map(r => ({id: r.id, lv: levelNum(r.level), w: r.word,
         taboo: [1, 2, 3, 4].map(k => r['taboo' + k]).filter(Boolean), hints: [1, 2, 3, 4].map(k => r['hint' + k]).filter(Boolean)}))
-      .filter(it => it.id && it.w && it.taboo.length && on[it.id] !== false);
+      .filter(it => it.id && it.w && (it.taboo.length || it.hints.length >= H_MIN) && on[it.id] !== false);
     return {key, name: t.name, items};
   });
   loadedT[key] = p; p.catch(() => { delete loadedT[key]; });
   return p;
 }
 function tabooData(topics){ return Promise.all(topics.map(loadTaboo)).then(all => Object.fromEntries(all.map(D => [D.key, D]))); }
-const eligibleTaboo = (D, levels) => (D.items || []).filter(it => it.lv == null || levels.includes(band(it.lv)));
-function countTaboo(topics, levels, data, level){
+const eligibleTaboo = (D, levels, kind) => (D.items || []).filter(it => (kind === 'hints' ? it.hints.length >= H_MIN : it.taboo.length) && (it.lv == null || levels.includes(band(it.lv))));
+function countTaboo(topics, levels, data, level, kind){
   let n = 0;
-  topics.forEach(tk => { const D = data[tk]; if (D) n += eligibleTaboo(D, level ? [level] : levels).filter(it => !level || it.lv != null).length; });
+  topics.forEach(tk => { const D = data[tk]; if (D) n += eligibleTaboo(D, level ? [level] : levels, kind).filter(it => !level || it.lv != null).length; });
   return n;
 }
 
@@ -1051,12 +1062,15 @@ function chooser(){
 }
 
 // ---------- making or changing a Don't Say It! game ----------
-function tabooForm(id){
+function tabooForm(id, kind){
+  kind = kind === 'hints' ? 'hints' : 'taboo';
+  const hints = kind === 'hints', count = (t, l, d, lv) => countTaboo(t, l, d, lv, kind);
   const old = id ? setOf(id) : null;
   if (id && !old) { location.hash = '#/board'; return; }
-  const cfg = Object.assign(JSON.parse(JSON.stringify(T_DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
+  const cfg = Object.assign(JSON.parse(JSON.stringify(hints ? H_DEFAULTS : T_DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
   if (!cfg.teams || cfg.teams.length < 2) cfg.teams = funNames(4);
-  C.setTitle(old ? "Change: Don't Say It!" : "New Don't Say It! game"); C.header();
+  const name = GAME_TYPES[kind].name;
+  C.setTitle(old ? 'Change: ' + name : 'New ' + name + ' game'); C.header();
   let data = null;
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
   const sel = (sid, label, list, cur) => '<div class="field"><label for="' + sid + '">' + label + '</label><select id="' + sid + '">' + list.map(x => opt(x[0], x[1], cur)).join('') + '</select></div>';
@@ -1066,17 +1080,23 @@ function tabooForm(id){
     '<div class="field"><label for="b-title">Name</label><input type="text" id="b-title" maxlength="80" placeholder="e.g. 9A Representation words" value="' + esc(cfg.title) + '"></div>' +
     '<fieldset><legend>Topics</legend><div class="bg-chips" id="b-topics">' + T_TOPICS.map(t =>
       '<label class="bg-chip"><input type="checkbox" value="' + t.key + '"' + (cfg.topics.includes(t.key) ? ' checked' : '') + '><span>' + esc(t.name) + ' <small data-n="' + t.key + '">…</small></span></label>').join('') + '</div>' +
-      '<p class="note">The words come from each topic\'s taboo.csv. A word is ready once its forbidden words are written.</p></fieldset>' +
+      '<p class="note">' + (hints ? 'The words come from each topic\'s taboo.csv. A word is ready once it has at least two hints.'
+        : 'The words come from each topic\'s taboo.csv. A word is ready once its forbidden words are written.') + '</p></fieldset>' +
     '<fieldset><legend>Levels</legend><div class="bg-chips" id="b-levels"></div></fieldset>' +
     '<p class="bg-total" id="b-total" aria-live="polite">Counting the words…</p>' +
-    '<hr><fieldset><legend>Rounds</legend><div class="bg-settings">' +
+    (hints ? '<hr><fieldset><legend>Turns</legend><div class="bg-settings">' +
+      sel('b-turn', 'Each turn lasts', [[30, '30 seconds'], [45, '45 seconds'], [60, '1 minute'], [90, '90 seconds'], [120, '2 minutes']], cfg.times[0] || 60) +
+      sel('b-rounds', 'Turns for each team', [[1, '1'], [2, '2'], [3, '3'], [4, '4'], [5, '5']], cfg.times.length || 3) +
+    '</div><p class="note">Points: 4 for a word guessed on the first hint, then 3, 2 and 1. The clock stops while the wheel picks another team; ' +
+      'they answer for 1 point, and if they\'re wrong the wheel spins again.</p></fieldset>'
+    : '<hr><fieldset><legend>Rounds</legend><div class="bg-settings">' +
       sel('b-t1', 'Round 1: each team plays for', [[30, '30 seconds'], [45, '45 seconds'], [60, '1 minute'], [90, '90 seconds'], [120, '2 minutes']], cfg.times[0] || 60) +
       sel('b-t2', 'Round 2', [[0, 'No round 2'], [15, '15 seconds'], [20, '20 seconds'], [30, '30 seconds'], [45, '45 seconds'], [60, '1 minute']], cfg.times[1] || 0) +
       sel('b-t3', 'Round 3', [[0, 'No round 3'], [10, '10 seconds'], [15, '15 seconds'], [20, '20 seconds'], [30, '30 seconds']], cfg.times[2] || 0) +
       sel('b-said', 'Saying a red word', [['skip', 'Next word, no point lost'], ['lose', 'Lose a point']], cfg.said) +
     '</div>' +
     '<label class="choice"><input type="checkbox" id="b-replay"' + (cfg.replay !== false ? ' checked' : '') + '><span><b>Replay Same Words in Next Round</b><br>' +
-      '<span class="note">Every word sent in round 1 comes back in the later rounds: a reminder, for recall. Untick it for new words each round.</span></span></label></fieldset>' +
+      '<span class="note">Every word sent in round 1 comes back in the later rounds: a reminder, for recall. Untick it for new words each round.</span></span></label></fieldset>') +
     '<hr><fieldset><legend>Teams</legend>' +
       '<div class="row"><label class="lab" for="b-nteams">How many</label><select id="b-nteams">' + [2, 3, 4, 5, 6, 7, 8].map(n => opt(n, n, cfg.teams.length)).join('') + '</select>' +
       '<button class="btn small alt" type="button" id="b-renames">New names for every team</button></div>' +
@@ -1089,21 +1109,26 @@ function tabooForm(id){
     cfg.title = $('#b-title').value.trim();
     cfg.topics = $$('#b-topics input:checked').map(i => i.value);
     if ($$('#b-levels input').length) cfg.levels = $$('#b-levels input:checked').map(i => +i.value);
-    cfg.times = [+$('#b-t1').value, +$('#b-t2').value, +$('#b-t3').value];
-    cfg.said = $('#b-said').value; cfg.replay = $('#b-replay').checked;
+    if (hints) cfg.times = Array(+$('#b-rounds').value || 3).fill(+$('#b-turn').value || 60);
+    else { cfg.times = [+$('#b-t1').value, +$('#b-t2').value, +$('#b-t3').value]; cfg.said = $('#b-said').value; cfg.replay = $('#b-replay').checked; }
     cfg.teams = $$('#b-teams input').map((i, k) => i.value.trim() || 'Team ' + (k + 1));
   };
   const drawCounts = () => {
-    $$('#b-topics [data-n]').forEach(x => { x.textContent = data ? countTaboo([x.dataset.n], cfg.levels, data) : '…'; });
-    $('#b-levels').innerHTML = LEVELS.map(([n, name]) => { const c = data && cfg.topics.length ? countTaboo(cfg.topics, cfg.levels, data, n) : null;
+    $$('#b-topics [data-n]').forEach(x => { x.textContent = data ? count([x.dataset.n], cfg.levels, data) : '…'; });
+    $('#b-levels').innerHTML = LEVELS.map(([n, name]) => { const c = data && cfg.topics.length ? count(cfg.topics, cfg.levels, data, n) : null;
       return '<label class="bg-chip"><input type="checkbox" value="' + n + '"' + (cfg.levels.includes(n) ? ' checked' : '') + '><span>' + name + (c == null ? '' : ' <small>' + c + '</small>') + '</span></label>'; }).join('');
     $$('#b-levels input').forEach(i => i.onchange = () => { read(); drawCounts(); });
     const el = $('#b-total'); el.classList.remove('bad');
     if (!data) { el.textContent = 'Counting the words…'; return; }
     if (!cfg.topics.length) { el.textContent = 'Choose at least one topic.'; return; }
     if (!cfg.levels.length) { el.textContent = 'Choose at least one level.'; el.classList.add('bad'); return; }
-    const n = countTaboo(cfg.topics, cfg.levels, data), times = cfg.times.filter(Boolean);
-    if (!n) { el.textContent = 'No words are ready yet in ' + (cfg.topics.length > 1 ? 'these topics' : 'this topic') + ' at these levels: their taboo.csv needs its forbidden words (content/README.md says how).'; el.classList.add('bad'); return; }
+    const n = count(cfg.topics, cfg.levels, data), times = cfg.times.filter(Boolean);
+    if (!n) { el.textContent = 'No words are ready yet in ' + (cfg.topics.length > 1 ? 'these topics' : 'this topic') + ' at these levels: their taboo.csv needs ' +
+      (hints ? 'hints' : 'its forbidden words') + ' (content/README.md says how).'; el.classList.add('bad'); return; }
+    if (hints) { const turns = cfg.times.length;
+      el.textContent = n + ' word' + (n === 1 ? '' : 's') + ' ready. Each team has ' + turns + ' turn' + (turns === 1 ? '' : 's') + ' of ' + cfg.times[0] + ' seconds.' +
+        (n < cfg.teams.length * turns * 3 ? ' Not many words for ' + cfg.teams.length + ' teams: some may come round again.' : '');
+      return; }
     el.textContent = n + ' word' + (n === 1 ? '' : 's') + ' ready. Each team plays once a round: ' + times.map(x => x + ' seconds').join(', then ') + '.' +
       (times.length > 1 ? (cfg.replay ? ' The words from round 1 come back in the later rounds.' : ' New words each round.') : '') +
       (n < cfg.teams.length * 6 ? ' Not many words for ' + cfg.teams.length + ' teams: some may come round again.' : '');
@@ -1119,7 +1144,7 @@ function tabooForm(id){
     $$('#b-teams .bg-dice').forEach(b => b.onclick = () => { const i = +b.dataset.i; cfg.teams[i] = funName(cfg.teams.filter((_, k) => k !== i)); drawTeams(); });
   };
   $$('#b-topics input').forEach(i => i.onchange = () => { C.touch(); read(); drawCounts(); });
-  ['#b-t1', '#b-t2', '#b-t3', '#b-replay'].forEach(q => $(q).onchange = () => { read(); drawCounts(); });
+  ['#b-t1', '#b-t2', '#b-t3', '#b-replay', '#b-turn', '#b-rounds'].forEach(q => { if ($(q)) $(q).onchange = () => { read(); drawCounts(); }; });
   $('#b-nteams').onchange = () => { cfg.teams = $$('#b-teams input').map(i => i.value); drawTeams(); read(); drawCounts(); };
   $('#b-renames').onclick = () => { cfg.teams = funNames(cfg.teams.length); drawTeams(); };
   drawTeams(); drawCounts();
@@ -1134,9 +1159,9 @@ function tabooForm(id){
     if (!cfg.topics.length) return say('Choose at least one topic.');
     if (!data) return say('Still counting the words. Try again in a moment.');
     if (!cfg.levels.length) return say('Choose at least one level.');
-    if (!countTaboo(cfg.topics, cfg.levels, data)) return say('No words are ready yet for these topics and levels.');
-    const s = Object.assign({}, cfg, {game: 'taboo', id: old ? old.id : uid(), created: old ? old.created : Date.now(),
-      title: cfg.title || cfg.topics.map(topicName).join(' + ') + ' words'});
+    if (!count(cfg.topics, cfg.levels, data)) return say('No words are ready yet for these topics and levels.');
+    const s = Object.assign({}, cfg, {game: kind, id: old ? old.id : uid(), created: old ? old.created : Date.now(),
+      title: cfg.title || cfg.topics.map(topicName).join(' + ') + (hints ? ' hints' : ' words')});
     saveSet(s);
     const g = gameOf(s.id);
     if (g && go === 'play' && !confirm('This game is in progress. Start a new game with the new settings? (Cancel keeps the game in progress.)')) { location.hash = '#/board/play/' + s.id; return; }
@@ -1149,11 +1174,11 @@ function tabooForm(id){
 // The game is saved as it goes: fresh (words not sent yet), deck (this round's replayed words), pool (every word sent so far),
 // stage (ready, play, summary, over), cur (the word on the board), log (this turn's words and what happened to them).
 function newTabooGame(set, data){
-  const cfg = JSON.parse(JSON.stringify(set)), all = [];
-  cfg.topics.forEach(tk => { const D = data[tk]; if (D) eligibleTaboo(D, cfg.levels).forEach(it => all.push({k: tk + '|' + it.id, t: tk, lv: it.lv, w: it.w, taboo: it.taboo, hints: it.hints})); });
-  const times = (cfg.times || T_DEFAULTS.times).map(Number).filter(x => x > 0);
+  const cfg = JSON.parse(JSON.stringify(set)), all = [], kind = gameType(set);
+  cfg.topics.forEach(tk => { const D = data[tk]; if (D) eligibleTaboo(D, cfg.levels, kind).forEach(it => all.push({k: tk + '|' + it.id, t: tk, lv: it.lv, w: it.w, taboo: it.taboo, hints: it.hints})); });
+  const times = (cfg.times || (kind === 'hints' ? H_DEFAULTS : T_DEFAULTS).times).map(Number).filter(x => x > 0);
   const names = (cfg.teams && cfg.teams.length >= 2) ? cfg.teams : funNames(4);
-  return {v: 1, kind: 'taboo', set: set.id, title: cfg.title || "Don't Say It!", cfg, started: Date.now(), times: times.length ? times : [60],
+  return {v: 1, kind, set: set.id, title: cfg.title || GAME_TYPES[kind].name, cfg, started: Date.now(), times: times.length ? times : [60],
     teams: names.map((nm, i) => ({name: nm, c: COLOURS[i % COLOURS.length], s: 0})), turn: 0, round: 0, step: 0,
     fresh: shuffle(all), deck: [], pool: [], stage: 'ready', cur: null, log: [], left: 0, words: all.length};
 }
@@ -1169,8 +1194,9 @@ function drawTaboo(){
   if (g.stage !== 'play') { clearInterval(P.tick); P.tick = null; }
   tPrompt(); drawScores();
   const card = document.createElement('div');
-  card.className = 'bg-card tb'; card.tabIndex = -1; card.setAttribute('role', 'region'); card.setAttribute('aria-label', "Don't Say It!");
-  if (g.stage === 'ready') tReady(card); else if (g.stage === 'play') tPlay(card); else tSummary(card);
+  const hn = g.kind === 'hints';
+  card.className = 'bg-card tb' + (hn ? ' hn' : ''); card.tabIndex = -1; card.setAttribute('role', 'region'); card.setAttribute('aria-label', GAME_TYPES[g.kind].name);
+  if (g.stage === 'ready') tReady(card); else if (g.stage === 'play') (hn ? hPlay : tPlay)(card); else (hn ? hSummary : tSummary)(card);
   P.stage.innerHTML = ''; P.stage.appendChild(card); P.card = card;
   if (g.stage === 'play') { fitWord(); if (!P.tick && !P.paused) tRun(); }
   card.focus({preventScroll: true});
@@ -1179,9 +1205,10 @@ function tReady(card){
   const g = P.game, t = g.teams[g.turn], first = g.step === 0;
   card.innerHTML = '<div class="tb-ready">' +
     '<p class="tb-round">' + (first ? 'Round ' + (g.round + 1) + ' of ' + g.times.length : 'Next team') + ' · ' + g.times[g.round] + ' seconds</p>' +
-    (first && g.round > 0 ? '<p class="tb-note">' + (g.cfg.replay !== false ? 'The words from round 1 are back. Who remembers them?' : 'New words this round.') + '</p>' : '') +
+    (first && g.round > 0 && g.kind !== 'hints' ? '<p class="tb-note">' + (g.cfg.replay !== false ? 'The words from round 1 are back. Who remembers them?' : 'New words this round.') + '</p>' : '') +
     '<p class="tb-team" style="--tc:' + t.c + '">' + esc(t.name) + '</p>' +
-    '<p class="tb-how">One player guesses, with their back to the board. The rest of the team describe the word without saying it or any of the red words.</p>' +
+    '<p class="tb-how">' + (g.kind === 'hints' ? 'Guess the word from its hints. The first hint is worth 4 points, then 3, 2 and 1. Talk it over, then give one answer.'
+      : 'One player guesses, with their back to the board. The rest of the team describe the word without saying it or any of the red words.') + '</p>' +
     '<button type="button" class="bg-btn solid tb-go" data-go>Start <kbd>Space</kbd></button></div>';
   card.querySelector('[data-go]').onclick = () => tStart();
 }
@@ -1197,7 +1224,7 @@ function tNext(){
   if (g.deck.length) q = g.deck.pop();
   else if (g.fresh.length) { q = g.fresh.pop(); src = 'fresh'; if (!g.pool.some(x => x.k === q.k)) g.pool.push(q); }
   else if (g.pool.length) { g.deck = shuffle(g.pool.filter(x => !g.cur || x.k !== g.cur.q.k)); q = g.deck.pop() || g.pool[0]; }
-  g.cur = q ? {q, src, hints: 0} : null;
+  g.cur = q ? {q, src, hints: g.kind === 'hints' ? 1 : 0} : null;   // Hints starts with the first hint on the board
 }
 function tPlay(card){
   const g = P.game, c = g.cur, total = g.times[g.round], got = g.log.filter(x => x.r === 'got').length;
@@ -1223,6 +1250,7 @@ function tPlay(card){
 }
 // The word fills its half of the board
 function fitWord(){
+  if (P && P.game && P.game.kind === 'hints') return fitHints();
   const card = P && P.card, w = card && card.querySelector('.tb-word'), box = card && card.querySelector('.tb-wordbox');
   if (!w || !box) return;
   const len = w.textContent.length, u = P.u;
@@ -1234,7 +1262,7 @@ function fitWord(){
 function tRun(){
   clearInterval(P.tick);
   P.tick = setInterval(() => {
-    const g = P && P.game; if (!g || g.stage !== 'play' || P.paused || P.endEl) return;
+    const g = P && P.game; if (!g || g.stage !== 'play' || P.paused || P.endEl || P.flash || (g.cur && g.cur.wheel)) return;   // the clock stops for the wheel
     g.left--;
     const tb = P.card && P.card.querySelector('.tb-time');
     if (tb) { tb.querySelector('.tb-secs').textContent = Math.max(0, g.left); tb.querySelector('.tb-bar i').style.width = Math.max(0, 100 * g.left / g.times[g.round]) + '%'; tb.classList.toggle('low', g.left <= 5); }
@@ -1312,6 +1340,200 @@ function tKey(e){
   else if (lk === 's') { e.preventDefault(); tResult('skip'); }
   else if (lk === 'x' || lk === 'n') { e.preventDefault(); tResult('said'); }
   else if (lk === 'h') { e.preventDefault(); tHint(); }
+}
+
+// =====================================================================================================================
+// ---------- Hints (6 Nov 2026, teacher: "They have to guess words based on the hints presented on the board") ----------
+// The team that is playing sees hint 1 and guesses: right on hint 1 is 4 points, and each new hint takes a point off (3, 2, 1).
+// A minute a turn, as many words as they can. A word the team can't get after the last hint can go to the class: the wheel
+// picks one of the other teams to answer for 1 point; if they're wrong it spins again for the teams left. The clock stops meanwhile.
+// The game runs on the Don't Say It! engine (ready, play, summary; turns and rounds); g.cur.wheel = {out, pick, rot} while the wheel is up.
+const hPts = n => Math.max(1, 5 - n);   // points for a word guessed on hint n
+const hCands = W => P.game.teams.map((t, i) => i).filter(i => i !== P.game.turn && !W.out.includes(i));
+const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+function hPlay(card){
+  const g = P.game, c = g.cur, total = g.times[g.round];
+  if (!c) { card.innerHTML = '<div class="tb-ready"><p class="tb-how">There are no more words.</p></div>'; return; }
+  const q = c.q, n = q.hints.length, W = c.wheel, pts = hPts(c.hints), more = c.hints < n;
+  const mine = g.log.filter(x => x.r === 'got'), turnPts = mine.reduce((a, x) => a + x.d, 0);
+  card.innerHTML =
+    '<div class="tb-time' + (P.paused || W ? ' paused' : '') + (g.left <= 5 ? ' low' : '') + '"><div class="tb-bar"><i style="width:' + (100 * g.left / total) + '%"></i></div>' +
+      '<span class="tb-secs">' + g.left + '</span>' + (W ? '<span class="hn-stopped">Clock stopped</span>' : '') +
+      '<button type="button" class="bg-btn small" data-a="pause"' + (W ? ' hidden' : '') + '>' + (P.paused ? 'Carry on' : 'Pause') + '</button></div>' +
+    '<div class="hn-main' + (W ? ' wheel' : '') + '"><div class="hn-hints">' +
+      '<p class="hn-label">' + (W ? 'Over to the class · <b>1 point</b>' : 'What\'s the word? · Hint ' + c.hints + ' of ' + n + ' · <b>' + plural(pts, 'point') + '</b>') + '</p>' +
+      '<ol class="hn-list">' + q.hints.map((h, i) => i < c.hints
+        ? '<li class="hn-h' + (i === c.hints - 1 && !W ? ' new' : '') + '"><span class="hn-pts">' + hPts(i + 1) + '</span><span class="hn-t">' + esc(h) + '</span></li>'
+        : '<li class="hn-h wait"><span class="hn-pts">' + hPts(i + 1) + '</span><span class="hn-t">Hint ' + (i + 1) + '</span></li>').join('') + '</ol>' +
+      '<p class="tb-meta">' + esc([topicName(q.t), q.lv != null ? LEVEL_NAME[band(q.lv)] : ''].filter(Boolean).join(' · ')) + '</p></div>' +
+      (W ? hWheelPanel(W) : '') + '</div>' +
+    '<div class="tb-acts"><span class="tb-count">✓ ' + plural(mine.length, 'word') + ' · ' + plural(turnPts, 'point') + ' this turn</span>' +
+      (W ? hWheelActs(W)
+        : (more ? '<button type="button" class="bg-btn wrong" data-a="hint">✗ Next hint: ' + plural(hPts(c.hints + 1), 'point') + ' <kbd>N</kbd></button>'
+          : '<button type="button" class="bg-btn" data-a="show">Show the word <kbd>A</kbd></button>' +
+            '<button type="button" class="bg-btn hn-throw" data-a="wheel">🎡 Throw it out to the class <kbd>W</kbd></button>') +
+          '<button type="button" class="bg-btn right tb-got" data-a="got">✓ Got it! +' + pts + ' <kbd>Y</kbd></button>') + '</div>';
+  const on = (a, fn) => { const b = card.querySelector('[data-a=' + a + ']'); if (b) b.onclick = fn; };
+  on('pause', () => tPause()); on('hint', hHint); on('show', hShow); on('wheel', hWheel); on('got', hGot);
+  on('spin', hSpin); on('back', hWheelBack); on('yes', () => hWheelResult(true)); on('no', () => hWheelResult(false));
+}
+// The hints fill their side of the board; the wheel is as big as its side allows
+function fitHints(){
+  const card = P && P.card, box = card && card.querySelector('.hn-hints'), list = card && card.querySelector('.hn-list');
+  if (!box || !list) return;
+  const u = P.u, wp = card.querySelector('.hn-wheel'), wb = card.querySelector('.hn-wheelbox');
+  if (wp && wb) { const rest = [...wp.children].filter(x => x !== wb).reduce((a, x) => a + x.offsetHeight, 0) + 30 * u;
+    const sz = Math.max(60, Math.min(wp.clientWidth - 10 * u, wp.clientHeight - rest)); wb.style.width = wb.style.height = sz + 'px'; }
+  let f = (wp ? 34 : 44) * u; const min = 14 * u, gap = parseFloat(getComputedStyle(box).rowGap) || 0;
+  const over = () => [...box.children].reduce((a, x) => a + x.offsetHeight, 0) + gap * (box.children.length - 1) > box.clientHeight;
+  list.style.setProperty('--hf', f + 'px');
+  for (let k = 0; k < 40 && f > min && over(); k++) { f = Math.max(min, f * .92); list.style.setProperty('--hf', f + 'px'); }
+}
+function hHint(){
+  const g = P.game, c = g.cur; if (g.stage !== 'play' || !c || c.wheel || P.flash || c.hints >= c.q.hints.length) return;
+  c.hints++; sfx('open'); save(); drawTaboo();
+}
+function hGot(){
+  const g = P.game, c = g.cur; if (g.stage !== 'play' || !c || c.wheel || P.flash) return;
+  const d = hPts(c.hints), team = g.teams[g.turn];
+  team.s += d; g.log.push({k: c.q.k, w: c.q.w, r: 'got', d, h: c.hints});
+  sfx('right'); tNext(); save(); drawScores({[g.turn]: d});
+  hFlash(c.q.w, '+' + d + ' · ' + team.name, team.c);
+}
+// Nobody got it: the teacher shows the word, and the team carries on with the next one
+function hShow(){
+  const g = P.game, c = g.cur; if (g.stage !== 'play' || !c || c.wheel || P.flash || c.hints < c.q.hints.length) return;
+  hNobody();
+}
+function hNobody(){
+  const g = P.game, c = g.cur;
+  g.log.push({k: c.q.k, w: c.q.w, r: 'miss', d: 0}); sfx('wrong'); tNext(); save();
+  hFlash(c.q.w, 'Nobody got it', null);
+}
+// The word fills the board for a moment (a click or Space moves on sooner), then the next word's first hint
+function hFlash(w, line, colour){
+  const card = P.card; if (!card) return drawTaboo();
+  const el = document.createElement('div');
+  el.className = 'hn-flash' + (colour ? '' : ' none'); if (colour) el.style.setProperty('--tc', colour);
+  el.innerHTML = '<p class="hn-flash-w">' + esc(w) + '</p><p class="hn-flash-l">' + esc(line) + '</p>';
+  card.appendChild(el);
+  const we = el.firstChild; let f = (w.length < 9 ? 150 : w.length < 15 ? 118 : 92) * P.u;
+  we.style.fontSize = f + 'px';
+  for (let k = 0; k < 30 && f > 30 * P.u && (we.scrollWidth > we.clientWidth + 1 || el.scrollHeight > el.clientHeight + 1); k++) { f *= .9; we.style.fontSize = f + 'px'; }
+  const fl = P.flash = {done: () => { if (!P || P.flash !== fl) return; clearTimeout(fl.t); P.flash = null; drawTaboo(); }};
+  fl.t = setTimeout(fl.done, 1900);
+  el.onclick = fl.done;
+}
+function hFlashEnd(){ if (P && P.flash) P.flash.done(); }
+
+// ---------- the wheel: "The remaining team names appear in the wheel which spins and selects a team" ----------
+function hWheel(){
+  const g = P.game, c = g.cur; if (g.stage !== 'play' || !c || c.wheel || P.flash || c.hints < c.q.hints.length) return;
+  c.wheel = {out: [], pick: null, rot: 0}; sfx('surprise'); save(); drawTaboo();
+}
+function hWheelBack(){ const c = P.game.cur; if (!c || !c.wheel || P.spinning) return; c.wheel = null; save(); drawTaboo(); }
+function wheelSvg(cands){
+  const g = P.game, n = cands.length, s = 360 / Math.max(1, n), R = 96;
+  const pt = (a, r) => { const t = (a - 90) * Math.PI / 180; return (Math.cos(t) * r).toFixed(2) + ' ' + (Math.sin(t) * r).toFixed(2); };
+  let out = '<svg viewBox="-100 -100 200 200" aria-hidden="true"><circle r="99" class="rim"/>';
+  if (!n) return out + '<circle r="' + R + '" class="empty"/></svg>';
+  cands.forEach((ti, i) => {
+    const t = g.teams[ti], a0 = i * s, mid = a0 + s / 2, flip = mid > 180;
+    // the name in two lines (Zooming / Puffins), as big as its slice allows
+    const nm = t.name.length > 28 ? t.name.slice(0, 27) + '…' : t.name;
+    let lines = [nm];
+    nm.split('').forEach((ch, k) => { if (ch === ' ' && Math.max(k, nm.length - k - 1) < Math.max(...lines.map(x => x.length))) lines = [nm.slice(0, k), nm.slice(k + 1)]; });
+    const long = Math.max(5, ...lines.map(x => x.length));
+    let fs = Math.min(n === 1 ? 22 : 17, 118 / long);
+    if (n > 1) for (let k = 0; k < 30 && fs > 6; k++) { const inner = 58 - long * .62 * fs / 2; if (lines.length * 1.2 * fs <= inner * s * Math.PI / 180) break; fs *= .93; }
+    const txt = at => '<text ' + at + ' text-anchor="middle" dominant-baseline="central" font-size="' + fs.toFixed(1) + '">' +
+      lines.map((x, k) => '<tspan x="0" dy="' + (k ? 1.16 : -(lines.length - 1) * .58) + 'em">' + esc(x) + '</tspan>').join('') + '</text>';
+    if (n === 1) { out += '<circle r="' + R + '" fill="' + t.c + '"/>' + txt('transform="translate(0 -52)"'); return; }
+    out += '<path d="M0 0L' + pt(a0, R) + 'A' + R + ' ' + R + ' 0 ' + (s > 180 ? 1 : 0) + ' 1 ' + pt(a0 + s, R) + 'Z" fill="' + t.c + '"/>' +
+      txt('transform="rotate(' + (flip ? mid + 90 : mid - 90).toFixed(2) + ') translate(' + (flip ? -58 : 58) + ' 0)"');
+  });
+  return out + '<circle r="13" class="hub"/></svg>';
+}
+function hWheelPanel(W){
+  const g = P.game, cands = hCands(W), t = W.pick != null && !P.spinning ? g.teams[W.pick] : null;
+  return '<div class="hn-wheel"><div class="hn-wheelbox"><div class="hn-spin" style="transform:rotate(' + W.rot + 'deg)">' + wheelSvg(cands) + '</div>' +
+      '<svg class="hn-pointer" viewBox="0 0 40 40" aria-hidden="true"><path d="M5 5h30L20 33z"/></svg></div>' +
+    '<p class="hn-pick"' + (t ? ' style="--tc:' + t.c + '"' : '') + ' aria-live="polite">' + (t ? esc(t.name) + '!' : P.spinning ? 'Spinning…' : 'Who will it be?') + '</p>' +
+    (W.out.length ? '<p class="hn-out">Tried: ' + esc(W.out.map(i => g.teams[i].name).join(', ')) + '</p>' : '') + '</div>';
+}
+function hWheelActs(W){
+  if (W.pick != null && !P.spinning) return '<button type="button" class="bg-btn wrong" data-a="no">✗ Wrong <kbd>N</kbd></button>' +
+    '<button type="button" class="bg-btn right tb-got" data-a="yes">✓ Right +1 <kbd>Y</kbd></button>';
+  return '<button type="button" class="bg-btn" data-a="back"' + (P.spinning ? ' disabled' : '') + '>Back <kbd>Esc</kbd></button>' +
+    '<button type="button" class="bg-btn solid tb-got" data-a="spin"' + (P.spinning ? ' disabled' : '') + '>🎡 Spin <kbd>Space</kbd></button>';
+}
+function hSpin(){
+  const g = P.game, c = g.cur, W = c && c.wheel; if (!W || P.spinning || W.pick != null || P.endEl || P.flash) return;
+  const cands = hCands(W); if (!cands.length) return hNobody();
+  const n = cands.length, s = 360 / n, i = Math.floor(Math.random() * n), a = (i + .15 + Math.random() * .7) * s;   // where on the wheel the pointer stops
+  const from = W.rot, to = from - (from % 360) + 360 * (reduced() ? 1 : 5) + ((360 - a) % 360), ms = reduced() ? 500 : 4200;
+  W.pick = cands[i]; W.rot = to; P.spinning = true; save();   // the pick is saved straight away: a reload shows it
+  const card = P.card, spin = card.querySelector('.hn-spin');
+  card.querySelectorAll('[data-a=spin],[data-a=back]').forEach(b => { b.disabled = true; });
+  const pk = card.querySelector('.hn-pick'); if (pk) pk.textContent = 'Spinning…';
+  spin.getBoundingClientRect();
+  spin.style.transition = 'transform ' + ms + 'ms cubic-bezier(.12,.7,.12,1)'; spin.style.transform = 'rotate(' + to + 'deg)';
+  let last = null;   // a tick each time a name passes the pointer
+  const tick = setInterval(() => {
+    if (!P || !P.spinning) return clearInterval(tick);
+    const m = /matrix\(([^,]+),\s*([^,]+)/.exec(getComputedStyle(spin).transform); if (!m) return;
+    const r = (Math.atan2(+m[2], +m[1]) * 180 / Math.PI + 360) % 360, k = Math.floor(((360 - r) % 360) / s);
+    if (last !== null && k !== last) sfx('tick'); last = k;
+  }, 40);
+  setTimeout(() => {
+    clearInterval(tick);
+    if (!P || P.game !== g) return;
+    P.spinning = false;
+    if (g.cur !== c) return;
+    sfx('surprise'); if (!P.endEl) drawTaboo();
+  }, ms + 150);
+}
+function hWheelResult(right){
+  const g = P.game, c = g.cur, W = c && c.wheel; if (!W || W.pick == null || P.spinning || P.flash) return;
+  const ti = W.pick, team = g.teams[ti];
+  if (right) {
+    team.s += 1; g.log.push({k: c.q.k, w: c.q.w, r: 'stole', by: ti, d: 1});
+    sfx('right'); tNext(); save(); drawScores({[ti]: 1});
+    return hFlash(c.q.w, '+1 · ' + team.name, team.c);
+  }
+  W.out.push(ti); W.pick = null;
+  if (!hCands(W).length) return hNobody();
+  sfx('wrong'); save(); drawTaboo();
+  setTimeout(() => { if (P && P.game === g && g.cur === c && c.wheel === W && W.pick == null) hSpin(); }, 900);   // "If they can't get it the wheel spins again"
+}
+function hSummary(card){
+  const g = P.game, t = g.teams[g.turn], pts = g.log.filter(x => x.r === 'got').reduce((a, x) => a + x.d, 0);
+  const last = g.step === g.teams.length - 1, lastRound = g.round === g.times.length - 1;
+  card.innerHTML = '<div class="tb-ready">' +
+    '<p class="tb-round">Time\'s up!</p><p class="tb-team" style="--tc:' + t.c + '">' + esc(t.name) + ': ' + plural(pts, 'point') + '</p>' +
+    (g.log.length ? '<div class="tb-list">' + g.log.map(x => '<span class="tb-w hn-w ' + x.r + '">' +
+        (x.r === 'got' ? '✓ ' + esc(x.w) + ' <b>+' + x.d + '</b>' : x.r === 'stole' ? '🎡 ' + esc(x.w) + ': ' + esc((g.teams[x.by] || {}).name || '') + ' <b>+1</b>' : '– ' + esc(x.w)) +
+        '</span>').join('') + '</div><p class="note">To change a score, click the team at the top.</p>' : '<p class="tb-how">No words this turn.</p>') +
+    '<button type="button" class="bg-btn solid tb-go" data-go>' + (last ? (lastRound ? 'Final scores' : 'Start round ' + (g.round + 2)) : 'Next team') + ' <kbd>Space</kbd></button></div>';
+  card.querySelector('[data-go]').onclick = () => tAdvance();
+}
+function hKey(e){
+  const g = P.game, k = e.key, lk = k.toLowerCase();
+  if (P.flash) { if (k === ' ' || k === 'Enter' || k === 'Escape') { e.preventDefault(); P.flash.done(); } return; }
+  if (g.stage !== 'play') return tKey(e);
+  const W = g.cur && g.cur.wheel;
+  if (W) {
+    if (k === ' ' || k === 'Enter') { e.preventDefault(); hSpin(); }
+    else if (lk === 'y' || lk === 'g') { e.preventDefault(); hWheelResult(true); }
+    else if (lk === 'n' || lk === 'x') { e.preventDefault(); hWheelResult(false); }
+    else if (k === 'Escape') { e.preventDefault(); hWheelBack(); }
+    return;
+  }
+  if (k === ' ') { e.preventDefault(); tPause(); }
+  else if (lk === 'y' || lk === 'g' || k === 'Enter') { e.preventDefault(); hGot(); }
+  else if (lk === 'n' || lk === 'h' || lk === 'x') { e.preventDefault(); hHint(); }
+  else if (lk === 'w') { e.preventDefault(); hWheel(); }
+  else if (lk === 'a') { e.preventDefault(); hShow(); }
 }
 
 // ---------- sounds (made in the browser: no files to load) ----------
