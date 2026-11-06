@@ -315,6 +315,14 @@ html.bg-on main.home { display: none; }
 .hn-main.wheel { grid-template-columns: minmax(0, 1fr) minmax(0, 40%); }
 .hn-hints { width: 100%; max-width: calc(1250 * var(--u)); justify-self: center; min-width: 0; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: calc(14 * var(--u)); overflow: hidden; }
 .hn-label { margin: 0; font-weight: 700; color: var(--muted); font-size: calc(24 * var(--u)); }
+.hn-top { display: flex; flex-wrap: wrap; align-items: center; column-gap: calc(28 * var(--u)); row-gap: calc(10 * var(--u)); }
+.hn-word { margin: 0 0 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .25em .6em; font-family: var(--display); font-weight: 800; font-size: calc(38 * var(--u)); line-height: 1; text-transform: uppercase; }
+.hn-g { display: inline-flex; gap: .16em; white-space: nowrap; }
+.hn-l { display: inline-block; width: .8em; height: 1.15em; line-height: 1.2em; text-align: center; border-bottom: .12em solid var(--muted); }
+.hn-l.on { border-color: var(--hi); color: var(--ink); }
+.hn-l.new { animation: hn-pop .5s ease both; }
+.hn-p { display: inline-block; height: 1.15em; line-height: 1.2em; color: var(--muted); }
+@keyframes hn-pop { 0% { transform: scale(.2); opacity: 0; } 60% { transform: scale(1.3); opacity: 1; } 100% { transform: none; } }
 .hn-label b { background: var(--hi); color: #151935; padding: 0 .45em; border-radius: 99px; white-space: nowrap; }
 .hn-list { --hf: 40px; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: calc(12 * var(--u)); }
 .hn-h { display: flex; align-items: center; gap: .55em; padding: calc(12 * var(--u)) calc(20 * var(--u)); border-radius: calc(16 * var(--u)); background: var(--web-soft); font-weight: 700; font-size: var(--hf); line-height: 1.25; }
@@ -345,4 +353,4 @@ html.bg-on main.home { display: none; }
 .tb-w.stole { background: #fff3b8; border-color: #b08900; color: #5c4700; }
 .tb-w.miss { opacity: .8; }
 @media (prefers-color-scheme: dark) { .tb-w.stole { background: #3d3410; color: #ffe58a; } }
-@media (prefers-reduced-motion: reduce) { .hn-h.new, .hn-flash { animation: none !important; } }
+@media (prefers-reduced-motion: reduce) { .hn-h.new, .hn-flash, .hn-l.new { animation: none !important; } }

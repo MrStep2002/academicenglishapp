@@ -1351,6 +1351,28 @@ function tKey(e){
 const hPts = n => Math.max(1, 5 - n);   // points for a word guessed on hint n
 const hCands = W => P.game.teams.map((t, i) => i).filter(i => i !== P.game.turn && !W.out.includes(i));
 const plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+// The word as blanks, hangman style: hint 1 shows only the blanks, each later hint fills in one more letter
+const isLetter = ch => /[a-z\u00c0-\u024f]/i.test(ch);
+function hOrder(w){   // the order letters appear: the first letter of each word, then the others, in an order fixed for the word
+  const ch = [...w], firsts = [], rest = [];
+  let h = 7, start = true;
+  ch.forEach((x, i) => { h = (Math.imul(h, 31) + x.charCodeAt(0)) >>> 0;
+    if (isLetter(x)) { (start ? firsts : rest).push(i); start = false; } else start = x === ' ' || x === '-'; });
+  for (let i = rest.length - 1; i > 0; i--) { h = (Math.imul(h, 1103515245) + 12345) >>> 0; const j = h % (i + 1); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+  return firsts.concat(rest);
+}
+function hBlanks(w, k, fresh){
+  const ch = [...w], letters = ch.filter(isLetter).length, n = Math.max(0, Math.min(k, letters - 2));
+  const order = hOrder(w), show = new Set(order.slice(0, n)), newest = fresh && n > 0 ? order[n - 1] : -1;
+  const groups = [''];
+  ch.forEach((x, i) => {
+    if (x === ' ') { groups.push(''); return; }
+    groups[groups.length - 1] += !isLetter(x) ? '<span class="hn-p">' + esc(x) + '</span>'
+      : '<span class="hn-l' + (show.has(i) ? ' on' + (i === newest ? ' new' : '') : '') + '">' + (show.has(i) ? esc(x) : '') + '</span>';
+  });
+  return '<p class="hn-word" aria-label="' + plural(letters, 'letter') + (n ? ', ' + n + ' shown' : '') + '">' +
+    groups.filter(Boolean).map(g => '<span class="hn-g">' + g + '</span>').join('') + '</p>';
+}
 function hPlay(card){
   const g = P.game, c = g.cur, total = g.times[g.round];
   if (!c) { card.innerHTML = '<div class="tb-ready"><p class="tb-how">There are no more words.</p></div>'; return; }
@@ -1361,7 +1383,8 @@ function hPlay(card){
       '<span class="tb-secs">' + g.left + '</span>' + (W ? '<span class="hn-stopped">Clock stopped</span>' : '') +
       '<button type="button" class="bg-btn small" data-a="pause"' + (W ? ' hidden' : '') + '>' + (P.paused ? 'Carry on' : 'Pause') + '</button></div>' +
     '<div class="hn-main' + (W ? ' wheel' : '') + '"><div class="hn-hints">' +
-      '<p class="hn-label">' + (W ? 'Over to the class · <b>1 point</b>' : 'What\'s the word? · Hint ' + c.hints + ' of ' + n + ' · <b>' + plural(pts, 'point') + '</b>') + '</p>' +
+      '<div class="hn-top"><p class="hn-label">' + (W ? 'Over to the class · <b>1 point</b>' : 'What\'s the word? · Hint ' + c.hints + ' of ' + n + ' · <b>' + plural(pts, 'point') + '</b>') + '</p>' +
+        hBlanks(q.w, c.hints - 1, !W) + '</div>' +
       '<ol class="hn-list">' + q.hints.map((h, i) => i < c.hints
         ? '<li class="hn-h' + (i === c.hints - 1 && !W ? ' new' : '') + '"><span class="hn-pts">' + hPts(i + 1) + '</span><span class="hn-t">' + esc(h) + '</span></li>'
         : '<li class="hn-h wait"><span class="hn-pts">' + hPts(i + 1) + '</span><span class="hn-t">Hint ' + (i + 1) + '</span></li>').join('') + '</ol>' +
@@ -1384,6 +1407,10 @@ function fitHints(){
   const u = P.u, wp = card.querySelector('.hn-wheel'), wb = card.querySelector('.hn-wheelbox');
   if (wp && wb) { const rest = [...wp.children].filter(x => x !== wb).reduce((a, x) => a + x.offsetHeight, 0) + 30 * u;
     const sz = Math.max(60, Math.min(wp.clientWidth - 10 * u, wp.clientHeight - rest)); wb.style.width = wb.style.height = sz + 'px'; }
+  // the blanks stay on the points line if they can (smaller for a long phrase), so the hints keep their room
+  const wd = card.querySelector('.hn-word'), lb = card.querySelector('.hn-label');
+  if (wd && lb) { let wf = 38 * u; wd.style.fontSize = wf + 'px';
+    for (let k = 0; k < 20 && wf > 24 * u && wd.offsetTop >= lb.offsetTop + lb.offsetHeight; k++) { wf *= .93; wd.style.fontSize = wf + 'px'; } }
   let f = (wp ? 34 : 44) * u; const min = 14 * u, gap = parseFloat(getComputedStyle(box).rowGap) || 0;
   const over = () => [...box.children].reduce((a, x) => a + x.offsetHeight, 0) + gap * (box.children.length - 1) > box.clientHeight;
   list.style.setProperty('--hf', f + 'px');
