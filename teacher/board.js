@@ -55,12 +55,17 @@ const needsQ = k => !!(SURPRISES[k] && SURPRISES[k].q);
 const GAME_TYPES = {
   squares: {name: 'Squaring Up', blurb: 'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
   taboo: {name: "Don't Say It!", blurb: 'One player guesses while their team describes the word without saying any of the red words. Each team plays once a round: 60, then 30, then 15 seconds.'},
-  hints: {name: 'Hints', blurb: 'Teams guess the word from its hints, shown one at a time: 4 points on the first hint, then 3, 2 and 1. A minute a turn. A word the team can\'t get goes to the wheel, which picks another team to answer.'}
+  hints: {name: 'Hints', blurb: 'Teams guess the word from its hints, shown one at a time: 4 points on the first hint, then 3, 2 and 1. A minute a turn. A word the team can\'t get goes to the wheel, which picks another team to answer.'},
+  cats: {name: 'Categories', blurb: 'A board of categories, like Jeopardy: questions worth 100 to 500 that get harder down each column, Daily Doubles to bet on, and a final question every team bets on.'}
 };
-const gameType = s => { const k = s && (s.game || s.kind); return k === 'taboo' || k === 'hints' ? k : 'squares'; };
+const gameType = s => { const k = s && (s.game || s.kind); return k === 'taboo' || k === 'hints' || k === 'cats' ? k : 'squares'; };
 const wordGame = k => k === 'taboo' || k === 'hints';   // the two games played from taboo.csv, a turn at a time
 const POINTS_BY_LEVEL = {1:10, 2:15, 3:20, 4:25, 5:30};
 const MIXED = [5, 10, 15, 20, 25];
+// Categories (7 Nov 2026): cols 'banks' (a column for each kind of question) or 'topics'; next 'winner' (the team that gets it right
+// chooses next, as on TV) or 'turns'; dd: Daily Doubles; final: a last question every team bets on
+const C_DEFAULTS = {title:'', topics:[], banks:['word','meaning','gap','tf','question'], levels:[1,2,3,4,5], cols:'banks', rows:5, secs:30, options:'show',
+  wrong:'nothing', next:'winner', dd:1, final:true, teams:null};
 const DEFAULTS = {title:'', topics:[], banks:['word','meaning','gap'], levels:[1,2,3,4,5], squares:20, secs:30, points:'same', options:'show',
   wrong:'nothing', surprise:'few', kinds:Object.keys(SURPRISES), teams:null};
 
@@ -237,8 +242,42 @@ function countFor(cfg, data, bank, level){
 }
 function dataFor(topics){ loadHidden(); return Promise.all(topics.map(loadTopic)).then(all => Object.fromEntries(all.filter(Boolean).map(D => [D.key, D]))); }
 
+// ---------- a Categories board: the columns, the level of each row, a question for every square ----------
+function catCols(cfg){
+  return cfg.cols === 'topics' ? cfg.topics.map(tk => ({name: topicName(tk), topics: [tk], banks: cfg.banks}))
+    : BANKS.filter(b => cfg.banks.includes(b.key)).map(b => ({name: b.name, topics: cfg.topics, banks: [b.key]}));
+}
+function rowLevels(cfg, R){   // from the easiest level chosen down to the hardest, spread out (3 rows of 5 levels: 1, 3, 5)
+  const L = (cfg.levels && cfg.levels.length ? cfg.levels : [1, 2, 3, 4, 5]).slice().sort((a, b) => a - b);
+  return Array.from({length: R}, (_, r) => L[R > 1 ? Math.round(r * (L.length - 1) / (R - 1)) : 0]);
+}
+// A question for one square: at the row's level if the column has one, or the nearest level (the levels chosen first)
+function drawAt(cc, lv, cfg, data, used){
+  const near = a => a.slice().sort((x, y) => Math.abs(x - lv) - Math.abs(y - lv) || x - y), chosen = cfg.levels && cfg.levels.length ? cfg.levels : [1, 2, 3, 4, 5];
+  for (const L of near(chosen).concat(near([1, 2, 3, 4, 5].filter(x => !chosen.includes(x))))) {
+    const q = draw({topics: cc.topics, banks: cc.banks, levels: [L]}, data, 1, used)[0]; if (q) return q; }
+  return null;
+}
+function newCatsGame(set, data){
+  const cfg = JSON.parse(JSON.stringify(set)), cols = catCols(cfg).slice(0, 6), R = Math.max(3, Math.min(5, +cfg.rows || 5)), lv = rowLevels(cfg, R);
+  const used = new Set(), tiles = [];
+  for (let r = 0; r < R; r++) cols.forEach((cc, c) => { const q = drawAt(cc, lv[r], cfg, data, used);
+    tiles.push(Object.assign({k: 'q', p: (r + 1) * 100, col: c, row: r, lvl: lv[r]}, q ? {q} : {empty: true})); });
+  // Daily Doubles: hidden under a square, never on the top row, never two in one column
+  const nDD = Math.max(0, Math.min(2, +cfg.dd || 0)), dcols = new Set();
+  shuffle(tiles.filter(t => !t.empty && t.row > 0)).forEach(t => { if (dcols.size < nDD && !dcols.has(t.col)) { t.k = 'dd'; dcols.add(t.col); } });
+  tiles.forEach((t, i) => Object.assign(t, {n: i + 1, done: !!t.empty, r: null}));
+  let final = null;   // the final question: a random column, the hardest level chosen
+  if (cfg.final && cols.length) { const c = Math.floor(Math.random() * cols.length), q = drawAt(cols[c], lv[R - 1], cfg, data, used);
+    if (q) final = {q, col: cols[c].name, stage: 'bet', bets: {}, marks: {}, shown: false, opts: cfg.options !== 'hide'}; }
+  const names = (cfg.teams && cfg.teams.length >= 2) ? cfg.teams : funNames(4);
+  return {v: 1, kind: 'cats', set: set.id, title: cfg.title || 'Categories', cfg, started: Date.now(), turn: 0, cols: cols.map(c => c.name), rows: R,
+    teams: names.map((nm, i) => ({name: nm, c: COLOURS[i % COLOURS.length], s: 0})), tiles, final, used: [...used]};
+}
+
 // ---------- a new game from a board ----------
 function newGame(set, data){
+  if (gameType(set) === 'cats') return newCatsGame(set, data);
   const cfg = JSON.parse(JSON.stringify(set));
   const n = Math.max(4, Math.min(40, +cfg.squares || 20));
   const kinds = cfg.surprise === 'none' ? [] : (cfg.kinds || []).filter(k => SURPRISES[k]);
@@ -278,9 +317,10 @@ const AEA_BOARD = window.AEA_BOARD = {
     if ((m = /^#\/board\/play\/([\w-]+)$/.exec(hash))) return play(m[1]);
     if (hash === '#/board/new') return chooser();
     if (hash === '#/board/new/squares') return form(null);
+    if (hash === '#/board/new/cats') return form(null, 'cats');
     if (hash === '#/board/new/taboo') return tabooForm(null, 'taboo');
     if (hash === '#/board/new/hints') return tabooForm(null, 'hints');
-    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) { const k = gameType(setOf(m[1])); return wordGame(k) ? tabooForm(m[1], k) : form(m[1]); }
+    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) { const k = gameType(setOf(m[1])); return wordGame(k) ? tabooForm(m[1], k) : form(m[1], k); }
     return list();
   },
   stop
@@ -294,15 +334,20 @@ function list(){
     '<p style="margin:0 0 14px"><a class="backlink" href="#/">← All classes</a></p>' +
     '<div class="spread" style="margin-bottom:14px"><p class="note">Games for the whole class on one screen: open a board, then put it on the projector.</p>' +
     '<a class="btn" href="#/board/new">+ New board game</a></div>' +
-    (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g && g.tiles ? g.tiles.filter(t => !t.done).length : 0;
+    (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g && g.tiles ? g.tiles.filter(t => !t.done).length : 0, all = g && g.tiles ? g.tiles.filter(t => !t.empty).length : 0;
       return '<div class="card bg-item" data-id="' + esc(s.id) + '">' +
         '<span class="bg-kind">' + esc(GAME_TYPES[gameType(s)].name) + '</span><h3>' + esc(s.title || 'Board game') + '</h3>' +
         (g ? '<span class="bg-going">' + (wordGame(g.kind) ? 'Game in progress: round ' + Math.min(g.round + 1, g.times.length) + ' of ' + g.times.length
+          : g.kind === 'cats' ? 'Game in progress: ' + left + ' of ' + all + ' questions left' + (!left && g.final && g.final.stage !== 'done' ? ', then the final question' : '')
           : 'Game in progress: ' + left + ' of ' + g.tiles.length + ' squares left') + '</span>' : '') +
         '<p class="note">' + esc(s.topics.map(topicName).join(', ') || 'No topics') + '</p>' +
         (gameType(s) === 'hints'
           ? '<p class="note">' + esc(levelsText(s.levels)) + '</p>' +
             '<p class="note">' + (s.teams || []).length + ' teams · ' + (s.times || []).length + ' turn' + ((s.times || []).length === 1 ? '' : 's') + ' each of ' + ((s.times || [])[0] || 60) + ' seconds</p>'
+          : gameType(s) === 'cats'
+          ? '<p class="note">' + esc((s.cols === 'topics' ? s.topics.map(topicName) : BANKS.filter(b => s.banks.includes(b.key)).map(b => b.name)).join(' · ')) + '</p>' +
+            '<p class="note">' + esc(levelsText(s.levels)) + ' · ' + (s.rows || 5) + ' rows · ' + (s.teams || []).length + ' teams · ' + (s.secs ? s.secs + ' seconds' : 'no timer') +
+              (s.dd ? ' · ' + s.dd + ' Daily Double' + (s.dd > 1 ? 's' : '') : '') + (s.final ? ' · a final question' : '') + '</p>'
           : gameType(s) === 'taboo'
           ? '<p class="note">' + esc(levelsText(s.levels)) + ' · ' + (s.replay !== false ? 'the same words each round' : 'new words each round') + '</p>' +
             '<p class="note">' + (s.teams || []).length + ' teams · rounds of ' + (s.times || []).filter(Number).join(', ') + ' seconds</p>'
@@ -325,12 +370,13 @@ function list(){
 }
 
 // ---------- making or changing a board ----------
-function form(id){
-  const old = id ? setOf(id) : null;
+function form(id, kind){
+  const cats = kind === 'cats', old = id ? setOf(id) : null;
   if (id && !old) { location.hash = '#/board'; return; }
-  const cfg = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
+  const cfg = Object.assign(JSON.parse(JSON.stringify(cats ? C_DEFAULTS : DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
   if (!cfg.teams || cfg.teams.length < 2) cfg.teams = funNames(4);
-  C.setTitle(old ? 'Change: Squaring Up' : 'New Squaring Up game'); C.header();
+  const gname = GAME_TYPES[cats ? 'cats' : 'squares'].name;
+  C.setTitle(old ? 'Change: ' + gname : 'New ' + gname + ' game'); C.header();
   let data = {};
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
   C.view.innerHTML =
@@ -342,7 +388,24 @@ function form(id){
     '<fieldset><legend>Questions</legend><div class="bg-types" id="b-banks"></div>' +
     '<p class="note">Left out because they need more than one screen: Build the sentence, Spot the error, Complete the text, In your own words, Find the evidence and the reading passages.</p></fieldset>' +
     '<fieldset><legend>Levels</legend><div class="bg-chips" id="b-levels"></div></fieldset>' +
+    (cats ? '<fieldset><legend>Columns</legend><div class="bg-kinds" id="b-cols">' +
+      [['banks', 'A column for each kind of question', 'Best for one topic: What does it mean?, Fill the gap, True or false…'],
+       ['topics', 'A column for each topic', 'For a review of several topics: each column mixes the kinds of question chosen.']].map(x =>
+        '<label><input type="radio" name="b-cols" value="' + x[0] + '"' + (cfg.cols === x[0] ? ' checked' : '') + '><span><b>' + x[1] + '</b><br><span class="note">' + x[2] + '</span></span></label>').join('') +
+      '</div><p class="note" id="b-colnames"></p></fieldset>' : '') +
     '<p class="bg-total" id="b-total" aria-live="polite">Choose at least one topic.</p>' +
+    (cats ? '<hr><fieldset><legend>The game</legend><div class="bg-settings">' +
+      '<div class="field"><label for="b-rows">Rows</label><select id="b-rows">' + [[3, '3: 100 to 300'], [4, '4: 100 to 400'], [5, '5: 100 to 500']].map(x => opt(x[0], x[1], cfg.rows)).join('') + '</select>' +
+        '<span class="note">Each row is a level harder, from the easiest level chosen to the hardest.</span></div>' +
+      '<div class="field"><label for="b-secs">Time to answer</label><select id="b-secs">' + [[0, 'No timer'], [10, '10 seconds'], [15, '15 seconds'], [20, '20 seconds'], [30, '30 seconds'], [45, '45 seconds'], [60, '1 minute'], [90, '90 seconds'], [120, '2 minutes']].map(x => opt(x[0], x[1], cfg.secs)).join('') + '</select></div>' +
+      '<div class="field"><label for="b-options">Answer options</label><select id="b-options">' + opt('show', 'Show them with the question', cfg.options) + opt('hide', 'Hidden until you show them', cfg.options) + '</select>' +
+        '<span class="note">Hidden: teams answer without choices first.</span></div>' +
+      '<div class="field"><label for="b-wrong">Wrong answers</label><select id="b-wrong">' + opt('nothing', 'Score nothing', cfg.wrong) + opt('lose', 'Lose the points', cfg.wrong) + '</select></div>' +
+      '<div class="field"><label for="b-next">Who chooses next</label><select id="b-next">' + opt('winner', 'The team that got it right', cfg.next) + opt('turns', 'Teams take turns', cfg.next) + '</select></div>' +
+      '<div class="field"><label for="b-dd">Daily Doubles</label><select id="b-dd">' + [[0, 'None'], [1, '1'], [2, '2']].map(x => opt(x[0], x[1], cfg.dd)).join('') + '</select>' +
+        '<span class="note">Hidden under a square: the team bets some of its points.</span></div>' +
+    '</div><label class="choice"><input type="checkbox" id="b-final"' + (cfg.final ? ' checked' : '') + '><span><b>A final question</b><br>' +
+      '<span class="note">When the board is finished: every team writes down a bet, then its answer. Right wins the bet, wrong loses it.</span></span></label></fieldset>' :
     '<hr><fieldset><legend>The game</legend><div class="bg-settings">' +
       '<div class="field"><label for="b-squares">Squares</label><select id="b-squares">' + [6, 9, 12, 15, 16, 20, 24, 25, 28, 30, 32, 36].map(n => opt(n, n, cfg.squares)).join('') + '</select></div>' +
       '<div class="field"><label for="b-secs">Time to answer</label><select id="b-secs">' + [[0, 'No timer'], [10, '10 seconds'], [15, '15 seconds'], [20, '20 seconds'], [30, '30 seconds'], [45, '45 seconds'], [60, '1 minute'], [90, '90 seconds'], [120, '2 minutes']].map(x => opt(x[0], x[1], cfg.secs)).join('') + '</select></div>' +
@@ -353,7 +416,7 @@ function form(id){
     '</div></fieldset>' +
     '<hr><fieldset><legend>Surprise squares</legend>' +
       '<div class="bg-settings"><div class="field"><label for="b-surprise">How many</label><select id="b-surprise">' + opt('none', 'None', cfg.surprise) + opt('few', 'A few (about 1 in 8)', cfg.surprise) + opt('lots', 'Lots (about 1 in 4)', cfg.surprise) + '</select></div></div>' +
-      '<div class="bg-kinds" id="b-kinds">' + Object.keys(SURPRISES).map(k => '<label><input type="checkbox" value="' + k + '"' + (cfg.kinds.includes(k) ? ' checked' : '') + '><span><b>' + SURPRISES[k].icon + ' ' + SURPRISES[k].name.replace('!', '') + '</b><br><span class="note">' + SURPRISES[k].blurb + '</span></span></label>').join('') + '</div></fieldset>' +
+      '<div class="bg-kinds" id="b-kinds">' + Object.keys(SURPRISES).map(k => '<label><input type="checkbox" value="' + k + '"' + (cfg.kinds.includes(k) ? ' checked' : '') + '><span><b>' + SURPRISES[k].icon + ' ' + SURPRISES[k].name.replace('!', '') + '</b><br><span class="note">' + SURPRISES[k].blurb + '</span></span></label>').join('') + '</div></fieldset>') +
     '<hr><fieldset><legend>Teams</legend>' +
       '<div class="row"><label class="lab" for="b-nteams">How many</label><select id="b-nteams">' + [2, 3, 4, 5, 6, 7, 8].map(n => opt(n, n, cfg.teams.length)).join('') + '</select>' +
       '<button class="btn small alt" type="button" id="b-renames">New names for every team</button></div>' +
@@ -368,8 +431,9 @@ function form(id){
     cfg.topics = checked('#b-topics');
     if ($$('#b-banks input').length) cfg.banks = $$('#b-banks input').filter(i => i.checked && !i.disabled).map(i => i.value);
     if ($$('#b-levels input').length) cfg.levels = $$('#b-levels input').filter(i => i.checked).map(i => +i.value);
-    cfg.squares = +$('#b-squares').value; cfg.secs = +$('#b-secs').value; cfg.points = $('#b-points').value; cfg.options = $('#b-options').value;
-    cfg.wrong = $('#b-wrong').value; cfg.surprise = $('#b-surprise').value; cfg.kinds = checked('#b-kinds');
+    cfg.secs = +$('#b-secs').value; cfg.options = $('#b-options').value; cfg.wrong = $('#b-wrong').value;
+    if (cats) { cfg.cols = (C.view.querySelector('#b-cols input:checked') || {}).value || 'banks'; cfg.rows = +$('#b-rows').value; cfg.next = $('#b-next').value; cfg.dd = +$('#b-dd').value; cfg.final = $('#b-final').checked; }
+    else { cfg.squares = +$('#b-squares').value; cfg.points = $('#b-points').value; cfg.surprise = $('#b-surprise').value; cfg.kinds = checked('#b-kinds'); }
     cfg.teams = $$('#b-teams input').map((i, k) => i.value.trim() || 'Team ' + (k + 1));
   };
   // Question types and levels, with how many questions each has for the topics chosen
@@ -397,6 +461,7 @@ function form(id){
     if (!cfg.topics.length) { el.textContent = 'Choose at least one topic.'; return; }
     if (!cfg.topics.every(t => data[t])) { el.textContent = 'Counting the questions…'; return; }
     if (!cfg.banks.length) { el.textContent = 'Choose at least one kind of question.'; el.classList.add('bad'); return; }
+    if (cats) return catsTotal(el);
     const total = countFor(cfg, data), kinds = cfg.surprise === 'none' ? 0 : cfg.kinds.length;
     const nSur = kinds ? Math.max(1, Math.round(cfg.squares * (cfg.surprise === 'lots' ? .25 : .12))) : 0, need = cfg.squares - nSur;
     const onlyGk = cfg.banks.every(b => b === 'gk');
@@ -405,6 +470,20 @@ function form(id){
     el.textContent = total + ' question' + (total === 1 ? '' : 's') + ' match. A board of ' + cfg.squares + ' squares uses ' + need + (nSur ? ' (and ' + nSur + ' surprise square' + (nSur === 1 ? '' : 's') + ')' : '') + ', different every game.' +
       (total < need ? ' There are not enough for every square, so the board will be smaller.' : '');
     if (total < need) el.classList.add('bad');
+  };
+  // Categories: the columns, and whether every square can have a question
+  const catsTotal = el => {
+    read();   // the kinds of question just drawn (a kind the topic doesn't have is unticked)
+    const cols = catCols(cfg), R = cfg.rows, lv = rowLevels(cfg, R), names = $('#b-colnames');
+    if (names) names.textContent = cols.length ? 'Columns: ' + cols.map(c => c.name).join(' · ') : '';
+    if (cols.length < 2) { el.textContent = cfg.cols === 'topics' ? 'Choose at least two topics for a column each (or a column for each kind of question).' : 'Choose at least two kinds of question for a column each (or a column for each topic).'; el.classList.add('bad'); return; }
+    if (cols.length > 6) { el.textContent = 'At most 6 columns: you have ' + cols.length + '. Untick some ' + (cfg.cols === 'topics' ? 'topics.' : 'kinds of question.'); el.classList.add('bad'); return; }
+    if (!cfg.levels.length && !cfg.banks.every(b => b === 'gk')) { el.textContent = 'Choose at least one level.'; el.classList.add('bad'); return; }
+    const short = cols.map(cc => ({cc, n: countFor({topics: cc.topics, banks: cc.banks, levels: cfg.levels}, data)})).filter(x => x.n < R);
+    el.textContent = cols.length + ' columns × ' + R + ' rows: 100 (' + LEVEL_NAME[lv[0]] + ') to ' + R * 100 + ' (' + LEVEL_NAME[lv[R - 1]] + ').' +
+      (cfg.dd ? ' ' + cfg.dd + ' Daily Double' + (cfg.dd > 1 ? 's' : '') + '.' : '') + (cfg.final ? ' Then a final question.' : '') +
+      (short.length ? ' Not enough questions in ' + short.map(x => x.cc.name + ' (' + x.n + ')').join(', ') + ': some squares will be empty.' : '');
+    if (short.length) el.classList.add('bad');
   };
   const drawCounts = () => { drawBanks(); drawLevels(); drawTotal(); };
   const drawTeams = () => {
@@ -421,9 +500,9 @@ function form(id){
     dataFor(cfg.topics).then(d => { Object.assign(data, d); read(); drawCounts(); })
       .catch(x => { const e = $('#err'); e.textContent = x.message + ' Check your internet connection and try again.'; e.hidden = false; }); };
   $$('#b-topics input').forEach(i => i.onchange = () => { C.touch(); loadChosen(); });
-  ['#b-squares', '#b-surprise'].forEach(s => $(s).onchange = () => { read(); drawTotal(); kindsState(); });
-  $$('#b-kinds input').forEach(i => i.onchange = () => { read(); drawTotal(); });
-  const kindsState = () => { const off = $('#b-surprise').value === 'none'; $('#b-kinds').setAttribute('aria-disabled', off); $$('#b-kinds input').forEach(i => { i.disabled = off; }); };
+  ['#b-squares', '#b-surprise', '#b-rows', '#b-dd', '#b-final'].forEach(s => { if ($(s)) $(s).onchange = () => { read(); drawTotal(); kindsState(); }; });
+  $$('#b-kinds input, #b-cols input').forEach(i => i.onchange = () => { read(); drawTotal(); });
+  const kindsState = () => { if (cats) return; const off = $('#b-surprise').value === 'none'; $('#b-kinds').setAttribute('aria-disabled', off); $$('#b-kinds input').forEach(i => { i.disabled = off; }); };
   $('#b-nteams').onchange = () => { cfg.teams = $$('#b-teams input').map(i => i.value); drawTeams(); };
   $('#b-renames').onclick = () => { cfg.teams = funNames(cfg.teams.length); drawTeams(); };
   drawTeams(); kindsState(); loadChosen();
@@ -438,8 +517,11 @@ function form(id){
     if (!cfg.banks.length) return say('Choose at least one kind of question.');
     if (!cfg.levels.length && !cfg.banks.every(b => b === 'gk')) return say('Choose at least one level.');
     if (!countFor(cfg, data)) return say('No questions match these choices yet. Choose more kinds of question, levels or topics.');
-    const s = Object.assign({}, cfg, {game: 'squares', id: old ? old.id : uid(), created: old ? old.created : Date.now(),
-      title: cfg.title || cfg.topics.map(topicName).join(' + ') + ' quiz'});
+    if (cats) { const n = catCols(cfg).length;
+      if (n < 2) return say(cfg.cols === 'topics' ? 'Choose at least two topics: each one is a column.' : 'Choose at least two kinds of question: each one is a column.');
+      if (n > 6) return say('At most 6 columns: you have ' + n + '.'); }
+    const s = Object.assign({}, cfg, {game: cats ? 'cats' : 'squares', id: old ? old.id : uid(), created: old ? old.created : Date.now(),
+      title: cfg.title || cfg.topics.map(topicName).join(' + ') + (cats ? ' categories' : ' quiz')});
     saveSet(s);
     const g = gameOf(s.id);
     if (g && go === 'play' && !confirm('This board has a game in progress. Start a new game with the new settings? (Cancel keeps the game in progress.)')) { location.hash = '#/board/play/' + s.id; return; }
@@ -508,6 +590,7 @@ function mount(game, data){
     '<p class="bg-prompt" aria-live="polite"></p>' +
     '<div class="bg-stage"><div class="bg-grid"></div></div>' +
     (game.kind === 'hints' ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>Y</kbd> got it · <kbd>N</kbd> next hint · <kbd>W</kbd> the wheel · <kbd>A</kbd> show the word · On the wheel: <kbd>Space</kbd> spin, <kbd>Y</kbd> right, <kbd>N</kbd> wrong</p>'
+      : game.kind === 'cats' ? '<p class="bg-keys">Click a square, or move with the arrow keys and press <kbd>Enter</kbd>. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>'
       : taboo ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>G</kbd> got it · <kbd>S</kbd> skip · <kbd>X</kbd> said a red word · <kbd>H</kbd> hint</p>'
       : '<p class="bg-keys">Click a square, or type its number. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>');
   document.body.appendChild(el);
@@ -515,7 +598,7 @@ function mount(game, data){
   el.querySelector('[data-t=sound]').onclick = () => { P.sound = !P.sound; setJ(K_SOUND, P.sound); tools(); if (P.sound) sfx('right'); };
   el.querySelector('[data-t=full]').onclick = () => { const d = document;
     if (d.fullscreenElement) d.exitFullscreen().catch(() => {}); else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(() => {}); };
-  el.querySelector('[data-t=end]').onclick = () => { if (taboo) { hFlashEnd(); tPause(true); endScreen(); } else if (!P.card) endScreen(); };
+  el.querySelector('[data-t=end]').onclick = () => { if (taboo) { hFlashEnd(); tPause(true); endScreen(); } else if (P.fin) { P.card.remove(); P.card = null; P.fin = false; endScreen(); } else if (!P.card) endScreen(); };
   el.querySelector('[data-t=exit]').onclick = () => { location.hash = '#/board'; };
   P.onResize = () => { sizeUp(); if (taboo) fitWord(); else { layoutGrid(); if (P.card) fitCard(); } };
   P.onKey = onKey; P.onFs = () => tools();
@@ -524,8 +607,10 @@ function mount(game, data){
   if (taboo) { P.paused = game.stage === 'play'; drawTaboo(); if (game.stage === 'over') endScreen(); return; }   // carried on mid-turn: the clock waits for Space
   drawGrid(); drawPrompt();
   if (!P.data) dataFor(game.cfg.topics).then(d => { if (P && P.game === game) P.data = d; }).catch(() => {});   // for New question
-  if (game.tiles.every(t => t.done)) endScreen();
+  if (game.tiles.every(t => t.done)) allDone();
 }
+// Every square has been played: the final question (Categories), or the final scores
+function allDone(){ const g = P.game; if (g.kind === 'cats' && g.final && g.final.stage !== 'done') return finalCard(); endScreen(); }
 function tools(){
   if (!P) return;
   const s = P.el.querySelector('[data-t=sound]'), f = P.el.querySelector('[data-t=full]'), fs = !!document.fullscreenElement;
@@ -546,12 +631,24 @@ function drawScores(bump){
 }
 function drawPrompt(){
   if (wordGame(P.game.kind)) return tPrompt();
-  const g = P.game, left = g.tiles.filter(t => !t.done).length, t = g.teams[g.turn];
-  P.prompt.innerHTML = left ? '<b style="color:' + t.c + '">' + esc(t.name) + '</b>, choose a square' : 'Every square is open!';
+  const g = P.game, left = g.tiles.filter(t => !t.done).length, t = g.teams[g.turn], cats = g.kind === 'cats';
+  P.prompt.innerHTML = left ? '<b style="color:' + t.c + '">' + esc(t.name) + '</b>, choose a ' + (cats ? 'category and a value' : 'square')
+    : cats && g.final && g.final.stage !== 'done' ? 'The final question' : cats ? 'Every question has been played!' : 'Every square is open!';
 }
 function layoutGrid(){
   const n = P.game.tiles.length, w = P.stage.clientWidth, h = P.stage.clientHeight;
   if (!w || !h) return;
+  if (P.game.kind === 'cats') {   // Categories: a column for each category, its name on top
+    const g = P.game, nc = g.cols.length, R = g.rows, gap = 10 * P.u, head = P.grid.querySelector('.bg-head');
+    P.cols = nc; P.rows = R;
+    P.grid.style.gridTemplateColumns = 'repeat(' + nc + ', minmax(0, 1fr))';
+    P.grid.style.gridTemplateRows = 'auto repeat(' + R + ', minmax(0, 1fr))';
+    const tw = (w - gap * (nc - 1)) / nc;
+    P.grid.style.setProperty('--hf', Math.max(13, Math.min(26 * P.u, tw * .11)) + 'px');
+    const th = (h - (head ? head.offsetHeight : 60) - gap * R) / R;
+    P.grid.style.setProperty('--tf', Math.max(18, Math.min(tw * .3, th * .5)) + 'px');
+    return;
+  }
   let best = null;
   for (let c = 2; c <= 10; c++) { const r = Math.ceil(n / c), empty = c * r - n;
     const tw = w / c, th = h / r, score = Math.abs(Math.log((tw / th) / 1.45)) + empty * .12 + (empty >= c / 2 + .5 ? .5 : 0);
@@ -566,9 +663,11 @@ function layoutGrid(){
   const gap = 12 * P.u, tw = (w - gap * (best.c - 1)) / best.c, th = (h - gap * (best.r - 1)) / best.r;
   P.grid.style.setProperty('--tf', Math.max(18, Math.min(tw * .42, th * .55)) + 'px');
 }
+const tileName = t => P.game.kind === 'cats' ? P.game.cols[t.col] + ', ' + t.p : 'Square ' + t.n;
 function tileInner(t){
   const g = P.game;
-  if (!t.done) return '<span class="face front">' + t.n + '</span><span class="face back">' + (t.k === 'q' ? '?' : '★') + '</span>';
+  if (t.empty) return '';
+  if (!t.done) return '<span class="face front">' + (g.kind === 'cats' ? t.p : t.n) + '</span><span class="face back">' + (t.k === 'q' ? '?' : '★') + '</span>';
   const r = t.r || {}, team = g.teams[r.team];
   let res;
   if (r.sur) res = '<span class="pts">' + SURPRISES[r.sur].icon + '</span><span class="nm" style="color:var(--ink)">' + esc(r.text || SURPRISES[t.k].name) + '</span>' + (team ? '<span class="nm">' + esc(team.name) + '</span>' : '');
@@ -577,15 +676,19 @@ function tileInner(t){
   return '<span class="face front"><span class="res">' + res + '</span></span>';
 }
 function drawGrid(){
-  P.grid.innerHTML = P.game.tiles.map((t, i) => '<button type="button" class="bg-tile' + (t.done ? ' done' : '') + '" data-i="' + i + '"' +
-    ' aria-label="' + (t.done ? 'Square ' + t.n + ', open' : 'Square ' + t.n) + '"' + (t.done ? ' aria-disabled="true"' : '') + '><span class="in">' + tileInner(t) + '</span></button>').join('');
+  const g = P.game, cats = g.kind === 'cats';
+  P.grid.classList.toggle('cats', cats);
+  P.grid.innerHTML = g.tiles.map((t, i) => '<button type="button" class="bg-tile' + (t.done ? ' done' : '') + (t.empty ? ' empty' : '') + '" data-i="' + i + '"' +
+    (cats ? ' style="grid-row:' + (t.row + 2) + ';grid-column:' + (t.col + 1) + '"' : '') + (t.empty ? ' tabindex="-1"' : '') +
+    ' aria-label="' + esc(tileName(t) + (t.done ? ', open' : '')) + '"' + (t.done ? ' aria-disabled="true"' : '') + '><span class="in">' + tileInner(t) + '</span></button>').join('') +
+    (cats ? g.cols.map((nm, c) => '<div class="bg-head" style="grid-row:1;grid-column:' + (c + 1) + '">' + esc(nm) + '</div>').join('') : '');
   P.grid.querySelectorAll('.bg-tile').forEach(b => b.onclick = () => openTile(+b.dataset.i));
   layoutGrid();
 }
 function redrawTile(i){
   const b = P.grid.children[i], t = P.game.tiles[i]; if (!b) return;
   b.className = 'bg-tile' + (t.done ? ' done' : ''); b.querySelector('.in').innerHTML = tileInner(t);
-  b.setAttribute('aria-label', t.done ? 'Square ' + t.n + ', open' : 'Square ' + t.n);
+  b.setAttribute('aria-label', tileName(t) + (t.done ? ', open' : ''));
   if (t.done) b.setAttribute('aria-disabled', 'true'); else b.removeAttribute('aria-disabled');
 }
 
@@ -598,8 +701,8 @@ function openTile(i){
   b.classList.add('flip'); sfx(t.k === 'q' ? 'open' : 'surprise');
   setTimeout(() => { if (!P) return; P.busy = false;
     P.open = {i, turn: P.game.turn, team: P.game.turn, tried: [], shown: P.game.cfg.options !== 'hide', revealed: false, marked: false, award: true,
-      double: t.k === 'double', sur: t.k !== 'q' && t.k !== 'double' && t.q ? t.k : null};
-    if (t.k === 'q') questionCard(); else surpriseCard(); }, reduced() ? 60 : 420);
+      double: t.k === 'double', sur: SURPRISES[t.k] && t.k !== 'double' && t.q ? t.k : null};
+    if (t.k === 'q') questionCard(); else if (t.k === 'dd') ddCard(); else surpriseCard(); }, reduced() ? 60 : 420);
 }
 function zoomIn(card, instant){
   if (instant) { P.stage.appendChild(card); P.card = card; fitCard(); card.focus({preventScroll: true}); return; }
@@ -621,11 +724,13 @@ function zoomOut(then){
   setTimeout(() => { if (!P) return; card.remove(); P.card = null; P.busy = false; const i = P.open.i; P.open = null;
     b.classList.remove('flip'); redrawTile(i); b.focus({preventScroll: true}); then && then(); }, reduced() ? 0 : 430);
 }
-function nextTurn(){ const g = P.game; g.turn = (P.open.turn + 1) % g.teams.length; }
+function nextTurn(r){ const g = P.game;
+  if (g.kind === 'cats' && g.cfg.next !== 'turns') g.turn = r && r.ok && r.team != null ? r.team : P.open.turn;   // nobody right: the same team chooses again
+  else g.turn = (P.open.turn + 1) % g.teams.length; }
 function finishTile(result, bump){
   const g = P.game, t = g.tiles[P.open.i];
-  t.done = true; t.r = result; nextTurn(); save();
-  zoomOut(() => { drawScores(bump); drawPrompt(); if (g.tiles.every(x => x.done)) setTimeout(() => { if (P && !P.card) endScreen(); }, 900); });
+  t.done = true; t.r = result; nextTurn(result); save();
+  zoomOut(() => { drawScores(bump); drawPrompt(); if (g.tiles.every(x => x.done)) setTimeout(() => { if (P && !P.card) allDone(); }, 900); });
 }
 
 // ---------- the question card ----------
@@ -649,18 +754,22 @@ function qMore(q){
   return rich(q.why);
 }
 // "10 points", "⚡ 20 points", "🦝 10 points + Steal"
-const ptsLabel = (o, t) => (o.double ? '⚡ ' : o.sur ? SURPRISES[o.sur].icon + ' ' : '') + t.p * (o.double ? 2 : 1) + ' points' + (o.sur ? ' + ' + SURPRISES[o.sur].name.replace('!', '') : '');
+const ptsOf = (o, t) => o.wager != null ? o.wager : t.p * (o.double ? 2 : 1);
+const ptsLabel = (o, t) => o.wager != null ? '🎯 ' + o.wager + ' points' :
+  (o.double ? '⚡ ' : o.sur ? SURPRISES[o.sur].icon + ' ' : '') + t.p * (o.double ? 2 : 1) + ' points' + (o.sur ? ' + ' + SURPRISES[o.sur].name.replace('!', '') : '');
+// The card's top line: Categories shows the category (and the kind of question, if that isn't the category)
+const metaK = (t, q) => P.game.kind === 'cats' ? P.game.cols[t.col] : KIND[q.k];
+const metaS = (t, q) => (P.game.kind === 'cats' && P.game.cols[t.col] !== KIND[q.k] ? KIND[q.k] + ' · ' : '') + metaOf(q);
 const metaOf = q => [topicName(q.t), q.lv != null ? LEVEL_NAME[band(q.lv)] : '', q.focus || ''].filter(Boolean).join(' · ');
 function questionCard(instant){
-  const g = P.game, o = P.open, t = g.tiles[o.i], q = t.q, pts = t.p * (o.double ? 2 : 1), secs = +g.cfg.secs || 0;
-  const meta = metaOf(q);
+  const g = P.game, o = P.open, t = g.tiles[o.i], q = t.q, secs = +g.cfg.secs || 0;
   const card = document.createElement('div');
   card.className = 'bg-card'; card.tabIndex = -1; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Question ' + t.n);
   card.innerHTML =
-    '<div class="bg-card-top"><span class="bg-num">' + t.n + '</span>' +
-      '<div class="bg-meta"><span class="k">' + esc(KIND[q.k]) + '</span><span class="s">' + esc(meta) + '</span></div>' +
+    '<div class="bg-card-top">' + (g.kind === 'cats' ? '' : '<span class="bg-num">' + t.n + '</span>') +
+      '<div class="bg-meta"><span class="k">' + esc(metaK(t, q)) + '</span><span class="s">' + esc(metaS(t, q)) + '</span></div>' +
       '<button type="button" class="bg-btn small" data-a="swap" title="Put a different question on this square">New question</button>' +
-      '<span class="bg-pts' + (o.double ? ' double' : '') + '">' + ptsLabel(o, t) + '</span>' +
+      '<span class="bg-pts' + (o.double || o.wager != null ? ' double' : '') + '">' + ptsLabel(o, t) + '</span>' +
       (secs ? '<button type="button" class="bg-timer" title="Pause or restart the timer (Space)" aria-label="Timer"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="42"/><circle class="arc" cx="50" cy="50" r="42"/></svg><span class="t"></span></button>' : '') +
       '<button type="button" class="bg-x" title="Close (Esc)" aria-label="Close">×</button></div>' +
     '<div class="bg-q">' + qBody(q) + '</div>' +
@@ -681,7 +790,7 @@ function questionCard(instant){
   card.querySelector('[data-a=award]').onchange = e => { o.award = e.target.checked; drawWho(); };
   card.querySelectorAll('[data-team]').forEach(b => b.onclick = () => { if (o.tried.includes(+b.dataset.team) && !o.marked) return; o.team = +b.dataset.team; drawWho(); });
   const tb = card.querySelector('.bg-timer'); if (tb) tb.onclick = () => toggleTimer();
-  drawOpts(card); zoomIn(card, instant); drawWho();
+  drawOpts(card); zoomIn(card, instant); drawWho(); fitCard();
   startTimer(secs);
 }
 function drawOpts(card){
@@ -695,10 +804,10 @@ function drawOpts(card){
 }
 function drawWho(){
   const o = P.open, card = P.card; if (!card || !card.querySelector('.bg-who')) return;
-  const g = P.game, t = g.tiles[o.i], pts = t.p * (o.double ? 2 : 1);
+  const g = P.game, t = g.tiles[o.i], pts = ptsOf(o, t);
   card.querySelectorAll('[data-team]').forEach(b => { const i = +b.dataset.team; b.setAttribute('aria-pressed', i === o.team); b.disabled = o.tried.includes(i); b.style.opacity = o.tried.includes(i) ? .4 : ''; });
   const r = card.querySelector('[data-a=right]'); r.innerHTML = '✓ Right' + (o.award ? ' +' + pts : '') + ' <kbd>Y</kbd>';
-  const w = card.querySelector('[data-a=wrong]'); w.innerHTML = '✗ Wrong' + (o.award && g.cfg.wrong === 'lose' ? ' −' + pts : '') + ' <kbd>N</kbd>';
+  const w = card.querySelector('[data-a=wrong]'); w.innerHTML = '✗ Wrong' + (o.award && (g.cfg.wrong === 'lose' || o.wager) ? ' −' + pts : '') + ' <kbd>N</kbd>';
   w.disabled = o.tried.length >= g.teams.length;
   const sw = card.querySelector('[data-a=swap]'); if (sw) sw.hidden = o.marked;   // until Right or Wrong is clicked (a disputed answer: put up another question)
 }
@@ -721,7 +830,7 @@ function paintReveal(){
 }
 function mark(ok){
   const o = P.open, g = P.game; if (!o || !P.card || P.busy) return;
-  const t = g.tiles[o.i], pts = t.p * (o.double ? 2 : 1), team = g.teams[o.team], said = P.card.querySelector('.bg-said');
+  const t = g.tiles[o.i], pts = ptsOf(o, t), team = g.teams[o.team], said = P.card.querySelector('.bg-said');
   P.card.querySelectorAll('.hint').forEach(b => b.classList.remove('hint'));
   if (ok) {
     const got = o.award ? pts : 0; team.s += got;
@@ -733,7 +842,7 @@ function mark(ok){
     return;
   }
   if (o.tried.includes(o.team)) return;
-  const lost = o.award && g.cfg.wrong === 'lose' ? Math.min(pts, team.s) : 0;
+  const lost = o.award && (g.cfg.wrong === 'lose' || o.wager != null) ? Math.min(pts, team.s) : 0;   // a Daily Double's bet is always lost
   team.s -= lost; o.tried.push(o.team); o.marked = true; o.lost = (o.lost || {}); if (lost) o.lost[o.team] = -lost;
   sfx('wrong'); stopTimer(true); save(); drawScores(lost ? {[o.team]: -lost} : null);
   const left = g.teams.map((_, i) => i).filter(i => !o.tried.includes(i));
@@ -757,15 +866,15 @@ function swapQuestion(){
   if (!P.data) { said.className = 'bg-said'; said.textContent = 'Still loading the other questions. Try again in a moment.'; return; }
   const used = new Set(g.used || []), cur = t.q.t + '|' + t.q.b + '|' + t.q.id;
   used.add(cur);
-  const same = Object.assign({}, g.cfg, {banks: [t.q.b], topics: [t.q.t]});
-  let q = draw(same, P.data, 1, used)[0] || draw(g.cfg, P.data, 1, used)[0];
+  const cats = g.kind === 'cats', same = Object.assign({}, g.cfg, {banks: [t.q.b], topics: [t.q.t]}, cats && t.lvl ? {levels: [t.lvl]} : {});
+  let q = draw(same, P.data, 1, used)[0] || (cats ? drawAt(catCols(g.cfg)[t.col], t.lvl, g.cfg, P.data, used) : draw(g.cfg, P.data, 1, used)[0]);
   if (!q) { said.className = 'bg-said'; said.textContent = 'There are no more questions to swap in.'; return; }
   g.used = [...used]; t.q = q; if (g.cfg.points === 'level') t.p = POINTS_BY_LEVEL[band(q.lv)] || 20;
   save();
   const card = P.card, secs = +g.cfg.secs || 0;
   card.querySelector('.bg-q').innerHTML = qBody(q);
-  card.querySelector('.bg-meta .k').textContent = KIND[q.k];
-  card.querySelector('.bg-meta .s').textContent = metaOf(q);
+  card.querySelector('.bg-meta .k').textContent = metaK(t, q);
+  card.querySelector('.bg-meta .s').textContent = metaS(t, q);
   card.querySelector('.bg-pts').textContent = ptsLabel(o, t);
   card.querySelector('.bg-opts').className = 'bg-opts' + (q.opts.length === 2 ? ' two' : '');
   card.querySelector('.bg-more').innerHTML = ''; o.chosen = null; o.revealed = false; o.shown = g.cfg.options !== 'hide';
@@ -951,12 +1060,13 @@ function endScreen(){
   let place = 0;
   const rows = ranked.map((t, k) => { if (k === 0 || t.s !== ranked[k - 1].s) place = k + 1;
     return '<li class="' + (t.s === top ? 'win' : '') + '" style="--tc:' + t.c + ';animation-delay:' + (k * .12) + 's"><span class="p">' + (t.s === top ? '🏆' : place) + '</span><span class="n">' + esc(t.name) + '</span><span class="s">' + t.s + '</span></li>'; }).join('');
-  const taboo = wordGame(g.kind), left = taboo ? (g.stage === 'over' ? 0 : 1) : g.tiles.filter(t => !t.done).length;
+  const taboo = wordGame(g.kind), cats = g.kind === 'cats', finalLeft = cats && g.final && g.final.stage !== 'done' ? 1 : 0;
+  const left = taboo ? (g.stage === 'over' ? 0 : 1) : g.tiles.filter(t => !t.done).length + finalLeft;
   const end = document.createElement('div');
   end.className = 'bg-end';
   end.innerHTML = '<div class="bg-confetti" aria-hidden="true"></div>' +
     '<h2>' + (winners.length === g.teams.length ? 'It\'s a draw!' : winners.length > 1 ? 'A tie for first place!' : esc(winners[0].name) + ' win!') + '</h2>' +
-    '<p class="sub">' + (taboo ? (left ? 'The game was ended early' : 'Final scores') : left ? left + ' square' + (left === 1 ? '' : 's') + ' not opened' : 'Final scores') + '</p>' +
+    '<p class="sub">' + (taboo ? (left ? 'The game was ended early' : 'Final scores') : cats ? (left ? 'Ended early: ' + left + ' question' + (left === 1 ? '' : 's') + ' not played' + (finalLeft ? ' (with the final question)' : '') : 'Final scores') : left ? left + ' square' + (left === 1 ? '' : 's') + ' not opened' : 'Final scores') + '</p>' +
     '<div class="bg-rank"><ol>' + rows + '</ol></div>' +
     '<div class="acts">' + (taboo && !left ? '' : '<button type="button" class="bg-btn" data-e="back">Back to the ' + (taboo ? 'game' : 'board') + '</button>') +
       '<button type="button" class="bg-btn" data-e="again">Play again (new ' + (taboo ? 'words' : 'questions') + ')</button><button type="button" class="bg-btn solid" data-e="done">Finish</button></div>';
@@ -965,7 +1075,7 @@ function endScreen(){
     for (let k = 0; k < 90; k++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = pick(cols);
       c.style.animationDuration = (2.4 + Math.random() * 2.6) + 's'; c.style.animationDelay = (Math.random() * 1.2) + 's'; c.style.transform = 'rotate(' + Math.random() * 360 + 'deg)'; box.appendChild(c); } }
   sfx('win');
-  const back = end.querySelector('[data-e=back]'); if (back) back.onclick = () => { end.remove(); P.endEl = null; if (taboo) drawTaboo(); };
+  const back = end.querySelector('[data-e=back]'); if (back) back.onclick = () => { end.remove(); P.endEl = null; if (taboo) drawTaboo(); else if (finalLeft && g.tiles.every(t => t.done)) finalCard(); };
   end.querySelector('[data-e=again]').onclick = () => {
     const set = setOf(g.set); if (!set) return;
     end.querySelector('.acts').innerHTML = '<p class="sub">Getting new ' + (taboo ? 'words' : 'questions') + '…</p>';
@@ -984,6 +1094,8 @@ function onKey(e){
   const k = e.key, card = P.card;
   if (P.endEl) { if (k === 'Escape') { P.endEl.remove(); P.endEl = null; e.preventDefault(); } return; }
   if (document.querySelector('.bg-pop')) { if (k === 'Escape') { closePop(); e.preventDefault(); } return; }
+  if (P.fin) { const lk = k.toLowerCase(), b = P.card && P.card.querySelector(lk === 's' ? '[data-a=show]' : lk === 'o' ? '[data-a=opts]' : 'x-none');
+    if (b) { e.preventDefault(); b.click(); } return; }
   if (P.game.kind === 'hints') return hKey(e);
   if (P.game.kind === 'taboo') return tKey(e);
   if (card && P.open) {
@@ -1001,17 +1113,107 @@ function onKey(e){
     return;
   }
   // The board: type a square's number (two digits within a second), or move with the arrow keys
-  if (/^[0-9]$/.test(k)) {
+  if (/^[0-9]$/.test(k) && P.game.kind !== 'cats') {
     e.preventDefault(); clearTimeout(P.keyWait); P.keyBuf = (P.keyBuf + k).slice(-2);
     const n = +P.keyBuf, max = P.game.tiles.length, go = () => { const i = P.game.tiles.findIndex(t => t.n === +P.keyBuf); P.keyBuf = ''; if (i >= 0) openTile(i); };
     if (P.keyBuf.length === 2 || n * 10 > max) go(); else P.keyWait = setTimeout(go, 900);
     return;
   }
   if (/^Arrow/.test(k)) {
-    const tiles = [...P.grid.children], cur = tiles.indexOf(document.activeElement), c = P.cols || 5;
+    const tiles = [...P.grid.querySelectorAll('.bg-tile')], cur = tiles.indexOf(document.activeElement), c = P.cols || 5;
     let i = cur < 0 ? 0 : cur + ({ArrowRight: 1, ArrowLeft: -1, ArrowDown: c, ArrowUp: -c})[k];
     i = Math.max(0, Math.min(tiles.length - 1, i)); tiles[i].focus(); e.preventDefault();
   }
+}
+
+// =====================================================================================================================
+// ---------- Categories: the Daily Double (7 Nov 2026) ----------
+// Hidden under a square. The team that chose it answers on its own, for a bet: up to its score, or the top value on the board
+// if that is more (as on TV). Right wins the bet; wrong loses it (whatever the board says about wrong answers).
+function ddCard(){
+  const g = P.game, o = P.open, t = g.tiles[o.i], card = newCard('Daily Double');
+  const maxOf = () => Math.max(g.teams[o.team].s, g.rows * 100);
+  const go = () => {
+    if (P.busy || !P.card) return;
+    o.wager = Math.max(0, Math.min(maxOf(), Math.round(+card.querySelector('.cd-go input').value || 0)));
+    o.tried = g.teams.map((x, i) => i).filter(i => i !== o.team);   // only this team answers
+    card.remove(); P.card = null; questionCard(true);
+  };
+  const draw = () => {
+    const team = g.teams[o.team], max = maxOf();
+    const vals = [...new Set(Array.from({length: g.rows}, (_, r) => (r + 1) * 100).filter(v => v <= max).concat([max]))];
+    card.innerHTML = '<div class="bg-card-top"><span style="flex:1"></span><button type="button" class="bg-x" title="Put it back (Esc)" aria-label="Put it back">×</button></div>' +
+      '<div class="bg-sp-icon" aria-hidden="true">🎯</div><p class="bg-sp-name">Daily Double!</p>' +
+      '<p class="bg-sp-text"><b>' + esc(team.name) + '</b> answer this one on their own. How many points do they bet? Up to ' + max + '.</p>' +
+      '<div class="bg-sp-pick">' + vals.map(v => '<button type="button" data-bet="' + v + '" style="--tc:#151935">' + v + (v === max && v > g.rows * 100 ? ' (all)' : '') + '</button>').join('') + '</div>' +
+      '<div class="cd-go"><input type="number" inputmode="numeric" min="0" max="' + max + '" step="10" value="' + Math.min(t.p, max) + '" aria-label="The bet">' +
+        '<button type="button" class="bg-btn solid" data-go>Bet and show the question</button></div>' +
+      '<p class="note" style="color:#151935;opacity:.75">For a different team: ' + g.teams.map((x, i) => i === o.team ? '' :
+        '<a href="#" data-for="' + i + '" style="color:#151935;font-weight:700;margin-right:10px">' + esc(x.name) + '</a>').join('') + '</p>';
+    const inp = card.querySelector('.cd-go input'), gb = card.querySelector('[data-go]');
+    card.querySelectorAll('[data-bet]').forEach(b => b.onclick = () => { inp.value = b.dataset.bet; gb.focus(); });
+    card.querySelectorAll('[data-for]').forEach(a => a.onclick = e => { e.preventDefault(); o.team = +a.dataset.for; draw(); });
+    card.querySelector('.bg-x').onclick = () => closeSurprise();
+    gb.onclick = go;
+    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); go(); } };
+  };
+  draw(); zoomIn(card);
+}
+
+// ---------- Categories: the final question ----------
+// When the board is finished: the category is shown, every team writes down a bet (0 up to its score) and the teacher types
+// the bets in; then the question, every team writes its answer; Show the answer; the teacher marks each team ✓ or ✗ and the
+// bets are added or taken away. Saved as it goes (g.final: stage bet / q / done, bets, marks, shown, opts).
+function finalCard(){
+  const g = P.game, F = g.final; if (!F) return endScreen();
+  if (P.card) P.card.remove();
+  closePop(); P.prompt.textContent = 'The final question';
+  const card = document.createElement('div');
+  card.className = 'bg-card cf'; card.tabIndex = -1; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'The final question');
+  P.card = card; P.fin = true;
+  const top = '<div class="bg-card-top"><div class="bg-meta"><span class="k">The final question · ' + esc(F.col) + '</span><span class="s">' + esc(metaOf(F.q)) + '</span></div></div>';
+  if (F.stage === 'bet') {
+    card.innerHTML = top + '<div class="cf-bet"><p class="cf-h">The final question</p><p class="cf-cat">' + esc(F.col) + '</p>' +
+      '<p class="cf-how">Each team writes down a bet, from 0 up to its score. A right answer wins the bet; a wrong answer loses it. Type in the bets:</p>' +
+      '<div class="cf-teams">' + g.teams.map((t, i) => '<label class="cf-team" style="--tc:' + t.c + '"><span>' + esc(t.name) + ' <small>' + t.s + '</small></span>' +
+        '<input type="number" inputmode="numeric" min="0" max="' + t.s + '" step="10" placeholder="0" value="' + (F.bets[i] != null ? F.bets[i] : '') + '" data-bet="' + i + '" aria-label="' + esc(t.name) + ': bet"></label>').join('') + '</div>' +
+      '<button type="button" class="bg-btn solid tb-go" data-go>Show the question</button></div>';
+    card.querySelectorAll('[data-bet]').forEach(inp => {
+      const i = +inp.dataset.bet, t = g.teams[i];
+      inp.oninput = () => { F.bets[i] = Math.max(0, Math.min(t.s, Math.round(+inp.value || 0))); save(); };
+      inp.onchange = () => { if (inp.value !== '') inp.value = F.bets[i]; };
+      inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); (card.querySelector('[data-bet="' + (i + 1) + '"]') || card.querySelector('[data-go]')).focus(); } };
+    });
+    card.querySelector('[data-go]').onclick = () => { g.teams.forEach((t, i) => { F.bets[i] = Math.max(0, Math.min(t.s, F.bets[i] || 0)); }); F.stage = 'q'; save(); sfx('open'); finalCard(); };
+  } else {
+    const q = F.q, two = q.opts.length === 2, all = g.teams.every((t, i) => F.marks[i] != null);
+    card.innerHTML = top + '<div class="bg-q">' + qBody(q) + '</div>' +
+      '<div class="bg-opts' + (two ? ' two' : '') + '">' + (F.opts || F.shown
+        ? q.opts.map((x, i) => '<div class="bg-opt' + (F.shown ? (i === q.a ? ' ok' : ' dim') : '') + '">' + (two ? '' : '<span class="l">' + 'ABCD'[i] + '</span>') + '<span class="o">' + esc(x) + '</span></div>').join('')
+        : '<button type="button" class="bg-btn solid bg-reveal-opts" data-a="opts">Show the options <kbd>O</kbd></button>') + '</div>' +
+      '<p class="bg-more">' + (F.shown ? qMore(q) : '') + '</p>' +
+      '<div class="bg-mark">' + (F.shown
+        ? '<div class="cf-marks">' + g.teams.map((t, i) => '<span class="cf-m" style="--tc:' + t.c + '"><span>' + esc(t.name) + ' · bet ' + (F.bets[i] || 0) + '</span>' +
+            '<button type="button" class="y" data-m="' + i + '" data-v="1" aria-pressed="' + (F.marks[i] === true) + '" aria-label="' + esc(t.name) + ': right">✓</button>' +
+            '<button type="button" class="n" data-m="' + i + '" data-v="0" aria-pressed="' + (F.marks[i] === false) + '" aria-label="' + esc(t.name) + ': wrong">✗</button></span>').join('') + '</div>' +
+          '<button type="button" class="bg-btn solid" data-a="add"' + (all ? '' : ' disabled') + '>' + (all ? 'Add up the scores' : 'Mark every team') + '</button>'
+        : '<span class="cf-wait">Every team writes its answer down.</span><button type="button" class="bg-btn solid" data-a="show">Show the answer <kbd>S</kbd></button>') + '</div>';
+    const on = (a, fn) => { const b = card.querySelector('[data-a=' + a + ']'); if (b) b.onclick = fn; };
+    on('opts', () => { F.opts = true; save(); finalCard(); });
+    on('show', () => { F.shown = true; F.opts = true; save(); sfx('surprise'); finalCard(); });
+    on('add', finalScores);
+    card.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { F.marks[+b.dataset.m] = b.dataset.v === '1'; save(); finalCard(); });
+  }
+  P.stage.appendChild(card); fitCard();
+  const first = card.querySelector('[data-bet]'); (F.stage === 'bet' && first ? first : card).focus({preventScroll: true});
+}
+function finalScores(){
+  const g = P.game, F = g.final, bump = {};
+  if (!F || F.stage === 'done' || !g.teams.every((t, i) => F.marks[i] != null)) return;
+  g.teams.forEach((t, i) => { const bet = F.bets[i] || 0, d = F.marks[i] ? bet : -Math.min(bet, t.s); t.s += d; if (d) bump[i] = d; });
+  F.stage = 'done'; save(); drawScores(bump); sfx('right');
+  const btn = P.card && P.card.querySelector('[data-a=add]'); if (btn) { btn.disabled = true; btn.textContent = 'Added up'; }
+  setTimeout(() => { if (!P || P.game !== g) return; if (P.card) P.card.remove(); P.card = null; P.fin = false; drawPrompt(); endScreen(); }, 1600);
 }
 
 // =====================================================================================================================

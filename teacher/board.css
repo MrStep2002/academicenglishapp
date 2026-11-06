@@ -354,3 +354,32 @@ html.bg-on main.home { display: none; }
 .tb-w.miss { opacity: .8; }
 @media (prefers-color-scheme: dark) { .tb-w.stole { background: #3d3410; color: #ffe58a; } }
 @media (prefers-reduced-motion: reduce) { .hn-h.new, .hn-flash, .hn-l.new { animation: none !important; } }
+
+/* Categories (7 Nov 2026): a Jeopardy-style board. A column for each category, its name on top; the values on the squares */
+.bg-grid.cats { gap: calc(10 * var(--u)); }
+.bg-head { display: grid; place-items: center; min-height: calc(62 * var(--u)); padding: calc(8 * var(--u)) calc(10 * var(--u)); border-radius: calc(14 * var(--u));
+  background: var(--web-soft); color: var(--ink); text-align: center; font-family: var(--display); font-weight: 800; font-size: var(--hf, 22px); line-height: 1.1; overflow-wrap: anywhere; }
+.bg-tile.empty { visibility: hidden; pointer-events: none; }
+.cd-go { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: calc(10 * var(--u)); }
+.cd-go input { width: calc(150 * var(--u)); font: inherit; font-family: var(--display); font-weight: 800; font-size: calc(30 * var(--u)); padding: calc(6 * var(--u)) calc(10 * var(--u));
+  border-radius: calc(12 * var(--u)); border: 3px solid #151935; background: #fff; color: #151935; text-align: center; }
+.bg-card.cf { gap: calc(12 * var(--u)); }
+.cf-bet { flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(14 * var(--u)); text-align: center; }
+.cf-h { margin: 0; font-family: var(--display); font-weight: 800; font-size: calc(64 * var(--u)); letter-spacing: -.03em; line-height: 1; }
+.cf-cat { margin: 0; padding: calc(6 * var(--u)) calc(22 * var(--u)); border-radius: 99px; background: var(--hi); color: #151935; font-family: var(--display); font-weight: 800; font-size: calc(36 * var(--u)); }
+.cf-how { margin: 0; max-width: 40em; font-weight: 700; font-size: calc(21 * var(--u)); line-height: 1.35; color: var(--muted); }
+.cf-teams { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(10 * var(--u)); }
+.cf-team { display: flex; align-items: center; gap: calc(10 * var(--u)); padding: calc(8 * var(--u)) calc(10 * var(--u)) calc(8 * var(--u)) calc(16 * var(--u)); border-radius: calc(14 * var(--u));
+  background: var(--tc); color: #fff; font-weight: 700; font-size: calc(20 * var(--u)); }
+.cf-team small { font-size: .8em; opacity: .85; font-family: var(--display); }
+.cf-team input { width: calc(110 * var(--u)); font: inherit; font-family: var(--display); font-weight: 800; padding: calc(4 * var(--u)) calc(8 * var(--u)); border-radius: calc(10 * var(--u));
+  border: 0; background: #fff; color: #151935; text-align: center; }
+.cf-marks { flex: 1 1 auto; display: flex; flex-wrap: wrap; gap: calc(8 * var(--u)); min-width: 0; }
+.cf-m { display: inline-flex; align-items: center; gap: calc(6 * var(--u)); padding: calc(5 * var(--u)) calc(6 * var(--u)) calc(5 * var(--u)) calc(14 * var(--u)); border-radius: 99px;
+  background: var(--tc); color: #fff; font-weight: 700; font-size: calc(17 * var(--u)); }
+.cf-m > span { margin-right: calc(4 * var(--u)); }
+.cf-m button { font: inherit; font-weight: 800; width: calc(38 * var(--u)); height: calc(34 * var(--u)); border-radius: 99px; border: 2px solid rgba(255,255,255,.75); background: transparent; color: #fff; cursor: pointer; }
+.cf-m button.y[aria-pressed="true"] { background: #23a05c; border-color: #fff; }
+.cf-m button.n[aria-pressed="true"] { background: #c0392b; border-color: #fff; }
+.cf-wait { flex: 1; font-weight: 700; color: var(--muted); font-size: calc(19 * var(--u)); }
+.bg-card.cf .bg-opt { cursor: default; }
