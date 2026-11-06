@@ -41,14 +41,22 @@ const LEVELS = [[1,'Foundation'],[2,'Foundation+'],[3,'Intermediate'],[4,'Interm
 const LEVEL_NAME = Object.fromEntries(LEVELS);
 // Team colours: white text reads on all of them
 const COLOURS = ['#c8344a', '#1f63c4', '#13804f', '#7343c9', '#b35300', '#b4286a', '#0b7a7a', '#4f5578'];
+// q: the team has to answer a question right to win the surprise (6 Nov 2026, teacher: "they still need to answer a question to qualify")
 const SURPRISES = {
-  bonus:  {icon:'🎁', name:'Bonus!',  blurb:'Free points for the team, no question.'},
-  double: {icon:'⚡', name:'Double!', blurb:'A question worth double points.'},
-  steal:  {icon:'🦝', name:'Steal!',  blurb:'Take points from another team.'},
-  give:   {icon:'💝', name:'Gift!',   blurb:'Give points to another team.'},
-  swap:   {icon:'🔄', name:'Swap!',   blurb:'Swap scores with another team (or keep yours).'},
-  oops:   {icon:'💥', name:'Oops!',   blurb:'The team loses points.'}
+  bonus:  {icon:'🎁', name:'Bonus!',  q:true, blurb:'Answer a question right to win extra points.'},
+  double: {icon:'⚡', name:'Double!', q:true, blurb:'A question worth double points.'},
+  steal:  {icon:'🦝', name:'Steal!',  q:true, blurb:'Answer a question right, then take points from another team.'},
+  give:   {icon:'💝', name:'Gift!',   q:true, blurb:'Answer a question right, then give points to another team.'},
+  swap:   {icon:'🔄', name:'Swap!',   q:true, blurb:'Answer a question right, then swap scores with another team (or keep yours).'},
+  oops:   {icon:'💥', name:'Oops!',   blurb:'The team loses points. No question.'}
 };
+const needsQ = k => !!(SURPRISES[k] && SURPRISES[k].q);
+// The games (6 Nov 2026): Squaring Up (the tile board, named by the teacher) and Don't Say It! (Taboo-style, content/<topic>/taboo.csv)
+const GAME_TYPES = {
+  squares: {name: 'Squaring Up', blurb: 'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
+  taboo: {name: "Don't Say It!", blurb: 'One player guesses while their team describes the word without saying any of the red words. Each team plays once a round: 60, then 30, then 15 seconds.'}
+};
+const gameType = s => (s && (s.game === 'taboo' || s.kind === 'taboo')) ? 'taboo' : 'squares';
 const POINTS_BY_LEVEL = {1:10, 2:15, 3:20, 4:25, 5:30};
 const MIXED = [5, 10, 15, 20, 25];
 const DEFAULTS = {title:'', topics:[], banks:['word','meaning','gap'], levels:[1,2,3,4,5], squares:20, secs:30, points:'same', options:'show',
@@ -234,15 +242,14 @@ function newGame(set, data){
   const kinds = cfg.surprise === 'none' ? [] : (cfg.kinds || []).filter(k => SURPRISES[k]);
   const nSur = kinds.length ? Math.max(1, Math.round(n * (cfg.surprise === 'lots' ? .25 : .12))) : 0;
   let sur = []; while (sur.length < nSur) sur = sur.concat(shuffle(kinds)); sur = sur.slice(0, nSur);
-  const needQ = n - nSur + sur.filter(k => k === 'double').length;
+  const nSurQ = sur.filter(needsQ).length, needQ = n - nSur + nSurQ;
   const used = new Set(), qs = draw(cfg, data, needQ, used);
-  // Not enough questions: double squares go first, then the board gets smaller
-  while (qs.length < n - sur.length + sur.filter(k => k === 'double').length && sur.includes('double')) sur.splice(sur.indexOf('double'), 1);
-  const qTiles = Math.min(qs.length - sur.filter(k => k === 'double').length, n - sur.length);
+  // Not enough questions: the board gets smaller (a surprise square with no question left is dropped)
+  const qTiles = Math.max(0, Math.min(qs.length - nSurQ, n - sur.length));
   const pts = q => cfg.points === 'mixed' ? pick(MIXED) : cfg.points === 'level' ? (POINTS_BY_LEVEL[band(q.lv)] || 20) : 10;
   let tiles = [];
   for (let i = 0; i < qTiles; i++) { const q = qs.shift(); tiles.push({k: 'q', q, p: pts(q)}); }
-  sur.forEach(k => { if (k === 'double') { const q = qs.shift(); if (q) tiles.push({k: 'double', q, p: pts(q)}); } else tiles.push({k}); });
+  sur.forEach(k => { if (needsQ(k)) { const q = qs.shift(); if (q) tiles.push({k, q, p: pts(q)}); } else tiles.push({k}); });
   tiles = shuffle(tiles).map((t, i) => Object.assign(t, {n: i + 1, done: false, r: null}));
   const names = (cfg.teams && cfg.teams.length >= 2) ? cfg.teams : funNames(4);
   return {v: 1, set: set.id, title: cfg.title || 'Board game', cfg, started: Date.now(), turn: 0, wanted: n,
@@ -267,8 +274,10 @@ const AEA_BOARD = window.AEA_BOARD = {
     C = ctx; stop();
     let m;
     if ((m = /^#\/board\/play\/([\w-]+)$/.exec(hash))) return play(m[1]);
-    if (hash === '#/board/new') return form(null);
-    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) return form(m[1]);
+    if (hash === '#/board/new') return chooser();
+    if (hash === '#/board/new/squares') return form(null);
+    if (hash === '#/board/new/taboo') return tabooForm(null);
+    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) return gameType(setOf(m[1])) === 'taboo' ? tabooForm(m[1]) : form(m[1]);
     return list();
   },
   stop
@@ -282,19 +291,23 @@ function list(){
     '<p style="margin:0 0 14px"><a class="backlink" href="#/">← All classes</a></p>' +
     '<div class="spread" style="margin-bottom:14px"><p class="note">Games for the whole class on one screen: open a board, then put it on the projector.</p>' +
     '<a class="btn" href="#/board/new">+ New board game</a></div>' +
-    (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g ? g.tiles.filter(t => !t.done).length : 0;
+    (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g && g.tiles ? g.tiles.filter(t => !t.done).length : 0;
       return '<div class="card bg-item" data-id="' + esc(s.id) + '">' +
-        '<h3>' + esc(s.title || 'Board game') + '</h3>' +
-        (g ? '<span class="bg-going">Game in progress: ' + left + ' of ' + g.tiles.length + ' squares left</span>' : '') +
+        '<span class="bg-kind">' + esc(GAME_TYPES[gameType(s)].name) + '</span><h3>' + esc(s.title || 'Board game') + '</h3>' +
+        (g ? '<span class="bg-going">' + (g.kind === 'taboo' ? 'Game in progress: round ' + Math.min(g.round + 1, g.times.length) + ' of ' + g.times.length
+          : 'Game in progress: ' + left + ' of ' + g.tiles.length + ' squares left') + '</span>' : '') +
         '<p class="note">' + esc(s.topics.map(topicName).join(', ') || 'No topics') + '</p>' +
-        '<p class="note">' + esc(s.banks.map(bankName).join(', ')) + ' · ' + esc(levelsText(s.levels)) + '</p>' +
-        '<p class="note">' + s.squares + ' squares · ' + (s.teams || []).length + ' teams · ' + (s.secs ? s.secs + ' seconds' : 'no timer') + '</p>' +
+        (gameType(s) === 'taboo'
+          ? '<p class="note">' + esc(levelsText(s.levels)) + ' · ' + (s.replay !== false ? 'the same words each round' : 'new words each round') + '</p>' +
+            '<p class="note">' + (s.teams || []).length + ' teams · rounds of ' + (s.times || []).filter(Number).join(', ') + ' seconds</p>'
+          : '<p class="note">' + esc(s.banks.map(bankName).join(', ')) + ' · ' + esc(levelsText(s.levels)) + '</p>' +
+            '<p class="note">' + s.squares + ' squares · ' + (s.teams || []).length + ' teams · ' + (s.secs ? s.secs + ' seconds' : 'no timer') + '</p>') +
         '<div class="row">' + (g ? '<a class="btn" href="#/board/play/' + esc(s.id) + '">Carry on</a><button class="btn alt" type="button" data-act="fresh">New game</button>'
           : '<a class="btn" href="#/board/play/' + esc(s.id) + '">Play</a>') +
         '<a class="btn small alt" href="#/board/' + esc(s.id) + '">Change</a>' +
         '<button class="btn small alt" type="button" data-act="copy">Copy</button>' +
         '<button class="btn small alt" type="button" data-act="del">Delete</button></div></div>'; }).join('') + '</div>'
-      : '<div class="card narrow"><p class="note">No board games yet. Make one: choose the topics, the kinds of question and the levels, then the teams.</p>' +
+      : '<div class="card narrow"><p class="note">No board games yet. Make one: choose a game, the topics and the levels, then the teams.</p>' +
         '<div><a class="btn" href="#/board/new">+ New board game</a></div></div>') +
     '<p class="note" style="margin-top:16px">Your boards are saved in this browser on this computer. A game in progress is saved too, so you can carry on after closing the page.</p>';
   C.view.querySelectorAll('[data-act]').forEach(b => b.onclick = () => {
@@ -311,7 +324,7 @@ function form(id){
   if (id && !old) { location.hash = '#/board'; return; }
   const cfg = Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
   if (!cfg.teams || cfg.teams.length < 2) cfg.teams = funNames(4);
-  C.setTitle(old ? 'Change the board' : 'New board game'); C.header();
+  C.setTitle(old ? 'Change: Squaring Up' : 'New Squaring Up game'); C.header();
   let data = {};
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
   C.view.innerHTML =
@@ -419,7 +432,7 @@ function form(id){
     if (!cfg.banks.length) return say('Choose at least one kind of question.');
     if (!cfg.levels.length && !cfg.banks.every(b => b === 'gk')) return say('Choose at least one level.');
     if (!countFor(cfg, data)) return say('No questions match these choices yet. Choose more kinds of question, levels or topics.');
-    const s = Object.assign({}, cfg, {id: old ? old.id : uid(), created: old ? old.created : Date.now(),
+    const s = Object.assign({}, cfg, {game: 'squares', id: old ? old.id : uid(), created: old ? old.created : Date.now(),
       title: cfg.title || cfg.topics.map(topicName).join(' + ') + ' quiz'});
     saveSet(s);
     const g = gameOf(s.id);
@@ -450,6 +463,14 @@ function play(id){
   if (g) return mount(g);
   C.setTitle(set.title || 'Board game'); C.header();
   C.view.innerHTML = '<p class="note">Getting the questions ready…</p>';
+  if (gameType(set) === 'taboo') {
+    tabooData(set.topics).then(data => {
+      const game = newTabooGame(set, data);
+      if (!game.words) { C.view.innerHTML = '<p class="err">No words are ready for this game yet. <a href="#/board/' + esc(id) + '">Change it</a></p>'; return; }
+      saveGame(game); if (location.hash === '#/board/play/' + id) mount(game);
+    }).catch(x => { C.view.innerHTML = '<p><a class="backlink" href="#/board">← Board games</a></p><p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
+    return;
+  }
   dataFor(set.topics).then(data => {
     const game = newGame(set, data);
     if (!game.tiles.length) { C.view.innerHTML = '<p class="err">No questions match this board\'s choices. <a href="#/board/' + esc(id) + '">Change the board</a></p>'; return; }
@@ -467,7 +488,8 @@ function mount(game, data){
   stop();
   P = {game, data: data || null, card: null, open: null, busy: false, keyBuf: '', sound: getJ(K_SOUND, true)};
   document.documentElement.classList.add('bg-on');
-  document.title = game.title + ' · Board game';
+  const taboo = game.kind === 'taboo';
+  document.title = game.title + ' · ' + GAME_TYPES[taboo ? 'taboo' : 'squares'].name;
   const el = P.el = document.createElement('div');
   el.className = 'bg-play';
   el.innerHTML =
@@ -479,18 +501,21 @@ function mount(game, data){
     '<div class="bg-scores" role="group" aria-label="Scores. Click a team to change its score."></div>' +
     '<p class="bg-prompt" aria-live="polite"></p>' +
     '<div class="bg-stage"><div class="bg-grid"></div></div>' +
-    '<p class="bg-keys">Click a square, or type its number. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>';
+    (taboo ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>G</kbd> got it · <kbd>S</kbd> skip · <kbd>X</kbd> said a red word · <kbd>H</kbd> hint</p>'
+      : '<p class="bg-keys">Click a square, or type its number. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>');
   document.body.appendChild(el);
   P.stage = el.querySelector('.bg-stage'); P.grid = el.querySelector('.bg-grid'); P.scores = el.querySelector('.bg-scores'); P.prompt = el.querySelector('.bg-prompt');
   el.querySelector('[data-t=sound]').onclick = () => { P.sound = !P.sound; setJ(K_SOUND, P.sound); tools(); if (P.sound) sfx('right'); };
   el.querySelector('[data-t=full]').onclick = () => { const d = document;
     if (d.fullscreenElement) d.exitFullscreen().catch(() => {}); else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(() => {}); };
-  el.querySelector('[data-t=end]').onclick = () => { if (!P.card) endScreen(); };
+  el.querySelector('[data-t=end]').onclick = () => { if (taboo) { tPause(true); endScreen(); } else if (!P.card) endScreen(); };
   el.querySelector('[data-t=exit]').onclick = () => { location.hash = '#/board'; };
-  P.onResize = () => { sizeUp(); layoutGrid(); if (P.card) fitCard(); };
+  P.onResize = () => { sizeUp(); if (taboo) fitWord(); else { layoutGrid(); if (P.card) fitCard(); } };
   P.onKey = onKey; P.onFs = () => tools();
   addEventListener('resize', P.onResize); addEventListener('keydown', P.onKey, true); document.addEventListener('fullscreenchange', P.onFs);
-  tools(); sizeUp(); drawScores(); drawGrid(); drawPrompt();
+  tools(); sizeUp(); drawScores();
+  if (taboo) { P.paused = game.stage === 'play'; drawTaboo(); if (game.stage === 'over') endScreen(); return; }   // carried on mid-turn: the clock waits for Space
+  drawGrid(); drawPrompt();
   if (!P.data) dataFor(game.cfg.topics).then(d => { if (P && P.game === game) P.data = d; }).catch(() => {});   // for New question
   if (game.tiles.every(t => t.done)) endScreen();
 }
@@ -513,6 +538,7 @@ function drawScores(bump){
     f.className = 'bg-float'; f.textContent = (bump[i] > 0 ? '+' : '') + bump[i]; chip.appendChild(f); setTimeout(() => f.remove(), 1500); });
 }
 function drawPrompt(){
+  if (P.game.kind === 'taboo') return tPrompt();
   const g = P.game, left = g.tiles.filter(t => !t.done).length, t = g.teams[g.turn];
   P.prompt.innerHTML = left ? '<b style="color:' + t.c + '">' + esc(t.name) + '</b>, choose a square' : 'Every square is open!';
 }
@@ -538,7 +564,7 @@ function tileInner(t){
   if (!t.done) return '<span class="face front">' + t.n + '</span><span class="face back">' + (t.k === 'q' ? '?' : '★') + '</span>';
   const r = t.r || {}, team = g.teams[r.team];
   let res;
-  if (t.k !== 'q' && t.k !== 'double' || r.sur) res = '<span class="pts">' + SURPRISES[r.sur || t.k].icon + '</span><span class="nm" style="color:var(--ink)">' + esc(r.text || SURPRISES[t.k].name) + '</span>' + (team ? '<span class="nm">' + esc(team.name) + '</span>' : '');
+  if (r.sur) res = '<span class="pts">' + SURPRISES[r.sur].icon + '</span><span class="nm" style="color:var(--ink)">' + esc(r.text || SURPRISES[t.k].name) + '</span>' + (team ? '<span class="nm">' + esc(team.name) + '</span>' : '');
   else if (r.ok && team) res = '<span class="dot" style="--tc:' + team.c + '"></span><span class="pts">' + (r.pts ? '+' + r.pts : '✓') + '</span><span class="nm">' + esc(team.name) + '</span>';
   else res = '<span class="pts" style="color:var(--muted)">✗</span><span class="nm">No points</span>';
   return '<span class="face front"><span class="res">' + res + '</span></span>';
@@ -564,7 +590,8 @@ function openTile(i){
   const b = P.grid.children[i];
   b.classList.add('flip'); sfx(t.k === 'q' ? 'open' : 'surprise');
   setTimeout(() => { if (!P) return; P.busy = false;
-    P.open = {i, turn: P.game.turn, team: P.game.turn, tried: [], shown: P.game.cfg.options !== 'hide', revealed: false, marked: false, award: true, double: t.k === 'double'};
+    P.open = {i, turn: P.game.turn, team: P.game.turn, tried: [], shown: P.game.cfg.options !== 'hide', revealed: false, marked: false, award: true,
+      double: t.k === 'double', sur: t.k !== 'q' && t.k !== 'double' && t.q ? t.k : null};
     if (t.k === 'q') questionCard(); else surpriseCard(); }, reduced() ? 60 : 420);
 }
 function zoomIn(card, instant){
@@ -614,6 +641,8 @@ function qMore(q){
   if (q.k === 'rw') return q.fix ? '<b>Correct:</b> ' + esc(q.fix) : rich(q.why);
   return rich(q.why);
 }
+// "10 points", "⚡ 20 points", "🦝 10 points + Steal"
+const ptsLabel = (o, t) => (o.double ? '⚡ ' : o.sur ? SURPRISES[o.sur].icon + ' ' : '') + t.p * (o.double ? 2 : 1) + ' points' + (o.sur ? ' + ' + SURPRISES[o.sur].name.replace('!', '') : '');
 const metaOf = q => [topicName(q.t), q.lv != null ? LEVEL_NAME[band(q.lv)] : '', q.focus || ''].filter(Boolean).join(' · ');
 function questionCard(instant){
   const g = P.game, o = P.open, t = g.tiles[o.i], q = t.q, pts = t.p * (o.double ? 2 : 1), secs = +g.cfg.secs || 0;
@@ -624,7 +653,7 @@ function questionCard(instant){
     '<div class="bg-card-top"><span class="bg-num">' + t.n + '</span>' +
       '<div class="bg-meta"><span class="k">' + esc(KIND[q.k]) + '</span><span class="s">' + esc(meta) + '</span></div>' +
       '<button type="button" class="bg-btn small" data-a="swap" title="Put a different question on this square">New question</button>' +
-      '<span class="bg-pts' + (o.double ? ' double' : '') + '">' + (o.double ? '⚡ ' : '') + pts + ' points</span>' +
+      '<span class="bg-pts' + (o.double ? ' double' : '') + '">' + ptsLabel(o, t) + '</span>' +
       (secs ? '<button type="button" class="bg-timer" title="Pause or restart the timer (Space)" aria-label="Timer"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="42"/><circle class="arc" cx="50" cy="50" r="42"/></svg><span class="t"></span></button>' : '') +
       '<button type="button" class="bg-x" title="Close (Esc)" aria-label="Close">×</button></div>' +
     '<div class="bg-q">' + qBody(q) + '</div>' +
@@ -664,7 +693,7 @@ function drawWho(){
   const r = card.querySelector('[data-a=right]'); r.innerHTML = '✓ Right' + (o.award ? ' +' + pts : '') + ' <kbd>Y</kbd>';
   const w = card.querySelector('[data-a=wrong]'); w.innerHTML = '✗ Wrong' + (o.award && g.cfg.wrong === 'lose' ? ' −' + pts : '') + ' <kbd>N</kbd>';
   w.disabled = o.tried.length >= g.teams.length;
-  const sw = card.querySelector('[data-a=swap]'); if (sw) sw.hidden = o.revealed || o.marked;
+  const sw = card.querySelector('[data-a=swap]'); if (sw) sw.hidden = o.marked;   // until Right or Wrong is clicked (a disputed answer: put up another question)
 }
 // The teacher clicks the option the team chose (or Show answer): the right one goes green, a wrong choice red
 function reveal(chosen){
@@ -693,7 +722,7 @@ function mark(ok){
     said.className = 'bg-said good'; said.textContent = got ? '✓ ' + team.name + ' +' + got : '✓ ' + team.name + ' (no points)';
     sfx('right'); stopTimer(true);
     P.busy = true;
-    setTimeout(() => { if (!P) return; P.busy = false; finishTile({ok: true, team: o.team, pts: got}, {[o.team]: got}); }, 1100);
+    setTimeout(() => { if (!P) return; P.busy = false; if (o.sur && got) rewardCard(got); else finishTile({ok: true, team: o.team, pts: got}, {[o.team]: got}); }, 1100);
     return;
   }
   if (o.tried.includes(o.team)) return;
@@ -717,6 +746,7 @@ function closeQuestion(){
 }
 function swapQuestion(){
   const o = P.open, g = P.game, t = g.tiles[o.i], said = P.card.querySelector('.bg-said');
+  if (o.marked || P.busy) return;
   if (!P.data) { said.className = 'bg-said'; said.textContent = 'Still loading the other questions. Try again in a moment.'; return; }
   const used = new Set(g.used || []), cur = t.q.t + '|' + t.q.b + '|' + t.q.id;
   used.add(cur);
@@ -729,10 +759,11 @@ function swapQuestion(){
   card.querySelector('.bg-q').innerHTML = qBody(q);
   card.querySelector('.bg-meta .k').textContent = KIND[q.k];
   card.querySelector('.bg-meta .s').textContent = metaOf(q);
-  card.querySelector('.bg-pts').textContent = (o.double ? '⚡ ' : '') + t.p * (o.double ? 2 : 1) + ' points';
+  card.querySelector('.bg-pts').textContent = ptsLabel(o, t);
   card.querySelector('.bg-opts').className = 'bg-opts' + (q.opts.length === 2 ? ' two' : '');
-  card.querySelector('.bg-more').innerHTML = ''; o.chosen = null; o.shown = g.cfg.options !== 'hide';
-  said.textContent = ''; drawOpts(); drawWho(); fitCard(); startTimer(secs);
+  card.querySelector('.bg-more').innerHTML = ''; o.chosen = null; o.revealed = false; o.shown = g.cfg.options !== 'hide';
+  card.querySelectorAll('.hint').forEach(b => b.classList.remove('hint'));
+  said.className = 'bg-said'; said.textContent = ''; drawOpts(); drawWho(); fitCard(); startTimer(secs);
 }
 // Big text that still fits: the options shrink until they fit their half of the card, then the question fills the rest
 function fitCard(){
@@ -795,31 +826,67 @@ function paintTimer(){
 }
 
 // ---------- surprise squares ----------
+// Oops happens straight away. Every other surprise says what's on offer, then shows its question (Double: for double points);
+// a right answer with Award points on earns the question's points and then the surprise (rewardCard). Nobody right: no surprise.
+const surpriseAmt = () => P.game.cfg.points === 'same' ? 10 : 20;
+const surpriseShell = (n, S, x) => '<div class="bg-card-top"><span class="bg-num">' + n + '</span><span style="flex:1"></span><button type="button" class="bg-x" title="' + x + ' (Esc)" aria-label="' + x + '">×</button></div>' +
+  '<div class="bg-sp-icon" aria-hidden="true">' + S.icon + '</div><p class="bg-sp-name">' + S.name + '</p>';
+function newCard(label){ const c = document.createElement('div'); c.className = 'bg-card surprise'; c.tabIndex = -1; c.setAttribute('role', 'dialog'); c.setAttribute('aria-label', label); return c; }
 function surpriseCard(){
-  const g = P.game, o = P.open, t = g.tiles[o.i], S = SURPRISES[t.k];
-  const amt = g.cfg.points === 'same' ? 10 : 20;
-  const card = document.createElement('div');
-  card.className = 'bg-card surprise'; card.tabIndex = -1; card.setAttribute('role', 'dialog'); card.setAttribute('aria-label', 'Surprise: ' + S.name);
+  const g = P.game, o = P.open, t = g.tiles[o.i], S = SURPRISES[t.k], amt = surpriseAmt();
+  const card = newCard('Surprise: ' + S.name);
+  if (t.q) {   // a question first
+    const offer = {double: 'This question is worth <b>' + t.p * 2 + ' points</b>.',
+      bonus: 'Answer the question right to win <b>' + amt + ' extra points</b>.',
+      steal: 'Answer the question right, then take <b>' + amt + ' points</b> from another team.',
+      give: 'Answer the question right, then give <b>' + amt + ' points</b> to another team.',
+      swap: 'Answer the question right, then you can <b>swap scores</b> with another team.'}[t.k] || '';
+    card.innerHTML = surpriseShell(t.n, S, 'Put it back') + '<p class="bg-sp-text">' + offer + '</p>' +
+      '<div class="bg-sp-pick"><button type="button" class="bg-btn solid" data-go="q">Show the question</button></div>';
+    card.querySelector('.bg-x').onclick = () => closeSurprise();
+    card.querySelector('[data-go=q]').onclick = () => { if (P.busy) return; card.remove(); P.card = null; questionCard(true); };   // the question takes its place, no second zoom
+  } else chooseSurprise(card, t.k, true, (text, bump) => finishTile({sur: t.k, team: o.team, text}, bump));   // Oops (and squares from games saved before 6 Nov b)
+  zoomIn(card);
+}
+// After a right answer: the team that answered gets the surprise (the question's points are already theirs)
+function rewardCard(got){
+  const g = P.game, o = P.open, t = g.tiles[o.i];
+  o.reward = got;
+  const card = newCard(SURPRISES[t.k].name);
+  P.card.remove(); P.card = null;
+  chooseSurprise(card, t.k, false, (text, bump) => {
+    bump[o.team] = (bump[o.team] || 0) + got;
+    finishTile({ok: true, sur: t.k, team: o.team, pts: got, text: t.k === 'bonus' ? '+' + (got + surpriseAmt()) : '+' + got + (text ? ' · ' + text : '')}, bump); });
+  zoomIn(card, true);
+}
+// × or Esc on a surprise: before the question, the square goes back; after a right answer, the team keeps the question's points but not the surprise
+function closeSurprise(){
+  const o = P.open; if (!o || P.busy) return;
+  if (o.reward != null) return finishTile({ok: true, team: o.team, pts: o.reward}, {[o.team]: o.reward});
+  zoomOut(() => {});
+}
+// What the surprise does to the scores, chosen on the card. done(text for the square, score changes)
+function chooseSurprise(card, kind, otherTeam, done){
+  const g = P.game, o = P.open, t = g.tiles[o.i], S = SURPRISES[kind], amt = surpriseAmt(), reward = o.reward != null;
   const draw = () => {
     const team = g.teams[o.team], others = g.teams.map((x, i) => i).filter(i => i !== o.team);
-    const pickBtns = (label) => '<div class="bg-sp-pick">' + others.map(i => '<button type="button" data-pick="' + i + '" style="--tc:' + g.teams[i].c + '">' + esc(g.teams[i].name) + (label ? '<span>' + g.teams[i].s + '</span>' : '') + '</button>').join('') + '</div>';
-    let text = '', acts = '';
+    const pickBtns = () => '<div class="bg-sp-pick">' + others.map(i => '<button type="button" data-pick="' + i + '" style="--tc:' + g.teams[i].c + '">' + esc(g.teams[i].name) + '<span>' + g.teams[i].s + '</span></button>').join('') + '</div>';
     const who = '<b>' + esc(team.name) + '</b>';
-    if (t.k === 'bonus') { text = who + ' get ' + amt + ' points. No question!'; acts = '<button type="button" class="bg-btn solid" data-go="bonus" data-first>Add ' + amt + ' points</button>'; }
-    else if (t.k === 'oops') { text = who + ' lose ' + amt + ' points.'; acts = '<button type="button" class="bg-btn solid" data-go="oops" data-first>Take ' + Math.min(amt, team.s) + ' points</button><button type="button" class="bg-btn" data-go="skip">Let them off</button>'; }
-    else if (t.k === 'steal') { text = who + ': choose a team to take ' + amt + ' points from.'; acts = pickBtns(true); }
-    else if (t.k === 'give') { text = who + ': choose a team to give ' + amt + ' points to.'; acts = pickBtns(true); }
-    else if (t.k === 'swap') { text = who + ' (' + team.s + '): swap scores with any team, or keep your own.'; acts = pickBtns(true) + '<button type="button" class="bg-btn" data-go="skip">Keep our score</button>'; }
-    card.innerHTML =
-      '<div class="bg-card-top"><span class="bg-num">' + t.n + '</span><span style="flex:1"></span><button type="button" class="bg-x" title="Put it back (Esc)" aria-label="Put it back">×</button></div>' +
-      '<div class="bg-sp-icon" aria-hidden="true">' + S.icon + '</div><p class="bg-sp-name">' + S.name + '</p><p class="bg-sp-text">' + text + '</p>' +
-      '<div class="bg-sp-pick" style="gap:8px">' + acts + '</div>' +
-      '<p class="note" style="color:#151935;opacity:.75">For a different team: <span class="bg-sp-for"></span></p>';
+    let text = '', acts = '';
+    if (kind === 'bonus') { text = who + (reward ? ' win ' : ' get ') + amt + ' extra points!'; acts = '<button type="button" class="bg-btn solid" data-go="bonus">Add ' + amt + ' points</button>'; }
+    else if (kind === 'oops') { text = who + ' lose ' + amt + ' points.'; acts = '<button type="button" class="bg-btn solid" data-go="oops">Take ' + Math.min(amt, team.s) + ' points</button><button type="button" class="bg-btn" data-go="skip">Let them off</button>'; }
+    else if (kind === 'steal') { text = who + ': choose a team to take ' + amt + ' points from.'; acts = pickBtns(); }
+    else if (kind === 'give') { text = who + ': choose a team to give ' + amt + ' points to.'; acts = pickBtns(); }
+    else if (kind === 'swap') { text = who + ' (' + team.s + '): swap scores with any team, or keep your own.'; acts = pickBtns() + '<button type="button" class="bg-btn" data-go="skip">Keep our score</button>'; }
+    card.innerHTML = surpriseShell(t.n, S, reward ? 'Close without the surprise' : 'Put it back') +
+      (reward ? '<p class="bg-sp-text" style="font-size:calc(22 * var(--u))">✓ Right! +' + o.reward + ' points</p>' : '') +
+      '<p class="bg-sp-text">' + text + '</p><div class="bg-sp-pick" style="gap:8px">' + acts + '</div>' +
+      (otherTeam ? '<p class="note" style="color:#151935;opacity:.75">For a different team: <span class="bg-sp-for"></span></p>' : '');
     const forBox = card.querySelector('.bg-sp-for');
-    forBox.innerHTML = g.teams.map((x, i) => i === o.team ? '' : '<a href="#" data-for="' + i + '" style="color:#151935;font-weight:700;margin-right:10px">' + esc(x.name) + '</a>').join('');
-    forBox.querySelectorAll('[data-for]').forEach(a => a.onclick = e => { e.preventDefault(); o.team = +a.dataset.for; draw(); });
-    card.querySelector('.bg-x').onclick = () => { if (!P.busy) zoomOut(() => {}); };
-    card.querySelectorAll('[data-go],[data-pick]').forEach(b => b.onclick = () => apply(b.dataset.go || t.k, b.dataset.pick != null ? +b.dataset.pick : null));
+    if (forBox) { forBox.innerHTML = g.teams.map((x, i) => i === o.team ? '' : '<a href="#" data-for="' + i + '" style="color:#151935;font-weight:700;margin-right:10px">' + esc(x.name) + '</a>').join('');
+      forBox.querySelectorAll('[data-for]').forEach(a => a.onclick = e => { e.preventDefault(); o.team = +a.dataset.for; draw(); }); }
+    card.querySelector('.bg-x').onclick = () => closeSurprise();
+    card.querySelectorAll('[data-go],[data-pick]').forEach(b => b.onclick = () => apply(b.dataset.go || kind, b.dataset.pick != null ? +b.dataset.pick : null));
   };
   const apply = (what, other) => {
     if (P.busy) return;
@@ -830,20 +897,12 @@ function surpriseCard(){
     else if (what === 'steal') { const th = g.teams[other], x = Math.min(amt, th.s); th.s -= x; me.s += x; bump[o.team] = x; bump[other] = -x; text = x ? 'Stole ' + x : 'Nothing to take'; }
     else if (what === 'give') { g.teams[other].s += amt; bump[other] = amt; text = 'Gave ' + amt; }
     else if (what === 'swap') { const th = g.teams[other], a = me.s, b = th.s; me.s = b; th.s = a; bump[o.team] = b - a; bump[other] = a - b; text = 'Swapped scores'; }
-    else if (what === 'skip') { text = t.k === 'swap' ? 'Kept their score' : 'Let off'; }
+    else if (what === 'skip') { text = kind === 'swap' ? 'Kept their score' : 'Let off'; }
     sfx(what === 'oops' ? 'wrong' : what === 'skip' ? 'open' : 'right');
     Object.keys(bump).forEach(k => { if (!bump[k]) delete bump[k]; });
-    finishTile({sur: t.k, team: o.team, text}, bump);
+    done(text, bump);
   };
-  if (t.k === 'double') {
-    card.innerHTML = '<div class="bg-card-top"><span class="bg-num">' + t.n + '</span><span style="flex:1"></span><button type="button" class="bg-x" title="Put it back (Esc)" aria-label="Put it back">×</button></div>' +
-      '<div class="bg-sp-icon" aria-hidden="true">' + S.icon + '</div><p class="bg-sp-name">' + S.name + '</p>' +
-      '<p class="bg-sp-text">This question is worth <b>' + t.p * 2 + ' points</b>.</p>' +
-      '<div class="bg-sp-pick"><button type="button" class="bg-btn solid" data-go="q" data-first>Show the question</button></div>';
-    card.querySelector('.bg-x').onclick = () => { if (!P.busy) zoomOut(() => {}); };
-    card.querySelector('[data-go=q]').onclick = () => { if (P.busy) return; card.remove(); P.card = null; questionCard(true); };   // the question takes its place, no second zoom
-  } else draw();
-  zoomIn(card);
+  draw();
 }
 
 // ---------- changing a score (click a team on the scoreboard) ----------
@@ -867,7 +926,7 @@ function scorePop(i, chip){
   const set = v => { t.s = Math.round(+v || 0); score.value = t.s; save(); drawScores(); };
   pop.querySelectorAll('[data-d]').forEach(b => b.onclick = () => set(t.s + +b.dataset.d));
   score.oninput = () => { if (score.value !== '' && !isNaN(+score.value)) { t.s = Math.round(+score.value); save(); drawScores(); } };
-  name.oninput = () => { t.name = name.value.trim() || t.name; save(); drawScores(); drawPrompt(); g.tiles.forEach((x, k) => { if (x.done) redrawTile(k); }); };
+  name.oninput = () => { t.name = name.value.trim() || t.name; save(); drawScores(); drawPrompt(); (g.tiles || []).forEach((x, k) => { if (x.done) redrawTile(k); }); };
   const tb = pop.querySelector('[data-turn]'); if (tb) tb.onclick = () => { g.turn = i; save(); drawScores(); drawPrompt(); closePop(); };
   pop.querySelector('[data-done]').onclick = closePop;
   score.focus(); score.select();
@@ -878,35 +937,36 @@ function scorePop(i, chip){
 
 // ---------- final scores ----------
 function endScreen(){
-  if (!P || P.card) return;
+  if (!P || (P.card && P.game.kind !== 'taboo')) return;
   closePop();
   const g = P.game, ranked = g.teams.map((t, i) => Object.assign({i}, t)).sort((a, b) => b.s - a.s);
   const top = ranked[0].s, winners = ranked.filter(t => t.s === top);
   let place = 0;
   const rows = ranked.map((t, k) => { if (k === 0 || t.s !== ranked[k - 1].s) place = k + 1;
     return '<li class="' + (t.s === top ? 'win' : '') + '" style="--tc:' + t.c + ';animation-delay:' + (k * .12) + 's"><span class="p">' + (t.s === top ? '🏆' : place) + '</span><span class="n">' + esc(t.name) + '</span><span class="s">' + t.s + '</span></li>'; }).join('');
-  const left = g.tiles.filter(t => !t.done).length;
+  const taboo = g.kind === 'taboo', left = taboo ? (g.stage === 'over' ? 0 : 1) : g.tiles.filter(t => !t.done).length;
   const end = document.createElement('div');
   end.className = 'bg-end';
   end.innerHTML = '<div class="bg-confetti" aria-hidden="true"></div>' +
     '<h2>' + (winners.length === g.teams.length ? 'It\'s a draw!' : winners.length > 1 ? 'A tie for first place!' : esc(winners[0].name) + ' win!') + '</h2>' +
-    '<p class="sub">' + (left ? left + ' square' + (left === 1 ? '' : 's') + ' not opened' : 'Final scores') + '</p>' +
+    '<p class="sub">' + (taboo ? (left ? 'The game was ended early' : 'Final scores') : left ? left + ' square' + (left === 1 ? '' : 's') + ' not opened' : 'Final scores') + '</p>' +
     '<div class="bg-rank"><ol>' + rows + '</ol></div>' +
-    '<div class="acts"><button type="button" class="bg-btn" data-e="back">Back to the board</button><button type="button" class="bg-btn" data-e="again">Play again (new questions)</button><button type="button" class="bg-btn solid" data-e="done">Finish</button></div>';
+    '<div class="acts">' + (taboo && !left ? '' : '<button type="button" class="bg-btn" data-e="back">Back to the ' + (taboo ? 'game' : 'board') + '</button>') +
+      '<button type="button" class="bg-btn" data-e="again">Play again (new ' + (taboo ? 'words' : 'questions') + ')</button><button type="button" class="bg-btn solid" data-e="done">Finish</button></div>';
   P.stage.appendChild(end); P.endEl = end;
   if (!reduced()) { const box = end.querySelector('.bg-confetti'), cols = winners.map(w => w.c).concat(['#ffe14d', '#ffffff']);
     for (let k = 0; k < 90; k++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = pick(cols);
       c.style.animationDuration = (2.4 + Math.random() * 2.6) + 's'; c.style.animationDelay = (Math.random() * 1.2) + 's'; c.style.transform = 'rotate(' + Math.random() * 360 + 'deg)'; box.appendChild(c); } }
   sfx('win');
-  end.querySelector('[data-e=back]').onclick = () => { end.remove(); P.endEl = null; };
+  const back = end.querySelector('[data-e=back]'); if (back) back.onclick = () => { end.remove(); P.endEl = null; if (taboo && P.card) P.card.focus({preventScroll: true}); };
   end.querySelector('[data-e=again]').onclick = () => {
     const set = setOf(g.set); if (!set) return;
-    end.querySelector('.acts').innerHTML = '<p class="sub">Getting new questions…</p>';
-    dataFor(set.topics).then(data => { const n = newGame(set, data); n.teams = g.teams.map(t => Object.assign({}, t, {s: 0})); saveGame(n); mount(n, data); })
+    end.querySelector('.acts').innerHTML = '<p class="sub">Getting new ' + (taboo ? 'words' : 'questions') + '…</p>';
+    (taboo ? tabooData(set.topics) : dataFor(set.topics)).then(data => { const n = taboo ? newTabooGame(set, data) : newGame(set, data); n.teams = g.teams.map(t => Object.assign({}, t, {s: 0})); saveGame(n); mount(n, data); })
       .catch(x => { end.querySelector('.acts').innerHTML = '<p class="err">' + esc(x.message) + '</p>'; });
   };
   end.querySelector('[data-e=done]').onclick = () => { dropGame(g.set); location.hash = '#/board'; };
-  end.querySelector('[data-e=' + (left ? 'back' : 'done') + ']').focus({preventScroll: true});
+  (end.querySelector('[data-e=' + (left ? 'back' : 'done') + ']') || end.querySelector('[data-e=done]')).focus({preventScroll: true});
 }
 
 // ---------- keys (a laptop at the front, or a keyboard by the board) ----------
@@ -917,9 +977,10 @@ function onKey(e){
   const k = e.key, card = P.card;
   if (P.endEl) { if (k === 'Escape') { P.endEl.remove(); P.endEl = null; e.preventDefault(); } return; }
   if (document.querySelector('.bg-pop')) { if (k === 'Escape') { closePop(); e.preventDefault(); } return; }
+  if (P.game.kind === 'taboo') return tKey(e);
   if (card && P.open) {
     const isQ = !card.classList.contains('surprise');
-    if (k === 'Escape') { e.preventDefault(); if (isQ) closeQuestion(); else if (!P.busy) zoomOut(() => {}); return; }
+    if (k === 'Escape') { e.preventDefault(); if (isQ) closeQuestion(); else closeSurprise(); return; }
     if (!isQ) return;
     const lk = k.toLowerCase();
     if (k === ' ') { e.preventDefault(); toggleTimer(); return; }
@@ -943,6 +1004,314 @@ function onKey(e){
     let i = cur < 0 ? 0 : cur + ({ArrowRight: 1, ArrowLeft: -1, ArrowDown: c, ArrowUp: -c})[k];
     i = Math.max(0, Math.min(tiles.length - 1, i)); tiles[i].focus(); e.preventDefault();
   }
+}
+
+// =====================================================================================================================
+// ---------- Don't Say It! (6 Nov 2026, teacher: "a variant on Taboo") ----------
+// One player from the team that is playing guesses, with their back to the board; the rest of the team describe the word on
+// the board without saying it or the four red words beside it. The teacher clicks Got it!, Skip or Said it! and the next word
+// comes up. Every team plays once a round, and the rounds get shorter (60, 30, 15 seconds). "Replay Same Words in Next Round"
+// (on by default): every word sent in round 1 comes back in the later rounds, for recall; off: new words each round.
+// Words: content/<topic>/taboo.csv (word, taboo1-4, hint1-4; a word plays once it has a forbidden word). Hints show one at a time.
+const T_DEFAULTS = {game: 'taboo', title: '', topics: [], levels: [1, 2, 3, 4, 5], times: [60, 30, 15], replay: true, said: 'skip', teams: null};
+const T_TOPICS = TOPICS.filter(t => !t.only);
+const loadedT = {};
+function loadTaboo(key){
+  if (loadedT[key]) return loadedT[key];
+  const t = TOPICS.find(x => x.key === key);
+  if (!t || t.only) return Promise.resolve({key, items: []});
+  const get = f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null);
+  const p = Promise.all([get('words'), get('taboo')]).then(([W, T]) => {
+    if (W === null && T === null) throw new Error("Couldn't load the words for " + t.name + '.');
+    const on = {};   // Representation plays only its key words, like its page
+    (W || []).forEach(r => { const lists = listOf(r.list).map(x => x.toLowerCase()); on[r.id] = !t.list || !lists.length || lists.includes(t.list); });
+    const items = (T || []).map(r => ({id: r.id, lv: levelNum(r.level), w: r.word,
+        taboo: [1, 2, 3, 4].map(k => r['taboo' + k]).filter(Boolean), hints: [1, 2, 3, 4].map(k => r['hint' + k]).filter(Boolean)}))
+      .filter(it => it.id && it.w && it.taboo.length && on[it.id] !== false);
+    return {key, name: t.name, items};
+  });
+  loadedT[key] = p; p.catch(() => { delete loadedT[key]; });
+  return p;
+}
+function tabooData(topics){ return Promise.all(topics.map(loadTaboo)).then(all => Object.fromEntries(all.map(D => [D.key, D]))); }
+const eligibleTaboo = (D, levels) => (D.items || []).filter(it => it.lv == null || levels.includes(band(it.lv)));
+function countTaboo(topics, levels, data, level){
+  let n = 0;
+  topics.forEach(tk => { const D = data[tk]; if (D) n += eligibleTaboo(D, level ? [level] : levels).filter(it => !level || it.lv != null).length; });
+  return n;
+}
+
+// ---------- which game? ----------
+function chooser(){
+  C.setTitle('New board game'); C.header();
+  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Board games</a></p>' +
+    '<p class="note" style="margin:0 0 14px">Which game?</p><div class="bg-list">' +
+    Object.keys(GAME_TYPES).map(k => '<a class="card bg-item bg-choice" href="#/board/new/' + k + '"><h3>' + esc(GAME_TYPES[k].name) + '</h3>' +
+      '<p class="note">' + esc(GAME_TYPES[k].blurb) + '</p><span class="btn" style="align-self:flex-start;margin-top:6px">Make one</span></a>').join('') + '</div>';
+}
+
+// ---------- making or changing a Don't Say It! game ----------
+function tabooForm(id){
+  const old = id ? setOf(id) : null;
+  if (id && !old) { location.hash = '#/board'; return; }
+  const cfg = Object.assign(JSON.parse(JSON.stringify(T_DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
+  if (!cfg.teams || cfg.teams.length < 2) cfg.teams = funNames(4);
+  C.setTitle(old ? "Change: Don't Say It!" : "New Don't Say It! game"); C.header();
+  let data = null;
+  const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
+  const sel = (sid, label, list, cur) => '<div class="field"><label for="' + sid + '">' + label + '</label><select id="' + sid + '">' + list.map(x => opt(x[0], x[1], cur)).join('') + '</select></div>';
+  C.view.innerHTML =
+    '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Board games</a></p>' +
+    '<form class="card bg-form" id="bf" novalidate>' +
+    '<div class="field"><label for="b-title">Name</label><input type="text" id="b-title" maxlength="80" placeholder="e.g. 9A Representation words" value="' + esc(cfg.title) + '"></div>' +
+    '<fieldset><legend>Topics</legend><div class="bg-chips" id="b-topics">' + T_TOPICS.map(t =>
+      '<label class="bg-chip"><input type="checkbox" value="' + t.key + '"' + (cfg.topics.includes(t.key) ? ' checked' : '') + '><span>' + esc(t.name) + ' <small data-n="' + t.key + '">…</small></span></label>').join('') + '</div>' +
+      '<p class="note">The words come from each topic\'s taboo.csv. A word is ready once its forbidden words are written.</p></fieldset>' +
+    '<fieldset><legend>Levels</legend><div class="bg-chips" id="b-levels"></div></fieldset>' +
+    '<p class="bg-total" id="b-total" aria-live="polite">Counting the words…</p>' +
+    '<hr><fieldset><legend>Rounds</legend><div class="bg-settings">' +
+      sel('b-t1', 'Round 1: each team plays for', [[30, '30 seconds'], [45, '45 seconds'], [60, '1 minute'], [90, '90 seconds'], [120, '2 minutes']], cfg.times[0] || 60) +
+      sel('b-t2', 'Round 2', [[0, 'No round 2'], [15, '15 seconds'], [20, '20 seconds'], [30, '30 seconds'], [45, '45 seconds'], [60, '1 minute']], cfg.times[1] || 0) +
+      sel('b-t3', 'Round 3', [[0, 'No round 3'], [10, '10 seconds'], [15, '15 seconds'], [20, '20 seconds'], [30, '30 seconds']], cfg.times[2] || 0) +
+      sel('b-said', 'Saying a red word', [['skip', 'Next word, no point lost'], ['lose', 'Lose a point']], cfg.said) +
+    '</div>' +
+    '<label class="choice"><input type="checkbox" id="b-replay"' + (cfg.replay !== false ? ' checked' : '') + '><span><b>Replay Same Words in Next Round</b><br>' +
+      '<span class="note">Every word sent in round 1 comes back in the later rounds: a reminder, for recall. Untick it for new words each round.</span></span></label></fieldset>' +
+    '<hr><fieldset><legend>Teams</legend>' +
+      '<div class="row"><label class="lab" for="b-nteams">How many</label><select id="b-nteams">' + [2, 3, 4, 5, 6, 7, 8].map(n => opt(n, n, cfg.teams.length)).join('') + '</select>' +
+      '<button class="btn small alt" type="button" id="b-renames">New names for every team</button></div>' +
+      '<div class="bg-teams" id="b-teams"></div></fieldset>' +
+    '<p class="err" id="err" role="alert" hidden></p>' +
+    '<div class="row bg-saveline"><button class="btn" type="submit" data-go="play">Save and play</button><button class="btn alt" type="submit" data-go="list">Save</button><a class="btn alt" href="#/board">Cancel</a></div>' +
+    '</form>';
+  const $ = q => C.view.querySelector(q), $$ = q => [...C.view.querySelectorAll(q)];
+  const read = () => {
+    cfg.title = $('#b-title').value.trim();
+    cfg.topics = $$('#b-topics input:checked').map(i => i.value);
+    if ($$('#b-levels input').length) cfg.levels = $$('#b-levels input:checked').map(i => +i.value);
+    cfg.times = [+$('#b-t1').value, +$('#b-t2').value, +$('#b-t3').value];
+    cfg.said = $('#b-said').value; cfg.replay = $('#b-replay').checked;
+    cfg.teams = $$('#b-teams input').map((i, k) => i.value.trim() || 'Team ' + (k + 1));
+  };
+  const drawCounts = () => {
+    $$('#b-topics [data-n]').forEach(x => { x.textContent = data ? countTaboo([x.dataset.n], cfg.levels, data) : '…'; });
+    $('#b-levels').innerHTML = LEVELS.map(([n, name]) => { const c = data && cfg.topics.length ? countTaboo(cfg.topics, cfg.levels, data, n) : null;
+      return '<label class="bg-chip"><input type="checkbox" value="' + n + '"' + (cfg.levels.includes(n) ? ' checked' : '') + '><span>' + name + (c == null ? '' : ' <small>' + c + '</small>') + '</span></label>'; }).join('');
+    $$('#b-levels input').forEach(i => i.onchange = () => { read(); drawCounts(); });
+    const el = $('#b-total'); el.classList.remove('bad');
+    if (!data) { el.textContent = 'Counting the words…'; return; }
+    if (!cfg.topics.length) { el.textContent = 'Choose at least one topic.'; return; }
+    if (!cfg.levels.length) { el.textContent = 'Choose at least one level.'; el.classList.add('bad'); return; }
+    const n = countTaboo(cfg.topics, cfg.levels, data), times = cfg.times.filter(Boolean);
+    if (!n) { el.textContent = 'No words are ready yet in ' + (cfg.topics.length > 1 ? 'these topics' : 'this topic') + ' at these levels: their taboo.csv needs its forbidden words (content/README.md says how).'; el.classList.add('bad'); return; }
+    el.textContent = n + ' word' + (n === 1 ? '' : 's') + ' ready. Each team plays once a round: ' + times.map(x => x + ' seconds').join(', then ') + '.' +
+      (times.length > 1 ? (cfg.replay ? ' The words from round 1 come back in the later rounds.' : ' New words each round.') : '') +
+      (n < cfg.teams.length * 6 ? ' Not many words for ' + cfg.teams.length + ' teams: some may come round again.' : '');
+  };
+  const drawTeams = () => {
+    const n = +$('#b-nteams').value;
+    while (cfg.teams.length < n) cfg.teams.push(funName(cfg.teams));
+    cfg.teams = cfg.teams.slice(0, n);
+    $('#b-teams').innerHTML = cfg.teams.map((nm, i) => '<div class="bg-team"><span class="sw" style="background:' + COLOURS[i] + '"></span>' +
+      '<input type="text" maxlength="30" aria-label="Team ' + (i + 1) + ' name" value="' + esc(nm) + '">' +
+      '<button class="bg-dice" type="button" data-i="' + i + '" title="A new name" aria-label="A new name for team ' + (i + 1) + '">🎲</button></div>').join('');
+    $$('#b-teams input').forEach((inp, i) => inp.oninput = () => { cfg.teams[i] = inp.value; });
+    $$('#b-teams .bg-dice').forEach(b => b.onclick = () => { const i = +b.dataset.i; cfg.teams[i] = funName(cfg.teams.filter((_, k) => k !== i)); drawTeams(); });
+  };
+  $$('#b-topics input').forEach(i => i.onchange = () => { C.touch(); read(); drawCounts(); });
+  ['#b-t1', '#b-t2', '#b-t3', '#b-replay'].forEach(q => $(q).onchange = () => { read(); drawCounts(); });
+  $('#b-nteams').onchange = () => { cfg.teams = $$('#b-teams input').map(i => i.value); drawTeams(); read(); drawCounts(); };
+  $('#b-renames').onclick = () => { cfg.teams = funNames(cfg.teams.length); drawTeams(); };
+  drawTeams(); drawCounts();
+  tabooData(T_TOPICS.map(t => t.key)).then(d => { data = d; read(); drawCounts(); })
+    .catch(x => { const e = $('#err'); e.textContent = x.message + ' Check your internet connection and try again.'; e.hidden = false; });
+  let go = 'play';
+  $$('#bf [type=submit]').forEach(b => b.onclick = () => { go = b.dataset.go; });
+  $('#bf').onsubmit = e => {
+    e.preventDefault(); C.touch(); read();
+    const err = $('#err'), say = m => { err.textContent = m; err.hidden = false; err.scrollIntoView({block: 'center', behavior: 'smooth'}); };
+    err.hidden = true;
+    if (!cfg.topics.length) return say('Choose at least one topic.');
+    if (!data) return say('Still counting the words. Try again in a moment.');
+    if (!cfg.levels.length) return say('Choose at least one level.');
+    if (!countTaboo(cfg.topics, cfg.levels, data)) return say('No words are ready yet for these topics and levels.');
+    const s = Object.assign({}, cfg, {game: 'taboo', id: old ? old.id : uid(), created: old ? old.created : Date.now(),
+      title: cfg.title || cfg.topics.map(topicName).join(' + ') + ' words'});
+    saveSet(s);
+    const g = gameOf(s.id);
+    if (g && go === 'play' && !confirm('This game is in progress. Start a new game with the new settings? (Cancel keeps the game in progress.)')) { location.hash = '#/board/play/' + s.id; return; }
+    if (g && go === 'play') dropGame(s.id);
+    location.hash = go === 'play' ? '#/board/play/' + s.id : '#/board';
+  };
+}
+
+// ---------- playing Don't Say It! ----------
+// The game is saved as it goes: fresh (words not sent yet), deck (this round's replayed words), pool (every word sent so far),
+// stage (ready, play, summary, over), cur (the word on the board), log (this turn's words and what happened to them).
+function newTabooGame(set, data){
+  const cfg = JSON.parse(JSON.stringify(set)), all = [];
+  cfg.topics.forEach(tk => { const D = data[tk]; if (D) eligibleTaboo(D, cfg.levels).forEach(it => all.push({k: tk + '|' + it.id, t: tk, lv: it.lv, w: it.w, taboo: it.taboo, hints: it.hints})); });
+  const times = (cfg.times || T_DEFAULTS.times).map(Number).filter(x => x > 0);
+  const names = (cfg.teams && cfg.teams.length >= 2) ? cfg.teams : funNames(4);
+  return {v: 1, kind: 'taboo', set: set.id, title: cfg.title || "Don't Say It!", cfg, started: Date.now(), times: times.length ? times : [60],
+    teams: names.map((nm, i) => ({name: nm, c: COLOURS[i % COLOURS.length], s: 0})), turn: 0, round: 0, step: 0,
+    fresh: shuffle(all), deck: [], pool: [], stage: 'ready', cur: null, log: [], left: 0, words: all.length};
+}
+function tPrompt(){
+  const g = P.game, t = g.teams[g.turn];
+  P.prompt.innerHTML = g.stage === 'over' ? 'Final scores' : 'Round ' + (g.round + 1) + ' of ' + g.times.length + ' · ' + g.times[g.round] + ' seconds a turn · ' +
+    '<b style="color:' + t.c + '">' + esc(t.name) + '</b>' + (g.stage === 'play' ? ' are playing' : g.stage === 'summary' ? '' : ' are next');
+}
+function drawTaboo(){
+  const g = P.game;
+  if (g.stage === 'over') return;
+  g.turn = (g.round + g.step) % g.teams.length;
+  if (g.stage !== 'play') { clearInterval(P.tick); P.tick = null; }
+  tPrompt(); drawScores();
+  const card = document.createElement('div');
+  card.className = 'bg-card tb'; card.tabIndex = -1; card.setAttribute('role', 'region'); card.setAttribute('aria-label', "Don't Say It!");
+  if (g.stage === 'ready') tReady(card); else if (g.stage === 'play') tPlay(card); else tSummary(card);
+  P.stage.innerHTML = ''; P.stage.appendChild(card); P.card = card;
+  if (g.stage === 'play') { fitWord(); if (!P.tick && !P.paused) tRun(); }
+  card.focus({preventScroll: true});
+}
+function tReady(card){
+  const g = P.game, t = g.teams[g.turn], first = g.step === 0;
+  card.innerHTML = '<div class="tb-ready">' +
+    '<p class="tb-round">' + (first ? 'Round ' + (g.round + 1) + ' of ' + g.times.length : 'Next team') + ' · ' + g.times[g.round] + ' seconds</p>' +
+    (first && g.round > 0 ? '<p class="tb-note">' + (g.cfg.replay !== false ? 'The words from round 1 are back. Who remembers them?' : 'New words this round.') + '</p>' : '') +
+    '<p class="tb-team" style="--tc:' + t.c + '">' + esc(t.name) + '</p>' +
+    '<p class="tb-how">One player guesses, with their back to the board. The rest of the team describe the word without saying it or any of the red words.</p>' +
+    '<button type="button" class="bg-btn solid tb-go" data-go>Start <kbd>Space</kbd></button></div>';
+  card.querySelector('[data-go]').onclick = () => tStart();
+}
+function tStart(){
+  const g = P.game; if (g.stage !== 'ready') return;
+  g.stage = 'play'; g.left = g.times[g.round]; g.log = []; P.paused = false;
+  tNext(); sfx('open'); save(); drawTaboo();
+}
+// The next word: this round's replayed words first, then words not sent yet; when everything has been sent, round again
+function tNext(){
+  const g = P.game;
+  let q = null, src = 'deck';
+  if (g.deck.length) q = g.deck.pop();
+  else if (g.fresh.length) { q = g.fresh.pop(); src = 'fresh'; if (!g.pool.some(x => x.k === q.k)) g.pool.push(q); }
+  else if (g.pool.length) { g.deck = shuffle(g.pool.filter(x => !g.cur || x.k !== g.cur.q.k)); q = g.deck.pop() || g.pool[0]; }
+  g.cur = q ? {q, src, hints: 0} : null;
+}
+function tPlay(card){
+  const g = P.game, c = g.cur, total = g.times[g.round], got = g.log.filter(x => x.r === 'got').length;
+  if (!c) { card.innerHTML = '<div class="tb-ready"><p class="tb-how">There are no more words.</p></div>'; return; }
+  const q = c.q;
+  card.innerHTML =
+    '<div class="tb-time' + (P.paused ? ' paused' : '') + (g.left <= 5 ? ' low' : '') + '"><div class="tb-bar"><i style="width:' + (100 * g.left / total) + '%"></i></div>' +
+      '<span class="tb-secs">' + g.left + '</span><button type="button" class="bg-btn small" data-a="pause">' + (P.paused ? 'Carry on' : 'Pause') + '</button></div>' +
+    '<div class="tb-main"><div class="tb-wordbox"><p class="tb-label">Describe</p><p class="tb-word">' + esc(q.w) + '</p>' +
+      '<p class="tb-meta">' + esc([topicName(q.t), q.lv != null ? LEVEL_NAME[band(q.lv)] : ''].filter(Boolean).join(' · ')) + '</p>' +
+      '<ol class="tb-hints">' + q.hints.slice(0, c.hints).map(h => '<li>' + esc(h) + '</li>').join('') + '</ol></div>' +
+      '<div class="tb-ban"><p class="tb-ban-h">Don\'t say</p><ul>' + q.taboo.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul></div></div>' +
+    '<div class="tb-acts"><span class="tb-count">✓ ' + got + ' this turn</span>' +
+      (q.hints.length ? '<button type="button" class="bg-btn" data-a="hint"' + (c.hints >= q.hints.length ? ' disabled' : '') + '>Hint ' + Math.min(c.hints + 1, q.hints.length) + ' of ' + q.hints.length + ' <kbd>H</kbd></button>' : '') +
+      '<button type="button" class="bg-btn" data-a="skip">Skip <kbd>S</kbd></button>' +
+      '<button type="button" class="bg-btn wrong" data-a="said">✗ Said it! <kbd>X</kbd></button>' +
+      '<button type="button" class="bg-btn right tb-got" data-a="got">✓ Got it! <kbd>G</kbd></button></div>';
+  card.querySelector('[data-a=pause]').onclick = () => tPause();
+  card.querySelector('[data-a=skip]').onclick = () => tResult('skip');
+  card.querySelector('[data-a=said]').onclick = () => tResult('said');
+  card.querySelector('[data-a=got]').onclick = () => tResult('got');
+  const h = card.querySelector('[data-a=hint]'); if (h) h.onclick = () => tHint();
+}
+// The word fills its half of the board
+function fitWord(){
+  const card = P && P.card, w = card && card.querySelector('.tb-word'), box = card && card.querySelector('.tb-wordbox');
+  if (!w || !box) return;
+  const len = w.textContent.length, u = P.u;
+  let s = (len < 9 ? 150 : len < 15 ? 120 : 92) * u; const min = 28 * u;
+  w.style.fontSize = s + 'px';
+  const over = () => [...box.children].reduce((a, e) => a + e.offsetHeight, 0) + 40 * u > box.clientHeight || w.scrollWidth > w.clientWidth + 1;
+  for (let k = 0; k < 40 && s > min && over(); k++) { s = Math.max(min, s * .92); w.style.fontSize = s + 'px'; }
+}
+function tRun(){
+  clearInterval(P.tick);
+  P.tick = setInterval(() => {
+    const g = P && P.game; if (!g || g.stage !== 'play' || P.paused || P.endEl) return;
+    g.left--;
+    const tb = P.card && P.card.querySelector('.tb-time');
+    if (tb) { tb.querySelector('.tb-secs').textContent = Math.max(0, g.left); tb.querySelector('.tb-bar i').style.width = Math.max(0, 100 * g.left / g.times[g.round]) + '%'; tb.classList.toggle('low', g.left <= 5); }
+    if (g.left > 0 && g.left <= 5) sfx('tick');
+    if (g.left % 5 === 0) saveGame(g);
+    if (g.left <= 0) tTimeUp();
+  }, 1000);
+}
+function tPause(force){
+  const g = P && P.game; if (!g || g.stage !== 'play') return;
+  P.paused = force === true ? true : !P.paused;
+  const tb = P.card && P.card.querySelector('.tb-time');
+  if (tb) { tb.classList.toggle('paused', P.paused); tb.querySelector('[data-a=pause]').textContent = P.paused ? 'Carry on' : 'Pause'; }
+  if (!P.paused && !P.tick) tRun();
+}
+function tHint(){
+  const g = P.game, c = g.cur; if (g.stage !== 'play' || !c || c.hints >= c.q.hints.length) return;
+  c.hints++; save(); drawTaboo();
+}
+// Got it! (+1), Skip (0) or Said it! (a red word: 0, or −1 if the board says so), then the next word
+function tResult(r){
+  const g = P.game; if (g.stage !== 'play' || !g.cur || P.busy) return;
+  const team = g.teams[g.turn];
+  let d = r === 'got' ? 1 : r === 'said' && g.cfg.said === 'lose' ? -Math.min(1, team.s) : 0;
+  team.s += d;
+  g.log.push({k: g.cur.q.k, w: g.cur.q.w, r, d});
+  sfx(r === 'got' ? 'right' : r === 'said' ? 'wrong' : 'open');
+  tNext(); save(); drawTaboo();
+  if (d) drawScores({[g.turn]: d});
+  if (r === 'got') { const box = P.card.querySelector('.tb-wordbox'); if (box) box.classList.add('ok'); }
+}
+// Time's up: the word on the board goes back for later, and the turn's words are listed (the teacher can change any of them)
+function tTimeUp(){
+  const g = P.game;
+  clearInterval(P.tick); P.tick = null; sfx('up');
+  if (g.cur) { if (g.cur.src === 'deck') g.deck.unshift(g.cur.q); else g.fresh.unshift(g.cur.q); }
+  g.cur = null; g.stage = 'summary'; save(); drawTaboo();
+}
+function tSummary(card){
+  const g = P.game, t = g.teams[g.turn], got = g.log.filter(x => x.r === 'got').length;
+  const last = g.step === g.teams.length - 1, lastRound = g.round === g.times.length - 1;
+  const mark = {got: '✓', skip: '–', said: '✗'};
+  card.innerHTML = '<div class="tb-ready">' +
+    '<p class="tb-round">Time\'s up!</p><p class="tb-team" style="--tc:' + t.c + '">' + esc(t.name) + ': ' + got + '</p>' +
+    (g.log.length ? '<div class="tb-list">' + g.log.map((x, i) => '<button type="button" class="tb-w ' + x.r + '" data-i="' + i + '" title="Click to change">' + mark[x.r] + ' ' + esc(x.w) + '</button>').join('') + '</div>' +
+      '<p class="note">Got one just as time ran out? Click a word to change it.</p>' : '<p class="tb-how">No words this turn.</p>') +
+    '<button type="button" class="bg-btn solid tb-go" data-go>' + (last ? (lastRound ? 'Final scores' : 'Start round ' + (g.round + 2)) : 'Next team') + ' <kbd>Space</kbd></button></div>';
+  card.querySelectorAll('.tb-w').forEach(b => b.onclick = () => {
+    const x = g.log[+b.dataset.i], team = g.teams[g.turn];
+    const r = x.r === 'got' ? 'skip' : 'got', d = r === 'got' ? 1 : 0;
+    team.s += d - x.d; const change = d - x.d; x.r = r; x.d = d;
+    save(); drawTaboo(); if (change) drawScores({[g.turn]: change});
+  });
+  card.querySelector('[data-go]').onclick = () => tAdvance();
+}
+function tAdvance(){
+  const g = P.game; if (g.stage !== 'summary') return;
+  g.step++;
+  if (g.step >= g.teams.length) {
+    g.step = 0; g.round++;
+    if (g.round >= g.times.length) { g.stage = 'over'; g.round = g.times.length - 1; save(); tPrompt(); return endScreen(); }
+    g.deck = g.cfg.replay !== false ? shuffle(g.pool.slice()) : [];   // Replay Same Words in Next Round
+  }
+  g.stage = 'ready'; save(); drawTaboo();
+}
+function tKey(e){
+  const g = P.game, k = e.key, lk = k.toLowerCase();
+  if (k === ' ' || (k === 'Enter' && g.stage !== 'play')) {
+    e.preventDefault();
+    if (g.stage === 'ready') tStart(); else if (g.stage === 'summary') tAdvance(); else if (g.stage === 'play' && k === ' ') tPause();
+    return;
+  }
+  if (g.stage !== 'play') return;
+  if (lk === 'g' || lk === 'y' || k === 'Enter') { e.preventDefault(); tResult('got'); }
+  else if (lk === 's') { e.preventDefault(); tResult('skip'); }
+  else if (lk === 'x' || lk === 'n') { e.preventDefault(); tResult('said'); }
+  else if (lk === 'h') { e.preventDefault(); tHint(); }
 }
 
 // ---------- sounds (made in the browser: no files to load) ----------

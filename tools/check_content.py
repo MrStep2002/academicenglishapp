@@ -19,6 +19,7 @@ NAMES = {'foundation': 1, 'foundation+': 2, 'intermediate': 3, 'intermediate+': 
 LEVEL_NAMES = ['', 'Foundation', 'Foundation+', 'Intermediate', 'Intermediate+', 'Advanced']
 MIN_LEVEL = 6   # the same number as MIN_LEVEL in en/engine/app.js
 OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3', 'list'}   # columns a file may leave out
+TABOO_PARTS = {'of', 'the', 'a', 'an', 'with', 'to', 'and', 'in', 'on', 'for', 'up', 'out', 'down', 'en'}   # never forbidden on their own
 # Science pages (3 Nov 2026): any file may also have "syllabus" (codes such as 2.4, separated by ;) and "extended"
 # (yes = Extended only), used by the topic choice. A science folder's data tables (ions.csv, elements.csv, reactions.csv in
 # content/chemistry/; quantities.csv, waves.csv, em-uses.csv, nuclides.csv in content/physics/) are read by its module
@@ -39,7 +40,31 @@ HEADS = {
     'knowledge': ['id', 'level', 'question', 'correct', 'wrong1', 'wrong2', 'wrong3', 'explanation'],   # General knowledge (31 Oct): level optional
     # Find the evidence (English version) / All-in English (Chinese version), 3 Nov 2026: right4, wrong4 and wrong5 may be added
     'evidence': ['id', 'level', 'statement', 'right1', 'right2', 'right3', 'wrong1', 'wrong2', 'wrong3', 'word', 'side', 'explanation'],
+    # Don't Say It! (teacher page board game, 6 Nov 2026): the word, four words that can't be said, four hints for the describers
+    'taboo': ['id', 'level', 'word', 'taboo1', 'taboo2', 'taboo3', 'taboo4', 'hint1', 'hint2', 'hint3', 'hint4'],
 }
+
+
+def taboo_problems(word, taboo, hints):
+    """Don't Say It!: a hint that uses the word, or one of its forbidden words, can't be read out."""
+    def forms(w):
+        s = {w, w + 's', w + 'es', w + 'ed', w + 'd', w + 'n', w + 'ing', w + 'er', w + 'ers', w + 'ly'}
+        if w.endswith('e'): s |= {w[:-1] + 'ing', w[:-1] + 'ed'}
+        if w.endswith('y'): s |= {w[:-1] + 'ies', w[:-1] + 'ied'}
+        if w.endswith('s'): s.add(w[:-1])
+        return s
+    out = []
+    parts = [p for p in re.split(r'[\s\-]+', word.lower()) if p and p not in TABOO_PARTS]
+    for h in hints:
+        toks = re.findall(r'[a-zà-ÿ]+', h.lower())
+        if any(t in forms(p) or (len(p) >= 5 and len(t) >= 5 and (p in t or p.startswith(t))) for p in parts for t in toks):
+            out.append(f'a hint uses the word itself: "{h}"')
+        for b in [x.lower() for x in taboo]:
+            if ' ' in b: hit = b in h.lower()
+            else: hit = any(t in forms(b) or (len(t) >= 5 and len(b) >= 5 and (b.startswith(t) or t.startswith(b))) for t in toks)
+            if hit: out.append(f'a hint uses the forbidden word "{b}": "{h}"')
+    if len({x.lower() for x in taboo}) < len(taboo): out.append('the same forbidden word is there twice')
+    return out
 KNOWLEDGE_OPTIONAL = {'level', 'wrong2', 'wrong3', 'explanation'}
 EVIDENCE_OPTIONAL = {'right2', 'right3', 'side', 'explanation'}
 ROLE = re.compile(r'^(topic|verb|detail|link|judge|hedge)\s*:\s*(.+)$', re.I)
@@ -204,6 +229,12 @@ def check_folder(folder, all_word_ids):
                     if not wrongs(s): say(kind, r, f'word {k} has no wrong answers')
                     if r.get('word' + a) and not known(r['word' + a]): say(kind, r, f'word{a}: "{r["word" + a]}" is not in words.csv')
                 if not n or n != sets: say(kind, r, f'{n} word(s) in [brackets] but {sets} set(s) of answers (skipped)'); ok = False
+            elif kind == 'taboo':   # Don't Say It!: a word waits until it has a forbidden word; it is not on the topic pages' level buttons
+                tb = [r.get(f'taboo{k}', '') for k in range(1, 5) if r.get(f'taboo{k}', '')]
+                if not r.get('word'): say(kind, r, 'needs a word (skipped)')
+                for m in taboo_problems(r.get('word', ''), tb, [r.get(f'hint{k}', '') for k in range(1, 5) if r.get(f'hint{k}', '')]): say(kind, r, m)
+                if tb and r.get('id') and r['id'] not in ids: say(kind, r, f'id "{r["id"]}" is not in words.csv (it still plays)')
+                ok = False
             if kind == 'gaps' and r.get('word') and not known(r['word']): say(kind, r, f'word: "{r["word"]}" is not in words.csv')
             if ok and b is not None: counts.setdefault(kind, {})[b] = counts.setdefault(kind, {}).get(b, 0) + 1
 
@@ -256,6 +287,13 @@ def check_folder(folder, all_word_ids):
         a, h = (pct(t, ABS), pct(f, ABS)), (pct(t, HED), pct(f, HED))
         print(f'  tf.csv: {len(t)} TRUE, {len(f)} FALSE. Absolute words (only, every, never…) in {a[0]}% of TRUE and {a[1]}% of FALSE; hedges (may, can, probably…) in {h[0]}% and {h[1]}%.'
               + ('  Aim: within 10 points of each other.' if max(abs(a[0] - a[1]), abs(h[0] - h[1])) > 10 else ''))
+    taboo = data.get('taboo', [])
+    if taboo:   # Don't Say It! plays only the words with forbidden words
+        ready = [r for r in taboo if any(r.get(f'taboo{k}') for k in range(1, 5))]
+        by = {}
+        for r in ready: by[band(r.get('level')) or 0] = by.get(band(r.get('level')) or 0, 0) + 1
+        print(f'  taboo.csv: {len(ready)} of {len(taboo)} words ready for Don\'t Say It! (they have forbidden words)'
+              + (': ' + ', '.join(f'{LEVEL_NAMES[b] if b else "no level"} {n}' for b, n in sorted(by.items())) if ready else '') + '.')
     reads = data.get('reads', [])
     if reads:   # Complete the text: the word bank has only the key words and the text's own extra words
         with_extra = sum(1 for r in reads if any(r.get(k) for k in ('extra1', 'extra2', 'extra3')))

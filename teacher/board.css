@@ -190,6 +190,7 @@ html.bg-on main.home { display: none; }
 @keyframes bg-hint { 50% { box-shadow: 0 0 0 calc(6 * var(--u)) rgba(255,225,77,.85); } }
 .bg-btn.small { font-size: calc(15 * var(--u)); padding: calc(6 * var(--u)) calc(12 * var(--u)); border-width: 1.5px; color: var(--muted); border-color: var(--line); }
 .bg-btn.small:hover { color: var(--ink); border-color: var(--ink); }
+.bg-play [hidden] { display: none !important; }
 .bg-btn:disabled { opacity: .45; cursor: default; animation: none; }
 .bg-btn kbd, .bg-tool kbd { font: inherit; font-size: .72em; opacity: .7; border: 1.5px solid currentColor; border-radius: 5px; padding: 0 4px; }
 .bg-switch { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: calc(16 * var(--u)); cursor: pointer; user-select: none; }
@@ -264,3 +265,47 @@ html.bg-on main.home { display: none; }
   .bg-sp-icon, .bg-rank li, .bg-team-chip .sc.bump, .bg-timer.low .t, .bg-btn.hint, .bg-float { animation: none !important; }
   .bg-confetti { display: none; }
 }
+
+/* The game chooser and the game's name on the list (6 Nov 2026) */
+.bg-kind { align-self: flex-start; font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.bg-choice { color: var(--ink); text-decoration: none; }
+.bg-choice:hover { border-color: var(--web); }
+
+/* Don't Say It! (6 Nov 2026): the word, the red words down the side, the timer bar */
+.bg-card.tb { gap: calc(14 * var(--u)); }
+.tb-ready { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(16 * var(--u)); text-align: center; overflow: hidden; }
+.tb-round { margin: 0; font-weight: 700; color: var(--muted); font-size: calc(26 * var(--u)); }
+.tb-note { margin: 0; font-weight: 700; font-size: calc(24 * var(--u)); background: var(--hi); color: #151935; padding: calc(6 * var(--u)) calc(18 * var(--u)); border-radius: 99px; }
+.tb-team { margin: 0; font-family: var(--display); font-weight: 800; font-size: calc(84 * var(--u)); line-height: 1.05; letter-spacing: -.02em; color: var(--tc); }
+.tb-how { margin: 0; max-width: 34em; font-size: calc(24 * var(--u)); line-height: 1.35; }
+.tb-go { font-size: calc(30 * var(--u)); padding: calc(14 * var(--u)) calc(34 * var(--u)); }
+.tb-time { flex: none; display: flex; align-items: center; gap: calc(14 * var(--u)); }
+.tb-bar { flex: 1; height: calc(16 * var(--u)); border-radius: 99px; background: var(--line); overflow: hidden; }
+.tb-bar i { display: block; height: 100%; background: var(--web); border-radius: 99px; transition: width 1s linear, background .3s; }
+.tb-secs { min-width: 2.2em; text-align: center; font-family: var(--display); font-weight: 800; font-size: calc(46 * var(--u)); line-height: 1; font-variant-numeric: tabular-nums; }
+.tb-time.low .tb-bar i { background: #d6402f; }
+.tb-time.low .tb-secs { color: #d6402f; animation: bg-pulse 1s ease infinite; }
+.tb-time.paused .tb-secs { opacity: .4; animation: none; }
+.tb-main { flex: 1 1 0; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 32%); gap: calc(22 * var(--u)); }
+.tb-wordbox { min-width: 0; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(10 * var(--u)); text-align: center; overflow: hidden; }
+.tb-wordbox.ok { animation: tb-ok .45s ease; }
+@keyframes tb-ok { 0% { transform: scale(.94); opacity: .4; } 100% { transform: none; opacity: 1; } }
+.tb-label { margin: 0; font-weight: 700; color: var(--muted); font-size: calc(20 * var(--u)); text-transform: uppercase; letter-spacing: .1em; }
+.tb-word { margin: 0; max-width: 100%; font-family: var(--display); font-weight: 800; line-height: 1.02; letter-spacing: -.03em; overflow-wrap: anywhere; }
+.tb-meta { margin: 0; color: var(--muted); font-size: calc(17 * var(--u)); }
+.tb-hints { margin: calc(6 * var(--u)) 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: calc(8 * var(--u)); max-width: 36em; }
+.tb-hints li { padding: calc(8 * var(--u)) calc(16 * var(--u)); border-radius: calc(12 * var(--u)); background: var(--web-soft); font-weight: 700; font-size: calc(24 * var(--u)); line-height: 1.3; animation: bg-rise .3s ease both; }
+.tb-ban { min-height: 0; display: flex; flex-direction: column; gap: calc(8 * var(--u)); padding: calc(16 * var(--u)) calc(22 * var(--u)); border-radius: calc(18 * var(--u)); background: #c0392b; color: #fff; overflow: hidden; }
+.tb-ban-h { margin: 0; font-weight: 800; font-size: calc(20 * var(--u)); text-transform: uppercase; letter-spacing: .1em; opacity: .9; }
+.tb-ban ul { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; margin: 0; padding: 0; list-style: none; }
+.tb-ban li { padding: calc(8 * var(--u)) 0; border-top: 2px solid rgba(255,255,255,.35); font-family: var(--display); font-weight: 800; font-size: calc(40 * var(--u)); line-height: 1.1; overflow-wrap: anywhere; }
+.tb-ban li:first-child { border-top: 0; }
+.tb-acts { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: calc(10 * var(--u)); padding-top: calc(12 * var(--u)); border-top: 2px solid var(--line); }
+.tb-count { margin-right: auto; font-weight: 700; font-size: calc(22 * var(--u)); color: var(--muted); }
+.tb-got { font-size: calc(28 * var(--u)); padding: calc(14 * var(--u)) calc(30 * var(--u)); }
+.tb-list { display: flex; flex-wrap: wrap; justify-content: center; gap: calc(10 * var(--u)); max-width: 92%; }
+.tb-w { font: inherit; font-weight: 700; font-size: calc(24 * var(--u)); padding: calc(8 * var(--u)) calc(16 * var(--u)); border-radius: 99px; border: 2px solid var(--line); background: var(--bg); color: var(--muted); cursor: pointer; }
+.tb-w.got { background: #d8f3e3; border-color: #23a05c; color: #135c33; }
+.tb-w.said { background: #fde0dc; border-color: #c0392b; color: #7a1d12; }
+@media (prefers-color-scheme: dark) { .tb-w.got { background: #123a25; color: #9be7bb; } .tb-w.said { background: #43160f; color: #ffb3a7; } }
+@media (prefers-reduced-motion: reduce) { .tb-wordbox.ok, .tb-hints li, .tb-time.low .tb-secs { animation: none !important; } .tb-bar i { transition: none; } }
