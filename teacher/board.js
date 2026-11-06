@@ -783,6 +783,7 @@ function questionCard(instant){
         '<button type="button" class="bg-btn wrong" data-a="wrong">✗ Wrong <kbd>N</kbd></button>' +
       '</div><p class="bg-said" aria-live="polite"></p></div>';
   card.querySelector('.bg-x').onclick = () => closeQuestion();
+  reportBtn(card, q);
   card.querySelector('[data-a=show]').onclick = () => reveal(null);
   card.querySelector('[data-a=right]').onclick = () => mark(true);
   card.querySelector('[data-a=wrong]').onclick = () => mark(false);
@@ -891,7 +892,7 @@ function swapQuestion(){
   card.querySelector('.bg-opts').className = 'bg-opts' + (q.opts.length === 2 ? ' two' : '');
   card.querySelector('.bg-more').innerHTML = ''; o.chosen = null; o.revealed = false; o.out = []; o.over = false; o.shown = g.cfg.options !== 'hide';
   card.querySelectorAll('.hint').forEach(b => b.classList.remove('hint'));
-  said.className = 'bg-said'; said.textContent = ''; drawOpts(); drawWho(); fitCard(); startTimer(secs);
+  said.className = 'bg-said'; said.textContent = ''; drawOpts(); drawWho(); fitCard(); startTimer(secs); reportBtn(card, q);
 }
 // Big text that still fits: the options shrink until they fit their half of the card, then the question fills the rest
 function fitCard(){
@@ -919,6 +920,41 @@ function fitCard(){
     const over = () => [...q.children].reduce((a, e) => a + e.offsetHeight, 0) + gap * (q.children.length - 1) > q.clientHeight + 1 || text.scrollWidth > text.clientWidth + 1;
     for (let k = 0; k < 40 && s > min && over(); k++) { s = Math.max(min, s * .92); text.style.fontSize = s + 'px'; }
   }
+}
+
+// ---------- Report (7 Nov 2026): a small button in the corner of the question card ----------
+// One click: "Reported ✓", and the game carries on (no reasons to choose). The question goes to the Reports page on the
+// teacher page, as a report from "You", with the question, its options and its answer; Remove there takes it out of every
+// game, these boards included. The board remembers what it has reported (g.reported).
+const repGame = q => { const b = BANKS.find(x => x.key === q.b); return b ? b.hid[0] : q.b; };
+const repKey = q => q.t + '|' + repGame(q) + '|' + q.id;
+const devId = () => { let d = ''; try { d = localStorage.getItem('aeaDevice') || '';
+  if (!/^[A-Za-z0-9_-]{8,40}$/.test(d)) { d = 'd' + Math.random().toString(36).slice(2, 12) + Date.now().toString(36); localStorage.setItem('aeaDevice', d); } } catch (e) {} return d; };
+function reportBtn(card, q){
+  let b = card.querySelector('.bg-report');
+  if (!b) { b = document.createElement('button'); b.type = 'button'; b.className = 'bg-report'; card.appendChild(b); }
+  const done = (P.game.reported || []).includes(repKey(q));
+  b.textContent = done ? 'Reported ✓' : '⚑ Report'; b.disabled = done;
+  b.title = done ? 'This question is on your Reports page' : 'Report this question: it goes to your Reports page';
+  b.onclick = () => sendReport(card, q, b);
+}
+function sendReport(card, q, b){
+  const g = P.game, key = repKey(q);
+  if ((g.reported || []).includes(key) || b.dataset.sending) return;
+  b.dataset.sending = '1'; b.textContent = 'Reported ✓'; b.disabled = true;
+  let token = null, api = '';
+  try { const a = JSON.parse(localStorage.getItem('aea:account:teacher')); token = a && a.token && a.until > Date.now() ? a.token : null; } catch (e) {}
+  try { api = localStorage.getItem('aea:api') || ''; } catch (e) {}
+  api = (api || 'https://api.academicenglishapp.com').replace(/\/+$/, '');
+  const box = card.querySelector('.bg-q'), shown = (box ? box.innerText.trim() : '') + (q.opts ? '\nOptions: ' + q.opts.join(' | ') : '');
+  fetch(api + '/api/report', {method: 'POST', headers: Object.assign({'Content-Type': 'application/json'}, token ? {Authorization: 'Bearer ' + token} : {}),
+    body: JSON.stringify({topic: q.t, game: repGame(q), item: String(q.id), reason: 'other', comment: 'Reported from a board game (' + GAME_TYPES[gameType(g)].name + ').',
+      shown, chosen: '', feedback: q.opts ? 'Answer: ' + q.opts[q.a] : '', side: 'en', page: '', pageName: topicName(q.t), gameName: 'Board game: ' + (KIND[q.k] || q.k),
+      level: q.lv != null ? LEVEL_NAME[band(q.lv)] || '' : '', device: devId()})})
+    .then(r => { if (!r.ok) throw new Error('not sent');
+      if (P && P.game === g) { g.reported = (g.reported || []).concat(key); save(); } })
+    .catch(() => { if (b.isConnected) { b.textContent = '⚑ Not sent: try again'; b.disabled = false; } })
+    .then(() => { delete b.dataset.sending; });
 }
 
 // ---------- the timer ----------
@@ -1216,6 +1252,7 @@ function finalCard(){
     on('opts', () => { F.opts = true; save(); finalCard(); });
     on('show', () => { F.shown = true; F.opts = true; save(); sfx('surprise'); finalCard(); });
     on('add', finalScores);
+    reportBtn(card, q);
     card.querySelectorAll('[data-m]').forEach(b => b.onclick = () => { F.marks[+b.dataset.m] = b.dataset.v === '1'; save(); finalCard(); });
   }
   P.stage.appendChild(card); fitCard();

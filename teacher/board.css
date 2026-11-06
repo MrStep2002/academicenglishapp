@@ -385,3 +385,10 @@ html.bg-on main.home { display: none; }
 .cf-m button.n[aria-pressed="true"] { background: #c0392b; border-color: #fff; }
 .cf-wait { flex: 1; font-weight: 700; color: var(--muted); font-size: calc(19 * var(--u)); }
 .bg-card.cf .bg-opt { cursor: default; }
+
+/* Report (7 Nov 2026): small, in the bottom right corner of the question card, in the card's padding */
+.bg-report { position: absolute; right: calc(18 * var(--u)); bottom: calc(2 * var(--u)); z-index: 1; font: inherit; font-weight: 700; font-size: calc(12 * var(--u));
+  line-height: 1.1; padding: 0 calc(8 * var(--u)); border: 0; border-radius: 99px; background: transparent; color: var(--muted); opacity: .8; cursor: pointer; }
+.bg-report:hover:not(:disabled), .bg-report:focus-visible { opacity: 1; color: var(--ink); background: var(--bg); outline: none; }
+.bg-report:disabled { cursor: default; opacity: 1; color: #1c8a4e; }
+@media (prefers-color-scheme: dark) { .bg-report:disabled { color: #6fd39b; } }

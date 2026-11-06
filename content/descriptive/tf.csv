@@ -44,7 +44,7 @@ desc-tf-042,A1,“great” is similar in meaning to “excellent.”,TRUE,“exc
 desc-tf-043,A1,“tired” is similar in meaning to “high.”,FALSE,“tired” means Needing rest because you have used your energy. The proposed synonym “high” belongs with “tall.”
 desc-tf-044,A1,“orange” is used correctly here: “The orange light shines through the window.”,TRUE,The example uses “orange” correctly: “The orange light shines through the window.”
 desc-tf-045,A1,“always” is similar in meaning to “every time.”,TRUE,“every time” is a synonym of “always.”
-desc-tf-046,A1,“look” means: Look at something carefully over a period of time.,FALSE,Correct definition: “look” means Turn your eyes towards something to see it.
+desc-tf-046,A1,“look” means: Produce words aloud using your voice.,FALSE,Correct definition: “look” means Turn your eyes towards something to see it.
 desc-tf-047,A1,“clean” is similar in meaning to “lengthy.”,FALSE,"“clean” means Free from dirt, marks or unwanted material. The proposed synonym “lengthy” belongs with “long.”"
 desc-tf-048,A1,“free” is similar in meaning to “aged.”,FALSE,“free” means Not occupied with work or another planned activity. The proposed synonym “aged” belongs with “old.”
 desc-tf-049,A1,“green” means: Measuring a large distance from one end to the other.,FALSE,Correct definition: “green” means Having the colour of grass and most leaves.
@@ -138,7 +138,7 @@ desc-tf-136,A2,“heavy” means: Weighing a lot and therefore difficult to lift
 desc-tf-137,A2,This is the correct use of “knock”: “She knocked on the door by quietly sliding a letter underneath it.”,FALSE,To “knock” is to hit a surface to make a sound. Sliding a letter makes no knock.
 desc-tf-138,A2,“round” means: Shaped like a circle or a ball.,TRUE,Correct definition: “round” means Shaped like a circle or a ball.
 desc-tf-139,A2,“worried” means: Resting with your eyes closed and unaware of your surroundings.,FALSE,Correct definition: “worried” means Thinking about problems or unpleasant things that may happen.
-desc-tf-140,A2,“arrive” means: Come into view or become visible to someone.,FALSE,Correct definition: “arrive” means Reach the place where a journey ends.
+desc-tf-140,A2,“arrive” means: Raise something from a lower position to a higher one.,FALSE,Correct definition: “arrive” means Reach the place where a journey ends.
 desc-tf-141,A2,“dry” is similar in meaning to “conscious.”,FALSE,“dry” means Having no water or other liquid on its surface. The proposed synonym “conscious” belongs with “awake.”
 desc-tf-142,A2,“shy” is similar in meaning to “sleeping.”,FALSE,“shy” means Feeling nervous about meeting or speaking to other people. The proposed synonym “sleeping” belongs with “asleep.”
 desc-tf-143,A2,This is the correct use of “angrily”: “She angrily thanked her friend for the lovely present and gave her a warm hug.”,FALSE,“Angrily” means with strong displeasure. Thanking someone warmly for a lovely present is not angry.
@@ -169,7 +169,7 @@ desc-tf-167,B1,"This is the correct use of “wander”: “The bus wandered alo
 desc-tf-168,B1,This is the correct use of “shallow”: “The shallow well was so deep that a stone took five seconds to reach the bottom.”,FALSE,“Shallow” means not deep. A well that takes five seconds to reach the bottom is very deep.
 desc-tf-169,B1,“dim” is used correctly here: “A dim lamp showed the outline of the narrow bed.”,TRUE,The example uses “dim” correctly: “A dim lamp showed the outline of the narrow bed.”
 desc-tf-170,B1,“bend” means: Change a straight shape into an angle or curve.,TRUE,Correct definition: “bend” means Change a straight shape into an angle or curve.
-desc-tf-171,B1,“tense” means: Slightly worried or uncomfortable.,FALSE,"Correct definition: “tense” means Unable to relax because of strain, worry or possible danger."
+desc-tf-171,B1,“tense” means: Feeling that you want to thank someone for their help.,FALSE,"Correct definition: “tense” means Unable to relax because of strain, worry or possible danger."
 desc-tf-172,B1,“seize” means: Take hold of something quickly and firmly.,TRUE,Correct definition: “seize” means Take hold of something quickly and firmly.
 desc-tf-173,B1,"“scratch” means: Shake slightly through fear, cold or strong emotion.",FALSE,Correct definition: “scratch” means Rub or scrape a surface with a sharp point or nails.
 desc-tf-174,B1,“annoyed” is used correctly here: “He was annoyed by the constant tapping behind him.”,TRUE,The example uses “annoyed” correctly: “He was annoyed by the constant tapping behind him.”
