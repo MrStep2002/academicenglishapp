@@ -161,6 +161,7 @@ def check_folder(folder, all_word_ids):
                 s = r.get('sentence', '')
                 if s.count('___') != 1 or not r.get('answer') or not wrongs(): say(kind, r, 'needs a sentence with one ___, an answer and a wrong answer (skipped)'); ok = False
                 if r.get('answer') and r.get('answer') in wrongs(): say(kind, r, 'the answer is also a wrong answer')
+                if re.search(r'_{4,}', s): say(kind, r, 'the gap has more than three underscores: the games show the extra ones (use exactly ___)')
             elif kind == 'builds':
                 pieces = [p.strip() for p in r.get('pieces', '').split('|') if p.strip()]
                 if len(pieces) < 2: say(kind, r, 'needs at least two pieces (skipped)'); ok = False
