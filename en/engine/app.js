@@ -1370,8 +1370,13 @@ function playEvidence(){
     const r=deck.next(); if(!r) return;
     const opts=shuffle([...r.right.map(t=>({t, ok:true})), ...r.wrong.map(t=>({t, ok:false}))]), n=r.right.length, picked=new Set();
     const long=opts.some(o=>o.t.length>44), chosen=k=>T(`${k} of ${n} chosen`, `已选 ${k} / ${n}`);
-    const card=showCard(`<p class="instr">${n===1 ? T('Choose the detail that shows this','选出能说明这一点的细节') : T(`Choose the ${n} details that show this`, `选出能说明这一点的 ${n} 个细节`)}</p>
-      <p class="statement ev-statement">${esc(r.s)}</p>
+    // A paragraph instead of a statement (7 Nov 2026, Advertising: a description of an advert, then points of analysis, some of
+    // which can't apply to it): shown like a reading passage, not in the big bold statement type, with its own instruction.
+    const para=String(r.s).split(/\s+/).length>25;
+    const instr=para ? (n===1 ? T('Choose the point of analysis that fits this text','选出适用于这段文字的分析') : T(`Choose the ${n} points of analysis that fit this text`, `选出适用于这段文字的 ${n} 条分析`))
+      : (n===1 ? T('Choose the detail that shows this','选出能说明这一点的细节') : T(`Choose the ${n} details that show this`, `选出能说明这一点的 ${n} 个细节`));
+    const card=showCard(`<p class="instr">${instr}</p>
+      ${para ? `<div class="passage ev-passage"><p>${esc(r.s)}</p></div>` : `<p class="statement ev-statement">${esc(r.s)}</p>`}
       <div class="opts notes${long?' long':''}">${opts.map((o,i)=>`<button class="opt" data-i="${i}" aria-pressed="false"><kbd>${i+1}</kbd><span>${esc(o.t)}</span></button>`).join('')}</div>
       <div class="next-row check-row"><span class="pick-n" id="pickN">${chosen(0)}</span><button class="btn" id="check" disabled>${T('Check','检查')}</button></div><div class="fb"></div>`);
     const btns=[...card.querySelectorAll('.opt')], chk=card.querySelector('#check'), pn=card.querySelector('#pickN'); let done=false;

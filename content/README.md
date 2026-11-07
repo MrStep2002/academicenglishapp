@@ -256,6 +256,10 @@ Example (the teacher's, from Representation): `Explain how the advert presents t
 expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` Wrong: `She stands beside another person.` /
 `She is old.` / `She is looking directly at the camera.`
 
+- **statement** can also be a whole paragraph (more than 25 words), e.g. Advertising (7 Nov 2026): a description of an advert,
+  then three points of analysis that fit it (right) and three that can't apply to it (wrong). The game then shows it like a
+  reading passage and says "Choose the 3 points of analysis that fit this text". Rows without their right and wrong columns
+  filled in are skipped until they are.
 - **statement**: what the details must show. At Foundation, a plain sentence (`The man in the advert is rich.`); from
   Intermediate, the exam frame (`Explain how the advert presents…`). The game adds "Choose the 3 details that show this".
 - **right1** (to right3): the details that show it. The number filled in is the number to choose. A right4 column may be added.
