@@ -1247,7 +1247,9 @@ function playQuestion(){
   shell(game,'Choose the answer that does what the question asks.'); st.draw();
   const step=()=>{
     const q=deck.next();
-    const qHtml=q.cmd ? esc(q.q).replace(new RegExp('^('+esc(q.cmd).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','i'),'<mark>$1</mark>') : esc(q.q);
+    // The command word is marked where it starts the question, or a sentence in it (7 Nov 2026: many questions start with a
+    // short situation, e.g. "Club attendance fell after… Suggest one possible reason.")
+    const qHtml=q.cmd ? esc(q.q).replace(new RegExp('(^|[.?!:;”’"]\\s+)('+esc(q.cmd).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')(?![a-z])','i'),'$1<mark>$2</mark>') : esc(q.q);
     mcCard({instr:'Exam question', promptHtml:`<div class="exam-q">${qHtml}</div>`, options:q.opts, answer:q.opts[q.a], optClass:'long',
       onResult:(ok,card,fb)=>{ ok?fbOk(fb,`<span>${rich(q.why)}</span>`):fbNo(fb,'',`<span>${rich(q.why)}</span>`); settle(ok,card,st,deck,q,step); }});
   };
@@ -2616,7 +2618,9 @@ function circuitGames(kind){
     return [...ARCADE, ...GAMES].filter(g=>keys.includes(g.key) && !HIDE.has(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run})); }
   if(SIDE==='zh'){
     if(kind==='arcade') return zhWords().length>=4 ? ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run})) : [];
-    const keys=ZH_CIRCUIT[kind]||ZH_CIRCUIT.short;
+    // short is only asked for by class games (the Daily Circuit uses quick); on a science page it includes the rule-made
+    // games, as on the English version (7 Nov 2026)
+    const keys=kind==='short' ? [...ZH_CIRCUIT.short, ...GEN_ZH.map(g=>g.key)] : ZH_CIRCUIT[kind]||ZH_CIRCUIT.short;
     return ZH_GAMES.filter(g=>keys.includes(g.key) && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
   }
   if(kind==='arcade') return ARCADE.filter(g=>CIRCUIT_ARCADE.includes(g.key) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run}));
@@ -2776,7 +2780,14 @@ async function classOpen(id){
   if(g.status==='passed') return classPanel(`<p class="cg-k">${T('Class game','课堂游戏')} · ${name}</p><h1>✓ ${T('Done','完成')}</h1>
     <div class="cg-big">${g.score}<small> ${T('points','分')}</small></div><p>${T(`Score needed: ${g.minScore}.`, `目标分数：${g.minScore}。`)}${g.late?' '+T('Handed in late.','迟交。'):''}</p>
     <p class="cg-actions"><a class="btn alt" href="../index.html">${T('Back to topics','返回主题')}</a></p>`);
-  if(g.status==='playing') return classBegin(id);
+  if(g.status==='playing' && !sylNone()) return classBegin(id);
+  classIntro(g, id);
+}
+// The start panel. Science pages (7 Nov 2026): the games use only the topics the student has ticked, so "Your topics" sits
+// above Start (open while nothing is ticked) and Start waits until at least one topic is ticked. Without this a student
+// who had never opened the page would get "No game at your level here".
+function classIntro(g, id){
+  const name=T(esc(g.name), esc(g.zh||g.name)), noTopics=sylNone(), playing=g.status==='playing';
   const per=Math.round(g.minutes*60/CLASS_PLAN.length), perTxt=per%60 ? `${per} seconds` : `${per/60} minute${per===60?'':'s'}`, perZh=per%60 ? `${per} 秒` : `${per/60} 分钟`;
   classPanel(`<p class="cg-k">${T('Class game','课堂游戏')}${g.status==='below'?' · '+T('Play again','再玩一次'):''}</p><h1>${name}</h1>
     <ul class="cg-facts"><li><b>${T(`${g.minutes} minute${g.minutes===1?'':'s'}`, `${g.minutes} 分钟`)}</b>: ${T(`five games of ${perTxt} each, at your level.`, `五个游戏，每个 ${perZh}，难度适合你。`)}</li>
@@ -2784,8 +2795,10 @@ async function classOpen(id){
       ${g.minScore?`<li>${T(`Score needed: <b>${g.minScore}</b>.`, `目标分数：<b>${g.minScore}</b>。`)}</li>`:''}
       ${g.status==='below'?`<li>${T(`Last time: <b>${g.score}</b>.`, `上一次：<b>${g.score}</b> 分。`)}</li>`:''}
       <li>${T('The clock starts when you press Start and doesn’t stop, even if you leave the page.','按“开始”后计时开始，离开页面也不会停。')}</li></ul>
-    <p class="cg-actions"><button class="btn big" type="button" id="cgGo">${T('Start','开始')} →</button></p><p class="cg-err" id="cgErr" hidden></p>`);
-  const go=document.getElementById('cgGo'); go.focus({preventScroll:true});
+    ${SYL ? `<div class="cg-syl">${sylPicker()}</div>` : ''}
+    <p class="cg-actions"><button class="btn big" type="button" id="cgGo"${noTopics?' disabled':''}>${playing ? T('Carry on','继续') : T('Start','开始')} →</button></p><p class="cg-err" id="cgErr" hidden></p>`);
+  wireSyl(()=>classIntro(g, id));
+  const go=document.getElementById('cgGo'); if(!noTopics) go.focus({preventScroll:true});
   go.onclick=()=>{ go.disabled=true; classBegin(id, ()=>{ go.disabled=false; }); };
   keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); go.click(); } };
 }

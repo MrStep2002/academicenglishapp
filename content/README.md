@@ -323,7 +323,7 @@ expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` W
 
 `id,level,command,question,correct,wrong1,wrong2,wrong3,explanation`
 
-- command: the command word at the start of the question (it is highlighted): `Evaluate`.
+- command: the command word, highlighted in the question: `Evaluate`. It starts the question, or a sentence in it after a short situation ("Club attendance fell after its meeting moved to 7 a.m. Suggest one possible reason.").
 - **question**, **correct**, **wrong1** (up to `wrong3`). The answers should differ in whether they do what the command word asks.
 
 ### extracts.csv (In your own words)

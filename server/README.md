@@ -80,7 +80,7 @@ sudo bash /opt/aea/server/update.sh
   after the due time: marked late.
 - Tables: `games` and `attempts` (one row per go); `students` gained `side` and `min_level`. Added automatically when the
   updated server starts, so `update.sh` is all that's needed.
-- Subjects are listed in `SUBJECTS` in `server.js` (those with an English and a Chinese page).
+- Subjects are listed in `SUBJECTS` in `server.js` (those with an English and a Chinese page; the key is the page's folder, so Media Descriptors is `describing-people`). Since 7 Nov 2026: Essentials, Web design, Representation, Media Descriptors, Advertising, Descriptive language, Chemistry, Physics. On a science page the start screen shows "Your topics", and Start waits until the student has ticked one.
 
 ## Students in more than one class (30 Oct 2026)
 

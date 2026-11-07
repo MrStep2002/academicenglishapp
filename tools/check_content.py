@@ -207,8 +207,9 @@ def check_folder(folder, all_word_ids):
                 if not r.get('question') or not r.get('correct') or not wrongs():
                     say(kind, r, 'needs a question, a correct answer and a wrong answer (skipped)'); ok = False
                 if r.get('correct') and r.get('correct') in wrongs(): say(kind, r, 'the correct answer is also a wrong answer')
-                if kind == 'questions' and r.get('command') and not r.get('question', '').lower().startswith(r['command'].lower()):
-                    say(kind, r, 'the question should start with the command word')
+                # the command word starts the question, or a sentence in it after a short situation (7 Nov 2026)
+                if kind == 'questions' and r.get('command') and not re.search(r'(^|[.?!:;”’"]\s+)' + re.escape(r['command'].strip().lower()) + r'(?![a-z])', r.get('question', '').lower()):
+                    say(kind, r, 'the command word should start the question, or a sentence in it')
             elif kind == 'evidence':   # Find the evidence / All-in English (3 Nov 2026)
                 right = [r.get(f'right{k}', '') for k in range(1, 5) if r.get(f'right{k}', '')]
                 wrong = [r.get(f'wrong{k}', '') for k in range(1, 6) if r.get(f'wrong{k}', '')]

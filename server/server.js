@@ -325,11 +325,17 @@ route('POST', '/api/teacher/classes/:id/members/remove', (req, body, p) => {
 // The games themselves run on the topic pages (en/engine/app.js, address ending #class-<game id>); this part keeps
 // the games and each student's goes ("attempts"), and works out what the teacher and the student see.
 // Subjects: those with an English and a Chinese version. More (arithmetic, general knowledge…) can be added here.
+// The subjects a class game can be set on. key = the page's folder (en/<key>/, zh/<key>/), so Media Descriptors is
+// describing-people. Added 7 Nov 2026: Media Descriptors, Advertising, Chemistry, Physics. A game already set keeps its key.
 const SUBJECTS = [
-  {key: 'representation', name: 'Representation', zh: '再现'},
+  {key: 'essentials', name: 'Academic English Essentials', zh: '学术英语基础'},
   {key: 'web-design', name: 'Web design', zh: '网页设计'},
+  {key: 'representation', name: 'Representation', zh: '再现'},
+  {key: 'describing-people', name: 'Media Descriptors', zh: '媒体描述词'},
+  {key: 'advertising', name: 'Advertising', zh: '广告'},
   {key: 'descriptive', name: 'Descriptive language', zh: '描写性语言'},
-  {key: 'essentials', name: 'Academic English Essentials', zh: '学术英语基础'}
+  {key: 'chemistry', name: 'Chemistry', zh: '化学'},
+  {key: 'physics', name: 'Physics', zh: '物理'}
 ];
 const subjectOf = key => SUBJECTS.find(s => s.key === key) || {key, name: key, zh: ''};
 const pathFor = (key, side) => (side === 'zh' ? 'zh/' : 'en/') + key + '/index.html';

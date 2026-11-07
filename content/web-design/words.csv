@@ -23,7 +23,7 @@
 "y8:purpose","A2","purpose","","What the website is intended to achieve.","","","目的","Controls and page features 控件与页面功能","","",""
 "y8:click","A2","click / tap","","Select something.","","","点击；轻触","Controls and page features 控件与页面功能","interaction","",""
 "y8:scroll","A2","scroll","","Move through a page.","","","滚动","Controls and page features 控件与页面功能","","",""
-"y8:browse","A2","browse","","Look through content.","","","浏览","Controls and page features 控件与页面功能","","explore",""
+"y8:browse","A2","browse","","Look through content.","","","浏览","Controls and page features 控件与页面功能","","",""
 "y8:download","A2","download","","Save a file to your device.","","","下载","Controls and page features 控件与页面功能","","",""
 "y8:submit","A2","submit","","Send an answer or information.","","","提交","Controls and page features 控件与页面功能","","",""
 "y8:url","A2","URL","noun","The address used to locate a webpage on the internet.","","","网址；统一资源定位符","Controls and page features 控件与页面功能","link; webpage","","URL stands for Uniform Resource Locator."
