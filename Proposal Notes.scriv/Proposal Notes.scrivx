@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<ScrivenerProject Identifier="A6C64A4A-C43C-4E33-9AC5-5CDA052F51E9" Version="2.0" Creator="SCRMAC-3.5.2-17487" Device="Thes-MacBook-Air" Author="" Modified="2026-11-07 18:25:32 +0800" ModID="34629F6D-F96A-4C6A-B814-746307A62704">
+<ScrivenerProject Identifier="A6C64A4A-C43C-4E33-9AC5-5CDA052F51E9" Version="2.0" Creator="SCRMAC-3.5.2-17487" Device="Thes-MacBook-Air" Author="" Modified="2026-11-07 19:01:04 +0800" ModID="829C4E71-A708-429A-ACD7-F05BFBEC26E5">
     <Binder>
         <BinderItem UUID="7A6AE91F-36ED-4E18-8148-FFEEF9497D79" Type="DraftFolder" Created="2026-11-07 17:52:44 +0800" Modified="2026-11-07 17:52:44 +0800">
             <Title>Draft</Title>
@@ -7,7 +7,7 @@
                 <IncludeInCompile>Yes</IncludeInCompile>
             </MetaData>
             <Children>
-                <BinderItem UUID="18876C3C-B6A4-4A4B-BA68-79A07D4637E9" Type="Text" Created="2026-11-07 17:52:44 +0800" Modified="2026-11-07 18:25:32 +0800">
+                <BinderItem UUID="18876C3C-B6A4-4A4B-BA68-79A07D4637E9" Type="Text" Created="2026-11-07 17:52:44 +0800" Modified="2026-11-07 19:01:04 +0800">
                     <MetaData>
                         <IncludeInCompile>Yes</IncludeInCompile>
                     </MetaData>
@@ -85,11 +85,11 @@
     <ProjectTargets Notify="No">
         <DraftTarget Type="Words" CountIncludedOnly="Yes" CurrentCompileGroupOnly="No" Deadline="2026-11-07 17:52:43 +0800" IgnoreDeadline="Yes">0</DraftTarget>
         <SessionTarget Type="Words" CountDraftOnly="Yes" AllowNegatives="Yes" NextResetDate="2026-11-08 00:00:00 +0800" ResetType="Time" ResetTime="00:00" DeterminedFromDeadline="No" WritingDays="" CanWriteOnDeadlineDate="No">0</SessionTarget>
-        <PreviousSession Words="169" Characters="1013" Date="2026-11-07 17:52:43 +0800"/>
+        <PreviousSession Words="236" Characters="1379" Date="2026-11-07 17:52:43 +0800"/>
     </ProjectTargets>
     <RecentWritingHistory Date="2026-11-07 17:52:43 +0800">
-        <DraftWordCount>169</DraftWordCount>
-        <DraftCharCount>1013</DraftCharCount>
+        <DraftWordCount>236</DraftWordCount>
+        <DraftCharCount>1379</DraftCharCount>
         <OtherWordCount>0</OtherWordCount>
         <OtherCharCount>0</OtherCharCount>
     </RecentWritingHistory>
