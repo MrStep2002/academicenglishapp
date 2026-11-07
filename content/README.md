@@ -38,6 +38,7 @@ The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (s
 | `questions.csv` | Answer the question (exam command words) |
 | `knowledge.csv` | General knowledge (Games row; no levels needed) |
 | `taboo.csv` | Don't Say It! and Hints (board games on the teacher page: a word, four words the team can't say, four hints) |
+| `wall.csv` | Connecting Wall (Starters on the teacher page: a group's name and four or more words that belong to it) |
 | `extracts.csv` | In your own words |
 
 Longer reading passages are not in the topic folders: they are in `reading-comprehension/` (Close reading, Big idea, Note taking). The topic folders' empty `reading.csv` files (Read and answer, replaced by Close reading) were removed on 25 Oct.
@@ -213,6 +214,23 @@ first hint, 3 on the second, then 2 and 1. A word plays in Hints once it has at 
   word's level.
 - Filled in so far: `representation/` (its 116 key words, hints hardest first). The checker lists any hint that uses the word or
   a forbidden word, and counts the words ready for each game.
+
+### wall.csv (Connecting Wall, 7 Nov 2026)
+
+`id,level,group,word1,word2,word3,word4,word5,word6`
+
+A starter on the teacher page (Starters): sixteen words on the board, and the class sorts them into four groups of four.
+The teacher clicks four tiles; if they are a group, they turn its colour and the group's name shows.
+
+- **group**: the group's name, shown once the group is found: `Camera shots`.
+- **word1** to **word4**: four words that belong to the group. **word5**, **word6** (optional, and `word7`… if you add the
+  columns): more words for the group. A wall uses four of them, chosen at random, so a group with six words looks different
+  from one starter to the next.
+- **level**: groups at the levels chosen for the starter come first; if there aren't four, groups from the nearest levels fill the wall.
+- A word can be in two groups (a red herring is part of the fun), but those two groups are never on the same wall, so every
+  wall has only one answer. The checker lists those words.
+- A wall needs four groups in the topics chosen. Every topic folder has some groups to start with (written by Claude on
+  7 Nov 2026: check and change them as you like).
 
 ### gaps.csv (Fill the gap)
 

@@ -42,6 +42,8 @@ HEADS = {
     'evidence': ['id', 'level', 'statement', 'right1', 'right2', 'right3', 'wrong1', 'wrong2', 'wrong3', 'word', 'side', 'explanation'],
     # Don't Say It! (teacher page board game, 6 Nov 2026): the word, four words that can't be said, four hints for the describers
     'taboo': ['id', 'level', 'word', 'taboo1', 'taboo2', 'taboo3', 'taboo4', 'hint1', 'hint2', 'hint3', 'hint4'],
+    # Connecting Wall (Starters on the teacher page, 7 Nov 2026): a group's name and four or more words (word5, word6… optional)
+    'wall': ['id', 'level', 'group', 'word1', 'word2', 'word3', 'word4', 'word5', 'word6'],
 }
 
 
@@ -238,6 +240,11 @@ def check_folder(folder, all_word_ids):
                 nh = sum(1 for k in range(1, 5) if r.get(f'hint{k}', ''))
                 if (tb or nh >= 2) and r.get('id') and r['id'] not in ids: say(kind, r, f'id "{r["id"]}" is not in words.csv (it still plays)')
                 ok = False
+            elif kind == 'wall':   # Connecting Wall (Starters): not on the topic pages' level buttons
+                ws = [r[k] for k in sorted((k for k in r if re.match(r'word\d+$', k)), key=lambda k: int(k[4:])) if r.get(k)]
+                if not r.get('group') or len({w.lower() for w in ws}) < 4: say(kind, r, 'needs a group name and at least four different words (skipped)')
+                elif len({w.lower() for w in ws}) < len(ws): say(kind, r, 'the same word is there twice')
+                ok = False
             if kind == 'gaps' and r.get('word') and not known(r['word']): say(kind, r, f'word: "{r["word"]}" is not in words.csv')
             if ok and b is not None: counts.setdefault(kind, {})[b] = counts.setdefault(kind, {}).get(b, 0) + 1
 
@@ -299,6 +306,15 @@ def check_folder(folder, all_word_ids):
               + (': ' + ', '.join(f'{LEVEL_NAMES[b] if b else "no level"} {n}' for b, n in sorted(by.items())) if ready else '') + '.')
         hn = [r for r in taboo if sum(1 for k in range(1, 5) if r.get(f'hint{k}')) >= 2]
         print(f'  taboo.csv: {len(hn)} of {len(taboo)} words ready for Hints (they have two hints or more; the hardest goes first).')
+    wall = data.get('wall', [])
+    if wall:   # Connecting Wall: four groups on a wall; a word in two groups keeps those groups off the same wall
+        good = [r for r in wall if r.get('group') and len({r[k].lower() for k in r if re.match(r'word\d+$', k) and r.get(k)}) >= 4]
+        where = {}
+        for r in good:
+            for k in r:
+                if re.match(r'word\d+$', k) and r.get(k): where.setdefault(r[k].lower(), []).append(r.get('group'))
+        twice = sorted(w for w, g in where.items() if len(set(g)) > 1)
+        print(f'  wall.csv: {len(good)} groups for Connecting Wall (a wall needs 4).' + (f' In more than one group (those groups are never on the same wall): {", ".join(twice)}.' if twice else ''))
     reads = data.get('reads', [])
     if reads:   # Complete the text: the word bank has only the key words and the text's own extra words
         with_extra = sum(1 for r in reads if any(r.get(k) for k in ('extra1', 'extra2', 'extra3')))

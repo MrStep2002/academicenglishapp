@@ -1,0 +1,13 @@
+id,level,group,word1,word2,word3,word4,word5,word6
+adv-wall-001,A2,Places you see adverts,billboard,flyer,leaflet,poster,shop window,bus stop
+adv-wall-002,A2,Ways to pay less,discount,sale,bargain,special offer,free gift,buy one get one free
+adv-wall-003,B1,Language features in adverts,slogan,imperative,superlative,rhetorical question,alliteration,pun
+adv-wall-004,B1,Ways to make a brand recognisable,mascot,packaging,brand name,label,brand colours,
+adv-wall-005,B1,Sounds in adverts,jingle,voiceover,sound effects,theme tune,background music,
+adv-wall-006,B1,Persuasive techniques,celebrity endorsement,testimonial,bandwagon,emotional appeal,fear appeal,scarcity
+adv-wall-007,B2,Parts of a print advert,headline,body copy,strapline,packshot,logo,small print
+adv-wall-008,B2,Advertising online,pop-up,sponsored post,influencer marketing,hashtag,banner ad,go viral
+adv-wall-009,B2,Words about audiences,target audience,demographic,niche market,mass market,focus group,psychographics
+adv-wall-010,C1,Dishonest advertising,greenwashing,puffery,dark patterns,clickbait,misleading,
+adv-wall-011,C1,Advertising theory,AIDA model,semiotics,hegemony,uses and gratifications,hierarchy of needs,
+adv-wall-012,C1,Consumer culture,consumerism,materialism,commodification,planned obsolescence,conspicuous consumption,

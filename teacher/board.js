@@ -325,6 +325,10 @@ const AEA_BOARD = window.AEA_BOARD = {
   },
   stop
 };
+// Starters (teacher/starters.js, 7 Nov 2026) use the same topics, levels and content loading as the board games
+AEA_BOARD.lib = {TOPICS, BANKS, LEVELS, LEVEL_NAME, parseCSV, levelNum, band, listOf, dataFor, eligible, makeQ, distractors, topicName,
+  hidden: (topic, game, id) => !!(HIDDEN.size && (HIDDEN.has(topic + '|' + game + '|' + id) || HIDDEN.has('*|' + game + '|' + id))),
+  loadHidden, esc, rich, shuffle, pick, uid, getJ, setJ, K_SOUND};
 
 // ---------- the list of boards ----------
 function list(){

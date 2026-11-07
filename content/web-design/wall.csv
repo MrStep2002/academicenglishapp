@@ -1,0 +1,12 @@
+id,level,group,word1,word2,word3,word4,word5,word6
+web-wall-001,A1,Parts of a web page,header,footer,menu,sidebar,heading,button
+web-wall-002,A2,Things you do on a website,click,scroll,browse,download,submit,search
+web-wall-003,A2,Parts of a form,input field,checkbox,dropdown menu,submit button,radio button,
+web-wall-004,B1,Pages of a website,homepage,About page,Contact page,landing page,gallery,
+web-wall-005,B1,Typography,typeface,font,serif,sans-serif,bold,italic
+web-wall-006,B1,Layout,grid,alignment,whitespace,margin,column,visual hierarchy
+web-wall-007,B1,Branding,logo,colour palette,typography,visual identity,tone,
+web-wall-008,B2,Easy to use and read,accessibility,usability,legibility,readability,intuitive,
+web-wall-009,B2,Making a website,wireframe,prototype,mock-up,design brief,user testing,iteration
+web-wall-010,B2,Images on the web,resolution,aspect ratio,compression,file size,alt text,thumbnail
+web-wall-011,C1,User experience,user journey,user flow,cognitive load,affordance,microinteraction,progressive disclosure

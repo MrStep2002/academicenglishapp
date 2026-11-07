@@ -1,0 +1,13 @@
+id,level,group,word1,word2,word3,word4,word5,word6
+chem-wall-001,A2,Inside an atom,proton,neutron,electron,nucleus,shell,
+chem-wall-002,A2,Laboratory equipment,beaker,test tube,Bunsen burner,pipette,burette,conical flask
+chem-wall-003,B1,Alkali metals,lithium,sodium,potassium,rubidium,caesium,
+chem-wall-004,B1,Halogens,fluorine,chlorine,bromine,iodine,astatine,
+chem-wall-005,B1,Noble gases,helium,neon,argon,krypton,xenon,
+chem-wall-006,B1,What the state symbols stand for,solid,liquid,gas,aqueous,,
+chem-wall-007,B1,Changes of state,melting,boiling,freezing,condensing,evaporating,subliming
+chem-wall-008,B1,Acids,hydrochloric acid,sulfuric acid,nitric acid,ethanoic acid,citric acid,
+chem-wall-009,B1,Indicators,litmus,universal indicator,methyl orange,phenolphthalein,,
+chem-wall-010,B2,Negative ions,chloride,hydroxide,carbonate,sulfate,nitrate,oxide
+chem-wall-011,B2,Separating mixtures,filtration,distillation,crystallisation,chromatography,evaporation,
+chem-wall-012,B2,Words about bonding,ionic,covalent,metallic,lattice,delocalised,
