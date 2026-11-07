@@ -1104,7 +1104,9 @@ function playTF(){
   const deck=rows.length ? Deck(rows) : null, wdeck=words.length>=4 ? Deck(words) : null, pool=words.length>=8 ? words : S.words;
   shell(game,'Press T or F on a keyboard, or tap.'); st.draw();
   const step=()=>{
-    const fromWords = wdeck && (!deck || Math.random()<.5);
+    // 7 Nov 2026 (teacher: "more like 70/30, with the tf statements at 70… the definitions are a little boring"):
+    // a statement from tf.csv 70% of the time, a word-and-meaning question from words.csv 30%
+    const fromWords = wdeck && (!deck || Math.random()<.3);
     const t = fromWords ? tfFromWord(wdeck.next(), pool) : deck.next(), item = fromWords ? t.w : t, from = fromWords ? wdeck : deck;
     const card=showCard(`<p class="instr">True or false?</p><p class="statement">${esc(t.s)}</p>
       <div class="tf-btns"><button class="tfb yes" data-v="1">True</button><button class="tfb no" data-v="0">False</button></div><div class="fb"></div>`);
