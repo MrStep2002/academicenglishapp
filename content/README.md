@@ -17,6 +17,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `advertising/` | English → Advertising, and Chinese version → Advertising (pages `en/advertising/`, `zh/advertising/`, since 5 Nov 2026). Words written level by level: `words.csv` has the written ones, `new-words.csv` the rest (the games don't read it). Ids `adv:<word>`. Words also in Representation (advert, slogan, target audience, direct address, emotive language…) are separate entries here with advertising meanings and examples, on purpose |
 | `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
 | `physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/physics/" below |
+| `mockingbird/` | English → To Kill a Mockingbird (`en/mockingbird/`, English version only, since 8 Nov 2026). Ids `tkam:<word>` for words, `tkam-tf-…`, `tkam-gk-…`, `tkam-char-…`. tf.csv has a `chapter` column (see True or false). Also `characters.csv` (below). The teacher's original word bank, `Mockingbird_empathic_word_bank_100.csv`, is not read by the games |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
@@ -221,6 +222,19 @@ first hint, 3 on the second, then 2 and 1. A word plays in Hints once it has at 
   new 239-word words.csv), physics (223) and web-design (100). Check and change them as you like. The checker lists any hint
   that uses the word or a forbidden word, and counts the words ready for each game.
 
+### characters.csv (To Kill a Mockingbird, 8 Nov 2026)
+
+`id,level,name,also_called,role,group,first_chapter,traits,taboo1,taboo2,taboo3,taboo4,hint1,hint2,hint3,hint4`
+
+The novel's characters, kept in their own file so they can be used in different ways. For now they play in
+**Don't Say It!** and **Hints** on the teacher page, alongside the topic's words: a character plays under its `name`.
+
+- **name**: what the class says, e.g. `Boo Radley`. also_called: other names, `;`-separated (not used by the games).
+- role: one line on who they are. group: Finch household, Neighbours, The Ewells, First Purchase church, The trial,
+  Townspeople, School. first_chapter: where they first appear. traits: a few adjectives.
+- **taboo1–4** and **hint1–4**: as in taboo.csv (hints hardest first; a hint never uses the name or a forbidden word).
+- level: main characters at Foundation, minor ones higher. The games filter by it like any other row.
+
 ### wall.csv (Connecting Wall, 7 Nov 2026)
 
 `id,level,group,word1,word2,word3,word4,word5,word6`
@@ -330,6 +344,8 @@ expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` W
 `id,level,statement,answer,explanation`
 
 - **answer**: `TRUE` or `FALSE`.
+- chapter (optional, To Kill a Mockingbird): the latest chapter the statement or its explanation gives away. The games
+  ignore it for now; it is there so a "read up to chapter X" setting could hide spoilers later.
 
 ### right-wrong.csv (Grammar Check)
 

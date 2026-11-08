@@ -25,6 +25,9 @@ TABOO_PARTS = {'of', 'the', 'a', 'an', 'with', 'to', 'and', 'in', 'on', 'for', '
 # content/chemistry/; quantities.csv, waves.csv, em-uses.csv, nuclides.csv in content/physics/) are read by its module
 # (en/engine/chem.js, en/engine/phys.js), not by this checker. Physics has its own: node tools/check_physics.js
 SCIENCE = {'syllabus', 'extended'}
+# chapter: the latest chapter of a set text a row depends on (content/mockingbird/, 8 Nov 2026). The games ignore it for
+# now; it is there so a "read up to chapter X" setting can hide spoilers later.
+NOTES = {'chapter'}
 
 HEADS = {
     'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note', 'list'],   # list: optional, see content/README.md
@@ -101,7 +104,7 @@ def check_folder(folder, all_word_ids):
         h, rows = read(path)
         missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)
                    and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL) and not (kind == 'evidence' and c in EVIDENCE_OPTIONAL)]
-        unknown = [c for c in h if c not in head and c not in SCIENCE and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)
+        unknown = [c for c in h if c not in head and c not in SCIENCE and c not in NOTES and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)
                    and not (kind == 'evidence' and re.match(r'(right|wrong)\d$', c))]
         if missing: problems.append(f'{kind}.csv: missing column(s) {", ".join(missing)}')
         if unknown: problems.append(f'{kind}.csv: column(s) not used by the games: {", ".join(unknown)}')

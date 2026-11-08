@@ -18,6 +18,8 @@ const K_SETS = 'aeaBoard:sets', K_GAMES = 'aeaBoard:games', K_SOUND = 'aeaBoard:
 const TOPICS = [
   {key:'essentials', name:'Academic English Essentials'},
   {key:'descriptive', name:'Descriptive language'},
+  // characters: Don't Say It! and Hints also play the topic's characters.csv (name, taboo1-4, hint1-4), 8 Nov 2026
+  {key:'mockingbird', name:'To Kill a Mockingbird', characters:true},
   {key:'representation', name:'Representation', list:'key'},
   {key:'media-descriptors', name:'Media Descriptors'},
   {key:'web-design', name:'Web design'},
@@ -1289,11 +1291,12 @@ function loadTaboo(key){
   const t = TOPICS.find(x => x.key === key);
   if (!t || t.only) return Promise.resolve({key, items: []});
   const get = f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null);
-  const p = Promise.all([get('words'), get('taboo')]).then(([W, T]) => {
+  const p = Promise.all([get('words'), get('taboo'), t.characters ? get('characters') : null]).then(([W, T, C]) => {
     if (W === null && T === null) throw new Error("Couldn't load the words for " + t.name + '.');
     const on = {};   // Representation plays only its key words, like its page
     (W || []).forEach(r => { const lists = listOf(r.list).map(x => x.toLowerCase()); on[r.id] = !t.list || !lists.length || lists.includes(t.list); });
-    const items = (T || []).map(r => ({id: r.id, lv: levelNum(r.level), w: r.word,
+    const rows = (T || []).concat((C || []).map(r => Object.assign({}, r, {word: r.name})));   // a character plays under its name
+    const items = rows.map(r => ({id: r.id, lv: levelNum(r.level), w: r.word,
         taboo: [1, 2, 3, 4].map(k => r['taboo' + k]).filter(Boolean), hints: [1, 2, 3, 4].map(k => r['hint' + k]).filter(Boolean)}))
       .filter(it => it.id && it.w && (it.taboo.length || it.hints.length >= H_MIN) && on[it.id] !== false);
     return {key, name: t.name, items};
@@ -1337,8 +1340,8 @@ function tabooForm(id, kind){
     '<div class="field"><label for="b-title">Name</label><input type="text" id="b-title" maxlength="80" placeholder="e.g. 9A Representation words" value="' + esc(cfg.title) + '"></div>' +
     '<fieldset><legend>Topics</legend><div class="bg-chips" id="b-topics">' + T_TOPICS.map(t =>
       '<label class="bg-chip"><input type="checkbox" value="' + t.key + '"' + (cfg.topics.includes(t.key) ? ' checked' : '') + '><span>' + esc(t.name) + ' <small data-n="' + t.key + '">…</small></span></label>').join('') + '</div>' +
-      '<p class="note">' + (hints ? 'The words come from each topic\'s taboo.csv. A word is ready once it has at least two hints.'
-        : 'The words come from each topic\'s taboo.csv. A word is ready once its forbidden words are written.') + '</p></fieldset>' +
+      '<p class="note">' + (hints ? 'The words come from each topic\'s taboo.csv (and To Kill a Mockingbird\'s characters.csv). A word is ready once it has at least two hints.'
+        : 'The words come from each topic\'s taboo.csv (and To Kill a Mockingbird\'s characters.csv). A word is ready once its forbidden words are written.') + '</p></fieldset>' +
     '<fieldset><legend>Levels</legend><div class="bg-chips" id="b-levels"></div></fieldset>' +
     '<p class="bg-total" id="b-total" aria-live="polite">Counting the words…</p>' +
     (hints ? '<hr><fieldset><legend>Turns</legend><div class="bg-settings">' +
