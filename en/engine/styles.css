@@ -691,8 +691,9 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 @media (max-width:640px){.lp{padding:10px}.lp-play{flex:1 1 100%}.lp-n{min-width:0}}
 @media (prefers-reduced-motion:reduce){.lp-bar i,.lscript .seg{transition:none}}
 
-/* Listen switch (8 Nov 2026): 🔊 Listen in the bar of True or false, Word or meaning, General knowledge and Answer the
-   question. On: the text at the top of the card is hidden behind a Hear it button and read aloud; shown after answering. */
+/* Listen switch (8 Nov 2026): 🔊 Listen in the bar of True or false, Word or meaning, General knowledge, Answer the
+   question and Find the evidence. On: the text at the top of the card is hidden behind a Hear it button and read aloud;
+   shown after answering. */
 .lsn-tog{cursor:pointer;font-weight:700;color:var(--ink-2);padding:6px 13px}
 .lsn-tog[aria-pressed="true"]{color:var(--paper)}
 .lsn-hide{display:none !important}

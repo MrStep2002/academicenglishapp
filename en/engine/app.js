@@ -1783,8 +1783,8 @@ function playListening(){
 }
 
 // ---------- LISTEN SWITCH (8 Nov 2026, teacher: "Try that listening switch first") ----------
-// A 🔊 Listen switch in the bar of True or false, Word or meaning, General knowledge and Answer the question, on the
-// English topic pages. When it is on, the statement, word, meaning or question at the top of each card is hidden and the
+// A 🔊 Listen switch in the bar of True or false, Word or meaning, General knowledge, Answer the question and Find the
+// evidence, on the English topic pages. When it is on, the statement, word, meaning or question at the top of each card is hidden and the
 // browser's voice reads it out as the card appears; 🔊 Hear it again (or the R key) repeats it as often as they like.
 // The words appear once the student has answered. The answer buttons stay on screen as usual. Points are as normal.
 // The setting is the student's, for every topic (aea:listen, saved to their account like everything under aea:).
@@ -1793,8 +1793,14 @@ function playListening(){
 // at the speed chosen there (aea:voice-rate). Browsers only speak after a tap on the page: opening the game is that tap;
 // after a refresh mid-game the button says "Tap to hear" until the student taps. If the voice fails, the words are shown.
 // To add a game: its key in LISTEN_KEYS, and the class of its text at the top in LISTEN_SEL (the card must call settle()).
-const LISTEN_KEYS = new Set(['tf','meaning','gk','question']);
-const LISTEN_SEL = '.statement, .gk-q, .prompt-word, .prompt-def, .exam-q';
+// Find the evidence added 8 Nov 2026 (teacher): its statement, or its paragraph (Advertising's descriptions of adverts,
+// up to ~600 characters), is read out; the details to choose stay on screen; the words appear after Check.
+const LISTEN_KEYS = new Set(['tf','meaning','gk','question','evidence']);
+const LISTEN_SEL = '.statement, .gk-q, .prompt-word, .prompt-def, .exam-q, .ev-passage';
+// A long text is read a sentence at a time (some voices stop after about 15 seconds of one utterance). Full stops in
+// titles, abbreviations and decimals don't end a sentence.
+const listenSplit = t => { const safe=t.replace(/\b(Mr|Mrs|Ms|Dr|St|Prof|e\.g|i\.e|etc|vs)\./g, m=>m.replace(/\./g,'․')).replace(/(\d)\.(\d)/g, '$1․$2');
+  return (safe.match(/[^.!?]+[.!?]+["”’)]*\s*|[^.!?]+$/g)||[safe]).map(s=>s.replace(/․/g,'.').trim()).filter(Boolean); };
 const LISTEN_KEY = 'aea:listen';
 let listenGame = null, listenRun = 0, listenU = null, listenSpoke = false;
 const listenCan = g => TTS_OK && SIDE==='en' && !inCircuit && !classRun && !!g && LISTEN_KEYS.has(g.key);
@@ -1833,24 +1839,28 @@ function listenSay(text, card){
   if(!document.body.contains(card)) return;
   const my=++listenRun;
   const go=()=>{ if(my!==listenRun || !document.body.contains(card)) return;
-    const u=new SpeechSynthesisUtterance(text), list=vRanked();
+    const list=vRanked(), box=card.querySelector('.lsn-box');
     let chosen='', rate=1; try{ chosen=localStorage.getItem('aea:voice')||''; rate=+localStorage.getItem('aea:voice-rate')||1; }catch(e){}
     const v=list.find(x=>x.name===chosen) || list[0];
-    if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-GB';
-    u.rate=rate; listenU=u;   // kept, so the browser doesn't drop the utterance before it ends
-    const box=card.querySelector('.lsn-box');
+    const parts=text.length>200 ? listenSplit(text) : [text];   // short texts (most cards) in one go, as before
     // A voice that never starts (e.g. one that needs a server this network can't reach): after 6 s, show the words
     const dog=listenSpoke ? 0 : setTimeout(()=>{ if(my===listenRun && !listenSpoke){ listenQuiet(); listenLabel(card, 'Hear it again'); listenFail(card); } }, 6000);
-    u.onstart=()=>{ clearTimeout(dog); if(my!==listenRun) return; listenSpoke=true; if(box) box.classList.add('speaking'); listenLabel(card, 'Playing…'); };
-    u.onend=()=>{ if(my!==listenRun) return; if(box) box.classList.remove('speaking'); listenLabel(card, 'Hear it again'); };
-    u.onerror=e=>{ if(my!==listenRun) return; if(box) box.classList.remove('speaking');
-      const why=e && e.error;
-      if(why==='interrupted' || why==='canceled') return;
-      if(why==='not-allowed'){ listenLabel(card, 'Tap to hear'); return; }
-      listenLabel(card, 'Hear it again');
-      if(!listenSpoke) listenFail(card); };   // nothing has played on this page: show the words so the game still works
+    listenU=parts.map((t, k)=>{   // kept, so the browser doesn't drop an utterance before it ends
+      const u=new SpeechSynthesisUtterance(t);
+      if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-GB';
+      u.rate=rate;
+      if(k===0) u.onstart=()=>{ clearTimeout(dog); if(my!==listenRun) return; listenSpoke=true; if(box) box.classList.add('speaking'); listenLabel(card, 'Playing…'); };
+      if(k===parts.length-1) u.onend=()=>{ if(my!==listenRun) return; if(box) box.classList.remove('speaking'); listenLabel(card, 'Hear it again'); };
+      u.onerror=e=>{ if(my!==listenRun) return;
+        const why=e && e.error;
+        if(why==='interrupted' || why==='canceled') return;
+        if(box) box.classList.remove('speaking');
+        if(why==='not-allowed'){ listenLabel(card, 'Tap to hear'); return; }
+        listenLabel(card, 'Hear it again');
+        if(!listenSpoke) listenFail(card); };   // nothing has played on this page: show the words so the game still works
+      return u; });
     ttsStop=listenQuiet;
-    speechSynthesis.speak(u); };
+    listenU.forEach(u=>speechSynthesis.speak(u)); };
   let busy=false; try{ busy=speechSynthesis.speaking || speechSynthesis.pending; if(busy) speechSynthesis.cancel(); }catch(e){}
   // Straight away when we can (a tap on an iPhone only counts if speech starts inside it); a moment's wait after cancel()
   // (Chrome can drop an utterance spoken in the same instant); and a wait for the voices list on its first load
