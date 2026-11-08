@@ -212,8 +212,10 @@ first hint, 3 on the second, then 2 and 1. A word plays in Hints once it has at 
   a team that gets the word on hint 1 scores 4 points. In Don't Say It! they help the describers, shown when the teacher presses
   Hint. A hint must not use the word itself, or any of its forbidden words (it couldn't be read out). Keep them short and at the
   word's level.
-- Filled in so far: `representation/` (its 116 key words, hints hardest first). The checker lists any hint that uses the word or
-  a forbidden word, and counts the words ready for each game.
+- Filled in so far: every topic folder, hints hardest first. `representation/` (148 words, 6–7 Nov); on 8 Nov Claude wrote
+  advertising (161), chemistry (69), descriptive (500), essentials (95), media-descriptors (239: the file was rebuilt from the
+  new 239-word words.csv), physics (223) and web-design (100). Check and change them as you like. The checker lists any hint
+  that uses the word or a forbidden word, and counts the words ready for each game.
 
 ### wall.csv (Connecting Wall, 7 Nov 2026)
 

@@ -1,0 +1,76 @@
+/* Handouts on the teacher page (8 Nov 2026): choosing the words (#/handouts) and the preview of the two A4 sides.
+   Uses the Starters page's layout (starters.css: .st-build, .st-side, .st-stick, .mt-…) and the site's colours. */
+.ho-list { max-height: 62vh; }
+.mt-w.off { opacity: .5; cursor: default; }
+.ho-zh { font-family: var(--zh); color: var(--web); font-weight: 600; margin-left: 2px; }
+.ho-h { margin: 6px 0 0; font-size: 1rem; }
+.ho-h .note { font-weight: 400; }
+.ho-meter { position: relative; height: 26px; border-radius: 99px; background: var(--bg); border: 1.5px solid var(--line); overflow: hidden; }
+.ho-meter i { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--web-soft); transition: width .25s; }
+.ho-meter.full i { background: var(--hi); }
+.ho-meter span { position: relative; display: block; text-align: center; font-size: .85rem; font-weight: 700; line-height: 23px; }
+.ho-acts { display: flex; flex-direction: column; gap: 6px; }
+.ho-act { display: flex; gap: 8px; align-items: flex-start; padding: 7px 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); cursor: pointer; font-size: .95rem; line-height: 1.3; }
+.ho-act input { margin-top: 3px; flex: none; width: 17px; height: 17px; accent-color: var(--ink); }
+.ho-act.on { border-color: var(--ink); }
+.ho-act.off { opacity: .5; cursor: default; }
+.ho-act .note { display: block; font-size: .84rem; }
+
+/* The preview: each side is an A4 page (210 × 297 mm), scaled down to fit (fitPreview in handouts.js) */
+.ho-prev-card { margin-top: 16px; }
+.ho-pages { display: flex; gap: 16px; align-items: flex-start; }
+.ho-pw { position: relative; flex: none; }
+.ho-page { position: absolute; top: 0; left: 0; transform-origin: 0 0; width: 210mm; height: 297mm; padding: 18mm; box-sizing: border-box; overflow: hidden;
+  background: #fff; color: #111; font-family: Arial, "Microsoft YaHei", "PingFang SC", var(--zh), sans-serif; font-size: 10.5pt; line-height: 1.2;
+  box-shadow: 0 2px 10px rgba(0,0,0,.18); border-radius: 2px; }
+.ho-page table { border-collapse: collapse; }
+.hp-title { font-size: 18pt; font-weight: 700; }
+.hp-sub { color: #555; margin: 2pt 0 8pt; }
+.hp-name { font-size: 10pt; margin-bottom: 10pt; }
+.hp-words { width: 100%; table-layout: fixed; }
+.hp-words th, .hp-words td { border: 1px solid #999; padding: 3pt 4pt; text-align: left; vertical-align: middle; height: 1cm; box-sizing: border-box; }
+.hp-words th { background: #e8eaf2; font-size: 10pt; height: 0.7cm; }
+.hp-words th:nth-child(1), .hp-words td:nth-child(1) { width: 0.8cm; text-align: center; color: #555; }
+.hp-words th:nth-child(2) { width: 4.4cm; } .hp-words th:nth-child(3) { width: 3.1cm; }
+.hp-words td:nth-child(2) b { font-size: 11pt; }
+.hp-pos { font-size: 8.5pt; color: #555; }
+.hp-zh2 { font-size: 12pt; }
+.hp-def { font-size: var(--msz, 10pt); }
+.hp-title2 { font-size: 14pt; font-weight: 700; margin-bottom: 2pt; }
+.hp-h { margin-top: 10pt; break-after: avoid; }
+.hp-h b { font-size: 12pt; }
+.hp-zh { color: #555; font-size: 11pt; }
+.hp-how { font-size: 9.5pt; color: #555; margin: 1pt 0 4pt; }
+.hp-two { display: grid; grid-template-columns: 1fr 1fr; column-gap: 8mm; }
+.hp-line { display: flex; align-items: flex-end; gap: 4pt; height: 0.95cm; }
+.hp-line span { flex: none; max-width: 56%; font-size: 11pt; }
+.hp-two.k-anagram .hp-line span { max-width: 68%; }
+.hp-line i { flex: 1; border-bottom: 1px solid #888; height: 1px; margin-bottom: 3pt; }
+.hp-mix { font-family: "Courier New", monospace; letter-spacing: 1pt; }
+.hp-lcwc { width: 100%; table-layout: fixed; }
+.hp-lcwc th, .hp-lcwc td { border: 1px solid #999; height: 0.72cm; padding: 0 4pt; font-size: 11pt; }
+.hp-lcwc th { background: #e8eaf2; font-size: 9.5pt; height: 0.62cm; text-align: left; }
+.hp-lcwc th:nth-child(3), .hp-lcwc th:nth-child(5) { width: 1.15cm; text-align: center; }
+.hp-lcwc th:nth-child(1) { width: 4.6cm; }
+.hp-lcwc td:nth-child(1) { font-weight: 700; }
+.hp-ws { display: flex; gap: 6mm; align-items: flex-start; }
+.hp-grid td { width: 0.6cm; height: 0.6cm; border: 1px solid #bbb; text-align: center; font-weight: 700; font-size: 11pt; padding: 0; }
+.hp-clues div { font-size: 11pt; margin-bottom: 4pt; }
+.hp-gap { font-size: 10.5pt; margin-bottom: 5pt; line-height: 1.35; }
+.hp-blank { display: inline-block; width: 3.2cm; border-bottom: 1px solid #333; }
+.hp-bank { border: 1px solid #999; padding: 4pt 6pt; text-align: center; margin-top: 4pt; }
+.hp-sent { font-size: 10.5pt; margin-top: 4pt; }
+.hp-sent i { display: block; height: 0.85cm; border-bottom: 1px solid #888; }
+/* The teacher page's own table styles (no wrapping, capital headings) are not for the preview */
+.ho-page th, .ho-page td { white-space: normal; text-transform: none; letter-spacing: normal; color: inherit; font-size: inherit; }
+.ho-page tr:last-child td { border-bottom: 1px solid #999; }
+.ho-page .hp-grid tr:last-child td { border-bottom: 1px solid #bbb; }
+.ho-page .hp-words td:nth-child(1) { color: #555; }
+.ho-page .hp-words th { font-size: 10pt; }
+.ho-page .hp-words td.hp-zh2 { font-size: 12pt; }
+.ho-page .hp-words td.hp-def { font-size: var(--msz, 10pt); }
+.ho-page .hp-lcwc th { font-size: 9.5pt; }
+.ho-page .hp-lcwc td, .ho-page .hp-grid td { font-size: 11pt; }
+/* The words chosen, in the side panel: just the word and its Chinese */
+#ho-picked li { padding-top: 4px; padding-bottom: 4px; }
+.ho-page table.hp-grid { width: auto; }

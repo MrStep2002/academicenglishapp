@@ -256,6 +256,8 @@
 
 /* The Big Question */
 .k-big .st-in { justify-content: center; }
+.st-panel.k-big, .st-panel.k-big:hover { cursor: default; border-color: var(--hi); }   /* no answer to show; the highlighter yellow marks it out */
+.st-panel.k-big .st-k { color: var(--ink); }
 .st-bigq { margin: 0; max-width: 100%; font-family: var(--display); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; text-align: center; white-space: pre-wrap; overflow-wrap: break-word; }
 #s-big:empty { display: none; }
 #s-big textarea { min-height: 84px; font-size: 1rem; }

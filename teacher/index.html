@@ -11,7 +11,8 @@
 <link rel="stylesheet" href="../css/fonts.css">
 <link rel="stylesheet" href="../css/home.css?v=2026-11-03b">
 <link rel="stylesheet" href="board.css?v=2026-11-07d">
-<link rel="stylesheet" href="starters.css?v=2026-11-08c">
+<link rel="stylesheet" href="starters.css?v=2026-11-08e">
+<link rel="stylesheet" href="handouts.css?v=2026-11-08a">
 <style>
   .home { max-width: 1040px; }
   .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
@@ -118,7 +119,8 @@
   <noscript><p>Please turn on JavaScript.</p></noscript>
 </main>
 <script src="board.js?v=2026-11-07e"></script>
-<script src="starters.js?v=2026-11-08c"></script>
+<script src="starters.js?v=2026-11-08e"></script>
+<script src="handouts.js?v=2026-11-08a"></script>
 <script>
 /* Teacher page: make classes and student logins, print login cards, see each student's points, level and last activity.
    Talks to the login server (server/server.js). The teacher's login is kept in this browser as "aea:account:teacher":
@@ -128,6 +130,7 @@
    Reports (31 Oct 2026): #/reports lists the questions reported in the games; Keep or Remove each one.
    Suggestions (3 Nov 2026): #/suggestions lists the ideas students sent from the suggestions box on the topic lists.
    Board games (6 Nov 2026): #/board… a game for the whole class on the projector (board.js, board.css).
+   Handouts (8 Nov 2026): #/handouts: a two-sided A4 sheet for learning key words, downloaded as a Word file (handouts.js, handouts.css).
    Starters (7 Nov 2026): #/starters… a few minutes of questions on the projector at the start of a lesson (starters.js, starters.css). */
 (function(){
 'use strict';
@@ -205,7 +208,7 @@ function showClasses(){
   call('/api/teacher/classes').then(function(r){
     view.innerHTML =
       '<div class="spread" style="margin-bottom:14px"><p class="note">' + (r.classes.length ? 'Choose a class to see its students.' : 'No classes yet. Make your first one.') + '</p>' +
-      '<span class="rep-btns"><a class="btn alt" href="#/starters">Starters</a><a class="btn alt" href="#/board">Board games</a><a class="btn alt" href="#/suggestions">Suggestions<span id="sgn" class="rep-count"></span></a><a class="btn alt" href="#/reports">Reports<span id="repn" class="rep-count"></span></a><a class="btn" href="#/new">+ New class</a></span></div>' +
+      '<span class="rep-btns"><a class="btn alt" href="#/starters">Starters</a><a class="btn alt" href="#/handouts">Handouts</a><a class="btn alt" href="#/board">Board games</a><a class="btn alt" href="#/suggestions">Suggestions<span id="sgn" class="rep-count"></span></a><a class="btn alt" href="#/reports">Reports<span id="repn" class="rep-count"></span></a><a class="btn" href="#/new">+ New class</a></span></div>' +
       '<div class="classes">' + r.classes.map(function(c){
         return '<a class="class-card" href="#/class/' + c.id + '"><b>' + esc(c.name) + '</b><span>' + c.students + ' student' + (c.students === 1 ? '' : 's') + '</span></a>'; }).join('') + '</div>';
     call('/api/teacher/reports').then(function(x){ var n = document.getElementById('repn'); if (n && x.open.length) n.textContent = ' (' + x.open.length + ' to check)'; }).catch(function(){});
@@ -740,6 +743,7 @@ function route(){
   if (h === '#/suggestions' || h === '#/suggestions/done') return showSuggestions();
   if (/^#\/board(\/|$)/.test(h) && window.AEA_BOARD) return AEA_BOARD.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
   if (/^#\/starters(\/|$)/.test(h) && window.AEA_START) return AEA_START.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
+  if (h === '#/handouts' && window.AEA_HANDOUT) return AEA_HANDOUT.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
   showClasses();
 }
 addEventListener('hashchange', route);
