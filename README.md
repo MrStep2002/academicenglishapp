@@ -40,7 +40,7 @@ sidebar: English / 中文版) switches side. The landing page still shows when a
 | `tools/check_content.py` | Checks every content file before you push (`tools/check_reading.py` does the reading passages on their own) |
 | `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css` |
 | `en/data/`, `zh/data/`, `en/reading/` | The old content files. Nothing uses them now: everything is in `content/` |
-| `zh/index.html` | Chinese version: topics as a list, grouped by subject |
+| `zh/index.html` | Chinese version home (8 Nov 2026): the English home in Chinese (greeting and level, class games, the Daily Circuit, this week's points, Your subjects, More subjects, Got an idea?), drawn by `en/engine/home.js` from the Chinese subject list (`ZH_SUBJECTS` in `en/engine/subjects.js`) |
 | `zh/essentials/` | Academic English Essentials on the Chinese side. It shares `content/essentials/` with the English page, like every other topic (95 words, all with Chinese). `zh/keywords/` is its old address and forwards here |
 | `zh/web-design/`, `zh/representation/`, `zh/descriptive/` | The Chinese version of these topics. They share their folder in `content/` with the English pages and use the `zh` column of `words.csv` |
 | `representation/` | Old Year 9 Representation app. Nothing links to it now: its words are in `content/representation/` |
@@ -65,8 +65,8 @@ what the page already has, so the games and pages underneath are unchanged.
   (Home / Descriptive language / Fill the gap): app.js passes it to `AEA_SHELL.crumbs()`. Other pages keep their back link.
 - Each English page loads, after `account.js`: `<script src="…/en/engine/subjects.js?v=…"></script>` and
   `<script src="…/en/engine/shell.js?v=…"></script>`, with `<link rel="stylesheet" href="…/css/site.css?v=…">` in the `<head>`.
-  On My progress and Maths the shell has `data-skip-zh`: opened from the Chinese side, those pages keep their old look for now.
-  Maths uses `data-side="maths"` for its points.
+  On My progress, Maths and Log in the shell has `data-auto-side`: opened from the Chinese side (`?from=zh`, a link from a
+  `zh/` page, or Maths opened from the Chinese side in this tab), they get the Chinese shell. Maths uses `data-side="maths"` for its points.
 - "Continue: …" on the home page: the topic pages remember the last game opened on each topic (`aea:lastgame:v1`, `lastGame()` in app.js).
 - **Game pages** (stage 2, 8 Nov 2026; `NEW_UI` in app.js, section 4 of `css/site.css`): the game's column, its name and
   how to play, then the game on the left and a side panel on the right: This round (or This game), any settings (Listen,
@@ -81,9 +81,20 @@ what the page already has, so the games and pages underneath are unchanged.
   buttons to hear the word and the example in the browser's voice, Previous / Next / Shuffle, ← → keys), with **Your
   words** beside them (known, familiar, learning and new at this level); then the game columns and the Games row. The word
   list (#words), My progress, Reading Comprehension, the Daily Circuit page and the login page have the new look too.
-  Login has the shell with `data-skip-zh` (a student coming from the Chinese version gets the old bilingual page).
-- The Chinese pages and the teacher page do not have the shell yet. Coming stage: the Chinese version.
-- After changing `shell.js`, `subjects.js`, `home.js` or `site.css`, change the `?v=` number after them on the pages that load them.
+  Login has the shell with `data-auto-side` (a student coming from the Chinese version gets the Chinese shell, and the page in both languages as before).
+- **The Chinese version** (stage 4, 8 Nov 2026; section 6 of `css/site.css`): the same shell and pages, in Chinese, with fewer
+  subjects. The `zh/` pages load the shell with `data-side="zh"`: the sidebar, top bar and Subjects menu are in Chinese and
+  list the Chinese version's subjects (`ZH_SUBJECTS` in `subjects.js`: add a Chinese topic there), Home is `zh/index.html`, the
+  Daily Circuit is `zh/circuit/`, My progress opens with `?from=zh`. Every label is written in both languages, each in its own
+  span (`t-en` / `t-zh`; `T(en, zh)` in app.js, `L(en, zh)` in shell.js and home.js), and the EN / 中文 switch beside the points
+  (account.js) shows one: Chinese until the student picks EN. The words being learned always show.
+  The Chinese subject page (`zhTopicPage()` in app.js) is the English one in Chinese: area and name, 我在学 switch, the topics on
+  science pages and the student's level (no level buttons: on the Chinese side the level moves by itself, `zhPoolWords()`), word
+  cards with the Chinese on the back, Your words, the science page's own games (练习), then the three columns of three
+  (词汇, 句子, 游戏: `ZH_COLS`). The games use the same layout and side panel as the English ones (`zhShell()` → `gameLayout()`;
+  the keys in `ZH_KEYS`, More from `zhMoreBox()`). The language menu in the sidebar moves between the two versions (`aea:lang`).
+- The teacher page does not have the shell.
+- After changing `shell.js`, `subjects.js`, `home.js`, `account.js`, `app.js` or `site.css`, change the `?v=` number after them on the pages that load them (both versions).
 
 ## English games by category
 
@@ -95,7 +106,7 @@ what the page already has, so the games and pages underneath are unchanged.
 | Games (the row across the bottom of a topic page) | General knowledge (`knowledge.csv`), Save the mouse, Word search (7 Nov 2026: the topic's words hidden in a square of letters; the list shows the words, or their meanings / their Chinese; size and directions follow the level; `playWordSearch` in app.js), Whack-a-word, Word Invaders, Word Snake. Word search is also on the Chinese topic pages (Games column, where "Wordsearch: coming soon" was) |
 | Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
 
-Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
+Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` (change its `data-name`, `data-store` and `data-content`) and add one line for it to `ZH_SUBJECTS` in `en/engine/subjects.js` (since 8 Nov 2026 the Chinese home is drawn from that list).
 
 To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add one line for it to `en/engine/subjects.js` (its address, name and area). Nothing else needs changing: the sidebar, the Subjects menu, the home page, the landing page and the Site content pages all read that list. New topic pages need the shell too (copy the `site.css`, `subjects.js` and `shell.js` lines from another topic page). Details in `content/README.md`.
 

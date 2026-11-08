@@ -33,7 +33,7 @@
   .zh { font-family: var(--zh); }
   .stat { display: inline-block; background: var(--hi); color: #151935; font-weight: 700; padding: 1px 8px; border-radius: 6px; }
 </style>
-<link rel="stylesheet" href="../css/site.css?v=2026-11-08u">
+<link rel="stylesheet" href="../css/site.css?v=2026-11-08v">
 </head>
 <body class="aea-login">
 <main class="home">
@@ -45,11 +45,11 @@
   <section class="card" id="panel" aria-live="polite"><p class="note">Loading…</p></section>
   <noscript><p>Please turn on JavaScript to log in.</p></noscript>
 </main>
-<script src="../en/engine/account.js?v=2026-10-29b"></script>
-<!-- The site's sidebar and top bar (redesign stage 3, 8 Nov 2026); not when the student came from the Chinese version (data-skip-zh) -->
-<script src="../en/engine/subjects.js?v=2026-11-08s"></script>
-<script src="../en/engine/shell.js?v=2026-11-08t" data-skip-zh></script>
-<script>if(window.AEA_SHELL && AEA_SHELL.crumbs) AEA_SHELL.crumbs([{label:'Home', href:AEA_SHELL.home()}, {label:'Log in'}]);</script>
+<script src="../en/engine/account.js?v=2026-11-08v"></script>
+<!-- The site's sidebar and top bar (redesign stage 3, 8 Nov 2026); in Chinese when the student came from the Chinese version (data-auto-side, stage 4) -->
+<script src="../en/engine/subjects.js?v=2026-11-08v"></script>
+<script src="../en/engine/shell.js?v=2026-11-08v" data-auto-side></script>
+<script>if(window.AEA_SHELL && AEA_SHELL.crumbs) AEA_SHELL.crumbs([{label:'Home', zh:'首页', href:AEA_SHELL.home()}, {label:'Log in', zh:'登录'}]);</script>
 <script>
 (function(){
   'use strict';

@@ -13,8 +13,9 @@ const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
 // draw their games in the new layout: the path in the top bar (Home / Descriptive language / Fill the gap) instead of the
 // back link, the game with a side panel beside it (This round, Playing at, Keys, More in this subject), and on the
 // Reading Comprehension pages the passage beside both questions with one Confirm. See frame(), gameLayout() and
-// css/site.css (4. Game pages). The Chinese side keeps the older layout until stage 4.
-const NEW_UI = !!(window.AEA_SHELL && window.AEA_SHELL.crumbs) && SIDE!=='zh';
+// css/site.css (4. Game pages). The Chinese side (stage 4, 8 Nov 2026): the same layout, in Chinese, when the page loads the
+// shell with data-side="zh" (every label through T(), so the English / 中文 switch still works).
+const NEW_UI = !!(window.AEA_SHELL && window.AEA_SHELL.crumbs);
 // Generated games (Science, 3 Nov 2026): a page can load a module before this file that makes questions by rules from
 // data tables (en/engine/chem.js sets window.AEA_GEN). See GENERATED GAMES and SYLLABUS TOPICS below. Every other page: null.
 const GEN = window.AEA_GEN || null;
@@ -24,9 +25,11 @@ const GEN = window.AEA_GEN || null;
 // (English words, their Chinese, meanings, examples) are content: they always show, whatever the switch says.
 // T(en, zh): both, each in its own span, for HTML (the English side just gets the English).
 // TX(en, zh): only the chosen one, for text that can't hold HTML (textContent, placeholders, aria-labels).
+// ZH_UI: the page is in both languages: the Chinese side, and My progress opened from it (stage 4: the shell says so)
+const ZH_UI = SIDE==='zh' || (CFG.only==='progress' && !!window.AEA_SHELL && window.AEA_SHELL.side==='zh');
 function uiLang(){ try{ return localStorage.getItem('aea:ui-lang')==='en' ? 'en' : 'zh'; }catch(e){ return 'zh'; } }
-function T(en, zh){ return SIDE==='zh' ? `<span class="t-en">${en}</span><span class="t-zh" lang="zh-CN">${zh}</span>` : en; }
-function TX(en, zh){ return SIDE==='zh' && uiLang()==='zh' ? zh : en; }
+function T(en, zh){ return ZH_UI ? `<span class="t-en">${en}</span><span class="t-zh" lang="zh-CN">${zh}</span>` : en; }
+function TX(en, zh){ return ZH_UI && uiLang()==='zh' ? zh : en; }
 // A bilingual name from the page ("Web design 网页设计"): the English, the Chinese, and both as T()
 function splitName(s){ s=String(s||''); const i=s.search(/[\u3400-\u9fff]/); return i>0 ? {en:s.slice(0,i).trim(), zh:s.slice(i).trim()} : {en:s, zh:''}; }
 function nameT(s){ const n=splitName(s); return n.zh ? T(esc(n.en), esc(n.zh)) : esc(n.en); }
@@ -283,6 +286,10 @@ const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error, In your own words, Find the evidence, All-in English'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
+// The same, in Chinese (My progress opened from the Chinese side, stage 4)
+const POINT_KINDS_ZH = {word:'单词游戏：学习单词、单词配释义、看中文选英文、选出释义、判断对错、单词贪吃蛇、单词打地鼠、单词入侵者、单词搜索、限时挑战、生存挑战',
+  type:'拼写单词、拯救小老鼠', grammar:'填空、判断对错、语法检查、常识题、翻译', build:'连词成句、找错、用自己的话说、找证据、全英文练习',
+  short:'完成短文（分摊到每个空）、回答问题', passage:'阅读文章或听力测试：精读、主旨、笔记、听力'};
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
 // For the big serif headings: the serif font's + is tiny, so it is set in the body font
@@ -309,7 +316,7 @@ const P = (function(){
   const ensure = () => { if(data.topics[KEY]) return data.topics[KEY]; const o=overall();
     return (data.topics[KEY]={name:CFG.name||KEY, side:zhSide?'zh':'en', href:location.pathname, r:o ?? (zhSide?2:3), h:o==null?0:3, n:0, right:0}); };
   const label = r => { const b=Math.max(1, Math.min(5, Math.floor(r))), code=LEVEL_CODES[b];
-    return {code, name:LEVEL_NAMES[code]||'', zh:LEVEL_ZH[code]||'', pct: b>=5 ? 100 : Math.round((r-b)*100), next: LEVEL_NAMES[LEVEL_CODES[b+1]]||''}; };
+    return {code, name:LEVEL_NAMES[code]||'', zh:LEVEL_ZH[code]||'', pct: b>=5 ? 100 : Math.round((r-b)*100), next: LEVEL_NAMES[LEVEL_CODES[b+1]]||'', nextZh: LEVEL_ZH[LEVEL_CODES[b+1]]||''}; };
   // opts.noRate (Learn the words): the answer moves the word on and earns points, but does not count towards the student's level
   const record = (game, item, ok, opts) => {
     try{
@@ -594,7 +601,7 @@ function Stats(game){
   s.hit=(item)=>{ if(qf) qf.n++; s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); drawLevelBox(); };
   s.miss=(item)=>{ if(qf) qf.n++; s.answered++; s.streak=0; s.draw(); P.record(game,item,false); lastMiss={game, item}; drawLevelBox(); };
   s.draw=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    if(NEW_UI) el.innerHTML=gStats([['Correct', s.correct, '/'+s.answered], ['Streak', s.streak], ['Best', s.best]]);
+    if(NEW_UI) el.innerHTML=gStats([[T('Correct','答对'), s.correct, '/'+s.answered], [T('Streak','连对'), s.streak], [T('Best','最佳'), s.best]]);
     else el.innerHTML=`<span>${T('Correct','答对')} <b>${s.correct}</b>/${s.answered}</span><span class="streak">${T('Streak','连对')} <b>${s.streak}</b></span><span>${T('Best','最佳')} <b>${s.best}</b></span>`; };
   return s;
 }
@@ -698,8 +705,9 @@ const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' || g.key==
 const offWhy = (g, n) => sylNone() ? 'Choose your topics first' : n ? 'Not enough at this level yet' : SYL && !rowsNow(g).length ? 'None in your topics yet' : 'None at this level yet';
 
 // ---------- page frame ----------
-// cur: the name of this screen, the last step of the path in the top bar (new look). view: 'game' (a game with its side
-// panel), 'reading' (a Reading Comprehension page) or the default 'page' (menus, word list, My progress: stage 3)
+// cur: the name of this screen, the last step of the path in the top bar (new look): a string, or {label, zh} on the
+// Chinese side. view: 'game' (a game with its side panel), 'reading' (a Reading Comprehension page), 'topic' (a subject
+// page), 'list' (the word list), 'progress' or the default 'page'
 function frame(back, inner, cur, view){
   clearTimers(); keyHandler=null; circuitFinish=null; circuitStop=null; document.body.classList.remove('reading-wide');
   if(ttsStop){ ttsStop(); ttsStop=null; }   // Listening: stop the voice when the page moves on
@@ -718,15 +726,16 @@ function frame(back, inner, cur, view){
 }
 function go(hash){ if(location.hash===hash || (!hash && !location.hash)) route(); else location.hash=hash; }
 // The path in the top bar: Home, then the topic (a link back to its menu) and where the back link went, then this screen.
-// A back link to the English home (or the landing page) is just Home.
+// A back link to the English home (or the landing page) is just Home. On the Chinese side each step also has its Chinese (zh).
 function crumbsFor(back, cur){
-  const out=[{label:'Home', href:AEA_SHELL.home()}];
-  const homeLike=href=>{ try{ const r=new URL(href, location.href).href.split('#')[0].split('?')[0].slice(ROOT.length); return ['', 'index.html', 'en/', 'en/index.html'].includes(r); }catch(e){ return false; } };
+  const zh=SIDE==='zh', out=[ZH_UI ? {label:'Home', zh:'首页', href:AEA_SHELL.home()} : {label:'Home', href:AEA_SHELL.home()}];
+  const homeLike=href=>{ try{ const r=new URL(href, location.href).href.split('#')[0].split('?')[0].slice(ROOT.length); return ['', 'index.html', 'en/', 'en/index.html', 'zh/', 'zh/index.html'].includes(r); }catch(e){ return false; } };
+  const topic=()=>{ if(!zh) return {label:CFG.name||'Topic', href:'#'}; const n=splitName(CFG.name||''); return {label:n.en||'Topic', zh:n.zh, href:'#'}; };
   if(back && back.href){
-    if(back.href.charAt(0)==='#'){ out.push({label:CFG.name||'Topic', href:'#'}); if(back.href!=='#') out.push({label:back.label||'', href:back.href}); }
+    if(back.href.charAt(0)==='#'){ out.push(topic()); if(back.href!=='#') out.push({label:back.label||'', href:back.href}); }
     else if(!homeLike(back.href)) out.push({label:back.label||String(back.html||'').replace(/<[^>]*>/g,'')||'Back', href:back.href});
   }
-  if(cur) out.push({label:cur});
+  if(cur) out.push(typeof cur==='object' ? {label:cur.label, zh:cur.zh||''} : {label:cur});
   return out.filter((c,i)=>c.label && !(i && c.label===out[i-1].label && c.href===out[i-1].href));
 }
 
@@ -801,7 +810,8 @@ function gameColumnsHtml(){
 // at this level); then the games in their columns and the Games row.
 // (A word's stage, stageOf(), and the stage names, STAGES, are the Chinese side's: see "the student's words")
 const SUBJECT = (()=>{ const L=window.AEA_SUBJECTS; if(!L) return null; const norm=x=>String(x||'').split('?')[0].replace(/index\.html$/, '');
-  return L.SUBJECTS.find(x=>x.path && norm(x.path)===norm(PAGE)) || null; })();
+  const list=SIDE==='zh' && L.forSide ? L.forSide('zh').SUBJECTS : L.SUBJECTS;   // the Chinese version's own list (stage 4)
+  return list.find(x=>x.path && norm(x.path)===norm(PAGE)) || null; })();
 // Hear a word or an example (the browser's own voice: the best English one it has)
 function sayIt(text){
   if(!TTS_OK || !text) return;
@@ -811,16 +821,17 @@ function sayIt(text){
 const SPEAK_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
 function studyHtml(){
   const L=window.AEA_SUBJECTS, sub=SUBJECT; if(!L || !sub) return '';
-  if(sub.always) return `<span class="t-always">Always in the Daily Circuit</span>`;
+  if(sub.always) return `<span class="t-always">${T('Always in the Daily Circuit','一直包含在每日挑战中')}</span>`;
   if(!L.switchable(sub)) return '';
-  let on=false; try{ on=!!(((JSON.parse(localStorage.getItem('aea:studying:v1'))||{}).en||{})[sub.path]); }catch(e){}
-  return `<button type="button" class="t-sw" role="switch" aria-checked="${on}" id="tStudy"><span class="t-sw-l">I study this</span><span class="t-sw-t" aria-hidden="true"></span></button>`;
+  let on=false; try{ on=!!(((JSON.parse(localStorage.getItem('aea:studying:v1'))||{})[SIDE]||{})[sub.path]); }catch(e){}
+  return `<button type="button" class="t-sw" role="switch" aria-checked="${on}" id="tStudy"><span class="t-sw-l">${T('I study this','我在学')}</span><span class="t-sw-t" aria-hidden="true"></span></button>`;
 }
+// (The Chinese side saves a subject with both its names, "Web design 网页设计", as the Daily Circuit always has)
 function wireStudy(){
   const b=document.getElementById('tStudy'), sub=SUBJECT; if(!b || !sub) return;
   b.onclick=()=>{ const on=b.getAttribute('aria-checked')!=='true';
-    try{ const all=JSON.parse(localStorage.getItem('aea:studying:v1'))||{}; all.en=all.en||{};
-      if(on) all.en[sub.path]=sub.name; else delete all.en[sub.path]; localStorage.setItem('aea:studying:v1', JSON.stringify(all)); }catch(e){}
+    try{ const all=JSON.parse(localStorage.getItem('aea:studying:v1'))||{}; all[SIDE]=all[SIDE]||{};
+      if(on) all[SIDE][sub.path]=SIDE==='zh' && sub.zh ? sub.name+' '+sub.zh : sub.name; else delete all[SIDE][sub.path]; localStorage.setItem('aea:studying:v1', JSON.stringify(all)); }catch(e){}
     b.setAttribute('aria-checked', String(on));
     try{ window.dispatchEvent(new CustomEvent('aea:studying')); }catch(e){} };   // the sidebar's My subjects
 }
@@ -840,31 +851,33 @@ function topicPage(){
   wireLevels(()=>{ fcOrder=null; menu(); }); wireSyl(menu); wireStudy(); wireCards();
 }
 // The words the cards show: the chosen level's (as the games use them)
-const cardWords = () => { const ws=pick(S.words).filter(w=>!hiddenItem(w)); return fcOrder && fcOrder.length===ws.length ? fcOrder.map(i=>ws[i]).filter(Boolean) : ws; };
+// (On the Chinese side, the words that have their Chinese)
+const fcWords = () => pick(S.words).filter(w=>!hiddenItem(w) && (SIDE!=='zh' || ZH[w.id]));
+const cardWords = () => { const ws=fcWords(); return fcOrder && fcOrder.length===ws.length ? fcOrder.map(i=>ws[i]).filter(Boolean) : ws; };
 const fcKey = () => 'aea-fc:'+KEY+':'+chosenBand();   // where the card the student was on is kept (this tab only)
 function wordCardsHtml(){
-  const ws=pick(S.words).filter(w=>!hiddenItem(w)); if(!ws.length) return '';
+  const ws=fcWords(); if(!ws.length) return '';
   const counts={known:0, fam:0, learn:0, new:0}; ws.forEach(w=>counts[stageOf(w)]++);
-  const lvName=chosenBand()!=null && LEVELS.length>1 ? bandName(chosenBand()) : '';
+  const b=chosenBand(), lvName=b!=null && LEVELS.length>1 ? (SIDE==='zh' && LEVEL_ZH[LEVEL_CODES[b]] ? T(esc(bandName(b)), LEVEL_ZH[LEVEL_CODES[b]]) : esc(bandName(b))) : '';
   return `<section class="t-words" aria-labelledby="tWordsH">
-    <div class="t-sec-top"><h2 id="tWordsH">${LEVELS.length>1 ? 'Words at this level' : 'Words'}</h2><a href="#words">Open the word list</a></div>
+    <div class="t-sec-top"><h2 id="tWordsH">${LEVELS.length>1 ? T('Words at this level','本级别的单词') : T('Words','单词')}</h2><a href="#words">${T('Open the word list','查看词汇表')}</a></div>
     <div class="t-words-row">
       <div class="fc-area">
         <div class="fc-stack"><span class="fc-layer l3" aria-hidden="true"></span><span class="fc-layer l2" aria-hidden="true"></span><span class="fc-layer l1" aria-hidden="true"></span>
           <div class="fc" id="fc" aria-roledescription="word card"></div></div>
         <div class="fc-nav">
-          <button type="button" class="fc-btn" id="fcPrev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>Previous</button>
+          <button type="button" class="fc-btn" id="fcPrev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>${T('Previous','上一个')}</button>
           <span class="fc-n" id="fcN" aria-live="polite"></span>
-          <button type="button" class="fc-btn fc-next" id="fcNext">Next<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
-          <button type="button" class="fc-btn fc-shuf" id="fcShuf" aria-label="Shuffle the words" title="Shuffle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg></button>
+          <button type="button" class="fc-btn fc-next" id="fcNext">${T('Next','下一个')}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+          <button type="button" class="fc-btn fc-shuf" id="fcShuf" aria-label="${TX('Shuffle the words','打乱单词顺序')}" title="${TX('Shuffle','打乱')}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg></button>
         </div>
       </div>
       <aside class="t-mine" aria-labelledby="tMineH">
-        <h3 id="tMineH">Your words${lvName ? ' · '+esc(lvName) : ''}</h3>
-        <p class="t-mine-big"><b>${counts.known+counts.fam}</b><span>of ${ws.length} known or familiar</span></p>
+        <h3 id="tMineH">${T('Your words','你的单词')}${lvName ? ' · '+lvName : ''}</h3>
+        <p class="t-mine-big"><b>${counts.known+counts.fam}</b><span>${T(`of ${ws.length} known or familiar`, `/ ${ws.length} 个已掌握或熟悉`)}</span></p>
         <div class="t-mine-bar" aria-hidden="true">${STAGES.map(([k])=>`<i class="st-${k}" style="width:${100*counts[k]/ws.length}%"></i>`).join('')}</div>
-        <ul class="t-mine-key">${STAGES.map(([k,name])=>`<li><span class="sw st-${k}" aria-hidden="true"></span><span>${name}</span><b>${counts[k]}</b></li>`).join('')}</ul>
-        <p class="t-mine-note">Words move up as you get them right on different days.</p>
+        <ul class="t-mine-key">${STAGES.map(([k,name,zh])=>`<li><span class="sw st-${k}" aria-hidden="true"></span><span>${T(name, zh)}</span><b>${counts[k]}</b></li>`).join('')}</ul>
+        <p class="t-mine-note">${T('Words move up as you get them right on different days.','在不同的日子答对，单词就会升级。')}</p>
       </aside>
     </div>
   </section>`;
@@ -874,23 +887,24 @@ function wireCards(){
   let i=0; try{ i=+sessionStorage.getItem(fcKey())||0; }catch(e){}
   let back=false;
   const draw=(focusSel)=>{
-    const ws=cardWords(), n=ws.length; if(!n) return; i=((i%n)+n)%n; const w=ws[i], st=stageOf(w), stName=(STAGES.find(x=>x[0]===st)||[])[1];
+    const ws=cardWords(), n=ws.length; if(!n) return; i=((i%n)+n)%n; const w=ws[i], st=stageOf(w), stage=STAGES.find(x=>x[0]===st)||[], stName=T(stage[1], stage[2]), zh=SIDE==='zh' && ZH[w.id];
     try{ sessionStorage.setItem(fcKey(), i); }catch(e){}
     const say=(what, label, cls)=>TTS_OK ? `<button type="button" class="fc-say${cls?' '+cls:''}" data-say="${what}" aria-label="${label}" title="${label}">${SPEAK_SVG}</button>` : '';
+    const hearW=TX('Hear the word','听这个单词'), hearEx=TX('Hear the example','听例句');
     const top=`<div class="fc-top"><span class="fc-pos">${esc(w.pos||'')}</span><span class="fc-stage st-${st}">${stName}</span></div>`;
     fc.innerHTML=`<div class="fc-inner">
       <div class="fc-face fc-front"${back?' inert aria-hidden="true"':''}>${top}
-        <div class="fc-word-row"><h3 class="fc-word">${esc(w.w)}</h3>${say('word', 'Hear the word')}</div>
-        <p class="fc-tip">What does it mean? Turn the card over to check.</p></div>
+        <div class="fc-word-row"><h3 class="fc-word">${esc(w.w)}</h3>${say('word', hearW)}</div>
+        <p class="fc-tip">${T('What does it mean? Turn the card over to check.','这个词是什么意思？把卡片翻过来看看。')}</p></div>
       <div class="fc-face fc-back"${back?'':' inert aria-hidden="true"'}>${top}
-        <div class="fc-word-row"><p class="fc-word sm">${esc(w.w)}</p>${say('word', 'Hear the word')}</div>
-        <p class="fc-def">${esc(w.def)}</p>
-        ${w.ex ? `<p class="fc-ex"><i>${esc(w.ex)}</i>${say('ex', 'Hear the example', 'sm')}</p>` : ''}
-        ${w.syn && w.syn.length ? `<p class="fc-syn">Similar: ${esc(w.syn.join(', '))}</p>` : ''}</div>
+        <div class="fc-word-row"><p class="fc-word sm">${esc(w.w)}</p>${say('word', hearW)}</div>
+        ${zh ? `<p class="fc-zh" lang="zh-CN">${esc(zh)}</p>` : ''}<p class="fc-def">${esc(w.def)}</p>
+        ${w.ex ? `<p class="fc-ex"><i>${esc(w.ex)}</i>${say('ex', hearEx, 'sm')}</p>` : ''}
+        ${w.syn && w.syn.length ? `<p class="fc-syn">${T('Similar','近义词')}: ${esc(w.syn.join(', '))}</p>` : ''}</div>
     </div>
-    <button type="button" class="fc-flip" aria-pressed="${back}">${back ? 'Show the word' : 'Turn over'}</button>`;
+    <button type="button" class="fc-flip" aria-pressed="${back}">${back ? T('Show the word','看单词') : T('Turn over','翻过来')}</button>`;
     fc.classList.toggle('flipped', back);
-    fc.setAttribute('aria-label', `Word ${i+1} of ${n}: ${w.w}`);
+    fc.setAttribute('aria-label', TX(`Word ${i+1} of ${n}: ${w.w}`, `第 ${i+1} 个单词，共 ${n} 个：${w.w}`));
     document.getElementById('fcN').textContent=`${i+1} / ${n}`;
     document.getElementById('fcPrev').disabled = n<2;
     document.getElementById('fcNext').disabled = n<2;
@@ -903,7 +917,7 @@ function wireCards(){
   fc.addEventListener('click', e=>{ if(e.target.closest('button, a')) return; flip(false); });
   document.getElementById('fcPrev').onclick=()=>go(-1);
   document.getElementById('fcNext').onclick=()=>go(1);
-  document.getElementById('fcShuf').onclick=()=>{ const n=pick(S.words).filter(w=>!hiddenItem(w)).length; fcOrder=shuffle([...Array(n).keys()]); i=0; back=false; draw(); };
+  document.getElementById('fcShuf').onclick=()=>{ const n=fcWords().length; fcOrder=shuffle([...Array(n).keys()]); i=0; back=false; draw(); };
   // Keys, while the student is in the cards: ← → to move, Space or Enter on the card's button to turn it
   document.querySelector('.fc-area').addEventListener('keydown', e=>{ if(e.target.closest('input, textarea, select')) return;
     if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); document.getElementById('fcPrev').focus({preventScroll:true}); }
@@ -982,51 +996,78 @@ const KEY_HELP = {
   snake:[['Arrow keys','steer (or W A S D)'],['Space','start']], whack:[['1–9','whack that hole'],['Space','start']],
   invaders:[['1–9','fire at that word'],['Space','start']], listen:[['P','play or pause'],['Enter','check']]
 };
+// The Chinese side (stage 4): its games' keys (the same games underneath), and the Chinese for each key and what it does
+const ZH_KEYS = {zh:KEY_HELP.meaning, zhmean:KEY_HELP.meaning, zhtranslate:KEY_HELP.meaning, learn:KEY_HELP.meaning, zhtf:KEY_HELP.tf,
+  zhbuild:KEY_HELP.build, zhevidence:KEY_HELP.evidence, zhmouse:KEY_HELP.mouse, zhwordsearch:KEY_HELP.wordsearch, zhodd:[['1–4','choose an answer']],
+  zhtype:[['Enter','check']], zhspeed:[['1–4','choose an answer']], zhsurvive:[['1–4','choose an answer']], zhmatch:null};
+const KEY_ZH = {'choose an answer':'选择答案', 'next question':'下一题', 'true':'对', 'false':'错', 'good grammar':'语法正确', 'bad grammar':'语法错误',
+  'check':'检查', 'choose a detail':'选择细节', 'put a word in the next gap':'把单词填进下一个空', 'take the last one out':'拿出最后一个',
+  'guess a letter':'猜一个字母', 'next word':'下一个单词', 'move on the board':'在方阵上移动', 'first and last letter of a word':'选单词的第一个和最后一个字母',
+  'start again':'重新选', 'choose an answer ':'选择答案', 'confirm':'确认', 'choose a note':'选择笔记', 'steer (or W A S D)':'转向（或 W A S D）', 'start':'开始',
+  'whack that hole':'打那个洞', 'fire at that word':'射击那个单词', 'play or pause':'播放或暂停', 'Arrow keys':'方向键', 'Space':'空格键'};
+const keysFor = k => SIDE==='zh' && k in ZH_KEYS ? ZH_KEYS[k] : KEY_HELP[k];
+const keyT = s => SIDE==='zh' && KEY_ZH[s] ? T(s, KEY_ZH[s]) : s;
 // The score boxes: [[label, value, after the value, id of the value], …] as <dl> items
 const gStats = items => items.map(([k,v,after,id])=>`<div><dt>${k}</dt><dd><b${id?` id="${id}"`:''}>${v}</b>${after?`<small>${after}</small>`:''}</dd></div>`).join('');
-// The column a game sits in on the topic page, as the small label over its name
+// The column a game sits in on the topic page, as the small label over its name (HTML; on the Chinese side, ZH_COLS)
 function gameColumn(game){
+  if(SIDE==='zh'){ const c=ZH_COLS.find(c=>c.games.includes(game.key)); if(c) return T(esc(c.name), esc(c.zh));
+    if(game.gen) return T(esc(GEN.title||'Practice'), esc(GEN.titleZh||'练习'));
+    if(game.key==='learn') return T('Words','单词');
+    if(game.key==='must') return T('Games','游戏');
+    return isArcade(game) ? T('Games · arcade','游戏 · 街机') : ''; }
   if(isArcade(game)) return 'Games · arcade';
-  if(GEN && GEN.columns){ const col=GEN.columns.find(c=>(c.games||[]).includes(game.key)); if(col) return col.name; }
-  return (CATS[game.cat]||GAME_ROW[game.cat]||{}).name || '';
+  if(GEN && GEN.columns){ const col=GEN.columns.find(c=>(c.games||[]).includes(game.key)); if(col) return esc(col.name); }
+  return esc((CATS[game.cat]||GAME_ROW[game.cat]||{}).name || '');
 }
+// A game's name (HTML): on the Chinese side its Chinese name too
+const gameNameT = g => SIDE==='zh' && g.zh ? T(esc(g.name), esc(g.zh)) : esc(g.name);
+// The game on screen on the Chinese side (set when a game starts: see ZH_GAMES), for the heading and the side panel
+let ZH_NOW = null;
 let layoutBand = null;   // the level the game on screen was dealt at (Playing at), fixed when the game starts
 function gameLayout(game, note, o){
   o=o||{}; layoutBand=chosenBand();
-  const reading=CFG.only==='passage', lsn=listenCan(game);
-  const back=CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : {href:'#', label:CFG.name||'Back'};
-  const eyebrow=reading ? (CFG.eyebrow||'Reading') : gameColumn(game);
-  const head=`<div class="g-head"><div class="g-title">${eyebrow?`<p class="g-eyebrow">${esc(eyebrow)}</p>`:''}<h1>${esc(game.name)}</h1>${note?`<p class="g-hint">${note}</p>`:''}</div>
+  const reading=CFG.only==='passage', lsn=listenCan(game), zh=SIDE==='zh';
+  const back=CFG.only && CFG.only!=='zh' ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : {href:'#', label:CFG.name||'Back'};
+  const eyebrow=reading ? esc(CFG.eyebrow||'Reading') : gameColumn(game);
+  const title=o.titleHtml || gameNameT(game);
+  const head=`<div class="g-head"><div class="g-title">${eyebrow?`<p class="g-eyebrow">${eyebrow}</p>`:''}<h1>${title}</h1>${note?`<p class="g-hint">${note}</p>`:''}</div>
     ${reading?`<div class="g-hstats"><dl class="g-lv" id="gLevel" hidden></dl><dl class="g-stats" id="stats" aria-label="This round"></dl></div>`:''}</div>`;
-  if(reading) frame(back, `${head}<div class="g-wide">${o.top||''}<div class="feed" id="feed"></div></div>`, game.name, 'reading');
-  else frame(back, `${head}<div class="g-layout"><div class="g-main">${o.top||''}<div class="feed" id="feed"></div></div>${sidePanel(game, lsn)}</div>`, game.name, 'game');
+  const cur=zh ? {label:game.name||String(title).replace(/<[^>]*>/g,''), zh:game.zh||''} : game.name;
+  if(reading) frame(back, `${head}<div class="g-wide">${o.top||''}<div class="feed" id="feed"></div></div>`, cur, 'reading');
+  else frame(back, `${head}<div class="g-layout"><div class="g-main">${o.top||''}<div class="feed" id="feed"></div></div>${sidePanel(game, lsn)}</div>`, cur, 'game');
   if(lsn){ listenGame=game; listenWire(); }
 }
 function sidePanel(game, lsn){
-  const keys=KEY_HELP[game.key], free=!inCircuit && !classRun;
-  return `<aside class="g-side" aria-label="About this game">
-    <section class="g-box g-round" aria-labelledby="gRoundH"><h2 id="gRoundH">${isArcade(game) || game.key==='wordsearch' ? 'This game' : 'This round'}</h2><dl class="g-stats" id="stats"></dl></section>
-    <section class="g-box g-tools" id="gTools" aria-label="Settings"${lsn?'':' hidden'}>${lsn?listenSwitch():''}</section>
+  const keys=keysFor(game.key), free=!inCircuit && !classRun;
+  return `<aside class="g-side" aria-label="${TX('About this game','关于这个游戏')}">
+    <section class="g-box g-round" aria-labelledby="gRoundH"><h2 id="gRoundH">${isArcade(game) || game.key==='wordsearch' || game.key==='zhwordsearch' ? T('This game','本局') : T('This round','本轮')}</h2><dl class="g-stats" id="stats"></dl></section>
+    <section class="g-box g-tools" id="gTools" aria-label="${TX('Settings','设置')}"${lsn?'':' hidden'}>${lsn?listenSwitch():''}</section>
     ${LEVELS.length ? `<section class="g-box g-level" id="gLevelBox" aria-labelledby="gLevelH">${levelBoxInner()}</section>` : ''}
-    ${keys ? `<section class="g-box g-keys" aria-labelledby="gKeysH"><h2 id="gKeysH">Keys</h2><ul>${keys.map(([k,t])=>`<li><kbd>${k}</kbd> ${t}</li>`).join('')}</ul></section>` : ''}
+    ${keys ? `<section class="g-box g-keys" aria-labelledby="gKeysH"><h2 id="gKeysH">${T('Keys','按键')}</h2><ul>${keys.map(([k,t])=>`<li><kbd>${keyT(k)}</kbd> ${keyT(t)}</li>`).join('')}</ul></section>` : ''}
     ${free ? moreBox(game) : ''}
   </aside>`;
 }
-// Playing at: the level the questions come from (when the game started: Change goes back to the topic's level buttons),
+// Playing at: the level the questions come from (when the game started: Change goes back to the topic's level buttons;
+// the Chinese side has no Change, its level moves by itself),
 // then the student's level in this topic (a bar, and how far they are to the next level, or how many answers until it is
 // found), which moves with every answer
 function levelBoxInner(){
-  const b=layoutBand, t=P.topic(), n=t ? t.n||0 : 0, free=!inCircuit && !classRun;
+  const b=layoutBand, t=P.topic(), n=t ? t.n||0 : 0, free=!inCircuit && !classRun, zh=SIDE==='zh';
   let bar, cap;
-  if(n<P.CAL){ bar=n*100/P.CAL; cap=`Finding your level: ${n} of ${P.CAL} answers`; }
-  else { const L=P.label(t.r); bar=L.pct; cap=`Your level: ${esc(L.name)}${L.next?` · ${L.pct}% of the way to ${esc(L.next)}`:''}`; }
-  return `<h2 id="gLevelH">Playing at</h2><p class="g-lvl"><span>${b!=null ? nameHtml(bandName(b)) : 'Every level'}</span>${free?'<a href="#">Change</a>':''}</p>
+  if(n<P.CAL){ bar=n*100/P.CAL; cap=T(`Finding your level: ${n} of ${P.CAL} answers`, `正在评估你的水平：已答 ${n} / ${P.CAL} 题`); }
+  else { const L=P.label(t.r); bar=L.pct;
+    cap=zh ? T(`Your level: ${esc(L.name)}${L.next?` · ${L.pct}% of the way to ${esc(L.next)}`:''}`, `你的水平：${L.zh||esc(L.name)}${L.next?` · 距离下一级还有 ${100-L.pct}%`:''}`)
+      : `Your level: ${esc(L.name)}${L.next?` · ${L.pct}% of the way to ${esc(L.next)}`:''}`; }
+  const lv=b==null ? T('Every level','所有级别') : zh && LEVEL_ZH[LEVEL_CODES[b]] ? T(nameHtml(bandName(b)), LEVEL_ZH[LEVEL_CODES[b]]) : nameHtml(bandName(b));
+  return `<h2 id="gLevelH">${T('Playing at','当前级别')}</h2><p class="g-lvl"><span>${lv}</span>${free && !zh?`<a href="#">${T('Change','更改')}</a>`:''}</p>
     <span class="g-bar" aria-hidden="true"><i style="width:${Math.round(bar)}%"></i></span><p class="g-cap">${cap}</p>`;
 }
 function drawLevelBox(){ if(!NEW_UI) return; const el=document.getElementById('gLevelBox'); if(el) el.innerHTML=levelBoxInner(); }
 // More in this subject: two more from the game's own column, then others, then an arcade game (four in all). Arcade games
 // and the Games row (Save the mouse, Word search, General knowledge): More games, the rest of that row.
 function moreBox(game){
+  if(SIDE==='zh') return zhMoreBox(game);
   const ready=g=>g.key!==game.key && !HIDE.has(g.key) && !phoneOff(g) && g.key!=='passage' && g.items().length>=g.min;
   const arcade=ARCADE.filter(a=>!HIDE.has(a.key) && a.key!==game.key && a.items().length>=a.min);
   const cols=Object.keys(CATS);
@@ -1044,6 +1085,20 @@ function moreBox(game){
   const RIGHT='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6"/></svg>';
   return `<section class="g-box g-more" aria-labelledby="gMoreH"><h2 id="gMoreH">${isArcade(game) || game.cat==='games' ? 'More games' : 'More in '+esc(CFG.name||'this subject')}</h2>
     <ul>${list.map(g=>`<li><a href="#play-${esc(g.key)}"><span>${esc(g.name)}</span>${RIGHT}</a></li>`).join('')}</ul></section>`;
+}
+// The Chinese side: two more from the game's own column (or the science page's own games), then the first open game of
+// each other column (four in all)
+function zhMoreBox(game){
+  const get=k=>k==='snake' ? ZH_SNAKE : ZH_GAMES.find(g=>g.key===k), open=k=>{ const g=get(k); return g && g.key!==game.key && zhReady(g) ? g : null; };
+  const col=ZH_COLS.find(c=>c.games.includes(game.key)), gen=GEN_ZH.filter(g=>g.key!==game.key && g.ready());
+  const same=col ? col.games.map(open).filter(Boolean).slice(0, 2) : game.gen ? gen.slice(0, 2) : [];   // a science page's own game: two more of those first
+  const others=ZH_COLS.filter(c=>c!==col).map(c=>c.games.map(open).find(Boolean)).filter(Boolean);
+  const list=[...new Set([...same, ...others, ...gen, ...ZH_COLS.flatMap(c=>c.games.map(open)).filter(Boolean)])].slice(0, 4);
+  if(!list.length) return '';
+  const RIGHT='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6"/></svg>';
+  const n=splitName(CFG.name||'');
+  return `<section class="g-box g-more" aria-labelledby="gMoreH"><h2 id="gMoreH">${T('More in '+esc(n.en||'this subject'), esc(n.zh||n.en)+'的更多游戏')}</h2>
+    <ul>${list.map(g=>`<li><a href="#play-${esc(g.key)}"><span>${gameNameT(g)}</span>${RIGHT}</a></li>`).join('')}</ul></section>`;
 }
 // A place for a game's own settings (Spot the error: Tell me how many) in the side panel; the old bar without NEW_UI
 function gameTools(){ if(!NEW_UI) return document.querySelector('.bar'); const t=document.getElementById('gTools'); if(t) t.hidden=false; return t; }
@@ -1265,7 +1320,7 @@ function playWordSearch(zh){
       + (flash ? line(flash[0], flash[1], 'x') : '') + (drag ? line(drag.a, drag.z, 's') : pend!=null ? line(pend, pend, 's') : '');
       cells.forEach((c,i)=>c.classList.toggle('cur', kb && i===cur && !done)); grid.classList.toggle('kb', kb); };
     const stats=()=>{ const el=document.getElementById('stats'); if(!el) return; const s=Math.floor(((done||Date.now())-t0)/1000), bt=store.get('best:'+key, 0);
-      el.innerHTML=NEW_UI ? gStats([['Found', found.size, '/'+placed.length], ['Time', mmss(s)], ['Best', bt ? mmss(bt) : '–']])
+      el.innerHTML=NEW_UI ? gStats([[T('Found','找到'), found.size, '/'+placed.length], [T('Time','时间'), mmss(s)], [T('Best','最佳'), bt ? mmss(bt) : '–']])
         : `<span>${T('Found','找到')} <b>${found.size}</b>/${placed.length}</span><span>${T('Time','用时')} <b>${mmss(s)}</b></span>${bt?`<span>${T('Best','最快')} <b>${mmss(bt)}</b></span>`:''}`; };
     const tick=()=>{ if(done) return; stats(); later(tick, 1000); };
     const drawList=()=>{
@@ -1362,7 +1417,7 @@ function playMatch(mode, withZh){
   const L=new Array(PER).fill(null), R=new Array(PER).fill(null);
   const first=draw(PER,[]); const lo=shuffle([...Array(PER).keys()]), ro=shuffle([...Array(PER).keys()]);
   first.forEach((w,i)=>{ L[lo[i]]=w; R[ro[i]]=w; });
-  const card=showCard(`<p class="instr">${withZh||mode==='def'?'Match each word to its meaning':mode==='mix'?'Match each word to its meaning or its synonyms':'Match each word to its synonym group'}</p>
+  const card=showCard(`<p class="instr">${withZh ? T('Match each word to its meaning','把每个单词和它的释义配对') : mode==='def'?'Match each word to its meaning':mode==='mix'?'Match each word to its meaning or its synonyms':'Match each word to its synonym group'}</p>
     <div class="match"><div class="col left">${L.map((_,i)=>`<button class="tile word" data-side="L" data-slot="${i}"></button>`).join('')}</div>
     <div class="col right">${R.map((_,i)=>`<button class="tile ${mode==='syn'?'syn':'def'}" data-side="R" data-slot="${i}"></button>`).join('')}</div></div>
     <p class="toast" id="toast" aria-live="polite"></p>`);
@@ -1391,13 +1446,13 @@ function playMatch(mode, withZh){
     if(a.dataset.id===b.dataset.id){
       [a,b].forEach(x=>{x.classList.add('done'); x.disabled=true;});
       if(wrongOn.has(id)){ wrongOn.delete(id); st.miss(byId[id]); } else st.hit(byId[id]);
-      toast('Correct: '+byId[id].w);
+      toast(TX('Correct: ','答对了：')+byId[id].w);
       if(qfDue()) return qfNext(()=>{}, 300);   // Daily Circuit quick-fire: three pairs, then another game
       later(()=>{ spentL.add(+left.dataset.slot); spentR.add(+right_.dataset.slot);
         if(spentL.size>=REFILL_AT) refill(); else paint(); }, 450);
     } else {
       if(!wrongOn.has(id)){ wrongOn.add(id); deck.retry(byId[id]); }
-      toast('Not a match. Try again.', true);
+      toast(TX('Not a match. Try again.','不配对，再试一次。'), true);
       [a,b].forEach(x=>{ x.classList.remove('shake'); void x.offsetWidth; x.classList.add('shake'); later(()=>x.classList.remove('shake'),400); });
     }
   });
@@ -2285,11 +2340,12 @@ function arcadeEnd(game, score, missed, again, o){
   clearTimers(); keyHandler=null; document.querySelector('.timer')?.remove();
   const prev=store.get('best:'+game.key,0), isBest=score>prev; if(isBest) store.set('best:'+game.key,score);
   const list=[...new Map(missed.map(w=>[w.id,w])).values()];
-  const card=showCard(`<div class="end"><p class="instr">${esc(game.name)} · ${o.title||"time's up"}</p>
-    <div class="big">${score}</div><p class="end-sub">${o.unit ? o.unit(score) : (score===1?'word':'words')+' found'}</p>${o.note||''}
-    <h2>${isBest ? 'New best score!' : 'Best score: '+Math.max(prev,score)}</h2>
-    ${list.length?`<p class="instr" style="margin-top:22px">Words to practise</p><ul class="review">${list.map(w=>`<li><b>${esc(w.w)}</b> – ${esc(w.def)}</li>`).join('')}</ul>`:''}
-    <div class="end-actions"><button class="btn" id="again">Play again</button><a class="btn alt" href="#">All games</a></div></div>`);
+  const zh=SIDE==='zh';
+  const card=showCard(`<div class="end"><p class="instr">${zh ? gameNameT(game) : esc(game.name)} · ${o.title||T("time's up",'时间到')}</p>
+    <div class="big">${score}</div><p class="end-sub">${o.unit ? o.unit(score) : T((score===1?'word':'words')+' found', '个单词')}</p>${o.note||''}
+    <h2>${isBest ? T('New best score!','新纪录！') : T('Best score: ','最高分：')+Math.max(prev,score)}</h2>
+    ${list.length?`<p class="instr" style="margin-top:22px">${T('Words to practise','要练习的单词')}</p><ul class="review">${list.map(w=>`<li><b>${esc(w.w)}</b>${zh && ZH[w.id] ? ` <span lang="zh-CN">${esc(ZH[w.id])}</span>` : ''} – ${esc(w.def)}</li>`).join('')}</ul>`:''}
+    <div class="end-actions"><button class="btn" id="again">${T('Play again','再玩一次')}</button><a class="btn alt" href="#">${T('All games','所有游戏')}</a></div></div>`);
   card.querySelector('#again').onclick=again;
   keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); again(); } };
 }
@@ -2311,16 +2367,17 @@ function playSnake(){
   const ENDLESS=!inCircuit && !classRun, timed=!inCircuit && !ENDLESS;   // ENDLESS: played from the Games row
   const nextQ=arcadeQuestions(N), best=store.get('best:snake',0);
   let score=0; const missed=[];
-  const snHint=`${touch?'Tap the screen on the side you want the snake to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the snake shorter. You can go through the walls.'}`;
+  const snHint=T(`${touch?'Tap the screen on the side you want the snake to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the snake shorter. You can go through the walls.'}`,
+    `${touch?'点击屏幕上你想让蛇转向的那一边。':'用方向键或 WASD 转向（也可以点击想转向的那一边）。'}${ENDLESS?'每吃对一个单词得 3 分。吃错一个，游戏就结束。咬到尾巴会扣分。蛇可以穿过墙。':'吃错单词，蛇会变短。蛇可以穿过墙。'}`);
   if(NEW_UI) gameLayout(game, snHint, {top:timed?timerBar():''});
   else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     <p class="hint">${snHint}</p>
     ${timed?timerBar():''}<div class="feed" id="feed"></div>`);
   const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    el.innerHTML=NEW_UI ? gStats([[ENDLESS?'Score':'Found', score], ...(timed?[['Time', SECS, 's', 'snSecs']]:[]), ['Best', Math.max(best,score)]])
+    el.innerHTML=NEW_UI ? gStats([[ENDLESS?T('Score','得分'):T('Found','找到'), score], ...(timed?[[T('Time','时间'), SECS, T('s','秒'), 'snSecs']]:[]), [T('Best','最佳'), Math.max(best,score)]])
       : `<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="snSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
-  const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="snDef"></p>
-    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="Word Snake board"></canvas><p class="snake-msg" id="snMsg">${touch?'Tap to start':'Press an arrow key to start'}</p></div>
+  const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="snDef"></p>
+    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="${TX('Word Snake board','单词贪吃蛇的游戏区')}"></canvas><p class="snake-msg" id="snMsg">${touch?T('Tap to start','点击开始'):T('Press an arrow key to start','按方向键开始')}</p></div>
     <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
   card.classList.add('arcade-card'); card.style.touchAction='manipulation';   // quick taps never zoom the page
   const box=card.querySelector('#snBoard'), cv=card.querySelector('#snCanvas'), cx=cv.getContext('2d'), msg=card.querySelector('#snMsg');
@@ -2387,8 +2444,8 @@ function playSnake(){
     if(ENDLESS){   // the wrong word ends the game: a moment to see it, then the score
       over=true; p.until=performance.now()+1400; say(`✗ ${p.w.w}: ${p.w.def}`, true);
       const want=q.w, ate=p.w;
-      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playSnake, {title:'game over', unit:n=>n===1?'point':'points',
-        note:`<p class="end-sub" style="margin:14px 0 20px">You ate <b>${esc(ate.w)}</b>: ${esc(ate.def)}<br>The word you needed was <b>${esc(want.w)}</b>.</p>`}); }, 1400);
+      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playSnake, {title:T('game over','游戏结束'), unit:n=>T(n===1?'point':'points','分'),
+        note:`<p class="end-sub" style="margin:14px 0 20px">${T(`You ate <b>${esc(ate.w)}</b>: ${esc(ate.def)}<br>The word you needed was <b>${esc(want.w)}</b>.`, `你吃了 <b>${esc(ate.w)}</b>：${esc(ate.def)}<br>你要找的单词是 <b>${esc(want.w)}</b>。`)}</p>`}); }, 1400);
       return; }
     const cut=Math.min(2, snake.length-3); if(cut>0){ snake.splice(snake.length-cut, cut); prevTail=null; }
     say(`✗ ${p.w.w}: ${p.w.def}`, true);
@@ -2400,8 +2457,8 @@ function playSnake(){
     prevHead=h; snake.unshift(nh);
     if(grow>0){ grow--; prevTail=null; } else prevTail=snake.pop();
     if(bite>0){ const lost=snake.length-(bite+1); snake=snake.slice(0, bite+1); prevTail=null;
-      if(ENDLESS){ const was=score; score=Math.max(0, score-lost); stats(); say(`Ouch! You bit your tail: −${was-score} point${was-score===1?'':'s'}.`, true); }
-      else say('Ouch! You bit your tail.', true); }
+      if(ENDLESS){ const was=score; score=Math.max(0, score-lost); stats(); say(TX(`Ouch! You bit your tail: −${was-score} point${was-score===1?'':'s'}.`, `哎哟！咬到尾巴了：−${was-score} 分。`), true); }
+      else say(TX('Ouch! You bit your tail.', '哎哟！咬到尾巴了。'), true); }
     const now=performance.now(); pills=pills.filter(p=>p.state!=='bad' || now<p.until); lastTick=now;
     const p=pillAt(nh.x, nh.y); if(p){ if(p.w===q.w) right(p); else wrong(p); }
   }
@@ -2418,7 +2475,7 @@ function playSnake(){
     // if the game does not fit on the screen, scroll so the timer and the whole card are in view
     if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8, behavior:'smooth'}); } }
   function pause(){ if(!started || paused || over) return; paused=true; if(timed) left=Math.max(0, end-Date.now());
-    msg.textContent=touch?'Paused. Tap to carry on':'Paused. Press an arrow key to carry on'; msg.hidden=false; }
+    msg.textContent=touch?TX('Paused. Tap to carry on','已暂停。点击继续'):TX('Paused. Press an arrow key to carry on','已暂停。按方向键继续'); msg.hidden=false; }
   function resume(){ if(!paused || over) return; paused=false; if(timed) end=Date.now()+left; msg.hidden=true; run(); }
   // The game's own minute (in the Daily Circuit, the circuit's clock ends the station instead)
   function clock(){ if(over || !timed || !alive()) return;
@@ -2503,7 +2560,7 @@ function playWhack(){
     <p class="hint">${wkHint}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
   const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    el.innerHTML=NEW_UI ? gStats([['Found', score], ...(inCircuit?[]:[['Time', SECS, 's', 'wkSecs']]), ['Best', Math.max(best,score)]])
+    el.innerHTML=NEW_UI ? gStats([[T('Found','找到'), score], ...(inCircuit?[]:[[T('Time','时间'), SECS, T('s','秒'), 'wkSecs']]), [T('Best','最佳'), Math.max(best,score)]])
       : `<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="wkSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
   const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="wkDef"></p>
     <div class="whack" id="wkBoard">${[...Array(9)].map((_,i)=>`<div class="hole"><div class="well"><button type="button" class="mole" tabindex="-1" disabled><span></span></button></div>${touch?'':`<kbd>${i+1}</kbd>`}</div>`).join('')}
@@ -2602,7 +2659,7 @@ function playInvaders(){
     <p class="hint">${ivHint}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
   const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    el.innerHTML=NEW_UI ? gStats([['Found', score], ...(inCircuit?[]:[['Time', SECS, 's', 'ivSecs']]), ['Best', Math.max(best,score)]])
+    el.innerHTML=NEW_UI ? gStats([[T('Found','找到'), score], ...(inCircuit?[]:[[T('Time','时间'), SECS, T('s','秒'), 'ivSecs']]), [T('Best','最佳'), Math.max(best,score)]])
       : `<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="ivSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
   const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="ivDef"></p>
     <div class="invaders" id="ivBoard"><div class="iv-ground"></div><div class="iv-gun" id="ivGun"></div>
@@ -2796,6 +2853,8 @@ const ZH_GAMES = [
 // Science pages (3 Nov 2026): the generated games, in their own section on the Chinese menu (zhMenu)
 const GEN_ZH = SIDE==='zh' ? GEN_GAMES.map(g=>({key:g.key, type:'chem', gen:true, name:g.name, zh:g.zh, blurb:g.blurb, zhBlurb:g.zhBlurb, run:g.run, ready:()=>g.items().length>=g.min})) : [];
 ZH_GAMES.push(...GEN_ZH);
+// Each game says it is the one on screen when it starts (the new layout's heading and side panel: zhShell, stage 4)
+ZH_GAMES.forEach(g=>{ const run=g.run; g.run=()=>{ ZH_NOW=g; return run(); }; });
 // The Chinese topic page (3 Nov 2026, teacher): three columns of three games, Vocab, Sentences and Games, "a 3x3 grid so
 // it should be neat and tidy". Choose the meaning and True or false left the page ("too similar to the other stuff and there's
 // too much stuff on the page") but stay in the Daily Circuit; Speed round and Survival are not on the grid either (their
@@ -2845,6 +2904,7 @@ function zhMenu(){
   };
   const grid=`<div class="zh-grid">${ZH_COLS.map(c=>`<h2 class="zh-col-h zh-col-${c.key}">${T(c.name, c.zh)}</h2>${c.games.map(cell).join('')}`).join('')}</div>`;
   const tile=g=>`<div class="game-lock" aria-disabled="true">${LOCK_SVG}<span class="gl-name">${T(g.name, g.zh)}</span><span class="gl-need">${lockText(g)}</span></div>`;
+  if(NEW_UI) return zhTopicPage(cell, card);
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version', html:T('Chinese version','中文版')}, `
   <section class="hero hero-compact hero-zhc">
     <p class="eyebrow">${T('Chinese version','中文版')}</p>
@@ -2857,7 +2917,32 @@ function zhMenu(){
   <div class="wl-link"><p>${T('See every word with its Chinese meaning.','查看所有单词和中文释义。')}</p><a class="btn alt" href="#words">${T('Word list','词汇表')}</a></div>`);
   wireLevels(zhMenu); wireSyl(zhMenu);
 }
+// THE NEW CHINESE SUBJECT PAGE (redesign stage 4, 8 Nov 2026; only when NEW_UI): the English subject page (topicPage) in
+// Chinese. The subject's area and name, its 我在学 switch, the topics (science pages) and the student's level (no level
+// buttons: on the Chinese side the level moves by itself as the student's words grow, see zhPoolWords); the word cards (the English word on the front; its Chinese, the meaning and an example on the back) and Your words;
+// then the games: the science page's own games (练习) and the three columns of three (词汇, 句子, 游戏: ZH_COLS), a game that
+// is not open yet keeping its place, greyed, with what opens it. cell and card: zhMenu's.
+function zhTopicPage(cell, card){
+  const sub=SUBJECT, area=sub && window.AEA_SUBJECTS ? AEA_SUBJECTS.areaOf(sub.area) : null, n=splitName(CFG.name||'');
+  const eyebrow=area ? T(esc(area.name), esc(area.zh||area.name)) : T('Chinese version','中文版');
+  const gen=(()=>{ if(!GEN_ZH.length) return ''; const on=GEN_ZH.filter(g=>g.ready()), off=GEN_ZH.filter(g=>!g.ready());
+    const why=sylNone() ? T('Choose your topics first','先选择主题') : T('None in your topics at this level yet','你的主题在本级别还没有题目');
+    return `<section class="col col-gen games-row" aria-labelledby="col-gen"><h2 id="col-gen">${T(esc(GEN.title||'Practice'), esc(GEN.titleZh||'练习'))}</h2>
+      <div class="games-grid">${on.map(card).join('')}${off.map(g=>`<div class="game off" aria-disabled="true"><h3>${T(g.name, g.zh)}</h3><span class="best">${why}</span></div>`).join('')}</div></section>`; })();
+  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'中文版 Chinese version'}, `
+  <section class="t-head" aria-labelledby="tH">
+    <div class="t-top"><div class="t-title"><p class="t-eyebrow"${area?` style="color:${area.color}"`:''}>${eyebrow}</p><h1 id="tH">${nameT(CFG.name)}</h1></div>${studyHtml()}</div>
+    ${sylPicker()}
+    <div class="t-lv">${zhLevelLine()}</div>
+  </section>
+  ${wordCardsHtml()}
+  ${gen}
+  <div class="cols zh-cols">${ZH_COLS.map(c=>`<section class="col col-${c.key}" aria-labelledby="col-${c.key}"><h2 id="col-${c.key}">${T(c.name, c.zh)}</h2>${c.games.map(cell).join('')}</section>`).join('')}</div>`,
+    {label:n.en, zh:n.zh}, 'topic');
+  wireSyl(zhMenu); wireStudy(); wireCards();
+}
 function zhShell(title, note){
+  if(NEW_UI) return gameLayout(ZH_NOW || {key:'', name:String(title).replace(/<[^>]*>/g,'')}, note, {titleHtml:title});
   frame({href:'#', label:CFG.name||'Back', html:CFG.name?nameT(CFG.name):''}, `<div class="bar"><span class="title">${title}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
 }
@@ -2893,7 +2978,7 @@ function learnHtml(teaser){
   </section>`;
 }
 function playLearn(){
-  P.refresh();
+  ZH_NOW={key:'learn', name:'Learn the words', zh:'学习单词'}; P.refresh();
   const p=zhLevelWords(), pool=p.length>=8 ? p : S.words.filter(w=>ZH[w.id]), now=Date.now();
   const batch=p.filter(w=>stageOf(w)==='new').slice(0, LEARN_N), review=!batch.length;
   const isDue=w=>{ const r=P.wordRec(w.id); return r && r.s<4 && (r.due||0)<=now; };
@@ -3267,7 +3352,9 @@ function progressPage(){
   const stats=`<div class="stat-tiles"><div class="stat"><b>${answers}</b><span>answers</span></div><div class="stat"><b>${answers?Math.round(100*right/answers):0}%</b><span>right</span></div>
     <div class="stat"><b>${streak}</b><span>day${streak===1?'':'s'} in a row</span></div><div class="stat"><b>${known}</b><span>words known · ${learning} learning</span></div></div>`;
   const note=loggedIn()?'Your progress is saved to your account, so it is the same on every device you log in on.':'Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.';
-  // New look (stage 3, 8 Nov 2026): the same figures, as boxes across the width; the account panel (account.js) goes under the heading
+  // New look (stage 3, 8 Nov 2026): the same figures, as boxes across the width; the account panel (account.js) goes under the heading.
+  // Opened from the Chinese side (stage 4): the same page, every label in both languages (T: ZH_UI)
+  if(NEW_UI && ZH_UI) return progressZh({list, answers, right, known, learning, streak, L, PT, fmt, row});
   if(NEW_UI) return frame(null, `
   <section class="hero p-head"><p class="g-eyebrow">My progress</p>
     <h1>${L ? nameHtml(L.name) : 'Let’s find your level'}</h1>
@@ -3301,14 +3388,63 @@ function progressPage(){
   <p class="hint" style="margin-top:22px">${loggedIn()?'Your progress is saved to your account, so it is the same on every device you log in on.':'Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.'}</p>`, 'My progress');
 }
 
+// My progress opened from the Chinese side (stage 4, 8 Nov 2026): the new-look page, in both languages (the English / 中文
+// switch shows one). The figures are the same as on the English page (progressPage works them out).
+function progressZh({list, answers, right, known, learning, streak, L, PT, fmt}){
+  const lvT=x=>T(nameHtml(x.name), x.zh||nameHtml(x.name));
+  const ptsCard=(side,label)=>{ const t=PT?PT.totals(side):{};
+    return `<div class="pts-card"><p class="pts-card-k">${label}</p><div class="pts-nums">${[['s','this session','本次'],['d','today','今天'],['w','this week','本周'],['m','this month','本月'],['t','total','总计']]
+      .map(([k,l,z])=>`<div${k==='t'?' class="pts-total"':''}><b>${fmt(t[k])}</b><span>${T(l, z)}</span></div>`).join('')}</div>
+      ${PT?(()=>{ const goal=PT.WEEKLY_TARGET, w=t.w||0; return `<p class="pts-goal">${w>=goal?T(`<b>Weekly target reached!</b> ${fmt(w)} of ${goal} points`, `<b>本周目标达成！</b>${fmt(w)} / ${goal} 积分`):T(`This week: ${fmt(w)} of ${goal} points · ${fmt(goal-w)} to go`, `本周：${fmt(w)} / ${goal} 积分 · 还差 ${fmt(goal-w)}`)}</p><span class="lvl-bar"><i style="width:${Math.min(100,100*w/goal)}%"></i></span>`; })():''}</div>`; };
+  const days=PT?PT.lastDays(14):[], pmax=Math.max(1,...days.map(x=>x.en+x.zh));
+  const chart=`<div class="days pts-days" role="img" aria-label="${TX('Points per day over the last 14 days','最近 14 天每天的积分')}">${days.map(x=>{ const tot=x.en+x.zh;
+      return `<span class="pcol${tot?'':' zero'}" title="${x.date.toDateString()}: ${x.en} English, ${x.zh} 中文版"><i class="zh" style="height:${100*x.zh/pmax}%"></i><i class="en" style="height:${100*x.en/pmax}%"></i></span>`; }).join('')}</div>
+    <p class="legend"><span class="sw en"></span>${T('English','英文版')} <span class="sw zh"></span>${T('Chinese version','中文版')}</p>`;
+  const how=`<details class="pts-how"><summary>${T('How to earn points','如何获得积分')}</summary>
+    <ul><li>${T('Only right answers earn points. Harder levels and longer tasks earn more.','只有答对才得分。级别越高、任务越长，得分越多。')}</li>
+      <li>${T(`Every ${PT?PT.DOCK_EVERY:5} wrong answers take 1 point off (never below 0 for the day).`, `每答错 ${PT?PT.DOCK_EVERY:5} 题扣 1 分（每天最低为 0）。`)}</li>
+      <li>${T('A reading passage’s points are shared between its questions.','一篇阅读文章的积分分摊到它的每道题。')}</li>
+      <li>${T('English and Chinese version points are counted separately. The week starts on Monday.','英文版和中文版的积分分开计算。每周从星期一开始。')}</li>
+      <li>${T(`Weekly target: ${PT?PT.WEEKLY_TARGET:200} points.`, `每周目标：${PT?PT.WEEKLY_TARGET:200} 积分。`)}</li></ul>
+    <div class="pts-table-wrap"><table class="pts-table"><thead><tr><th>${T('Task','任务')}</th>${Object.keys(LEVEL_NAMES).map(c=>`<th>${T(esc(LEVEL_NAMES[c]), LEVEL_ZH[c])}</th>`).join('')}</tr></thead>
+      <tbody>${POINT_KINDS.map(([k,label])=>`<tr><td>${T(esc(label), esc(POINT_KINDS_ZH[k]||label))}</td>${POINTS[k].map(n=>`<td>${n}</td>`).join('')}</tr>`).join('')}</tbody></table></div></details>`;
+  const row=t=>{ const found=t.n>=P.CAL, l=found?P.label(t.r):null, w=t.words, pct=t.n?Math.round(100*t.right/t.n):0;
+    return `<a class="prog-row" href="${esc(t.href||'#')}"><span class="prog-name">${t.side==='zh' ? nameT(t.name) : esc(t.name)}<small>${t.side==='zh'?'中文版':'English'}</small></span>
+      <span class="prog-lvl">${found?`<b>${lvT(l)}</b>`:T(`Finding level · ${t.n} of ${P.CAL}`, `正在评估 · ${t.n} / ${P.CAL}`)}</span>
+      <span class="lvl-bar"><i style="width:${found?l.pct:t.n*100/P.CAL}%"></i></span>
+      <span class="prog-meta">${T(`${w&&w.total?`${w.known} of ${w.total} words known · `:''}${t.n} answer${t.n===1?'':'s'} · ${pct}% right${t.pts?` · ${fmt(t.pts)} points`:''}`,
+        `${w&&w.total?`已掌握 ${w.known} / ${w.total} 个单词 · `:''}作答 ${t.n} 次 · 答对 ${pct}%${t.pts?` · ${fmt(t.pts)} 积分`:''}`)}</span></a>`; };
+  const stats=`<div class="stat-tiles"><div class="stat"><b>${answers}</b><span>${T('answers','次作答')}</span></div><div class="stat"><b>${answers?Math.round(100*right/answers):0}%</b><span>${T('right','答对率')}</span></div>
+    <div class="stat"><b>${streak}</b><span>${T(`day${streak===1?'':'s'} in a row`, '天连续')}</span></div><div class="stat"><b>${known}</b><span>${T(`words known · ${learning} learning`, `个单词已掌握 · ${learning} 个学习中`)}</span></div></div>`;
+  const note=loggedIn()?T('Your progress is saved to your account, so it is the same on every device you log in on.','你的进步保存在你的账号里，在任何设备上登录都一样。')
+    :T('Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.','进步保存在这台设备的浏览器里。清除浏览数据或换一台电脑，就会从头开始。登录后可以保存在你的账号里。');
+  frame(null, `
+  <section class="hero p-head"><p class="g-eyebrow">${T('My progress','我的进步')}</p>
+    <h1>${L ? lvT(L) : T('Let’s find your level','来看看你的水平')}</h1>
+    <p>${L ? T(`Your overall level, from everything you have played.${L.next?` You are ${L.pct}% of the way to ${esc(L.next)}.`:''}`, `你的总体水平，来自你玩过的所有游戏。${L.next?`距离${L.nextZh}还有 ${100-L.pct}%。`:''}`)
+      : T(`Play any game. After ${P.CAL} answers in a topic, your level appears here.`, `玩任何一个游戏。在一个主题里答 ${P.CAL} 题后，你的水平就会显示在这里。`)}</p>
+    ${L?`<span class="g-bar p-bar" aria-hidden="true"><i style="width:${L.pct}%"></i></span>`:''}
+  </section>
+  ${stats}
+  <div class="p-grid">
+    <section class="p-box" aria-labelledby="pPtsH"><h2 id="pPtsH">${T('Points','积分')}</h2><div class="pts-cards">${ptsCard('zh',T('Chinese version','中文版'))}${ptsCard('en',T('English','英文版'))}</div></section>
+    <section class="p-box" aria-labelledby="pDaysH"><h2 id="pDaysH">${T('Points, last 14 days','最近 14 天的积分')}</h2>${chart}</section>
+  </div>
+  <section class="p-topics" aria-labelledby="pTopH"><h2 id="pTopH" class="p-h">${T('Your subjects','你的科目')}</h2>
+    <div class="prog-list">${list.length?list.map(row).join(''):`<p class="notice">${T('No games played yet on this device.','这台设备上还没有游戏记录。')}</p>`}</div></section>
+  ${how}
+  <p class="p-note">${note}</p>`, {label:'My progress', zh:'我的进步'}, 'progress');
+}
 const loggedIn = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(); return !!(a && a.token); }catch(e){ return false; } };
 
 // ---------- WORD LIST ----------
 function wordList(){
-  const head=NEW_UI ? `<div class="g-head"><div class="g-title"><p class="g-eyebrow">${esc(CFG.name||'')}</p><h1>Word list</h1><p class="g-hint">Every word in this subject, with its meaning and an example. Your level comes first.</p></div></div>`
+  const zh=SIDE==='zh';
+  const head=NEW_UI && zh ? `<div class="g-head"><div class="g-title"><p class="g-eyebrow">${nameT(CFG.name||'')}</p><h1>${T('Word list','词汇表')}</h1><p class="g-hint">${T('Every word in this subject, with its Chinese, its meaning and an example. Your level comes first.','这个科目的所有单词，附中文、英文释义和例句。你的级别排在最前面。')}</p></div></div>`
+    : NEW_UI ? `<div class="g-head"><div class="g-title"><p class="g-eyebrow">${esc(CFG.name||'')}</p><h1>Word list</h1><p class="g-hint">Every word in this subject, with its meaning and an example. Your level comes first.</p></div></div>`
     : `<div class="bar"><span class="title">${T('Word list','词汇表')}</span></div>`;
   frame({href:'#', label:CFG.name||'Back', html:SIDE==='zh'&&CFG.name?nameT(CFG.name):''}, `${head}
-    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`, 'Word list', NEW_UI ? 'list' : undefined);
+    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`, zh ? {label:'Word list', zh:'词汇表'} : 'Word list', NEW_UI ? 'list' : undefined);
   let q='';
   const draw=()=>{ const t=q.trim().toLowerCase(); let html='';
     // One heading per level, the chosen level first
@@ -3318,7 +3454,7 @@ function wordList(){
       const chosen=lb===chosenBand()&&LEVELS.length>1;
       const head=lb==null ? (LEVELS.length?T('Other words','其他单词'):'') : T(esc(bandName(lb))+(chosen?' · chosen level':''), LEVEL_ZH[LEVEL_CODES[lb]]+(chosen?' · 当前级别':''));
       html+=`${head?`<p class="instr" style="margin:22px 0 8px">${head}</p>`:''}<div class="wl">${ws.map(w=>`<div class="wl-row">
-        <div class="w">${esc(w.w)}${w.pos?`<small>${esc(w.pos)}</small>`:''}${ZH[w.id]&&CFG.only==='zh'?`<span class="zh" lang="zh-CN">${esc(ZH[w.id])}</span>`:''}${NEW_UI?(()=>{ const st=stageOf(w); return `<span class="fc-stage st-${st}">${(STAGES.find(x=>x[0]===st)||[])[1]}</span>`; })():''}</div>
+        <div class="w">${esc(w.w)}${w.pos?`<small>${esc(w.pos)}</small>`:''}${ZH[w.id]&&CFG.only==='zh'?`<span class="zh" lang="zh-CN">${esc(ZH[w.id])}</span>`:''}${NEW_UI?(()=>{ const st=stageOf(w), x=STAGES.find(x=>x[0]===st)||[]; return `<span class="fc-stage st-${st}">${T(x[1], x[2])}</span>`; })():''}</div>
         <div class="d">${esc(w.def)}${w.ex?`<br><i>${esc(w.ex)}</i>`:''}${w.syn&&w.syn.length?`<div class="syns">≈ ${esc(w.syn.join(' · '))}</div>`:''}</div></div>`).join('')}</div>`; }
     document.getElementById('list').innerHTML=html||`<p>${T('No words match that search.','没有找到匹配的单词。')}</p>`; };
   document.getElementById('q').oninput=e=>{q=e.target.value; draw();}; draw();
@@ -3649,10 +3785,12 @@ window.addEventListener('pagehide', ()=>{ const c=classRun; if(c && window.AEA_A
 
 // ---------- router ----------
 // The last game opened on this topic page, for the home page's "Continue: …" button (redesign stage 1, 8 Nov 2026).
-// English topic pages only, not in the Daily Circuit or a class game. Saved in aea:lastgame:v1 = {"en/web-design/index.html": {key, name, t}}.
-function lastGame(key, name){
-  if(SIDE!=='en' || CFG.only || inCircuit || classRun) return;
-  try{ const k='aea:lastgame:v1', m=JSON.parse(localStorage.getItem(k))||{}; m[PAGE]={key, name, t:Date.now()}; localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
+// Topic pages only (English, and the Chinese version's since stage 4: with the game's Chinese name, zh), not in the Daily
+// Circuit or a class game. Saved in aea:lastgame:v1 = {"en/web-design/index.html": {key, name, t}, "zh/…": {key, name, zh, t}}.
+function lastGame(key, name, zh){
+  if((SIDE==='en' ? CFG.only : CFG.only!=='zh') || inCircuit || classRun) return;
+  const pg=/\/$/.test(PAGE) ? PAGE+'index.html' : PAGE;   // (the address without index.html: saved under the subject list's path)
+  try{ const k='aea:lastgame:v1', m=JSON.parse(localStorage.getItem(k))||{}; m[pg]=zh ? {key, name, zh, t:Date.now()} : {key, name, t:Date.now()}; localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
 }
 function route(){
   const h=location.hash.replace(/^#/,''), cg=/^class-(\d+)$/.exec(h);
@@ -3680,7 +3818,8 @@ function route(){
     if(h==='words') return wordList();
     if(h==='learn') return zhLevelWords().length>=4 ? playLearn() : zhMenu();
     const g=h==='play-snake' ? ZH_SNAKE : ZH_GAMES.find(x=>'play-'+x.key===h);
-    return g && zhReady(g) ? g.run() : zhMenu();
+    if(g && zhReady(g)){ lastGame(g.key, g.name, g.zh); return g.run(); }
+    return zhMenu();
   }
   if(!h) return menu();
   if(h==='words') return wordList();

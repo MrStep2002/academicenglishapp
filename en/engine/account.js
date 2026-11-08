@@ -141,6 +141,7 @@ function chip(side){
 function panel(){
   const a = account(), from = encodeURIComponent(location.pathname + location.search);
   const login = ROOT + 'login/index.html?from=' + from;
+  if(document.documentElement.hasAttribute('data-ui')) return panelOne(a, login);
   if(a && a.token) return `<div class="acct-panel"><div class="acct-txt"><p class="acct-k">Your account 你的账户</p>` +
     `<p class="acct-who"><b>${esc(a.name)}</b>${a.className ? ' · Class ' + esc(a.className) : ''}</p>` +
     `<p class="acct-note">Your progress is saved to your account, so you can carry on from any computer or phone. On a shared computer, log out when you finish. ` +
@@ -152,6 +153,22 @@ function panel(){
   return `<div class="acct-panel"><div class="acct-txt"><p class="acct-k">Your account 你的账户</p>` +
     `<p class="acct-note">You are not logged in, so your progress is saved on this device only. Log in with the name and password from your teacher to carry on from any device. ` +
     `<span lang="zh">登录后，在任何设备上都可以继续。</span></p></div><a class="acct-btn" href="${login}">Log in 登录</a></div>`;
+}
+// The same, one language at a time (My progress opened from the Chinese side, redesign stage 4, 8 Nov 2026: the English /
+// 中文 switch shows one)
+function panelOne(a, login){
+  const L = (en, zh) => `<span class="t-en">${en}</span><span class="t-zh" lang="zh">${zh}</span>`;
+  const k = `<p class="acct-k">${L('Your account', '你的账户')}</p>`;
+  if(a && a.token) return `<div class="acct-panel"><div class="acct-txt">${k}` +
+    `<p class="acct-who"><b>${esc(a.name)}</b>${a.className ? ' · ' + L('Class ' + esc(a.className), '班级 ' + esc(a.className)) : ''}</p>` +
+    `<p class="acct-note">${L('Your progress is saved to your account, so you can carry on from any computer or phone. On a shared computer, log out when you finish.', '进度保存在你的账户里，在任何电脑或手机上都可以继续。在公用电脑上，结束后请退出。')}</p></div>` +
+    `<button class="acct-btn" type="button" data-acct-out>${L('Log out', '退出')}</button></div>`;
+  if(a) return `<div class="acct-panel"><div class="acct-txt">${k}<p class="acct-who"><b>${esc(a.name)}</b></p>` +
+    `<p class="acct-note">${L('Please log in again to keep saving your progress to your account.', '请重新登录，才能继续把进度保存到你的账户里。')}</p></div>` +
+    `<a class="acct-btn" href="${login}">${L('Log in again', '重新登录')}</a></div>`;
+  return `<div class="acct-panel"><div class="acct-txt">${k}` +
+    `<p class="acct-note">${L('You are not logged in, so your progress is saved on this device only. Log in with the name and password from your teacher to carry on from any device.', '你还没有登录，所以进度只保存在这台设备上。用老师给你的用户名和密码登录，就可以在任何设备上继续。')}</p></div>` +
+    `<a class="acct-btn" href="${login}">${L('Log in', '登录')}</a></div>`;
 }
 function style(){
   if(document.getElementById('acct-style')) return;

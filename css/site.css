@@ -4,6 +4,7 @@
    3. The landing page (index.html) and the home page (en/index.html), drawn by en/engine/home.js
    4. Game pages (stage 2): the path in the top bar, the game and its side panel, Close reading (en/engine/app.js, NEW_UI)
    5. Subject pages, the word list and My progress (stage 3; app.js), then Reading Comprehension, the Daily Circuit page and login
+   6. The Chinese version (stage 4): the same pages in Chinese
    Everything is prefixed aea- so nothing clashes with the game pages (en/engine/styles.css) or css/home.css. */
 
 /* ---------- 1. Fonts and colours ---------- */
@@ -774,11 +775,11 @@ html.aea-shelled #app[data-view="progress"] { gap: 26px; }
 .aea-page .cc-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .aea-page .cc-chip { display: inline-flex; align-items: center; min-height: 36px; padding: 0 14px; border: 1px solid var(--sh-green); border-radius: 99px; color: var(--sh-ink); background: var(--sh-green-soft); font-size: 15px; }
 .aea-page .cc-small a { font-weight: 700; color: var(--sh-link); }
-/* Log in: the form in a card, in English (the Chinese version keeps its own page: data-skip-zh) */
+/* Log in: the form in a card, in English (from the Chinese version, html.aea-zh: with the Chinese beside it, as before) */
 html.aea-shelled .aea-login .aea-content > .home { max-width: 640px; margin: 0; padding: 30px clamp(16px, 2.6vw, 40px) 56px; gap: 22px; }
 html.aea-shelled .aea-login .navline { display: none; }
 html.aea-shelled .aea-login .aea-top-end { display: none; }
-html.aea-shelled .aea-login [lang="zh"] { display: none; }
+html.aea-shelled:not(.aea-zh) .aea-login [lang="zh"] { display: none; }
 html.aea-shelled .aea-login .intro .eyebrow { font: 400 13px/1.4 var(--sh-mono); letter-spacing: .1em; color: var(--sh-muted); }
 html.aea-shelled .aea-login .intro h1 { margin: 0; font: 400 clamp(40px, 4.2vw, 56px)/1 var(--sh-serif); color: var(--sh-ink); }
 html.aea-shelled .aea-login #panel { padding: 28px; gap: 18px; border: 1px solid var(--sh-line); border-radius: 14px; background: var(--sh-card); color: var(--sh-ink); }
@@ -812,3 +813,15 @@ html.aea-shelled body.aea-login { background: var(--sh-bg); color: var(--sh-ink)
   .aea-page .cc-panel { padding: 22px; }
   .aea-act { min-height: 0; }
 }
+
+/* ---------- 6. The Chinese version (redesign stage 4, 8 Nov 2026) ----------
+   The same pages in Chinese (zh/, and My progress, Maths and Log in when opened from there). Every label is written in both
+   languages, each in its own span (class t-en / t-zh), and <html data-ui="en|zh"> (the English / 中文 switch: account.js)
+   shows one. html.aea-zh: the shell is the Chinese version's (shell.js data-side="zh"). */
+[data-ui="zh"] .t-en, [data-ui="en"] .t-zh { display: none !important; }
+.t-zh, .aea-shell [lang="zh-CN"] { font-family: var(--sh-zh); letter-spacing: 0; }
+html.aea-zh h1 .t-zh, html.aea-zh h2 .t-zh, html.aea-zh h3 .t-zh, html.aea-zh .aea-h1 .t-zh { font-weight: 600; }
+html.aea-zh .aea-streak i.t-zh { text-transform: none; }
+/* A Chinese subject page (app.js zhTopicPage): the word card's back has the Chinese; the three columns 词汇, 句子, 游戏 */
+.fc-zh { margin: 0; font: 600 clamp(28px, 2.6vw, 36px)/1.25 var(--sh-zh); color: var(--sh-ink); }
+#app[data-view="topic"] .col-sentences h2::before { background: var(--good); }

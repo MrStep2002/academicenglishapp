@@ -7,15 +7,18 @@
    - always: always in the Daily Circuit (Academic English Essentials); no switch
    - circuit: false = not in the Daily Circuit (no "I study this" switch): Reading Comprehension, Maths
    - soon: shown greyed as "Coming soon", no page yet
-   Load it before shell.js:  <script src="…/en/engine/subjects.js?v=…"></script> */
+   Load it before shell.js:  <script src="…/en/engine/subjects.js?v=…"></script>
+   THE CHINESE VERSION'S LIST (stage 4, 8 Nov 2026): ZH_SUBJECTS below, the same areas and conventions with fewer subjects;
+   zh: the Chinese name, shown on the Chinese side (the English name shows when the student picks EN). forSide('zh') gives
+   the list for that side. */
 (function(){
 'use strict';
 const AREAS = [
-  {key: 'every', name: 'Every subject', color: 'var(--sh-ink, #151935)'},   // navy (white in dark mode)
-  {key: 'eng',   name: 'English Language', color: '#b4286a'},
-  {key: 'media', name: 'Media', color: '#1a5cb0'},
-  {key: 'maths', name: 'Maths', color: '#9a4a00'},
-  {key: 'sci',   name: 'Science', color: '#11694a'}
+  {key: 'every', name: 'Every subject', zh: '所有学科', color: 'var(--sh-ink, #151935)'},   // navy (white in dark mode)
+  {key: 'eng',   name: 'English Language', zh: '英语语言', color: '#b4286a'},
+  {key: 'media', name: 'Media', zh: '媒体', color: '#1a5cb0'},
+  {key: 'maths', name: 'Maths', zh: '数学', color: '#9a4a00'},
+  {key: 'sci',   name: 'Science', zh: '科学', color: '#11694a'}
 ];
 const SUBJECTS = [
   {path: 'en/essentials/index.html',            name: 'Academic English Essentials', area: 'every', always: true},
@@ -32,6 +35,20 @@ const SUBJECTS = [
   {path: 'en/chemistry/index.html',             name: 'Chemistry',             area: 'sci'},
   {path: 'en/physics/index.html',               name: 'Physics',               area: 'sci'},
   {path: '',                                    name: 'Biology',               area: 'sci', soon: true}
+];
+// The Chinese version (zh/): Essentials, the topics that have their Chinese, and Maths (its pages are in both languages).
+// Mockingbird and Reading Comprehension are English only.
+const ZH_SUBJECTS = [
+  {path: 'zh/essentials/index.html',        name: 'Academic English Essentials', zh: '学术英语基础', area: 'every', always: true},
+  {path: 'zh/descriptive/index.html',       name: 'Descriptive language', zh: '描写性语言', area: 'eng'},
+  {path: 'zh/web-design/index.html',        name: 'Web design',           zh: '网页设计',   area: 'media'},
+  {path: 'zh/representation/index.html',    name: 'Representation',       zh: '再现',       area: 'media'},
+  {path: 'zh/describing-people/index.html', name: 'Media Descriptors',    zh: '媒体描述词', area: 'media'},
+  {path: 'zh/advertising/index.html',       name: 'Advertising',          zh: '广告',       area: 'media'},
+  {path: 'maths/index.html?from=zh',        name: 'Maths',                zh: '数学',       area: 'maths', circuit: false},
+  {path: 'zh/chemistry/index.html',         name: 'Chemistry',            zh: '化学',       area: 'sci'},
+  {path: 'zh/physics/index.html',           name: 'Physics',              zh: '物理',       area: 'sci'},
+  {path: '',                                name: 'Biology',              zh: '生物',       area: 'sci', soon: true}
 ];
 
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -58,5 +75,8 @@ function legacyHtml(){
   return html;
 }
 
-window.AEA_SUBJECTS = {AREAS, SUBJECTS, areaOf, ordered, switchable, legacyHtml};
+// One side's list: {SUBJECTS, ordered()} for 'en' (also maths) or 'zh'
+const forSide = side => { const list = side === 'zh' ? ZH_SUBJECTS : SUBJECTS; return {SUBJECTS: list, ordered: () => AREAS.flatMap(a=>list.filter(s=>s.area===a.key))}; };
+
+window.AEA_SUBJECTS = {AREAS, SUBJECTS, ZH_SUBJECTS, areaOf, ordered, switchable, legacyHtml, forSide};
 })();
