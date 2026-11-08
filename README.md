@@ -60,14 +60,22 @@ what the page already has, so the games and pages underneath are unchanged.
 - **Top bar**: Subjects ▾ (areas on the left, their subjects on the right, with the student's level where it has been found), then the
   days in a row, the points (Day · Week · Total) and Log in or the student's name.
 - **Phones** (under 860px wide): the sidebar becomes a menu behind the ☰ button; the points and name move into it.
-- The page's own points bar, Log in button and mouse logo are hidden; its back link stays.
+- The page's own points bar, Log in button and mouse logo are hidden. Pages drawn by the game engine (the topic pages,
+  their games, Reading Comprehension, Listening, My progress) show the path in the top bar instead of a back link
+  (Home / Descriptive language / Fill the gap): app.js passes it to `AEA_SHELL.crumbs()`. Other pages keep their back link.
 - Each English page loads, after `account.js`: `<script src="…/en/engine/subjects.js?v=…"></script>` and
   `<script src="…/en/engine/shell.js?v=…"></script>`, with `<link rel="stylesheet" href="…/css/site.css?v=…">` in the `<head>`.
   On My progress and Maths the shell has `data-skip-zh`: opened from the Chinese side, those pages keep their old look for now.
   Maths uses `data-side="maths"` for its points.
 - "Continue: …" on the home page: the topic pages remember the last game opened on each topic (`aea:lastgame:v1`, `lastGame()` in app.js).
-- The Chinese pages, login and the teacher page do not have the shell yet. Coming stages: the game pages, the topic pages (with the
-  word cards), My progress, Reading Comprehension, the Daily Circuit page, login, then the Chinese version.
+- **Game pages** (stage 2, 8 Nov 2026; `NEW_UI` in app.js, section 4 of `css/site.css`): the game's column, its name and
+  how to play, then the game on the left and a side panel on the right: This round (or This game), any settings (Listen,
+  Tell me how many), Playing at (the level, with Change), the keys (`KEY_HELP` in app.js: keep it in step with a game's keys)
+  and More in this subject (not in the Daily Circuit or a class game). Close reading and Big idea: the passage on the left,
+  every question on the right; choose the answers, then Confirm, then Next passage (`passageBoth()`); Note taking the same
+  way. On phones the score is one line under the name and the keys and More are left out.
+- The Chinese pages, login and the teacher page do not have the shell yet. Coming stages: the topic pages (with the word
+  cards), My progress, the Reading Comprehension and Daily Circuit pages, login, then the Chinese version.
 - After changing `shell.js`, `subjects.js`, `home.js` or `site.css`, change the `?v=` number after them on the pages that load them.
 
 ## English games by category

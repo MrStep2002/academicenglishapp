@@ -7,6 +7,8 @@
      (points.js draws them) and the Log in button or the student's name (account.js puts it next to the points)
    - on phones (under 860px) the sidebar becomes a menu that slides in from the left (the ☰ button)
    The page's own points bar, Log in button and mouse logo are hidden (the shell shows them instead); its back link stays.
+   Game pages (stage 2, 8 Nov 2026): the game engine (app.js) calls AEA_SHELL.crumbs([{label, href}, …]) and the top bar
+   shows that path (Home / Descriptive language / Fill the gap) in place of the Subjects menu; crumbs(null) brings the menu back.
    Load it on every English page after points.js, account.js and subjects.js, with css/site.css in the <head>:
      <script src="…/en/engine/subjects.js?v=…"></script><script src="…/en/engine/shell.js?v=…"></script>
    Options on the script tag:
@@ -68,6 +70,22 @@ const here = SUBJ.SUBJECTS.find(s=>s.path && PAGE.indexOf(norm(s.path)) === 0 &&
 const LANDING = PAGE === '' || PAGE === 'index.html';   // the landing page: its own list of every subject is #all
 const activeNav = PAGE === 'en/index.html' || PAGE === 'en/' || PAGE === '' || PAGE === 'index.html' ? 'home'
   : PAGE.indexOf('en/circuit/') === 0 ? 'circuit' : PAGE.indexOf('progress/') === 0 ? 'progress' : '';
+
+// ----- the path at the top of a game page (Home / Descriptive language / Fill the gap), set by app.js -----
+let CRUMBS = null;
+function crumbsHtml(){
+  if(!CRUMBS) return '';
+  const last = CRUMBS.length - 1;
+  return `<nav class="aea-crumbs" aria-label="Breadcrumb"><ol>${CRUMBS.map((c, i)=> (i ? '<li class="aea-crumb-sep" aria-hidden="true">/</li>' : '') +
+    (i < last && c.href ? `<li><a href="${esc(c.href)}">${esc(c.label)}</a></li>` : `<li aria-current="page"><span>${esc(c.label)}</span></li>`)).join('')}</ol></nav>`;
+}
+function setCrumbs(list){
+  CRUMBS = Array.isArray(list) && list.length ? list.map(c=>({label: String(c.label||''), href: c.href||''})) : null;
+  document.documentElement.classList.toggle('aea-crumbed', !!CRUMBS);
+  const slot = document.querySelector('.aea-crumbs-slot'); if(!slot) return;   // not built yet: build() draws them
+  slot.innerHTML = crumbsHtml();
+  if(CRUMBS) setSubjects(false);
+}
 
 // ----- icons -----
 const I = {
@@ -159,6 +177,7 @@ function build(){
           <button type="button" class="aea-subj-btn" aria-expanded="false" aria-controls="aea-subj-menu">Subjects ${icon('down', 16)}</button>
           <div class="aea-subj-menu" id="aea-subj-menu" hidden>${menuHtml()}</div>
         </div>
+        <div class="aea-crumbs-slot">${crumbsHtml()}</div>
         <div class="aea-top-end">
           <span class="aea-streak" hidden>${icon('flame', 18)}<b></b><i>days in a row</i></span>
           <div class="pts" data-points-bar="${esc(SIDE)}"></div>
@@ -249,6 +268,6 @@ function wire(shell){
   setInterval(drawStreak, 30000);
 }
 
-window.AEA_SHELL = {ROOT, redraw: redrawSide, streak, levelIn, studying};
+window.AEA_SHELL = {ROOT, redraw: redrawSide, streak, levelIn, studying, crumbs: setCrumbs, home: homeHref};
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();

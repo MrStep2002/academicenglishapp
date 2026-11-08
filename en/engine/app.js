@@ -9,6 +9,12 @@ const $app = document.getElementById('app');
 const CFG = $app.dataset;   // data-name, data-blurb, data-back, data-back-label, data-only, data-content, data-reading, data-format, data-store, data-odd, data-hide, data-list, data-linked
 const KEY = CFG.store || (CFG.content||'').replace(/\/+$/,'').split('/').pop() || 'topic';   // where this page's progress is saved
 const SIDE = (CFG.only==='zh' || /^zh/.test(KEY)) ? 'zh' : 'en';
+// The new look (redesign stage 2, 8 Nov 2026): English pages with the site shell (en/engine/shell.js: sidebar and top bar)
+// draw their games in the new layout: the path in the top bar (Home / Descriptive language / Fill the gap) instead of the
+// back link, the game with a side panel beside it (This round, Playing at, Keys, More in this subject), and on the
+// Reading Comprehension pages the passage beside both questions with one Confirm. See frame(), gameLayout() and
+// css/site.css (4. Game pages). The Chinese side keeps the older layout until stage 4.
+const NEW_UI = !!(window.AEA_SHELL && window.AEA_SHELL.crumbs) && SIDE!=='zh';
 // Generated games (Science, 3 Nov 2026): a page can load a module before this file that makes questions by rules from
 // data tables (en/engine/chem.js sets window.AEA_GEN). See GENERATED GAMES and SYLLABUS TOPICS below. Every other page: null.
 const GEN = window.AEA_GEN || null;
@@ -361,7 +367,7 @@ function rankForLevel(items){
 }
 // Show the points just earned (or the point taken off) in the answer's feedback, when there is one
 function earned(change){
-  if(!change) return; const v=document.querySelector('#feed .card .feedback .verdict'); if(!v) return;
+  if(!change) return; const v=document.querySelector('#feed .card .feedback .verdict, #feed .card .cr-end'); if(!v) return;
   if(change>0){ let b=v.querySelector('.pts-earn.up'); const n=(b?+b.dataset.n:0)+change;
     if(!b){ b=document.createElement('span'); b.className='pts-earn up'; v.appendChild(b); }
     b.dataset.n=n; b.textContent=`+${n} point${n===1?'':'s'}`; }
@@ -470,6 +476,12 @@ const studentLogin = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.acco
 const gameNameOf = key => { const g=[...GAMES, ...ZH_GAMES, ...ARCADE].find(x=>x.key===key); return g ? g.name : (CFG.name||key); };
 // The question as the student saw it: the card's text without the feedback, Next and the report panel
 function cardText(card){
+  if(card.querySelector('.cr')){   // Close reading / Big idea / Note taking in the new look: the passage, then each question and its options
+    const pass=card.querySelector('.cr-pass'), qs=[...card.querySelectorAll('.cr-q')], txt=el=>el ? el.innerText.trim() : '';
+    return {shown: [txt(pass), ...qs.map(q=>txt(q.querySelector('h3'))+'\nOptions: '+[...q.querySelectorAll('.opt span')].map(txt).join(' | '))].join('\n'),
+      chosen: [...card.querySelectorAll('.opt.no span')].map(txt).filter(Boolean).join(' | '),
+      feedback: qs.map(q=>txt(q.querySelector('.cr-why, .fb'))).filter(Boolean).join('\n')};
+  }
   const skip='.fb,.next-row,.report,.opts,.tf-btns,kbd';
   const prompt=[...card.children].filter(el=>!el.matches(skip)).map(el=>el.innerText.trim()).filter(Boolean).join('\n');
   const opts=[...card.querySelectorAll('.opt')].map(b=>(b.querySelector('span')||b).innerText.trim()).filter(Boolean);
@@ -579,10 +591,11 @@ function Deck(items){   // items: a list, or a function giving the list (read ag
 }
 function Stats(game){
   const s={answered:0,correct:0,streak:0,best:store.get('streak:'+game,0)}; CUR_GAME=game;
-  s.hit=(item)=>{ if(qf) qf.n++; s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); };
-  s.miss=(item)=>{ if(qf) qf.n++; s.answered++; s.streak=0; s.draw(); P.record(game,item,false); lastMiss={game, item}; };
+  s.hit=(item)=>{ if(qf) qf.n++; s.answered++; s.correct++; s.streak++; if(s.streak>s.best){ s.best=s.streak; store.set('streak:'+game,s.best);} s.draw(); P.record(game,item,true); drawLevelBox(); };
+  s.miss=(item)=>{ if(qf) qf.n++; s.answered++; s.streak=0; s.draw(); P.record(game,item,false); lastMiss={game, item}; drawLevelBox(); };
   s.draw=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    el.innerHTML=`<span>${T('Correct','答对')} <b>${s.correct}</b>/${s.answered}</span><span class="streak">${T('Streak','连对')} <b>${s.streak}</b></span><span>${T('Best','最佳')} <b>${s.best}</b></span>`; };
+    if(NEW_UI) el.innerHTML=gStats([['Correct', s.correct, '/'+s.answered], ['Streak', s.streak], ['Best', s.best]]);
+    else el.innerHTML=`<span>${T('Correct','答对')} <b>${s.correct}</b>/${s.answered}</span><span class="streak">${T('Streak','连对')} <b>${s.streak}</b></span><span>${T('Best','最佳')} <b>${s.best}</b></span>`; };
   return s;
 }
 
@@ -685,16 +698,37 @@ const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' || g.key==
 const offWhy = (g, n) => sylNone() ? 'Choose your topics first' : n ? 'Not enough at this level yet' : SYL && !rowsNow(g).length ? 'None in your topics yet' : 'None at this level yet';
 
 // ---------- page frame ----------
-function frame(back, inner){
+// cur: the name of this screen, the last step of the path in the top bar (new look). view: 'game' (a game with its side
+// panel), 'reading' (a Reading Comprehension page) or the default 'page' (menus, word list, My progress: stage 3)
+function frame(back, inner, cur, view){
   clearTimers(); keyHandler=null; circuitFinish=null; circuitStop=null; document.body.classList.remove('reading-wide');
   if(ttsStop){ ttsStop(); ttsStop=null; }   // Listening: stop the voice when the page moves on
   listenGame=null;   // Listen switch: no game on screen until shell() says so
+  if(NEW_UI){
+    $app.dataset.view = view || 'page';
+    $app.innerHTML = inner;
+    try{ AEA_SHELL.crumbs(crumbsFor(back, cur)); }catch(e){ console.warn(e); }
+    window.scrollTo(0,0);
+    return;
+  }
   const bar =CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
   $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${back.html||esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
   window.scrollTo(0,0);
 }
 function go(hash){ if(location.hash===hash || (!hash && !location.hash)) route(); else location.hash=hash; }
+// The path in the top bar: Home, then the topic (a link back to its menu) and where the back link went, then this screen.
+// A back link to the English home (or the landing page) is just Home.
+function crumbsFor(back, cur){
+  const out=[{label:'Home', href:AEA_SHELL.home()}];
+  const homeLike=href=>{ try{ const r=new URL(href, location.href).href.split('#')[0].split('?')[0].slice(ROOT.length); return ['', 'index.html', 'en/', 'en/index.html'].includes(r); }catch(e){ return false; } };
+  if(back && back.href){
+    if(back.href.charAt(0)==='#'){ out.push({label:CFG.name||'Topic', href:'#'}); if(back.href!=='#') out.push({label:back.label||'', href:back.href}); }
+    else if(!homeLike(back.href)) out.push({label:back.label||String(back.html||'').replace(/<[^>]*>/g,'')||'Back', href:back.href});
+  }
+  if(cur) out.push({label:cur});
+  return out.filter((c,i)=>c.label && !(i && c.label===out[i-1].label && c.href===out[i-1].href));
+}
 
 // ---------- SUBJECT MENU ----------
 // data-layout="compact" on a topic page (Descriptive language first, 24 Oct): no blurb, a one-line level under the level
@@ -723,7 +757,7 @@ function menu(){
         <span class="cat-meta">${off?'Only available on desktop devices':!games.length?'Coming soon':none?'None at this level yet':here.map(g=>esc(g.name)).join(' · ')}</span>
       </a>`;}).join('')}
   </div>
-  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
+  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`, CFG.name);
   wireLevels(menu);
 }
 
@@ -750,7 +784,7 @@ function menuCompact(){
   ${(()=>{ const ROW=['gk','mouse','wordsearch','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
       ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}
-  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
+  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`, CFG.name);
   wireLevels(menu); wireSyl(menu);
 }
 // Science pages: the columns the page's module names (GEN.columns: e.g. Chemistry, Vocabulary, Explaining)
@@ -784,22 +818,112 @@ function category(cat){
   const c=CATS[cat];
   if(c.desktop && PHONE && gamesIn(cat).every(phoneOff)){
     frame({href:'#', label:CFG.name||'Back'}, `<section class="hero"><p class="eyebrow">${esc(CFG.name||'')}</p><h1>${c.name}</h1>
-      <p class="notice">Reading games are only available on desktop devices. Open this page on a computer to play them.</p></section>`);
+      <p class="notice">Reading games are only available on desktop devices. Open this page on a computer to play them.</p></section>`, c.name);
     return;
   }
   const note = cat==='reading' && readingState==='loading' ? '<p class="notice">Loading reading passages…</p>' : cat==='reading' && readingState==='failed' ? '<p class="notice">The reading passages could not be loaded. They load when the site is online.</p>' : '';
   frame({href:'#', label:CFG.name||'Back'}, `
   <section class="hero"><p class="eyebrow">${esc(CFG.name||'')}${chosenBand()!=null?' · '+esc(bandName(chosenBand())):''}</p><h1>${c.name}</h1><p>${c.blurb}</p>${note}</section>
-  <div class="games">${gamesIn(cat).filter(g=>!phoneOff(g)).map(gameCard).join('')}</div>`);
+  <div class="games">${gamesIn(cat).filter(g=>!phoneOff(g)).map(gameCard).join('')}</div>`, c.name);
 }
 
 // ---------- game shell ----------
 function shell(game, note){
+  if(NEW_UI) return gameLayout(game, note);
   const c=CATS[game.cat]||GAME_ROW[game.cat]||{name:'Back'}, lsn=listenCan(game);
   frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span>${lsn?listenSwitch():''}<span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
   if(lsn){ listenGame=game; listenWire(); }
 }
+// ---------- THE NEW GAME LAYOUT (redesign stage 2, 8 Nov 2026; only when NEW_UI) ----------
+// The heading (the game's column as a small label, its name, how to play), then the game on the left and a side panel on
+// the right: This round (or This game), any settings (Listen, Tell me how many), Playing at (the level, with Change), the
+// keys, and More in this subject (not in the Daily Circuit or a class game, which choose the games). On a Reading
+// Comprehension page there is no side panel: the level and the round's score sit beside the heading, and the passage gets
+// the width. On phones the score comes first as one line and the keys and More are left out (css/site.css).
+// o (optional): {top: HTML above the game card, e.g. an arcade game's timer}
+const ARCADE_KEYS = ['snake','whack','invaders'];
+const isArcade = g => !!g && ARCADE_KEYS.includes(g.key) && ARCADE.some(a=>a.key===g.key);
+// The keys each game listens for (only shown on computers). Keep in step with the game's keyHandler.
+const KEY_HELP = {
+  meaning:[['1–4','choose an answer'],['Enter','next question']], gap:[['1–4','choose an answer'],['Enter','next question']],
+  question:[['1–4','choose an answer'],['Enter','next question']], gk:[['1–4','choose an answer'],['Enter','next question']],
+  must:[['1–4','choose an answer'],['Enter','next question']],
+  tf:[['T','true'],['F','false'],['Enter','next question']], rw:[['G','good grammar'],['B','bad grammar'],['Enter','next question']],
+  error:[['Enter','check']], build:[['Enter','check']], own:[['1–4','choose an answer']],
+  evidence:[['1–9','choose a detail'],['Enter','check']], read:[['1–9','put a word in the next gap'],['Backspace','take the last one out'],['Enter','check']],
+  mouse:[['A–Z','guess a letter'],['Enter','next word']],
+  wordsearch:[['Arrow keys','move on the board'],['Enter','first and last letter of a word'],['Esc','start again']],
+  passage:[['1–9','choose an answer'],['Enter','confirm']], notes:[['1–9','choose a note'],['Enter','check']],
+  snake:[['Arrow keys','steer (or W A S D)'],['Space','start']], whack:[['1–9','whack that hole'],['Space','start']],
+  invaders:[['1–9','fire at that word'],['Space','start']], listen:[['P','play or pause'],['Enter','check']]
+};
+// The score boxes: [[label, value, after the value, id of the value], …] as <dl> items
+const gStats = items => items.map(([k,v,after,id])=>`<div><dt>${k}</dt><dd><b${id?` id="${id}"`:''}>${v}</b>${after?`<small>${after}</small>`:''}</dd></div>`).join('');
+// The column a game sits in on the topic page, as the small label over its name
+function gameColumn(game){
+  if(isArcade(game)) return 'Games · arcade';
+  if(GEN && GEN.columns){ const col=GEN.columns.find(c=>(c.games||[]).includes(game.key)); if(col) return col.name; }
+  return (CATS[game.cat]||GAME_ROW[game.cat]||{}).name || '';
+}
+let layoutBand = null;   // the level the game on screen was dealt at (Playing at), fixed when the game starts
+function gameLayout(game, note, o){
+  o=o||{}; layoutBand=chosenBand();
+  const reading=CFG.only==='passage', lsn=listenCan(game);
+  const back=CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT || isArcade(game) ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:(CATS[game.cat]||GAME_ROW[game.cat]||{}).name||''};
+  const eyebrow=reading ? (CFG.eyebrow||'Reading') : gameColumn(game);
+  const head=`<div class="g-head"><div class="g-title">${eyebrow?`<p class="g-eyebrow">${esc(eyebrow)}</p>`:''}<h1>${esc(game.name)}</h1>${note?`<p class="g-hint">${note}</p>`:''}</div>
+    ${reading?`<div class="g-hstats"><dl class="g-lv" id="gLevel" hidden></dl><dl class="g-stats" id="stats" aria-label="This round"></dl></div>`:''}</div>`;
+  if(reading) frame(back, `${head}<div class="g-wide">${o.top||''}<div class="feed" id="feed"></div></div>`, game.name, 'reading');
+  else frame(back, `${head}<div class="g-layout"><div class="g-main">${o.top||''}<div class="feed" id="feed"></div></div>${sidePanel(game, lsn)}</div>`, game.name, 'game');
+  if(lsn){ listenGame=game; listenWire(); }
+}
+function sidePanel(game, lsn){
+  const keys=KEY_HELP[game.key], free=!inCircuit && !classRun;
+  return `<aside class="g-side" aria-label="About this game">
+    <section class="g-box g-round" aria-labelledby="gRoundH"><h2 id="gRoundH">${isArcade(game) || game.key==='wordsearch' ? 'This game' : 'This round'}</h2><dl class="g-stats" id="stats"></dl></section>
+    <section class="g-box g-tools" id="gTools" aria-label="Settings"${lsn?'':' hidden'}>${lsn?listenSwitch():''}</section>
+    ${LEVELS.length ? `<section class="g-box g-level" id="gLevelBox" aria-labelledby="gLevelH">${levelBoxInner()}</section>` : ''}
+    ${keys ? `<section class="g-box g-keys" aria-labelledby="gKeysH"><h2 id="gKeysH">Keys</h2><ul>${keys.map(([k,t])=>`<li><kbd>${k}</kbd> ${t}</li>`).join('')}</ul></section>` : ''}
+    ${free ? moreBox(game) : ''}
+  </aside>`;
+}
+// Playing at: the level the questions come from (when the game started: Change goes back to the topic's level buttons),
+// then the student's level in this topic (a bar, and how far they are to the next level, or how many answers until it is
+// found), which moves with every answer
+function levelBoxInner(){
+  const b=layoutBand, t=P.topic(), n=t ? t.n||0 : 0, free=!inCircuit && !classRun;
+  let bar, cap;
+  if(n<P.CAL){ bar=n*100/P.CAL; cap=`Finding your level: ${n} of ${P.CAL} answers`; }
+  else { const L=P.label(t.r); bar=L.pct; cap=`Your level: ${esc(L.name)}${L.next?` · ${L.pct}% of the way to ${esc(L.next)}`:''}`; }
+  return `<h2 id="gLevelH">Playing at</h2><p class="g-lvl"><span>${b!=null ? nameHtml(bandName(b)) : 'Every level'}</span>${free?'<a href="#">Change</a>':''}</p>
+    <span class="g-bar" aria-hidden="true"><i style="width:${Math.round(bar)}%"></i></span><p class="g-cap">${cap}</p>`;
+}
+function drawLevelBox(){ if(!NEW_UI) return; const el=document.getElementById('gLevelBox'); if(el) el.innerHTML=levelBoxInner(); }
+// More in this subject: two more from the game's own column, then others, then an arcade game (four in all). Arcade games
+// and the Games row (Save the mouse, Word search, General knowledge): More games, the rest of that row.
+function moreBox(game){
+  const ready=g=>g.key!==game.key && !HIDE.has(g.key) && !phoneOff(g) && g.key!=='passage' && g.items().length>=g.min;
+  const arcade=ARCADE.filter(a=>!HIDE.has(a.key) && a.key!==game.key && a.items().length>=a.min);
+  const cols=Object.keys(CATS);
+  const inCol=k=>GAMES.filter(g=>g.cat===k && gamesIn(k).includes(g) && ready(g));
+  let list;
+  if(isArcade(game) || game.cat==='games') list=[...inCol('games'), ...arcade].slice(0, 4);
+  else {
+    const same=GAMES.filter(g=>g.cat===game.cat && (game.gen || gamesIn(g.cat).includes(g)) && ready(g)).slice(0, 2);
+    const others=[]; cols.filter(k=>k!==game.cat && k!=='games').forEach(k=>{ const g=inCol(k)[0]; if(g) others.push(g); });
+    GAMES.filter(g=>g.gen && g.cat!==game.cat && ready(g)).forEach(g=>{ if(!others.some(x=>x.cat===g.cat)) others.push(g); });
+    list=[...same, ...others].slice(0, 3); if(arcade[0]) list.push(arcade[0]);
+    if(list.length<4) list=[...list, ...[...inCol('games'), ...arcade.slice(1)].filter(g=>!list.includes(g))].slice(0, 4);
+  }
+  if(!list.length) return '';
+  const RIGHT='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="m9 6 6 6-6 6"/></svg>';
+  return `<section class="g-box g-more" aria-labelledby="gMoreH"><h2 id="gMoreH">${isArcade(game) || game.cat==='games' ? 'More games' : 'More in '+esc(CFG.name||'this subject')}</h2>
+    <ul>${list.map(g=>`<li><a href="#play-${esc(g.key)}"><span>${esc(g.name)}</span>${RIGHT}</a></li>`).join('')}</ul></section>`;
+}
+// A place for a game's own settings (Spot the error: Tell me how many) in the side panel; the old bar without NEW_UI
+function gameTools(){ if(!NEW_UI) return document.querySelector('.bar'); const t=document.getElementById('gTools'); if(t) t.hidden=false; return t; }
+
 function showCard(html){
   const feed=document.getElementById('feed');
   const old=feed.querySelector('.card'); if(old) old.remove();
@@ -1017,7 +1141,8 @@ function playWordSearch(zh){
       + (flash ? line(flash[0], flash[1], 'x') : '') + (drag ? line(drag.a, drag.z, 's') : pend!=null ? line(pend, pend, 's') : '');
       cells.forEach((c,i)=>c.classList.toggle('cur', kb && i===cur && !done)); grid.classList.toggle('kb', kb); };
     const stats=()=>{ const el=document.getElementById('stats'); if(!el) return; const s=Math.floor(((done||Date.now())-t0)/1000), bt=store.get('best:'+key, 0);
-      el.innerHTML=`<span>${T('Found','找到')} <b>${found.size}</b>/${placed.length}</span><span>${T('Time','用时')} <b>${mmss(s)}</b></span>${bt?`<span>${T('Best','最快')} <b>${mmss(bt)}</b></span>`:''}`; };
+      el.innerHTML=NEW_UI ? gStats([['Found', found.size, '/'+placed.length], ['Time', mmss(s)], ['Best', bt ? mmss(bt) : '–']])
+        : `<span>${T('Found','找到')} <b>${found.size}</b>/${placed.length}</span><span>${T('Time','用时')} <b>${mmss(s)}</b></span>${bt?`<span>${T('Best','最快')} <b>${mmss(bt)}</b></span>`:''}`; };
     const tick=()=>{ if(done) return; stats(); later(tick, 1000); };
     const drawList=()=>{
       card.querySelectorAll('.ws-mode button').forEach(x=>x.setAttribute('aria-pressed', x.dataset.m===mode));
@@ -1265,7 +1390,7 @@ function playErr(){
   shell(game, `${items.length} paragraphs at this level. Tap each wrong word, then press Check.`); st.draw();
   const lab=document.createElement('label'); lab.className='toggle';
   lab.innerHTML=`<input type="checkbox" id="errCount" ${showCount?'checked':''}> Tell me how many`;
-  document.querySelector('.bar').appendChild(lab);
+  gameTools().appendChild(lab);
   let current=null;
   lab.querySelector('input').onchange=e=>{ showCount=e.target.checked; store.set('errCount',showCount); if(current) current(); };
   const step=()=>{
@@ -1533,7 +1658,8 @@ function playGK(must){
 // More questions on the same passage (optional): question2, correct2, wrong1_2, wrong2_2, wrong3_2, explanation2, and so on.
 function playPassage(){
   const game=GAMES.find(g=>g.key==='passage'), st=Stats('passage');
-  shell(game, ''); const items=readingTop(); if(!items) return; const deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
+  shell(game, NEW_UI ? (CFG.only==='passage' && CFG.blurb ? esc(CFG.blurb) : 'Read the passage, then choose the best answers.') : ''); const items=readingTop(); if(!items) return; const deck=Deck(items), nq=items.reduce((n,r)=>n+r.qs.length,0);
+  if(NEW_UI){ st.draw(); return passageBoth(st, deck); }
   document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}${nq>items.length?`, ${nq} questions`:''}. Read carefully, then choose the best answer.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), many=r.qs.length>1; let missed=false, got=0;
@@ -1549,6 +1675,60 @@ function playPassage(){
           if(ok && !last) autoNext(card,next); else manualNext(card,next, last?'Next passage →':'Next question →'); }});
     };
     ask(0);
+  };
+  step();
+}
+
+// Close reading and Big idea in the new look (8 Nov 2026, teacher: "both the questions appear one above the other";
+// "Let's go with choose and then check"; the button says "Confirm" and floats, with no box round it). The passage is on
+// the left and every question on the right. The student chooses an answer to each (and can change it); Confirm marks
+// them all (each question is one answer, as before: points shared between them), shows why, and says how it went; then
+// Next passage →. A passage with a question wrong comes back later (once). Keys: 1–4 for the first question, 5–8 for
+// the second, and so on (up to 9); Enter confirms, then goes on.
+function passageBoth(st, deck){
+  const step=()=>{
+    const r=deck.next(), qs=r.qs, picks=qs.map(()=>null); let checked=false;
+    const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+    const orders=qs.map(q=>shuffle(q.opts.map((o,i)=>i)));   // option 0 is the right one (the file's "correct" column)
+    let k=0; const keyOf=qs.map(q=>q.opts.map(()=>++k));
+    const card=showCard(`<div class="cr">
+      <article class="cr-pass" aria-labelledby="crTitle"><p class="cr-k">Passage${r.level?` · ${esc(levelName(r.level))}`:''}</p><h2 id="crTitle">${esc(r.title||'')}</h2><div class="cr-text">${paras}</div></article>
+      <div class="cr-qs">${qs.map((q,qi)=>`<section class="cr-q" aria-labelledby="crQ${qi}"><div class="cr-qtop"><p class="cr-k">${qs.length>1?`Question ${qi+1} of ${qs.length}`:'Question'}</p><span class="cr-tag" hidden></span></div>
+        <h3 id="crQ${qi}">${esc(q.q)}</h3>
+        <div class="opts long" role="group" aria-labelledby="crQ${qi}">${orders[qi].map((oi,j)=>`<button class="opt" type="button" data-q="${qi}" data-o="${oi}" aria-pressed="false">${keyOf[qi][j]<=9?`<kbd>${keyOf[qi][j]}</kbd>`:''}<span>${esc(q.opts[oi])}</span></button>`).join('')}</div>
+        <div class="cr-why" hidden></div></section>`).join('')}
+        <div class="cr-actions"><p class="cr-end" aria-live="polite"></p><button class="btn cr-go" type="button" disabled>Confirm</button></div></div></div>`);
+    card.classList.add('cr-card');
+    const go=card.querySelector('.cr-go'), btns=[...card.querySelectorAll('.cr-q .opt')], secs=[...card.querySelectorAll('.cr-q')];
+    const choose=b=>{ if(checked) return; const qi=+b.dataset.q; picks[qi]=+b.dataset.o;
+      btns.filter(x=>+x.dataset.q===qi).forEach(x=>x.setAttribute('aria-pressed', x===b ? 'true' : 'false'));
+      go.disabled=picks.some(p=>p==null); };
+    const next=()=>step();
+    const confirm=()=>{
+      if(checked || picks.some(p=>p==null)) return; checked=true;
+      const oks=qs.map((q,qi)=>picks[qi]===0), got=oks.filter(Boolean).length, all=got===qs.length;
+      qs.forEach((q,qi)=>{ const ok=oks[qi], sec=secs[qi];
+        sec.classList.add(ok ? 'ok' : 'no');
+        btns.filter(x=>+x.dataset.q===qi).forEach(x=>{ const o=+x.dataset.o; x.disabled=true; x.removeAttribute('aria-pressed'); x.classList.add(o===0 ? 'ok' : o===picks[qi] ? 'no' : 'dim'); });
+        const tag=sec.querySelector('.cr-tag'); tag.textContent=ok ? '✓ Right' : '✗ Not quite'; tag.hidden=false;
+        const why=sec.querySelector('.cr-why'); why.innerHTML=(ok ? '' : `<span class="cr-ans">The answer is: <b>${esc(q.opts[0])}</b></span>`)+(q.why ? `<span>${rich(q.why)}</span>` : ''); why.hidden=!why.innerHTML; });
+      const end=card.querySelector('.cr-end');
+      end.className='cr-end '+(all ? 'ok' : 'no');
+      end.innerHTML=all ? `<b>Well done!</b> ${qs.length===2 ? 'You got both questions right.' : qs.length>2 ? `You got all ${qs.length} questions right.` : 'You got it right.'}`
+        : qs.length>1 ? `You got ${got} of ${qs.length} right. This passage will come back later.` : 'Not quite. This passage will come back later.';
+      // Each question is one answer (the points shown in the line above, by earned())
+      let miss=null;
+      qs.forEach((q,qi)=>{ const item={id:r.id+(qi?'#'+(qi+1):''), level:r.level, qs:qs.length};
+        if(oks[qi]) st.hit(item); else { st.miss(item); if(!miss) miss={game:'passage', item}; } });
+      lastMiss=null; if(!all) deck.retry(r);
+      go.textContent='Next passage →'; go.disabled=false; go.onclick=next; go.focus({preventScroll:true});
+      if(miss) reportButton(card, card.querySelector('.cr-actions'), miss);
+      keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); next(); } };
+    };
+    btns.forEach(b=>b.onclick=()=>choose(b)); go.onclick=confirm;
+    keyHandler=e=>{ if(checked) return; const n=parseInt(e.key,10);
+      if(n>=1 && n<=9 && btns[n-1]) choose(btns[n-1]);
+      else if(e.key==='Enter'){ e.preventDefault(); confirm(); } };
   };
   step();
 }
@@ -1570,7 +1750,9 @@ function readingTop(){
   if(CFG.only!=='passage') return pick(all);   // a topic page: the level chosen on its menu
   const choice=readingChoice(), change=`<a href="${esc(CFG.back||'../index.html')}">Change level</a>`;
   const items = choice===ALL_LEVELS ? all : all.filter(x=>x.level && levelName(x.level)===choice);
-  document.getElementById('feed').insertAdjacentHTML('beforebegin', `<p class="hint read-lv">${choice===ALL_LEVELS?'All levels':`Level: ${esc(choice)}`}. ${change}</p>`);
+  const lv=NEW_UI && document.getElementById('gLevel');
+  if(lv){ lv.innerHTML=`<div><dt>Level</dt><dd><b>${choice===ALL_LEVELS ? 'All levels' : nameHtml(choice)}</b><a href="${esc(CFG.back||'../index.html')}">Change</a></dd></div>`; lv.hidden=false; }
+  else document.getElementById('feed').insertAdjacentHTML('beforebegin', `<p class="hint read-lv">${choice===ALL_LEVELS?'All levels':`Level: ${esc(choice)}`}. ${change}</p>`);
   if(!items.length){ document.getElementById('feed').innerHTML=`<p class="notice">There are no ${esc(choice)} passages in ${esc(CFG.name||'this activity')} yet. ${change} to choose another.</p>`; return null; }
   return items;
 }
@@ -1582,17 +1764,20 @@ function passageDone(fb, got, of, msg){
 }
 function playNotes(){
   const st=Stats('notes'), game={key:'notes', name:CFG.name||'Note taking', cat:'reading'};
-  shell(game, ''); const items=readingTop(); if(!items) return; const deck=Deck(items);
-  document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.</p>`); st.draw();
+  shell(game, NEW_UI ? esc(CFG.blurb||'Read the passage, then choose the notes that belong under the heading.') : ''); const items=readingTop(); if(!items) return; const deck=Deck(items);
+  if(!NEW_UI) document.querySelector('.feed').insertAdjacentHTML('beforebegin', `<p class="hint">${items.length} passage${items.length===1?'':'s'}. Read carefully, then choose the notes that belong under the heading.</p>`); st.draw();
   const step=()=>{
     const r=deck.next(), order=shuffle(r.opts.map((o,i)=>i)), picked=new Set();
     const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
-    const card=showCard(`<p class="instr">${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}</p><div class="passage">${paras}</div>
-      <div class="note-task"><span class="note-k">Notes on</span><b>${esc(r.topic)}</b></div>
+    const task=`<div class="note-task"><span class="note-k">Notes on</span><b>${esc(r.topic)}</b></div>
       <p class="question">Choose the ${r.count} notes that belong under this heading.</p>
       <div class="opts long notes">${order.map((i,k)=>`<button class="opt" data-i="${i}" aria-pressed="false"><kbd>${k+1}</kbd><span>${esc(r.opts[i])}</span></button>`).join('')}</div>
-      <div class="next-row check-row"><span class="pick-n" id="pickN">0 of ${r.count} chosen</span><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>`);
-    card.classList.add('reading');
+      <div class="next-row check-row"><span class="pick-n" id="pickN">0 of ${r.count} chosen</span><button class="btn" id="check" disabled>Check</button></div><div class="fb"></div>`;
+    // New look: the passage on the left, the heading and the notes on the right (as Close reading)
+    const card=showCard(NEW_UI ? `<div class="cr"><article class="cr-pass" aria-labelledby="crTitle"><p class="cr-k">Passage${r.level?` · ${esc(levelName(r.level))}`:''}</p><h2 id="crTitle">${esc(r.title||'')}</h2><div class="cr-text">${paras}</div></article>
+      <div class="cr-qs"><section class="cr-q cr-notes">${task}</section></div></div>`
+      : `<p class="instr">${esc(r.title)}${r.level?` · ${esc(levelName(r.level))}`:''}</p><div class="passage">${paras}</div>${task}`);
+    card.classList.add(NEW_UI ? 'cr-card' : 'reading');
     const btns=[...card.querySelectorAll('.opt')], chk=card.querySelector('#check'), pn=card.querySelector('#pickN'); let done=false;
     const toggle=b=>{ if(done) return; const i=+b.dataset.i;
       if(picked.has(i)) picked.delete(i); else { if(picked.size>=r.count) return; picked.add(i); }
@@ -1605,7 +1790,8 @@ function playNotes(){
       const fb=card.querySelector('.fb'); ok ? fbOk(fb, why) : fbNo(fb, '', `<span>You found ${got} of ${r.count}. The notes with a dashed green border were missed.</span>${why}`);
       const item={id:r.id, level:r.level};
       if(ok){ st.hit(item); } else { st.miss(item); deck.retry(r); }
-      passageDone(fb, ok?1:0, 1, ok?'You found all three notes.':''); manualNext(card,step,'Next passage →'); };
+      passageDone(fb, ok?1:0, 1, ok?'You found all three notes.':''); manualNext(card,step,'Next passage →');
+      const row=NEW_UI && card.querySelector(':scope > .next-row'); if(row) card.querySelector('.cr-q').appendChild(row); };
     btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
     keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) toggle(btns[n-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
   };
@@ -2001,10 +2187,14 @@ function playSnake(){
   const ENDLESS=!inCircuit && !classRun, timed=!inCircuit && !ENDLESS;   // ENDLESS: played from the Games row
   const nextQ=arcadeQuestions(N), best=store.get('best:snake',0);
   let score=0; const missed=[];
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${touch?'Tap the screen on the side you want the snake to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the snake shorter. You can go through the walls.'}</p>
+  const snHint=`${touch?'Tap the screen on the side you want the snake to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the snake shorter. You can go through the walls.'}`;
+  if(NEW_UI) gameLayout(game, snHint, {top:timed?timerBar():''});
+  else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+    <p class="hint">${snHint}</p>
     ${timed?timerBar():''}<div class="feed" id="feed"></div>`);
-  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="snSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
+  const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
+    el.innerHTML=NEW_UI ? gStats([[ENDLESS?'Score':'Found', score], ...(timed?[['Time', SECS, 's', 'snSecs']]:[]), ['Best', Math.max(best,score)]])
+      : `<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="snSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
   const card=showCard(`<p class="instr">Find the word that means</p><p class="arcade-def" id="snDef"></p>
     <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="Word Snake board"></canvas><p class="snake-msg" id="snMsg">${touch?'Tap to start':'Press an arrow key to start'}</p></div>
     <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
@@ -2183,10 +2373,14 @@ function playWhack(){
   const touch=PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
   const nextQ=arcadeQuestions(N), best=store.get('best:whack',0);
   let score=0; const missed=[];
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${T(`${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning while it is up. A wrong word stops your hammer for a second.`, '单词冒出来时，点击意思对的那个。点错了，锤子会停一秒。')}</p>
+  const wkHint=T(`${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning while it is up. A wrong word stops your hammer for a second.`, '单词冒出来时，点击意思对的那个。点错了，锤子会停一秒。');
+  if(NEW_UI) gameLayout(game, wkHint, {top:inCircuit?'':timerBar()});
+  else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+    <p class="hint">${wkHint}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
-  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="wkSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
+  const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
+    el.innerHTML=NEW_UI ? gStats([['Found', score], ...(inCircuit?[]:[['Time', SECS, 's', 'wkSecs']]), ['Best', Math.max(best,score)]])
+      : `<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="wkSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
   const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="wkDef"></p>
     <div class="whack" id="wkBoard">${[...Array(9)].map((_,i)=>`<div class="hole"><div class="well"><button type="button" class="mole" tabindex="-1" disabled><span></span></button></div>${touch?'':`<kbd>${i+1}</kbd>`}</div>`).join('')}
       <div class="arcade-msg" id="wkMsg"${inCircuit?' hidden':''}><button type="button" class="btn" id="wkGo">Start</button></div></div>
@@ -2278,10 +2472,14 @@ function playInvaders(){
   const calm=!!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const nextQ=arcadeQuestions(N), best=store.get('best:invaders',0);
   let score=0; const missed=[];
-  frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${T(`${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning before the words reach the line at the bottom. After a wrong word, the highlighter needs a second to cool down.`, '在单词落到底线之前，点击意思对的那个。点错了，荧光笔要等一秒才能再用。')}</p>
+  const ivHint=T(`${touch?'Tap':'Click (or press its number on)'} the word that matches the meaning before the words reach the line at the bottom. After a wrong word, the highlighter needs a second to cool down.`, '在单词落到底线之前，点击意思对的那个。点错了，荧光笔要等一秒才能再用。');
+  if(NEW_UI) gameLayout(game, ivHint, {top:inCircuit?'':timerBar()});
+  else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+    <p class="hint">${ivHint}</p>
     ${inCircuit?'':timerBar()}<div class="feed" id="feed"></div>`);
-  const stats=()=>{ const el=document.getElementById('stats'); if(el) el.innerHTML=`<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="ivSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
+  const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
+    el.innerHTML=NEW_UI ? gStats([['Found', score], ...(inCircuit?[]:[['Time', SECS, 's', 'ivSecs']]), ['Best', Math.max(best,score)]])
+      : `<span>${T('Found','找到')} <b>${score}</b></span>${inCircuit?'':`<span><b id="ivSecs">${SECS}</b>s</span>`}<span>${T('Best','最佳')} <b>${Math.max(best,score)}</b></span>`; };
   const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="ivDef"></p>
     <div class="invaders" id="ivBoard"><div class="iv-ground"></div><div class="iv-gun" id="ivGun"></div>
       <div class="arcade-msg" id="ivMsg"${inCircuit?' hidden':''}><button type="button" class="btn" id="ivGo">Start</button></div></div>
@@ -2942,7 +3140,7 @@ function progressPage(){
     if(ref && ref.origin===location.origin && ref.pathname!==location.pathname) back={href:ref.href, label:'Back'};
     else { const side=(list[0]||{}).side; if(side) back={href:ROOT+(side==='zh'?'zh':'en')+'/index.html', label:side==='zh'?'中文版 Chinese version':'English topics'}; }
   }catch(e){}
-  frame(back, `
+  frame(NEW_UI ? null : back, `
   <section class="hero"><p class="eyebrow">My progress 我的进步</p>
     <h1>${L?`${nameHtml(L.name)} <span class="h-sub" lang="zh-CN">${L.zh}</span>`:'Let’s find your level'}</h1>
     <p>${L?`Your overall level, from everything you have played.${L.next?` You are ${L.pct}% of the way to ${esc(L.next)}.`:''}`:`Play any game. After ${P.CAL} answers in a topic, your level appears here. 在任一主题答 ${P.CAL} 题后，这里会显示你的水平。`}</p>
@@ -2957,7 +3155,7 @@ function progressPage(){
   <p class="instr">Topics</p>
   <div class="prog-list">${list.length?list.map(row).join(''):'<p class="notice">No games played yet on this device. 这台设备上还没有游戏记录。</p>'}</div>
   ${how}
-  <p class="hint" style="margin-top:22px">${loggedIn()?'Your progress is saved to your account, so it is the same on every device you log in on.':'Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.'}</p>`);
+  <p class="hint" style="margin-top:22px">${loggedIn()?'Your progress is saved to your account, so it is the same on every device you log in on.':'Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.'}</p>`, 'My progress');
 }
 
 const loggedIn = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(); return !!(a && a.token); }catch(e){ return false; } };
@@ -2965,7 +3163,7 @@ const loggedIn = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(
 // ---------- WORD LIST ----------
 function wordList(){
   frame({href:'#', label:CFG.name||'Back', html:SIDE==='zh'&&CFG.name?nameT(CFG.name):''}, `<div class="bar"><span class="title">${T('Word list','词汇表')}</span></div>
-    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`);
+    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`, 'Word list');
   let q='';
   const draw=()=>{ const t=q.trim().toLowerCase(); let html='';
     // One heading per level, the chosen level first
@@ -3157,7 +3355,7 @@ function classSend(final, now){
 }
 const classClock = ms => { const s=Math.max(0, Math.ceil(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
 function classPanel(html){
-  frame({href:'../index.html', label:'', html:T('All topics','所有主题')}, `<section class="cg-panel">${html}</section>`);
+  frame({href:'../index.html', label:'', html:T('All topics','所有主题')}, `<section class="cg-panel">${html}</section>`, 'Class game');
 }
 // Open #class-<id>: check the game, say how it works, start (or carry on with time left)
 async function classOpen(id){
@@ -3325,7 +3523,7 @@ function route(){
       : readingState==='loading' ? `Loading ${what}…`
       : readingState==='failed' ? `The ${what} could not be loaded. They load when the site is online.`
       : !(S.passages||[]).length ? `No ${what} yet. Check back soon.` : '';
-    if(msg) return frame(back, `<section class="hero"><p class="eyebrow">${esc(CFG.eyebrow||'Reading')}</p><h1>${esc(CFG.name||'')}</h1>${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}<p class="notice">${msg}</p></section>`);
+    if(msg) return frame(back, `<section class="hero"><p class="eyebrow">${esc(CFG.eyebrow||'Reading')}</p><h1>${esc(CFG.name||'')}</h1>${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}<p class="notice">${msg}</p></section>`, CFG.name);
     if(CFG.format==='notes') return playNotes();
     if(listen) return playListening();
     GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
