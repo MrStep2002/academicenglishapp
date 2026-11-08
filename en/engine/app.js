@@ -736,6 +736,7 @@ function crumbsFor(back, cur){
 // there is no category page in between. Without it, the page keeps the older layout below.
 const COMPACT = CFG.layout==='compact';
 function menu(){
+  if(NEW_UI) return topicPage();
   if(COMPACT) return menuCompact();
   tidyChoice(); const n = pick(S.words).length;
   frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Subjects'}, `
@@ -770,7 +771,13 @@ function menuCompact(){
     ${levelsHtml()}
     ${levelLine()}
   </section>
-  <div class="cols">
+  ${gameColumnsHtml()}
+  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`, CFG.name);
+  wireLevels(menu); wireSyl(menu);
+}
+// The games on a topic page: the three columns (Vocabulary, Grammar, Reading; or a science page's own), then the Games row
+function gameColumnsHtml(){
+  return `<div class="cols">
     ${GEN && GEN.columns ? genColumns() : Object.entries(CATS).map(([k,c])=>{
       const all=gamesIn(k), games=all.filter(g=>!phoneOff(g)), off=c.desktop && PHONE && !games.length;
       const note = off ? 'Only available on desktop devices'
@@ -783,10 +790,127 @@ function menuCompact(){
   </div>
   ${(()=>{ const ROW=['gk','mouse','wordsearch','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
-      ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}
-  <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`, CFG.name);
-  wireLevels(menu); wireSyl(menu);
+      ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}`;
 }
+
+// ---------- THE NEW SUBJECT PAGE (redesign stage 3, 8 Nov 2026; only when NEW_UI) ----------
+// The subject's area and name, its "I study this" switch (the same switch as on the home page and the Daily Circuit: Essentials
+// is always on), the topics (science pages), the level buttons and the student's level; then Words at this level: word cards
+// to flip (teacher: "have the flipping thing"), the word and its part of speech on the front, the meaning and an example on
+// the back, each with a button to hear it, Previous / Next / Shuffle; beside them Your words (known, familiar, learning, new
+// at this level); then the games in their columns and the Games row.
+// (A word's stage, stageOf(), and the stage names, STAGES, are the Chinese side's: see "the student's words")
+const SUBJECT = (()=>{ const L=window.AEA_SUBJECTS; if(!L) return null; const norm=x=>String(x||'').split('?')[0].replace(/index\.html$/, '');
+  return L.SUBJECTS.find(x=>x.path && norm(x.path)===norm(PAGE)) || null; })();
+// Hear a word or an example (the browser's own voice: the best English one it has)
+function sayIt(text){
+  if(!TTS_OK || !text) return;
+  try{ speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(String(text)), v=vRanked()[0];
+    if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-GB'; u.rate=.95; speechSynthesis.speak(u); }catch(e){}
+}
+const SPEAK_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+function studyHtml(){
+  const L=window.AEA_SUBJECTS, sub=SUBJECT; if(!L || !sub) return '';
+  if(sub.always) return `<span class="t-always">Always in the Daily Circuit</span>`;
+  if(!L.switchable(sub)) return '';
+  let on=false; try{ on=!!(((JSON.parse(localStorage.getItem('aea:studying:v1'))||{}).en||{})[sub.path]); }catch(e){}
+  return `<button type="button" class="t-sw" role="switch" aria-checked="${on}" id="tStudy"><span class="t-sw-l">I study this</span><span class="t-sw-t" aria-hidden="true"></span></button>`;
+}
+function wireStudy(){
+  const b=document.getElementById('tStudy'), sub=SUBJECT; if(!b || !sub) return;
+  b.onclick=()=>{ const on=b.getAttribute('aria-checked')!=='true';
+    try{ const all=JSON.parse(localStorage.getItem('aea:studying:v1'))||{}; all.en=all.en||{};
+      if(on) all.en[sub.path]=sub.name; else delete all.en[sub.path]; localStorage.setItem('aea:studying:v1', JSON.stringify(all)); }catch(e){}
+    b.setAttribute('aria-checked', String(on));
+    try{ window.dispatchEvent(new CustomEvent('aea:studying')); }catch(e){} };   // the sidebar's My subjects
+}
+let fcOrder=null;   // the word cards' order (Shuffle), for this level; null: the order of the word list
+function topicPage(){
+  tidyChoice();
+  const sub=SUBJECT, area=sub && window.AEA_SUBJECTS ? AEA_SUBJECTS.areaOf(sub.area) : null;
+  const eyebrow=CFG.eyebrow || (area ? area.name : 'English games');
+  frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Subjects'}, `
+  <section class="t-head" aria-labelledby="tH">
+    <div class="t-top"><div class="t-title"><p class="t-eyebrow"${area?` style="color:${area.color}"`:''}>${esc(eyebrow)}</p><h1 id="tH">${esc(CFG.name||'')}</h1></div>${studyHtml()}</div>
+    ${sylPicker()}
+    ${LEVELS.length>1 ? `<div class="t-lv"><div class="t-lv-btns">${levelsHtml()}</div>${levelLine()}</div>` : levelLine()}
+  </section>
+  ${wordCardsHtml()}
+  ${gameColumnsHtml()}`, CFG.name, 'topic');
+  wireLevels(()=>{ fcOrder=null; menu(); }); wireSyl(menu); wireStudy(); wireCards();
+}
+// The words the cards show: the chosen level's (as the games use them)
+const cardWords = () => { const ws=pick(S.words).filter(w=>!hiddenItem(w)); return fcOrder && fcOrder.length===ws.length ? fcOrder.map(i=>ws[i]).filter(Boolean) : ws; };
+const fcKey = () => 'aea-fc:'+KEY+':'+chosenBand();   // where the card the student was on is kept (this tab only)
+function wordCardsHtml(){
+  const ws=pick(S.words).filter(w=>!hiddenItem(w)); if(!ws.length) return '';
+  const counts={known:0, fam:0, learn:0, new:0}; ws.forEach(w=>counts[stageOf(w)]++);
+  const lvName=chosenBand()!=null && LEVELS.length>1 ? bandName(chosenBand()) : '';
+  return `<section class="t-words" aria-labelledby="tWordsH">
+    <div class="t-sec-top"><h2 id="tWordsH">${LEVELS.length>1 ? 'Words at this level' : 'Words'}</h2><a href="#words">Open the word list</a></div>
+    <div class="t-words-row">
+      <div class="fc-area">
+        <div class="fc-stack"><span class="fc-layer l3" aria-hidden="true"></span><span class="fc-layer l2" aria-hidden="true"></span><span class="fc-layer l1" aria-hidden="true"></span>
+          <div class="fc" id="fc" aria-roledescription="word card"></div></div>
+        <div class="fc-nav">
+          <button type="button" class="fc-btn" id="fcPrev"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6-6 6 6 6"/></svg>Previous</button>
+          <span class="fc-n" id="fcN" aria-live="polite"></span>
+          <button type="button" class="fc-btn fc-next" id="fcNext">Next<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></button>
+          <button type="button" class="fc-btn fc-shuf" id="fcShuf" aria-label="Shuffle the words" title="Shuffle"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg></button>
+        </div>
+      </div>
+      <aside class="t-mine" aria-labelledby="tMineH">
+        <h3 id="tMineH">Your words${lvName ? ' · '+esc(lvName) : ''}</h3>
+        <p class="t-mine-big"><b>${counts.known+counts.fam}</b><span>of ${ws.length} known or familiar</span></p>
+        <div class="t-mine-bar" aria-hidden="true">${STAGES.map(([k])=>`<i class="st-${k}" style="width:${100*counts[k]/ws.length}%"></i>`).join('')}</div>
+        <ul class="t-mine-key">${STAGES.map(([k,name])=>`<li><span class="sw st-${k}" aria-hidden="true"></span><span>${name}</span><b>${counts[k]}</b></li>`).join('')}</ul>
+        <p class="t-mine-note">Words move up as you get them right on different days.</p>
+      </aside>
+    </div>
+  </section>`;
+}
+function wireCards(){
+  const fc=document.getElementById('fc'); if(!fc) return;
+  let i=0; try{ i=+sessionStorage.getItem(fcKey())||0; }catch(e){}
+  let back=false;
+  const draw=(focusSel)=>{
+    const ws=cardWords(), n=ws.length; if(!n) return; i=((i%n)+n)%n; const w=ws[i], st=stageOf(w), stName=(STAGES.find(x=>x[0]===st)||[])[1];
+    try{ sessionStorage.setItem(fcKey(), i); }catch(e){}
+    const say=(what, label, cls)=>TTS_OK ? `<button type="button" class="fc-say${cls?' '+cls:''}" data-say="${what}" aria-label="${label}" title="${label}">${SPEAK_SVG}</button>` : '';
+    const top=`<div class="fc-top"><span class="fc-pos">${esc(w.pos||'')}</span><span class="fc-stage st-${st}">${stName}</span></div>`;
+    fc.innerHTML=`<div class="fc-inner">
+      <div class="fc-face fc-front"${back?' inert aria-hidden="true"':''}>${top}
+        <div class="fc-word-row"><h3 class="fc-word">${esc(w.w)}</h3>${say('word', 'Hear the word')}</div>
+        <p class="fc-tip">What does it mean? Turn the card over to check.</p></div>
+      <div class="fc-face fc-back"${back?'':' inert aria-hidden="true"'}>${top}
+        <div class="fc-word-row"><p class="fc-word sm">${esc(w.w)}</p>${say('word', 'Hear the word')}</div>
+        <p class="fc-def">${esc(w.def)}</p>
+        ${w.ex ? `<p class="fc-ex"><i>${esc(w.ex)}</i>${say('ex', 'Hear the example', 'sm')}</p>` : ''}
+        ${w.syn && w.syn.length ? `<p class="fc-syn">Similar: ${esc(w.syn.join(', '))}</p>` : ''}</div>
+    </div>
+    <button type="button" class="fc-flip" aria-pressed="${back}">${back ? 'Show the word' : 'Turn over'}</button>`;
+    fc.classList.toggle('flipped', back);
+    fc.setAttribute('aria-label', `Word ${i+1} of ${n}: ${w.w}`);
+    document.getElementById('fcN').textContent=`${i+1} / ${n}`;
+    document.getElementById('fcPrev').disabled = n<2;
+    document.getElementById('fcNext').disabled = n<2;
+    fc.querySelectorAll('[data-say]').forEach(b=>b.onclick=e=>{ e.stopPropagation(); sayIt(b.dataset.say==='ex' ? w.ex : String(w.w).split(/\s*\/\s*/)[0]); });
+    fc.querySelector('.fc-flip').onclick=e=>{ e.stopPropagation(); flip(true); };
+    if(focusSel){ const f=fc.querySelector(focusSel); if(f) f.focus({preventScroll:true}); }
+  };
+  const flip=(keepFocus)=>{ back=!back; draw(keepFocus ? '.fc-flip' : null); };
+  const go=d=>{ i+=d; back=false; draw(); };
+  fc.addEventListener('click', e=>{ if(e.target.closest('button, a')) return; flip(false); });
+  document.getElementById('fcPrev').onclick=()=>go(-1);
+  document.getElementById('fcNext').onclick=()=>go(1);
+  document.getElementById('fcShuf').onclick=()=>{ const n=pick(S.words).filter(w=>!hiddenItem(w)).length; fcOrder=shuffle([...Array(n).keys()]); i=0; back=false; draw(); };
+  // Keys, while the student is in the cards: ← → to move, Space or Enter on the card's button to turn it
+  document.querySelector('.fc-area').addEventListener('keydown', e=>{ if(e.target.closest('input, textarea, select')) return;
+    if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); document.getElementById('fcPrev').focus({preventScroll:true}); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); go(1); document.getElementById('fcNext').focus({preventScroll:true}); } });
+  draw();
+}
+
 // Science pages: the columns the page's module names (GEN.columns: e.g. Chemistry, Vocabulary, Explaining)
 function genColumns(){
   return GEN.columns.map(col=>{ const all=(col.games||[]).map(k=>GAMES.find(g=>g.key===k)).filter(g=>g && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
@@ -870,7 +994,7 @@ let layoutBand = null;   // the level the game on screen was dealt at (Playing a
 function gameLayout(game, note, o){
   o=o||{}; layoutBand=chosenBand();
   const reading=CFG.only==='passage', lsn=listenCan(game);
-  const back=CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT || isArcade(game) ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:(CATS[game.cat]||GAME_ROW[game.cat]||{}).name||''};
+  const back=CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : {href:'#', label:CFG.name||'Back'};
   const eyebrow=reading ? (CFG.eyebrow||'Reading') : gameColumn(game);
   const head=`<div class="g-head"><div class="g-title">${eyebrow?`<p class="g-eyebrow">${esc(eyebrow)}</p>`:''}<h1>${esc(game.name)}</h1>${note?`<p class="g-hint">${note}</p>`:''}</div>
     ${reading?`<div class="g-hstats"><dl class="g-lv" id="gLevel" hidden></dl><dl class="g-stats" id="stats" aria-label="This round"></dl></div>`:''}</div>`;
@@ -3140,6 +3264,25 @@ function progressPage(){
     if(ref && ref.origin===location.origin && ref.pathname!==location.pathname) back={href:ref.href, label:'Back'};
     else { const side=(list[0]||{}).side; if(side) back={href:ROOT+(side==='zh'?'zh':'en')+'/index.html', label:side==='zh'?'中文版 Chinese version':'English topics'}; }
   }catch(e){}
+  const stats=`<div class="stat-tiles"><div class="stat"><b>${answers}</b><span>answers</span></div><div class="stat"><b>${answers?Math.round(100*right/answers):0}%</b><span>right</span></div>
+    <div class="stat"><b>${streak}</b><span>day${streak===1?'':'s'} in a row</span></div><div class="stat"><b>${known}</b><span>words known · ${learning} learning</span></div></div>`;
+  const note=loggedIn()?'Your progress is saved to your account, so it is the same on every device you log in on.':'Progress is saved in this browser on this device. Clearing browsing data, or using another computer, starts again. Log in to keep it in your account.';
+  // New look (stage 3, 8 Nov 2026): the same figures, as boxes across the width; the account panel (account.js) goes under the heading
+  if(NEW_UI) return frame(null, `
+  <section class="hero p-head"><p class="g-eyebrow">My progress</p>
+    <h1>${L ? nameHtml(L.name) : 'Let’s find your level'}</h1>
+    <p>${L ? `Your overall level, from everything you have played.${L.next?` You are ${L.pct}% of the way to ${esc(L.next)}.`:''}` : `Play any game. After ${P.CAL} answers in a topic, your level appears here.`}</p>
+    ${L?`<span class="g-bar p-bar" aria-hidden="true"><i style="width:${L.pct}%"></i></span>`:''}
+  </section>
+  ${stats}
+  <div class="p-grid">
+    <section class="p-box" aria-labelledby="pPtsH"><h2 id="pPtsH">Points</h2><div class="pts-cards">${ptsCard('en','English')}${ptsCard('zh','Chinese version 中文版')}</div></section>
+    <section class="p-box" aria-labelledby="pDaysH"><h2 id="pDaysH">Points, last 14 days</h2>${chart}</section>
+  </div>
+  <section class="p-topics" aria-labelledby="pTopH"><h2 id="pTopH" class="p-h">Your subjects</h2>
+    <div class="prog-list">${list.length?list.map(row).join(''):'<p class="notice">No games played yet on this device.</p>'}</div></section>
+  ${how}
+  <p class="p-note">${note}</p>`, 'My progress', 'progress');
   frame(NEW_UI ? null : back, `
   <section class="hero"><p class="eyebrow">My progress 我的进步</p>
     <h1>${L?`${nameHtml(L.name)} <span class="h-sub" lang="zh-CN">${L.zh}</span>`:'Let’s find your level'}</h1>
@@ -3162,8 +3305,10 @@ const loggedIn = () => { try{ const a=window.AEA_ACCOUNT && AEA_ACCOUNT.account(
 
 // ---------- WORD LIST ----------
 function wordList(){
-  frame({href:'#', label:CFG.name||'Back', html:SIDE==='zh'&&CFG.name?nameT(CFG.name):''}, `<div class="bar"><span class="title">${T('Word list','词汇表')}</span></div>
-    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`, 'Word list');
+  const head=NEW_UI ? `<div class="g-head"><div class="g-title"><p class="g-eyebrow">${esc(CFG.name||'')}</p><h1>Word list</h1><p class="g-hint">Every word in this subject, with its meaning and an example. Your level comes first.</p></div></div>`
+    : `<div class="bar"><span class="title">${T('Word list','词汇表')}</span></div>`;
+  frame({href:'#', label:CFG.name||'Back', html:SIDE==='zh'&&CFG.name?nameT(CFG.name):''}, `${head}
+    <input class="search" id="q" type="search" placeholder="${TX('Search words or meanings','搜索单词或释义')}" aria-label="${TX('Search the word list','搜索词汇表')}"><div id="list"></div>`, 'Word list', NEW_UI ? 'list' : undefined);
   let q='';
   const draw=()=>{ const t=q.trim().toLowerCase(); let html='';
     // One heading per level, the chosen level first
@@ -3173,7 +3318,7 @@ function wordList(){
       const chosen=lb===chosenBand()&&LEVELS.length>1;
       const head=lb==null ? (LEVELS.length?T('Other words','其他单词'):'') : T(esc(bandName(lb))+(chosen?' · chosen level':''), LEVEL_ZH[LEVEL_CODES[lb]]+(chosen?' · 当前级别':''));
       html+=`${head?`<p class="instr" style="margin:22px 0 8px">${head}</p>`:''}<div class="wl">${ws.map(w=>`<div class="wl-row">
-        <div class="w">${esc(w.w)}${w.pos?`<small>${esc(w.pos)}</small>`:''}${ZH[w.id]&&CFG.only==='zh'?`<span class="zh" lang="zh-CN">${esc(ZH[w.id])}</span>`:''}</div>
+        <div class="w">${esc(w.w)}${w.pos?`<small>${esc(w.pos)}</small>`:''}${ZH[w.id]&&CFG.only==='zh'?`<span class="zh" lang="zh-CN">${esc(ZH[w.id])}</span>`:''}${NEW_UI?(()=>{ const st=stageOf(w); return `<span class="fc-stage st-${st}">${(STAGES.find(x=>x[0]===st)||[])[1]}</span>`; })():''}</div>
         <div class="d">${esc(w.def)}${w.ex?`<br><i>${esc(w.ex)}</i>`:''}${w.syn&&w.syn.length?`<div class="syns">≈ ${esc(w.syn.join(' · '))}</div>`:''}</div></div>`).join('')}</div>`; }
     document.getElementById('list').innerHTML=html||`<p>${T('No words match that search.','没有找到匹配的单词。')}</p>`; };
   document.getElementById('q').oninput=e=>{q=e.target.value; draw();}; draw();

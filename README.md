@@ -74,8 +74,15 @@ what the page already has, so the games and pages underneath are unchanged.
   and More in this subject (not in the Daily Circuit or a class game). Close reading and Big idea: the passage on the left,
   every question on the right; choose the answers, then Confirm, then Next passage (`passageBoth()`); Note taking the same
   way. On phones the score is one line under the name and the keys and More are left out.
-- The Chinese pages, login and the teacher page do not have the shell yet. Coming stages: the topic pages (with the word
-  cards), My progress, the Reading Comprehension and Daily Circuit pages, login, then the Chinese version.
+- **Subject pages** (stage 3, 8 Nov 2026; `topicPage()` in app.js, section 5 of `css/site.css`): the area and name, the
+  "I study this" switch (the same `aea:studying:v1` as the home page and the Daily Circuit; Essentials says "Always in the
+  Daily Circuit"), the topics on science pages, the level buttons and the student's level; then **Words at this level**:
+  word cards to turn over (the word and part of speech on the front, the meaning, an example and similar words on the back,
+  buttons to hear the word and the example in the browser's voice, Previous / Next / Shuffle, ← → keys), with **Your
+  words** beside them (known, familiar, learning and new at this level); then the game columns and the Games row. The word
+  list (#words), My progress, Reading Comprehension, the Daily Circuit page and the login page have the new look too.
+  Login has the shell with `data-skip-zh` (a student coming from the Chinese version gets the old bilingual page).
+- The Chinese pages and the teacher page do not have the shell yet. Coming stage: the Chinese version.
 - After changing `shell.js`, `subjects.js`, `home.js` or `site.css`, change the `?v=` number after them on the pages that load them.
 
 ## English games by category
