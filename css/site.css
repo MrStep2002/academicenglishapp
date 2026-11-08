@@ -5,6 +5,7 @@
    4. Game pages (stage 2): the path in the top bar, the game and its side panel, Close reading (en/engine/app.js, NEW_UI)
    5. Subject pages, the word list and My progress (stage 3; app.js), then Reading Comprehension, the Daily Circuit page and login
    6. The Chinese version (stage 4): the same pages in Chinese
+   7. After the rebuild (8 Nov 2026): Listen beside the game's name, calmer feedback, the top bar staying in view on computers
    Everything is prefixed aea- so nothing clashes with the game pages (en/engine/styles.css) or css/home.css. */
 
 /* ---------- 1. Fonts and colours ---------- */
@@ -24,6 +25,7 @@
   --sh-fc-bg: #eef3fb; --sh-fc-line: #dbe4f4; --sh-fc-edge: #c3d2ee; --sh-fc-l2: #f4f7fd; --sh-fc-l3: #dfe7f5; --sh-say: #e8effc; --sh-btn-line: #c9d3e8;
   --sh-st-new-bg: #eef0f6; --sh-st-new: #4a4f6e; --sh-st-learn-bg: #fdf0d5; --sh-st-learn: #7a4a00; --sh-st-fam-bg: #e1ecfb; --sh-st-fam: #1a4fa0;
   --sh-st-known-bg: #e3f4ea; --sh-st-known: #11694a; --sh-bar-known: #17825a; --sh-bar-fam: #1a5cb0; --sh-bar-learn: #e0a526; --sh-bar-new: #c9cedd;
+  --sh-near: #9a5b00;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --sh-bg: #11152a; --sh-side: #161b33; --sh-card: #1a1f38; --sh-ink: #e8ebf6; --sh-ink2: #c9cee3; --sh-muted: #a9b0cc;
@@ -33,7 +35,8 @@
   --sh-flame: #ff9a5a; --sh-track: #2c3354; --sh-fill: #5fd39a; --sh-switch-off: #5d6488; --sh-pill: #252b4d; --sh-shadow: rgba(0,0,0,.45); color-scheme: dark;
   --sh-fc-bg: #171d38; --sh-fc-line: #2a3358; --sh-fc-edge: #36427a; --sh-fc-l2: #1d2444; --sh-fc-l3: #232b52; --sh-say: #263264; --sh-btn-line: #36406a;
   --sh-st-new-bg: #262c4a; --sh-st-new: #c9cee3; --sh-st-learn-bg: #3a2c12; --sh-st-learn: #f3c56b; --sh-st-fam-bg: #1d2c55; --sh-st-fam: #9db1ff;
-  --sh-st-known-bg: #163a2c; --sh-st-known: #6fdcaa; --sh-bar-known: #3fb27f; --sh-bar-fam: #6f8fff; --sh-bar-learn: #e0a526; --sh-bar-new: #3a4268; } }
+  --sh-st-known-bg: #163a2c; --sh-st-known: #6fdcaa; --sh-bar-known: #3fb27f; --sh-bar-fam: #6f8fff; --sh-bar-learn: #e0a526; --sh-bar-new: #3a4268;
+  --sh-near: #f3c56b; } }
 :root[data-theme="dark"] {
   --sh-bg: #11152a; --sh-side: #161b33; --sh-card: #1a1f38; --sh-ink: #e8ebf6; --sh-ink2: #c9cee3; --sh-muted: #a9b0cc;
   --sh-line: #2c3354; --sh-line2: #262c4a; --sh-soft: #20264a; --sh-hover: #232a4d; --sh-on: #263264; --sh-on-ink: #c3d2ff;
@@ -42,7 +45,8 @@
   --sh-flame: #ff9a5a; --sh-track: #2c3354; --sh-fill: #5fd39a; --sh-switch-off: #5d6488; --sh-pill: #252b4d; --sh-shadow: rgba(0,0,0,.45); color-scheme: dark;
   --sh-fc-bg: #171d38; --sh-fc-line: #2a3358; --sh-fc-edge: #36427a; --sh-fc-l2: #1d2444; --sh-fc-l3: #232b52; --sh-say: #263264; --sh-btn-line: #36406a;
   --sh-st-new-bg: #262c4a; --sh-st-new: #c9cee3; --sh-st-learn-bg: #3a2c12; --sh-st-learn: #f3c56b; --sh-st-fam-bg: #1d2c55; --sh-st-fam: #9db1ff;
-  --sh-st-known-bg: #163a2c; --sh-st-known: #6fdcaa; --sh-bar-known: #3fb27f; --sh-bar-fam: #6f8fff; --sh-bar-learn: #e0a526; --sh-bar-new: #3a4268; }
+  --sh-st-known-bg: #163a2c; --sh-st-known: #6fdcaa; --sh-bar-known: #3fb27f; --sh-bar-fam: #6f8fff; --sh-bar-learn: #e0a526; --sh-bar-new: #3a4268;
+  --sh-near: #f3c56b; }
 
 /* ---------- 2. The shell ---------- */
 html.aea-shelled body { margin: 0; }
@@ -683,8 +687,8 @@ html.aea-shelled #app[data-view="progress"] { gap: 26px; }
 #app[data-view="topic"] .col .game.off { filter: none; opacity: 1; background: var(--sh-bg); border-color: var(--sh-line2); color: var(--sh-off); }
 #app[data-view="topic"] .col .game.off p, #app[data-view="topic"] .col .game.off .best { color: var(--sh-off); }
 #app[data-view="topic"] .games-row { margin-top: 0; }
-#app[data-view="topic"] .games-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 14px; }
-#app[data-view="topic"] .games-grid .game h3 { font-size: 24px; }
+/* Three across, lined up with the columns above (8 Nov 2026, teacher: the descriptions fit on two lines); fewer when narrower */
+#app[data-view="topic"] .games-grid { grid-template-columns: repeat(auto-fill, minmax(max(280px, calc((100% - 56px) / 3)), 1fr)); gap: 24px 28px; }
 #app[data-view="topic"] .col-note { font-size: 15px; color: var(--sh-muted); }
 
 /* The word list */
@@ -825,3 +829,25 @@ html.aea-zh .aea-streak i.t-zh { text-transform: none; }
 /* A Chinese subject page (app.js zhTopicPage): the word card's back has the Chinese; the three columns 词汇, 句子, 游戏 */
 .fc-zh { margin: 0; font: 600 clamp(28px, 2.6vw, 36px)/1.25 var(--sh-zh); color: var(--sh-ink); }
 #app[data-view="topic"] .col-sentences h2::before { background: var(--good); }
+
+/* ---------- 7. After the rebuild (8 Nov 2026, the teacher's list) ---------- */
+/* The Listen switch beside the game's name (a feature to promote: it had moved into the side panel). app.js gameLayout() */
+.g-name { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
+#app[data-view] .g-name .lsn-tog { min-height: 42px; padding: 0 18px; gap: 8px; border: 1.5px solid var(--sh-link); border-radius: 99px;
+  background: var(--sh-card); color: var(--sh-link); font: 700 16px/1 var(--sh-body); }
+#app[data-view] .g-name .lsn-tog:hover { background: var(--sh-say); }
+#app[data-view] .g-name .lsn-tog[aria-pressed="true"] { background: var(--sh-link); border-color: var(--sh-link); color: var(--sh-card); }
+#app[data-view] .g-name .lsn-tog[aria-pressed="true"] .lsn-state::before { content: "· on"; font-weight: 400; }
+#app[data-view] .g-name .lsn-tog:focus-visible { outline: 3px solid var(--sh-ink); outline-offset: 2px; }
+/* Feedback after a wrong answer: no big red fill (teacher: "a little dramatic"); a pale panel with a coloured line down the
+   left. Nearly (Spot the error, Complete the text: at least half right) is amber */
+#app[data-view] .feedback.no, #app[data-view] .feedback.near { background: var(--sh-soft); border-left: 4px solid var(--bad, #b3261e); border-radius: 6px 10px 10px 6px; }
+#app[data-view] .feedback.near { border-left-color: var(--sh-near); }
+#app[data-view] .feedback.near .verdict { color: var(--sh-near); }
+/* The top bar stays in view as the page scrolls: computers only, not phones or tablets (teacher). app.js stickyTop() keeps
+   a new question card from scrolling under it */
+@media (min-width: 860px) and (hover: hover) and (pointer: fine) {
+  .aea-top { position: sticky; top: 0; }
+  html.aea-shelled { scroll-padding-top: 84px; }
+  .cr-pass { top: 80px; max-height: calc(100vh - 96px); }
+}

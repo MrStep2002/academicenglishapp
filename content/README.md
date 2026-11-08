@@ -224,16 +224,19 @@ first hint, 3 on the second, then 2 and 1. A word plays in Hints once it has at 
 
 ### characters.csv (To Kill a Mockingbird, 8 Nov 2026)
 
-`id,level,name,also_called,role,group,first_chapter,traits,taboo1,taboo2,taboo3,taboo4,hint1,hint2,hint3,hint4`
+`id,level,name,description,group,version,taboo1,taboo2,taboo3,taboo4,hint1,hint2,hint3,hint4`
 
-The novel's characters, kept in their own file so they can be used in different ways. For now they play in
-**Don't Say It!** and **Hints** on the teacher page, alongside the topic's words: a character plays under its `name`.
+The cast of Christopher Sergel's stage version (the teacher's list: the 20 characters in the play the class reads), in their
+own file so they can be used in different ways. For now they play in **Don't Say It!** and **Hints** on the teacher page,
+alongside the topic's words: a character plays under its `name`.
 
-- **name**: what the class says, e.g. `Boo Radley`. also_called: other names, `;`-separated (not used by the games).
-- role: one line on who they are. group: Finch household, Neighbours, The Ewells, First Purchase church, The trial,
-  Townspeople, School. first_chapter: where they first appear. traits: a few adjectives.
+- Every character has **two rows** (`version` 1 and 2, ids `tkam-char-<name>-1` and `-2`) with different forbidden words
+  and different hints, so the same character can come up twice in a game and be guessed in different ways.
+- **name**: what the class says, e.g. `Boo Radley`. description: the teacher's one-line description. group: Finch household,
+  Neighbours, The courtroom, The Ewells, Tom's family and church, Townspeople.
 - **taboo1–4** and **hint1–4**: as in taboo.csv (hints hardest first; a hint never uses the name or a forbidden word).
-- level: main characters at Foundation, minor ones higher. The games filter by it like any other row.
+  Hints only use what happens in the play, not scenes that are only in the novel.
+- level: main characters at Foundation, minor ones higher; both rows of a character have the same level.
 
 ### wall.csv (Connecting Wall, 7 Nov 2026)
 

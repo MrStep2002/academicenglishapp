@@ -68,12 +68,20 @@ what the page already has, so the games and pages underneath are unchanged.
   On My progress, Maths and Log in the shell has `data-auto-side`: opened from the Chinese side (`?from=zh`, a link from a
   `zh/` page, or Maths opened from the Chinese side in this tab), they get the Chinese shell. Maths uses `data-side="maths"` for its points.
 - "Continue: …" on the home page: the topic pages remember the last game opened on each topic (`aea:lastgame:v1`, `lastGame()` in app.js).
-- **Game pages** (stage 2, 8 Nov 2026; `NEW_UI` in app.js, section 4 of `css/site.css`): the game's column, its name and
-  how to play, then the game on the left and a side panel on the right: This round (or This game), any settings (Listen,
-  Tell me how many), Playing at (the level, with Change), the keys (`KEY_HELP` in app.js: keep it in step with a game's keys)
+- **Game pages** (stage 2, 8 Nov 2026; `NEW_UI` in app.js, section 4 of `css/site.css`): the game's column, its name (with
+  the 🔊 Listen switch beside it in the games that have it) and how to play, then the game on the left and a side panel on
+  the right: This round (or This game), any settings (Tell me how many), Playing at (the level, with Change), the keys (`KEY_HELP` in app.js: keep it in step with a game's keys)
   and More in this subject (not in the Daily Circuit or a class game). Close reading and Big idea: the passage on the left,
   every question on the right; choose the answers, then Confirm, then Next passage (`passageBoth()`); Note taking the same
   way. On phones the score is one line under the name and the keys and More are left out.
+- **After the rebuild** (8 Nov 2026, section 7 of `css/site.css`): on computers (not phones or tablets) the top bar stays in
+  view as the page scrolls (`stickyTop()` in app.js keeps new cards from scrolling under it). A wrong answer's feedback is a
+  pale panel with a coloured line down the left instead of a red fill. Spot the error and Complete the text say **Nearly!**
+  (amber) when at least half is right, and Spot the error is scored like Complete the text: each error is one answer (found
+  or missed), and so is each correct word marked as wrong. Questions about the same word are spaced out: a word due for
+  review moves up once, not with every sentence made from it, and the same word doesn't come back within 5 questions while
+  another can go there (`spaceOut()` in app.js). The Games row on a subject page is three across, lined up with the columns.
+  Report this question is back beside Continue in the Daily Circuit.
 - **Subject pages** (stage 3, 8 Nov 2026; `topicPage()` in app.js, section 5 of `css/site.css`): the area and name, the
   "I study this" switch (the same `aea:studying:v1` as the home page and the Daily Circuit; Essentials says "Always in the
   Daily Circuit"), the topics on science pages, the level buttons and the student's level; then **Words at this level**:
@@ -138,7 +146,7 @@ a 14-day chart and a "How to earn points" table.
   | Word games (match, meaning, Speed round, Survival, Odd one out…) | 1 | 1 | 2 | 2 | 3 |
   | Type it | 2 | 2 | 3 | 3 | 4 |
   | Fill the gap, True or false | 1 | 2 | 2 | 3 | 4 |
-  | Build the sentence, Spot the error, In your own words | 2 | 3 | 4 | 5 | 6 |
+  | Build the sentence, Spot the error (shared between its errors), In your own words | 2 | 3 | 4 | 5 | 6 |
   | Read it, Answer the question | 3 | 4 | 5 | 6 | 8 |
   | A reading passage (Close reading, Big idea, Note taking) | 8 | 10 | 15 | 18 | 22 |
 

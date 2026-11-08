@@ -284,11 +284,11 @@ const POINTS = {
 const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error, In your own words, Find the evidence, All-in English'],
+  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error (shared between its errors), In your own words, Find the evidence, All-in English'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The same, in Chinese (My progress opened from the Chinese side, stage 4)
 const POINT_KINDS_ZH = {word:'单词游戏：学习单词、单词配释义、看中文选英文、选出释义、判断对错、单词贪吃蛇、单词打地鼠、单词入侵者、单词搜索、限时挑战、生存挑战',
-  type:'拼写单词、拯救小老鼠', grammar:'填空、判断对错、语法检查、常识题、翻译', build:'连词成句、找错、用自己的话说、找证据、全英文练习',
+  type:'拼写单词、拯救小老鼠', grammar:'填空、判断对错、语法检查、常识题、翻译', build:'连词成句、找错（分摊到每个错误）、用自己的话说、找证据、全英文练习',
   short:'完成短文（分摊到每个空）、回答问题', passage:'阅读文章或听力测试：精读、主旨、笔记、听力'};
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -364,13 +364,29 @@ const P = (function(){
 function rankForLevel(items){
   const target=P.rating()+0.25, now=Date.now();
   // Chinese side (31 Oct): no level target; shaky words first, words never answered soon after, confident ones less often, known ones last
-  if(SIDE==='zh' && !classRun) return items.map(it=>{ let sc=Math.random()*0.8; const w=wordOf(it), rec=w && P.wordRec(w.id);
+  if(SIDE==='zh' && !classRun) return spaceOut(items.map(it=>{ let sc=Math.random()*0.8; const w=wordOf(it), rec=w && P.wordRec(w.id);
       if(w){ if(!rec) sc-=0.3; else if(!zhConfident(w)) sc-=0.6; else if(rec.s>=4 && rec.due>now) sc+=0.9; else sc+=0.3; }
-      return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
-  return items.map(it=>{ let sc=Math.random()*0.6; const d=itemLevel(it); if(d!=null) sc+=Math.abs(d-target);
+      return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]));
+  // A word due for review moves up once, not with every question made from it (8 Nov 2026: Fill the gap has five sentences
+  // per word, and all five used to come first, one after another)
+  const boosted=new Set();
+  return spaceOut(shuffle(items).map(it=>{ let sc=Math.random()*0.6; const d=itemLevel(it); if(d!=null) sc+=Math.abs(d-target);
       const w=wordOf(it), rec=w && P.wordRec(w.id);
-      if(rec){ if(rec.s>=1 && rec.s<4 && rec.due<=now) sc-=0.6; else if(rec.s>=4 && rec.due>now) sc+=0.8; }
-      return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+      if(rec){ if(rec.s>=1 && rec.s<4 && rec.due<=now){ if(!boosted.has(w.id)){ sc-=0.6; boosted.add(w.id); } } else if(rec.s>=4 && rec.due>now) sc+=0.8; }
+      return [sc,it]; }).sort((a,b)=>a[0]-b[0]).map(x=>x[1]));
+}
+// The same word never comes back within SPACE questions while another word can go there instead (8 Nov 2026, teacher:
+// "different variants on the same word four times in a row"). Questions not made from a word are never held back.
+const SPACE = 5;
+function spaceOut(list){
+  const key=it=>{ const w=wordOf(it); return w ? w.id : null; };
+  const gap=Math.min(SPACE, new Set(list.map(key).filter(k=>k!=null)).size-1); if(gap<1) return list;
+  const out=[], rest=list.slice(), recent=[];
+  while(rest.length){
+    let j=0; for(let i=0; i<rest.length && i<60; i++){ const k=key(rest[i]); if(k==null || !recent.includes(k)){ j=i; break; } }
+    const it=rest.splice(j,1)[0]; out.push(it); recent.push(key(it)); if(recent.length>gap) recent.shift();
+  }
+  return out;
 }
 // Show the points just earned (or the point taken off) in the answer's feedback, when there is one
 function earned(change){
@@ -517,7 +533,7 @@ function reportButton(card, row, miss){
       <input type="text" class="report-note" maxlength="300" placeholder="${esc(TX('Anything to add? (optional)','还有什么要说的吗？（可选）'))}">
       <div class="report-row"><button type="button" class="btn report-send" disabled>${T('Send report','发送')}</button><button type="button" class="btn alt report-cancel">${T('Cancel','取消')}</button></div>
       <p class="report-msg" role="status"></p>`;
-    card.appendChild(panel);
+    card.appendChild(panel); panel.querySelector('.report-opt').focus({preventScroll:true});   // (so Enter doesn't move on to the next question)
     let reason='';
     const send=panel.querySelector('.report-send'), msg=panel.querySelector('.report-msg');
     panel.querySelectorAll('.report-opt').forEach(o=>o.onclick=()=>{ reason=o.dataset.v;
@@ -569,12 +585,14 @@ function qfRight(card, next){
   requestAnimationFrame(()=>requestAnimationFrame(()=>bar.classList.add('run')));
   qfNext(next, QF_RIGHT_MS);
 }
-// After a wrong answer: the right answer stays on screen until the student presses Continue (or Enter)
+// After a wrong answer: the right answer stays on screen until the student presses Continue (or Enter), with Report this
+// question beside it (put back 8 Nov 2026, teacher)
 function qfWrong(card, next){
-  lastMiss=null;
+  const miss=lastMiss; lastMiss=null;
   const row=document.createElement('div'); row.className='next-row';
   row.innerHTML=`<button class="btn">${T('Continue','继续')} →</button>`; card.appendChild(row);
-  const b=row.querySelector('button'); let gone=false;
+  reportButton(card, row, miss);
+  const b=row.querySelector('.btn'); let gone=false;
   const go=()=>{ if(gone || !qf) return; gone=true; b.disabled=true; qfDue() ? qfSwitch() : next(); };
   b.onclick=go; b.focus({preventScroll:true});
   keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } };
@@ -584,7 +602,7 @@ function qfWrong(card, next){
 // Questions the teacher removed after a report (hiddenItem, 31 Oct) are skipped; if every item is removed, all play.
 function Deck(items){   // items: a list, or a function giving the list (read again on refill, and every 4 cards for newcomers)
   let queue=[], last=null, calls=0; const retried=new Set(), dealt=new Set(), live=typeof items==='function', src=live ? items : ()=>items;
-  const newcomers=()=>{ const inQ=new Set(queue); src().filter(x=>!inQ.has(x) && !dealt.has(x) && x!==last && !hiddenItem(x)).forEach(x=>queue.splice(Math.min(queue.length, 1+Math.floor(Math.random()*4)), 0, x)); };
+  const newcomers=()=>{ const inQ=new Set(queue); shuffle(src().filter(x=>!inQ.has(x) && !dealt.has(x) && x!==last && !hiddenItem(x))).forEach(x=>queue.splice(Math.min(queue.length, 1+Math.floor(Math.random()*4)), 0, x)); };   // (shuffled: not in the file's order)
   const refill=()=>{ dealt.clear(); const all=src(), shown=all.filter(x=>!hiddenItem(x)); queue=rankForLevel(shown.length ? shown : all); if(queue.length>1 && queue[0]===last) queue.push(queue.shift()); };
   return {
     next(){ if(!queue.length) refill(); else if(live && ++calls%4===0) newcomers();
@@ -630,9 +648,9 @@ const GAMES = [
   {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Read each statement and decide quickly: true or false?', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
   {key:'mouse',    cat:'games',   name:'Save the mouse',   blurb:'Guess the word one letter at a time before the mouse disappears.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
   // Word search (7 Nov 2026, teacher): in the Games row, after Save the mouse; plays on phones; not in the Daily Circuit
-  {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters, from the words or from their meanings.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
+  {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'rw',       form:'short', cat:'grammar', name:'Grammar Check',    blurb:'Is the sentence written correctly? Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'rw',       form:'short', cat:'grammar', name:'Grammar Check',    blurb:'Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
@@ -975,7 +993,7 @@ function shell(game, note){
 }
 // ---------- THE NEW GAME LAYOUT (redesign stage 2, 8 Nov 2026; only when NEW_UI) ----------
 // The heading (the game's column as a small label, its name, how to play), then the game on the left and a side panel on
-// the right: This round (or This game), any settings (Listen, Tell me how many), Playing at (the level, with Change), the
+// the right: This round (or This game), any settings (Tell me how many; Listen is beside the name), Playing at (the level, with Change), the
 // keys, and More in this subject (not in the Daily Circuit or a class game, which choose the games). On a Reading
 // Comprehension page there is no side panel: the level and the round's score sit beside the heading, and the passage gets
 // the width. On phones the score comes first as one line and the keys and More are left out (css/site.css).
@@ -1031,18 +1049,19 @@ function gameLayout(game, note, o){
   const back=CFG.only && CFG.only!=='zh' ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : {href:'#', label:CFG.name||'Back'};
   const eyebrow=reading ? esc(CFG.eyebrow||'Reading') : gameColumn(game);
   const title=o.titleHtml || gameNameT(game);
-  const head=`<div class="g-head"><div class="g-title">${eyebrow?`<p class="g-eyebrow">${eyebrow}</p>`:''}<h1>${title}</h1>${note?`<p class="g-hint">${note}</p>`:''}</div>
+  // The Listen switch sits beside the game's name (8 Nov 2026, teacher: a feature to promote; it was in the side panel)
+  const head=`<div class="g-head"><div class="g-title">${eyebrow?`<p class="g-eyebrow">${eyebrow}</p>`:''}<div class="g-name"><h1>${title}</h1>${lsn?listenSwitch():''}</div>${note?`<p class="g-hint">${note}</p>`:''}</div>
     ${reading?`<div class="g-hstats"><dl class="g-lv" id="gLevel" hidden></dl><dl class="g-stats" id="stats" aria-label="This round"></dl></div>`:''}</div>`;
   const cur=zh ? {label:game.name||String(title).replace(/<[^>]*>/g,''), zh:game.zh||''} : game.name;
   if(reading) frame(back, `${head}<div class="g-wide">${o.top||''}<div class="feed" id="feed"></div></div>`, cur, 'reading');
-  else frame(back, `${head}<div class="g-layout"><div class="g-main">${o.top||''}<div class="feed" id="feed"></div></div>${sidePanel(game, lsn)}</div>`, cur, 'game');
+  else frame(back, `${head}<div class="g-layout"><div class="g-main">${o.top||''}<div class="feed" id="feed"></div></div>${sidePanel(game)}</div>`, cur, 'game');
   if(lsn){ listenGame=game; listenWire(); }
 }
-function sidePanel(game, lsn){
+function sidePanel(game){
   const keys=keysFor(game.key), free=!inCircuit && !classRun;
   return `<aside class="g-side" aria-label="${TX('About this game','关于这个游戏')}">
     <section class="g-box g-round" aria-labelledby="gRoundH"><h2 id="gRoundH">${isArcade(game) || game.key==='wordsearch' || game.key==='zhwordsearch' ? T('This game','本局') : T('This round','本轮')}</h2><dl class="g-stats" id="stats"></dl></section>
-    <section class="g-box g-tools" id="gTools" aria-label="${TX('Settings','设置')}"${lsn?'':' hidden'}>${lsn?listenSwitch():''}</section>
+    <section class="g-box g-tools" id="gTools" aria-label="${TX('Settings','设置')}" hidden></section>
     ${LEVELS.length ? `<section class="g-box g-level" id="gLevelBox" aria-labelledby="gLevelH">${levelBoxInner()}</section>` : ''}
     ${keys ? `<section class="g-box g-keys" aria-labelledby="gKeysH"><h2 id="gKeysH">${T('Keys','按键')}</h2><ul>${keys.map(([k,t])=>`<li><kbd>${keyT(k)}</kbd> ${keyT(t)}</li>`).join('')}</ul></section>` : ''}
     ${free ? moreBox(game) : ''}
@@ -1103,13 +1122,15 @@ function zhMoreBox(game){
 // A place for a game's own settings (Spot the error: Tell me how many) in the side panel; the old bar without NEW_UI
 function gameTools(){ if(!NEW_UI) return document.querySelector('.bar'); const t=document.getElementById('gTools'); if(t) t.hidden=false; return t; }
 
+// The height of the top bar when it stays in view (computers only: css/site.css), so a card is never scrolled under it
+const stickyTop = () => { const t=document.querySelector('.aea-top'); return t && getComputedStyle(t).position==='sticky' ? t.getBoundingClientRect().height : 0; };
 function showCard(html){
   const feed=document.getElementById('feed');
   const old=feed.querySelector('.card'); if(old) old.remove();
   const card=document.createElement('div'); card.className='card enter'; card.innerHTML=html; lastMiss=null;
   feed.appendChild(card);
   if(listenGame && listenOn()) listenCard(card);   // Listen switch on: the text at the top is read out instead of shown
-  const top=feed.getBoundingClientRect().top; if(top<0) window.scrollBy(0, top-16);
+  const top=feed.getBoundingClientRect().top, bar=stickyTop(); if(top<bar) window.scrollBy(0, top-bar-16);
   return card;
 }
 function autoNext(card, next, ms){
@@ -1515,12 +1536,12 @@ function playBuild(){
   const step=()=>{
     const b=deck.next();
     const pieces=shuffle([...b.tiles.map((t,i)=>({t:t[0],r:t[1],k:'t'+i})), ...(b.decoys||[]).map((t,i)=>({t:t[0],r:t[1],k:'d'+i,decoy:true}))]);
-    const usedRoles=[...new Set(b.tiles.map(t=>t[1]))];
+    // The key under the pieces (Who or what, Verb, Detail, Linking word…) was taken off on 8 Nov 2026 (teacher: "just have the
+    // colours with no definitions"). The pieces keep their colours (class r-topic etc.); ROLES and ROLES_ZH are kept in case it comes back.
     const card=showCard((zh ? `<p class="instr">${T('Build this sentence in English','用英文组成这个句子')}</p>
       <p class="zh-sentence" lang="zh-CN">${esc(b.zh)}</p>` : `<p class="instr">Build the sentence</p><p class="build-goal">${esc(b.goal||'Put the pieces in order.')}</p>`)+`
       <div class="answer" id="ans" aria-label="Your sentence"></div>
       <div class="pool" id="pool">${pieces.map(p=>`<button class="piece r-${p.r}" data-k="${p.k}">${esc(p.t)}</button>`).join('')}</div>
-      <div class="rolekey">${usedRoles.map(r=>`<span class="r-${r}">${T(ROLES[r]||r, ROLES_ZH[r]||'')}</span>`).join('')}</div>
       <div class="next-row check-row"><button class="btn" id="check" disabled>${T('Check','检查')}</button></div><div class="fb"></div>`);
     const ans=card.querySelector('#ans'), pool=card.querySelector('#pool'), check=card.querySelector('#check');
     let placed=[], done=false;
@@ -1605,10 +1626,21 @@ function playErr(){
         else if(marked.has(i)) b.classList.add('t-false'); });
       card.querySelector('.check-row').remove();
       const list=errIdx.map(i=>{ const t=toks[i]; return `<li class="${got.has(i)?'got':'miss'}"><span><s>${esc(t.text)}</s> → <b>${esc(t.err.right)}</b></span><span class="why">${esc(t.err.why)}</span></li>`; }).join('');
-      const summary=`You found ${found} of ${errIdx.length}${falseMarks?` and marked ${falseMarks} correct word${falseMarks>1?'s':''} as wrong`:''}.`;
-      card.querySelector('.fb').innerHTML=`<div class="feedback ${ok?'ok':'no'}"><span class="verdict">${ok?'All found.':summary}</span><ul class="errlist">${list}</ul></div>`;
+      // Nearly (8 Nov 2026, teacher: "A 'Nearly' would seem fairer"): at least as many right as wrong
+      const wrongN=errIdx.length-found+falseMarks, nearly=!ok && found>0 && found>=wrongN;
+      const marks=falseMarks ? ` You also marked ${falseMarks} correct word${falseMarks>1?'s':''} as wrong.` : '';
+      const verdict=ok ? 'All found.' : `${nearly?'Nearly!':'Not quite.'} You found ${found} of ${errIdx.length}.${marks}`;
+      card.querySelector('.fb').innerHTML=`<div class="feedback ${ok?'ok':nearly?'near':'no'}"><span class="verdict">${verdict}</span><ul class="errlist">${list}</ul></div>`;
       if(partial && !ok){ partialCredit('error', it, found, falseMarks, errIdx.length); return; }
-      settle(ok,card,st,deck,it,step);
+      // Scored like Complete the text (8 Nov 2026, teacher): each error is one answer (found: right; missed: wrong), and so
+      // is each correct word marked as wrong; the paragraph's points are shared between its errors
+      const part=k=>({id:it.id+'#'+(k+1), level:it.level, qs:errIdx.length});
+      errIdx.forEach((i,k)=>{ if(got.has(i)) st.hit(part(k)); else st.miss(part(k)); });
+      for(let f=0; f<falseMarks; f++) st.miss({id:it.id, level:it.level, qs:errIdx.length});
+      listenReveal(card);
+      if(ok){ autoNext(card, step); return; }
+      lastMiss={game:'error', item:it};   // a report is about the whole paragraph
+      deck.retry(it); manualNext(card, step);
     };
     btn.onclick=()=>check(); keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); check(); } };
     circuitFinish=()=>check(true);
@@ -1750,17 +1782,21 @@ function playRead(){
     // partial: the Daily Circuit's time is up. The gaps the student has filled are marked (each is one answer, as usual);
     // empty gaps just show their word and are not counted
     const doCheck=(partial)=>{ if(checked || (!partial && firstEmpty()!==-1) || (partial && filled.every(x=>x==null))) return; checked=true; card.classList.add('done'); let got=0;
+      const marks=[];   // each filled gap is one answer, recorded once the result is on screen (so the points show in it)
       gaps.forEach((g,i)=>{ const s=slots[i];
         if(filled[i]==null){ s.classList.add('no'); s.textContent=g.ans; return; }
         const right=lc(bank[filled[i]].t)===lc(g.ans), item={id:r.id+'#'+(i+1), level:r.level, wid:g.id, qs:gaps.length};
-        if(right){ got++; s.classList.add('ok'); st.hit(item); }
-        else { s.classList.add('no'); s.innerHTML=`<s>${esc(inGap(i, bank[filled[i]].t))}</s> ${esc(g.ans)}`; st.miss(item); } });
+        if(right){ got++; s.classList.add('ok'); marks.push([true, item]); }
+        else { s.classList.add('no'); s.innerHTML=`<s>${esc(inGap(i, bank[filled[i]].t))}</s> ${esc(g.ans)}`; marks.push([false, item]); } });
       draw(); check.parentNode.remove();
       card.querySelector('#peek').textContent='Tap a word in the text to see what it means.';
       const fb=card.querySelector('.fb'), n=gaps.length;
       const notes=gaps.filter((g,i)=>filled[i]==null || lc(bank[filled[i]].t)!==lc(g.ans)).map(g=>wordNote(byId[g.id])).join('');
+      // Nearly (8 Nov 2026, teacher): at least half the gaps right
+      const near=got>0 && got*2>=n;
       if(got===n) fbOk(fb, `<span>All ${n} gaps right.</span>`);
-      else { fb.innerHTML=`<div class="feedback no"><span class="verdict">${got} of ${n} right.</span><span>The right words are shown in the text.</span>${notes}</div>`; deck.retry(r); }
+      else { fb.innerHTML=`<div class="feedback ${near?'near':'no'}"><span class="verdict">${near?'Nearly!':'Not quite.'} ${got} of ${n} right.</span><span>The right words are shown in the text.</span>${notes}</div>`; deck.retry(r); }
+      marks.forEach(([ok, item])=>ok ? st.hit(item) : st.miss(item));
       manualNext(card, step, 'Next text →'); };
     check.onclick=()=>doCheck();
     circuitFinish=()=>doCheck(true);
@@ -2208,7 +2244,7 @@ const LISTEN_KEY = 'aea:listen';
 let listenGame = null, listenRun = 0, listenU = null, listenSpoke = false;
 const listenCan = g => TTS_OK && SIDE==='en' && !inCircuit && !classRun && !!g && LISTEN_KEYS.has(g.key);
 const listenOn = () => { try{ return localStorage.getItem(LISTEN_KEY)==='1'; }catch(e){ return false; } };
-const listenSwitch = () => `<button class="chip lsn-tog" type="button" aria-pressed="${listenOn()}" title="Hear each question read aloud instead of reading it"><span aria-hidden="true">🔊</span> Listen</button>`;
+const listenSwitch = () => `<button class="chip lsn-tog" type="button" aria-pressed="${listenOn()}" title="Hear each question read aloud instead of reading it"><span aria-hidden="true">🔊</span> Listen<span class="lsn-state" aria-hidden="true"></span></button>`;
 function listenWire(){
   const b=document.querySelector('.lsn-tog'); if(!b) return;
   if(listenOn()) ttsLoad();
@@ -2473,7 +2509,7 @@ function playSnake(){
   }
   function start(){ if(started) return; started=true; msg.hidden=true; if(timed) end=Date.now()+SECS*1000; run(); clock();
     // if the game does not fit on the screen, scroll so the timer and the whole card are in view
-    if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8, behavior:'smooth'}); } }
+    if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8-stickyTop(), behavior:'smooth'}); } }
   function pause(){ if(!started || paused || over) return; paused=true; if(timed) left=Math.max(0, end-Date.now());
     msg.textContent=touch?TX('Paused. Tap to carry on','已暂停。点击继续'):TX('Paused. Press an arrow key to carry on','已暂停。按方向键继续'); msg.hidden=false; }
   function resume(){ if(!paused || over) return; paused=false; if(timed) end=Date.now()+left; msg.hidden=true; run(); }
@@ -2740,7 +2776,7 @@ function playInvaders(){
     say(TX(`Too late! It was ${q.w.w}.`, `太晚了！答案是 ${q.w.w}。`), true); later(newWave, 1200);
   }
   function start(){ if(started) return; started=true; msg.hidden=true; last=0; if(!inCircuit) end=Date.now()+SECS*1000; clock();
-    if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8, behavior:'smooth'}); } }
+    if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8-stickyTop(), behavior:'smooth'}); } }
   function pause(){ if(!started || paused || over) return; paused=true; if(!inCircuit) left=Math.max(0, end-Date.now()); goBtn.textContent=TX('Carry on','继续'); msg.hidden=false; }
   function resume(){ if(!paused || over) return; paused=false; last=0; if(!inCircuit) end=Date.now()+left; msg.hidden=true; }
   function clock(){ if(over || inCircuit || !alive()) return;
