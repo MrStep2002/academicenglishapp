@@ -2,6 +2,9 @@
 // Since 1 Nov 2026 (teacher: "a speed round… a high energy experience"), five minutes: quick-fire 60 s → arcade 60 s →
 // quick-fire 60 s → arcade 60 s → quick-fire 60 s, on both sides. Quick-fire: the game changes every three questions and
 // a right answer moves straight on (app.js, QF_…). The two arcade stations are two different arcade games (slot 0 and 1).
+// 8 Nov 2026 (teacher): the middle station is a whole minute of Match the meaning (kind 'match'): quick-fire 60 s → arcade
+// 60 s → Match 60 s → arcade 60 s → quick-fire 60 s. In quick-fire a right answer now moves on after a steady second and a
+// wrong one waits for Continue.
 // (25 Oct to 1 Nov: short 45 s → longer 45 s → arcade 60 s → longer 45 s → short 45 s, four minutes.) Each English game is tagged short or long in GAMES (en/engine/app.js), the
 // Chinese ones are listed in ZH_CIRCUIT there; the arcade station takes turns between the arcade games in CIRCUIT_ARCADE.
 // Academic English Essentials is always in the circuit (31 Oct 2026, teacher): ALWAYS below, no switch for it.
@@ -15,7 +18,7 @@ const SRC = (document.currentScript && document.currentScript.src) || '';
 const ROOT = SRC ? SRC.replace(/en\/engine\/circuit\.js([?#].*)?$/, '') : location.origin + '/';
 const KEY = 'aea:circuit:v1', STUDY = 'aea:studying:v1';
 const STATIONS = 5, SECS = 60;
-const PLAN = [['short',60], ['arcade',60], ['short',60], ['arcade',60], ['short',60]];   // both sides: [kind, seconds]; short = quick-fire
+const PLAN = [['short',60], ['arcade',60], ['match',60], ['arcade',60], ['short',60]];   // both sides: [kind, seconds]; short = quick-fire, match = Match the meaning
 const STALE = 30*60*1000;               // a circuit left alone for 30 minutes is dropped
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read = (k,d) => { try{ const v=JSON.parse(localStorage.getItem(k)); return v==null ? d : v; }catch(e){ return d; } };
@@ -37,7 +40,7 @@ const setStudying = (side, path, name, on) => { const s=read(STUDY, {}); s[side]
 
 // ----- The circuit in progress -----
 // {side, started, touched, n, arcade, plan:[{path, kind, secs, tried}], i, cur:{path, topic, game, name, zh, secs, right, answered, pts, ends, left}, results:[…], skip:[…]}
-// kind: 'short', 'long' or 'arcade'; arcade: which arcade game's turn it is
+// kind: 'short' (quick-fire), 'match' (Match the meaning) or 'arcade'; arcade: which arcade game's turn it is
 function active(side){ const r=load().run;
   if(!r || r.done || (side && r.side!==side)) return null;
   if(!r.plan || !r.plan[0] || !r.plan[0].kind) return null;
@@ -90,7 +93,7 @@ function skipTopic(path){
     return r.plan[r.i].path; });
   if(next) go(next); else location.href=resultsUrl(side||'en');
 }
-// A topic page with no game of this station's kind (a long game or an arcade game; on the Chinese side also a short game)
+// A topic page with no game of this station's kind (Match the meaning or an arcade game; on the Chinese side also a short game)
 // at the student's level: try another of their subjects for this station; when none has one, the station becomes a short
 // game (and its subjects can be tried again for that). Says where to go next: null when a short station has none anywhere.
 function retryStation(path){
@@ -166,8 +169,8 @@ function circuitPage(box){
     } else {
       main = `<p class="cc-k">${t && t.runs ? `✓ ${T(zh, 'Done today. You can play again', '今天已完成，可以再玩')}` : T(zh, 'Today', '今天')}</p>
         <h2>${T(zh, `${STATIONS} stations · 5 minutes`, `${STATIONS} 站 · 5 分钟`)}</h2>
-        <p>${T(zh, 'Three quick-fire rounds and two arcade games, a minute each, from your subjects at your level. In quick-fire the game changes every three questions, so be quick!',
-               '三轮快速答题和两个街机游戏，每个一分钟，都来自你的科目，难度适合你。快速答题每三题换一个游戏，要快哦！')}</p>${streakLine}
+        <p>${T(zh, 'Two quick-fire rounds, a Match the meaning round and two arcade games, a minute each, from your subjects at your level. In quick-fire the game changes every three questions, so be quick!',
+               '两轮快速答题、一轮单词配释义和两个街机游戏，每个一分钟，都来自你的科目，难度适合你。快速答题每三题换一个游戏，要快哦！')}</p>${streakLine}
         <p class="cc-actions"><button class="cc-btn big" data-start>${T(zh, 'Start the circuit', '开始挑战')} →</button></p>`;
     }
     box.innerHTML = `<section class="cc-panel">${main}</section>${subjects?`<section class="cc-subjects">${subjects}</section>`:''}`;

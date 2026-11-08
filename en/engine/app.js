@@ -511,11 +511,13 @@ function reportButton(card, row, miss){
 
 // ---------- DAILY CIRCUIT QUICK-FIRE (1 Nov 2026, teacher: "It's got to be a speed round… a high energy experience") ----------
 // A quick-fire station (kind 'short') plays one game for three answers, then switches to another (never the same twice
-// in a row, and the ones not played lately first). A right answer moves straight on; a wrong one shows the answer for
-// half a second, then moves on (no Next button). Games: those that ask one thing at a time (QF_GAMES), plus Match the
-// meaning (it switches after three pairs). Only the Daily Circuit: class games and normal play are unchanged.
-const QF_EACH = 3, QF_RIGHT_MS = 150, QF_WRONG_MS = 500;
-const QF_GAMES = {en:['meaning','tf','gap','rw','match'], zh:['zh','zhmean','zhtf','zhtype','zhmatch','zhodd']};
+// in a row, and the ones not played lately first). Games: those that ask one thing at a time (QF_GAMES).
+// 8 Nov 2026 (teacher): a right answer moves on after a steady second, every game the same (QF_RIGHT_MS, with the green
+// bar); a wrong answer waits for Continue ("so there is time to reflect"), and the station's clock keeps running.
+// Match the meaning is no longer in quick-fire: it has a one-minute round of its own (kind 'match', see circuitGames).
+// Only the Daily Circuit: class games and normal play are unchanged.
+const QF_EACH = 3, QF_RIGHT_MS = 1000;
+const QF_GAMES = {en:['meaning','tf','gap','rw'], zh:['zh','zhmean','zhtf','zhtype','zhodd']};
 let qf = null;   // {pool, game, n (answers in this game), recent}
 const qfDue = () => !!qf && qf.n>=QF_EACH;
 function qfPlay(g){
@@ -531,6 +533,23 @@ function qfSwitch(){
   qfPlay(from[Math.floor(Math.random()*from.length)]);
 }
 const qfNext = (next, ms) => { later(()=>{ if(!qf) return; qfDue() ? qfSwitch() : next(); }, ms); };
+// After a right answer: the green bar runs for QF_RIGHT_MS, then the next question (or the next game)
+function qfRight(card, next){
+  const bar=document.createElement('div'); bar.className='auto'; bar.innerHTML='<i></i>';
+  bar.style.setProperty('--dur', QF_RIGHT_MS+'ms'); card.appendChild(bar);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>bar.classList.add('run')));
+  qfNext(next, QF_RIGHT_MS);
+}
+// After a wrong answer: the right answer stays on screen until the student presses Continue (or Enter)
+function qfWrong(card, next){
+  lastMiss=null;
+  const row=document.createElement('div'); row.className='next-row';
+  row.innerHTML=`<button class="btn">${T('Continue','继续')} →</button>`; card.appendChild(row);
+  const b=row.querySelector('button'); let gone=false;
+  const go=()=>{ if(gone || !qf) return; gone=true; b.disabled=true; qfDue() ? qfSwitch() : next(); };
+  b.onclick=go; b.focus({preventScroll:true});
+  keyHandler = e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } };
+}
 
 // Endless deck: shuffled, refilled when empty; missed items come back a few cards later.
 // Questions the teacher removed after a report (hiddenItem, 31 Oct) are skipped; if every item is removed, all play.
@@ -582,7 +601,7 @@ const GAMES = [
   // Word search (7 Nov 2026, teacher): in the Games row, after Save the mouse; plays on phones; not in the Daily Circuit
   {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters, from the words or from their meanings.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or is there a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'A grammar check: is the sentence written correctly? Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
@@ -658,7 +677,8 @@ const offWhy = (g, n) => sylNone() ? 'Choose your topics first' : n ? 'Not enoug
 function frame(back, inner){
   clearTimers(); keyHandler=null; circuitFinish=null; circuitStop=null; document.body.classList.remove('reading-wide');
   if(ttsStop){ ttsStop(); ttsStop=null; }   // Listening: stop the voice when the page moves on
-  const bar = CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
+  listenGame=null;   // Listen switch: no game on screen until shell() says so
+  const bar =CFG.only==='progress' || !window.AEA_POINTS ? '' : `<div class="pts" data-points-bar="${SIDE}"></div>`;
   $app.innerHTML = `<div class="topline"><span class="navline"><a class="home-mark" href="${ROOT}index.html" aria-label="Academic English App: home" title="Home">${HOME_MARK}</a>${back?`<a class="back" href="${esc(back.href)}">← ${back.html||esc(back.label)}</a>`:''}</span>${bar}</div>${inner}`;
   if(bar) AEA_POINTS.render(SIDE, 0);
   window.scrollTo(0,0);
@@ -764,20 +784,22 @@ function category(cat){
 
 // ---------- game shell ----------
 function shell(game, note){
-  const c=CATS[game.cat]||GAME_ROW[game.cat]||{name:'Back'};
-  frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+  const c=CATS[game.cat]||GAME_ROW[game.cat]||{name:'Back'}, lsn=listenCan(game);
+  frame(CFG.only ? {href:CFG.back||'../index.html', label:CFG.backLabel||'Back'} : COMPACT ? {href:'#', label:CFG.name||'Back'} : {href:'#'+game.cat, label:c.name}, `<div class="bar"><span class="title">${game.name}</span>${lsn?listenSwitch():''}<span class="spacer"></span><div class="stats" id="stats"></div></div>
     ${note?`<p class="hint">${note}</p>`:''}<div class="feed" id="feed"></div>`);
+  if(lsn){ listenGame=game; listenWire(); }
 }
 function showCard(html){
   const feed=document.getElementById('feed');
   const old=feed.querySelector('.card'); if(old) old.remove();
   const card=document.createElement('div'); card.className='card enter'; card.innerHTML=html; lastMiss=null;
   feed.appendChild(card);
+  if(listenGame && listenOn()) listenCard(card);   // Listen switch on: the text at the top is read out instead of shown
   const top=feed.getBoundingClientRect().top; if(top<0) window.scrollBy(0, top-16);
   return card;
 }
 function autoNext(card, next, ms){
-  if(qf) return qfNext(next, ms||QF_RIGHT_MS);   // Daily Circuit quick-fire: straight on (unless the game asks for time to read)
+  if(qf) return qfRight(card, next);   // Daily Circuit quick-fire: on after a steady second, whatever the game
   const dur=ms||AUTO_MS, bar=document.createElement('div'); bar.className='auto'; bar.innerHTML='<i></i>';
   bar.style.setProperty('--dur', dur+'ms'); card.appendChild(bar);
   requestAnimationFrame(()=>requestAnimationFrame(()=>bar.classList.add('run')));
@@ -787,7 +809,7 @@ function autoNext(card, next, ms){
   keyHandler = e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); fire(); } };
 }
 function manualNext(card, next, label, ms){
-  if(qf) return qfNext(next, ms ? ms+600 : QF_WRONG_MS);   // Daily Circuit quick-fire: the answer for half a second, then on
+  if(qf) return qfWrong(card, next);   // Daily Circuit quick-fire: the answer stays until Continue
   const row=document.createElement('div'); row.className='next-row';
   row.innerHTML=`<button class="btn">${label||T('Next','下一个')+' →'}</button>`; card.appendChild(row);
   const b=row.querySelector('button'); b.onclick=next; b.focus({preventScroll:true});
@@ -816,6 +838,7 @@ const fbOk = (fb, html) => fb.innerHTML=`<div class="feedback ok"><span class="v
 const fbNo = (fb, answer, html) => fb.innerHTML=`<div class="feedback no"><span class="verdict">${T(`Not quite.${answer?` The answer is ${esc(answer)}.`:''}`, `不对。${answer?`答案是 ${esc(answer)}。`:''}`)}</span>${String(html||'').replace(/<span><\/span>/g,'')}</div>`;
 // After an answer: right → move on by itself; wrong → explain, wait, and bring the item back later.
 function settle(ok, card, st, deck, item, next, ms){   // ms: how long before moving on after a right answer (default AUTO_MS)
+  listenReveal(card);   // Listen switch: the words appear once the student has answered
   if(ok){ st.hit(item); autoNext(card, next, ms); } else { st.miss(item); deck.retry(item); manualNext(card, next, undefined, ms); }
 }
 
@@ -1310,21 +1333,27 @@ function playTF(){
 }
 
 // ---------- GRAMMAR: Right or wrong (right-wrong.csv) ----------
+// 8 Nov 2026 (teacher): "It's not clear that it's a grammar question… The kids need to shift their heads from factual
+// accuracy to grammatical accuracy." The card says Grammar check in a blue tag, asks "Is the grammar good or bad?" and
+// tells them not to judge the facts; the buttons are Good Grammar and Bad Grammar (keys G and B, or 1 and 2).
 function playRW(){
   const game=GAMES.find(g=>g.key==='rw'), items=game.items(), deck=Deck(items), st=Stats('rw');
-  shell(game,'Press R or W on a keyboard, or tap.'); st.draw();
+  shell(game,'Judge the grammar, not the facts. Press G or B on a keyboard, or tap.'); st.draw();
   const step=()=>{
     const t=deck.next();
-    const card=showCard(`<p class="instr">Right or wrong?</p><p class="statement">${esc(t.s)}</p>
-      <div class="tf-btns"><button class="tfb yes" data-v="1">Right</button><button class="tfb no" data-v="0">Wrong</button></div><div class="fb"></div>`);
+    const card=showCard(`<div class="gram-head"><span class="gram-tag">Grammar check</span><p class="gram-q">Is the grammar good or bad?</p>
+      <p class="gram-note">Don't ask whether it's true. Ask whether it's written correctly.</p></div>
+      <p class="statement gram-s">${esc(t.s)}</p>
+      <div class="tf-btns"><button class="tfb yes" data-v="1">Good Grammar</button><button class="tfb no" data-v="0">Bad Grammar</button></div><div class="fb"></div>`);
+    card.classList.add('gram');
     let done=false;
     const choose=v=>{ if(done) return; done=true; const ok=(v===1)===t.ok;
       card.querySelectorAll('.tfb').forEach(b=>{ b.disabled=true; if(+b.dataset.v===(t.ok?1:0)) b.classList.add('ok'); else b.classList.add('dim'); });
       const more=(!t.ok && t.fix ? `<span class="rw-fix">Correct: <b>${esc(t.fix)}</b></span>` : '')+(t.why?`<span>${rich(t.why)}</span>`:'');
-      const fb=card.querySelector('.fb'); ok?fbOk(fb,more):fbNo(fb,'',`<span>The sentence is <b>${t.ok?'right':'wrong'}</b>.</span>${more}`);
+      const fb=card.querySelector('.fb'); ok?fbOk(fb,more):fbNo(fb,'',`<span>The grammar is <b>${t.ok?'good':'bad'}</b>.</span>${more}`);
       settle(ok,card,st,deck,t,step); };
     card.querySelectorAll('.tfb').forEach(b=>b.onclick=()=>choose(+b.dataset.v));
-    keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='r'||k==='1') choose(1); if(k==='w'||k==='2') choose(0); };
+    keyHandler=e=>{ const k=e.key.toLowerCase(); if(k==='g'||k==='1') choose(1); if(k==='b'||k==='2') choose(0); };
   };
   step();
 }
@@ -1615,9 +1644,11 @@ if(TTS_OK && CFG.format==='listening') ttsLoad();   // the voices load in the ba
 const V_FEMALE=/\b(sonia|libby|maisie|hollie|bella|abbi|olivia|mia|aria|jenny|michelle|emma|ava|natasha|clara|serena|kate|stephanie|martha|hazel|susan|moira|karen|samantha|tessa|fiona|zira|catherine|emily|female)\b/i;
 const V_MALE=/\b(ryan|thomas|alfie|elliot|ethan|noah|oliver|guy|davis|andrew|brian|christopher|eric|roger|steffan|william|daniel|arthur|george|james|david|mark|aaron|fred|gordon|lee|alex|rishi|tom|male)\b/i;
 const vSex = v => V_FEMALE.test(v.name) ? 'f' : V_MALE.test(v.name) ? 'm' : '';
-// Best first: the natural / neural / premium voices, British English, then other English
+// Best first: the natural / neural / premium voices, British English, then other English.
+// Chrome's own Google voices on a computer (not built into the device: localService false) need Google's servers, which
+// are blocked on mainland networks, so they come last (8 Nov 2026); Android's Google voices are on the phone and keep their place.
 const vScore = v => (/natural|neural|online|premium|enhanced/i.test(v.name)?6:0) + (/^en[-_]gb/i.test(v.lang)?3:/^en[-_](ie|au|nz)/i.test(v.lang)?1.5:/^en[-_]us/i.test(v.lang)?1:0)
-  + (/google/i.test(v.name)?1:0) + (vSex(v)?.5:0);
+  + (/google/i.test(v.name) ? (v.localService===false ? -20 : 1) : 0) + (vSex(v)?.5:0);
 const vRanked = () => ttsVoices().sort((a,b)=>vScore(b)-vScore(a));
 // The script as a list of spoken pieces: one sentence each, with who says it and the pause after it
 function ttsScript(text){
@@ -1749,6 +1780,108 @@ function playListening(){
     show();
   };
   step();
+}
+
+// ---------- LISTEN SWITCH (8 Nov 2026, teacher: "Try that listening switch first") ----------
+// A 🔊 Listen switch in the bar of True or false, Word or meaning, General knowledge and Answer the question, on the
+// English topic pages. When it is on, the statement, word, meaning or question at the top of each card is hidden and the
+// browser's voice reads it out as the card appears; 🔊 Hear it again (or the R key) repeats it as often as they like.
+// The words appear once the student has answered. The answer buttons stay on screen as usual. Points are as normal.
+// The setting is the student's, for every topic (aea:listen, saved to their account like everything under aea:).
+// Not in the Daily Circuit or class games (listening is slower than reading, so timed stations would score lower).
+// Voice: the one chosen on the Listening page (aea:voice) if this device has it, otherwise the best English voice (vScore),
+// at the speed chosen there (aea:voice-rate). Browsers only speak after a tap on the page: opening the game is that tap;
+// after a refresh mid-game the button says "Tap to hear" until the student taps. If the voice fails, the words are shown.
+// To add a game: its key in LISTEN_KEYS, and the class of its text at the top in LISTEN_SEL (the card must call settle()).
+const LISTEN_KEYS = new Set(['tf','meaning','gk','question']);
+const LISTEN_SEL = '.statement, .gk-q, .prompt-word, .prompt-def, .exam-q';
+const LISTEN_KEY = 'aea:listen';
+let listenGame = null, listenRun = 0, listenU = null, listenSpoke = false;
+const listenCan = g => TTS_OK && SIDE==='en' && !inCircuit && !classRun && !!g && LISTEN_KEYS.has(g.key);
+const listenOn = () => { try{ return localStorage.getItem(LISTEN_KEY)==='1'; }catch(e){ return false; } };
+const listenSwitch = () => `<button class="chip lsn-tog" type="button" aria-pressed="${listenOn()}" title="Hear each question read aloud instead of reading it"><span aria-hidden="true">🔊</span> Listen</button>`;
+function listenWire(){
+  const b=document.querySelector('.lsn-tog'); if(!b) return;
+  if(listenOn()) ttsLoad();
+  b.onclick=()=>{ const on=!listenOn(); try{ localStorage.setItem(LISTEN_KEY, on ? '1' : '0'); }catch(e){}
+    b.setAttribute('aria-pressed', on);
+    const card=document.querySelector('#feed .card');
+    if(on){ ttsLoad(); if(card && !card.classList.contains('lsn') && !listenAnswered(card)) listenCard(card, true); }
+    else { listenQuiet(); if(card) listenUndo(card); } };
+}
+const listenAnswered = card => !!(card.querySelector('.fb') && card.querySelector('.fb').innerHTML.trim());
+// What the voice says: the text without the part of speech, and "a / b" as "a, or b"
+function listenText(p){
+  const c=p.cloneNode(true); c.querySelectorAll('small').forEach(x=>x.remove());
+  return c.textContent.replace(/\s+\/\s+/g, ', or ').replace(/\s+/g,' ').trim();
+}
+function listenCard(card, fromTap){
+  const p=card.querySelector(LISTEN_SEL), text=p && listenText(p); if(!text) return;
+  card.classList.add('lsn'); p.classList.add('lsn-hide');
+  const box=document.createElement('div'); box.className='lsn-box';
+  box.innerHTML=`<button class="btn lsn-play" type="button"><span aria-hidden="true">🔊</span> <span class="lsn-l">Hear it</span></button>
+    <span class="lsn-note">Listen, then answer. The words appear after you answer.${PHONE?'':' Press R to hear it again.'}</span>`;
+  p.before(box);
+  card._lsnSay=()=>listenSay(text, card);
+  box.querySelector('.lsn-play').onclick=card._lsnSay;
+  // Speech is only allowed once the student has tapped the page (after a refresh, they tap the button)
+  const ua=navigator.userActivation;
+  if(fromTap || !ua || ua.hasBeenActive) listenSay(text, card); else listenLabel(card, 'Tap to hear');
+}
+const listenLabel = (card, t) => { const l=card.querySelector('.lsn-l'); if(l) l.textContent=t; };
+function listenSay(text, card){
+  if(!document.body.contains(card)) return;
+  const my=++listenRun;
+  const go=()=>{ if(my!==listenRun || !document.body.contains(card)) return;
+    const u=new SpeechSynthesisUtterance(text), list=vRanked();
+    let chosen='', rate=1; try{ chosen=localStorage.getItem('aea:voice')||''; rate=+localStorage.getItem('aea:voice-rate')||1; }catch(e){}
+    const v=list.find(x=>x.name===chosen) || list[0];
+    if(v){ u.voice=v; u.lang=v.lang; } else u.lang='en-GB';
+    u.rate=rate; listenU=u;   // kept, so the browser doesn't drop the utterance before it ends
+    const box=card.querySelector('.lsn-box');
+    // A voice that never starts (e.g. one that needs a server this network can't reach): after 6 s, show the words
+    const dog=listenSpoke ? 0 : setTimeout(()=>{ if(my===listenRun && !listenSpoke){ listenQuiet(); listenLabel(card, 'Hear it again'); listenFail(card); } }, 6000);
+    u.onstart=()=>{ clearTimeout(dog); if(my!==listenRun) return; listenSpoke=true; if(box) box.classList.add('speaking'); listenLabel(card, 'Playing…'); };
+    u.onend=()=>{ if(my!==listenRun) return; if(box) box.classList.remove('speaking'); listenLabel(card, 'Hear it again'); };
+    u.onerror=e=>{ if(my!==listenRun) return; if(box) box.classList.remove('speaking');
+      const why=e && e.error;
+      if(why==='interrupted' || why==='canceled') return;
+      if(why==='not-allowed'){ listenLabel(card, 'Tap to hear'); return; }
+      listenLabel(card, 'Hear it again');
+      if(!listenSpoke) listenFail(card); };   // nothing has played on this page: show the words so the game still works
+    ttsStop=listenQuiet;
+    speechSynthesis.speak(u); };
+  let busy=false; try{ busy=speechSynthesis.speaking || speechSynthesis.pending; if(busy) speechSynthesis.cancel(); }catch(e){}
+  // Straight away when we can (a tap on an iPhone only counts if speech starts inside it); a moment's wait after cancel()
+  // (Chrome can drop an utterance spoken in the same instant); and a wait for the voices list on its first load
+  if(busy) setTimeout(go, 60); else if(ttsVoices().length) go(); else ttsLoad().then(go);
+}
+function listenQuiet(){ listenRun++; try{ if(TTS_OK) speechSynthesis.cancel(); }catch(e){} }
+function listenFail(card){
+  listenReveal(card);
+  const n=card.querySelector('.lsn-note'); if(n){ n.textContent='This device couldn’t read it aloud, so the words are shown. Try Microsoft Edge.'; n.classList.add('lsn-warn'); }
+}
+function listenReveal(card){
+  if(!card || !card.classList.contains('lsn')) return;
+  card.classList.add('lsn-shown');
+  card.querySelectorAll('.lsn-hide').forEach(x=>x.classList.remove('lsn-hide'));
+}
+function listenUndo(card){
+  card.querySelectorAll('.lsn-box').forEach(x=>x.remove()); card.querySelectorAll('.lsn-hide').forEach(x=>x.classList.remove('lsn-hide'));
+  card.classList.remove('lsn','lsn-shown'); delete card._lsnSay;
+}
+if(TTS_OK && SIDE==='en'){
+  if(listenOn()) ttsLoad();   // the voices load in the background while the page opens
+  // R hears it again (the games on the list don't use R)
+  document.addEventListener('keydown', e=>{ if(e.metaKey || e.ctrlKey || e.altKey || e.repeat || (e.key!=='r' && e.key!=='R')) return;
+    if(e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+    const c=document.querySelector('#feed .card.lsn'); if(c && c._lsnSay){ e.preventDefault(); c._lsnSay(); } });
+  // iPhones and iPads: speech has to start inside a tap the first time, so the first tap anywhere starts a silent one
+  const unlock=e=>{ document.removeEventListener('pointerup', unlock, true);
+    if(!listenOn() || listenSpoke || (e.target && e.target.closest && e.target.closest('.lsn-play, .lsn-tog'))) return;   // those two speak inside the tap themselves
+    try{ const u=new SpeechSynthesisUtterance(' '); u.volume=0; speechSynthesis.speak(u); }catch(e){} };
+  document.addEventListener('pointerup', unlock, true);
+  document.addEventListener('visibilitychange', ()=>{ if(document.hidden && listenGame) listenQuiet(); });
 }
 
 // Daily Circuit, time up with a long task half done: each part the student got right counts as a right answer at this
@@ -2791,6 +2924,8 @@ function wordList(){
 // Since 1 Nov 2026 the Daily Circuit is quick-fire (kind 'short': QF_GAMES, a new game every three answers, see QF_…) and
 // arcade (DC_ARCADE: Word Snake, Whack-a-word, Word Invaders, Save the mouse; two different ones per circuit). The rules
 // above for short/long stations are still how class games choose their games.
+// 8 Nov 2026 (teacher: "Match the Meaning… can get a full round… it needs longer to be really enjoyed"): the middle
+// station is a whole minute of Match the meaning (kind 'match'). No subject has it ready: the station is quick-fire.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
 const CIRCUIT_ARCADE = ['invaders', 'whack'];   // class games' arcade stations (Word Snake left out, teacher, 25 Oct)
 // Daily Circuit arcade stations (1 Nov 2026, teacher): two different ones per circuit, taking turns from circuit to circuit
@@ -2802,6 +2937,9 @@ function circuitGames(kind){
     const keys=QF_GAMES[SIDE==='zh'?'zh':'en'];
     if(SIDE==='zh') return ZH_GAMES.filter(g=>keys.includes(g.key) && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
     return GAMES.filter(g=>keys.includes(g.key) && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run})); }
+  if(kind==='match'){   // Daily Circuit Match round: Match the meaning (zhmatch on the Chinese side), when it is ready here
+    if(SIDE==='zh') return ZH_GAMES.filter(g=>g.key==='zhmatch' && zhReady(g)).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run}));
+    return GAMES.filter(g=>g.key==='match' && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min).map(g=>({key:g.key, name:g.name, run:g.run})); }
   if(kind==='dcarcade'){   // Daily Circuit arcade: the four arcade games (Save the mouse among them) that are ready here
     const keys=DC_ARCADE[SIDE==='zh'?'zh':'en'];
     if(SIDE==='zh') return zhWords().length>=4 ? [...ARCADE, ...ZH_GAMES].filter(g=>keys.includes(g.key) && (ARCADE.includes(g) || zhReady(g))).map(g=>({key:g.key, name:g.name, zh:g.zh, run:g.run})) : [];
@@ -2827,7 +2965,7 @@ function circuitStation(){
   if(cur && C.norm(cur.path)===C.norm(PAGE) && (quick ? cur.game==='quick' && games.length : games.some(g=>g.key===cur.game))) cur=C.resume();
   else {
     if(!games.length){ inCircuit=false;
-      if(kind==='long' || kind==='arcade' || SIDE==='zh' && kind==='short'){   // try another of their subjects for this station, or make it a short game
+      if(kind==='long' || kind==='arcade' || kind==='match' || SIDE==='zh' && kind==='short'){   // try another of their subjects for this station, or make it a short game
         const next=C.retryStation(PAGE);
         if(next===null && kind==='short') return C.skipTopic(PAGE);   // Chinese side: no True or false in any subject
         if(!next) return;

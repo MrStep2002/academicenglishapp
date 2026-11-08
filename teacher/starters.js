@@ -665,8 +665,8 @@ function smallHTML(it, on){
   const clue = () => cfg.clue ? '<p class="st-clue"><b>Clue:</b> ' + esc(it.def) + '</p>' : '';
   switch (it.k) {
     case 'gap': return instr('Write the missing word.') + '<p class="st-t">' + esc(q.s).replace(/_{3,}/, blank(q.opts[q.a], on)) + '</p>' + (opts ? optsHTML(q, on) : '');
-    case 'rw': return instr('Right or wrong? If it’s wrong, write it correctly.') + '<p class="st-t">' + esc(q.s) + '</p>' +
-      ans(q.a === 0 ? '<b class="st-ok">✓ Right</b>' : '<b class="st-no">✗ Wrong.</b> ' + (q.fix ? '<span class="st-fix">' + esc(q.fix) + '</span>' : '<span class="st-why">' + rich(q.why) + '</span>'));
+    case 'rw': return instr('Grammar check: good grammar or bad grammar? If it’s bad, write it correctly.') + '<p class="st-t">' + esc(q.s) + '</p>' +
+      ans(q.a === 0 ? '<b class="st-ok">✓ Good grammar</b>' : '<b class="st-no">✗ Bad grammar.</b> ' + (q.fix ? '<span class="st-fix">' + esc(q.fix) + '</span>' : '<span class="st-why">' + rich(q.why) + '</span>'));
     case 'word': return instr('Write what it means.') + '<p class="st-big">' + esc(q.w) + (q.pos ? '<small>' + esc(q.pos) + '</small>' : '') + '</p>' + (opts ? optsHTML(q, on) : ans('<span class="st-def">' + esc(q.def) + '</span>'));
     case 'meaning': return instr('Write the word that means:') + '<p class="st-t">' + esc(q.def) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.w)));
     case 'zh': return instr('Write the English word.') + '<p class="st-big zh" lang="zh-CN">' + esc(q.zh) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.w)));

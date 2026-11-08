@@ -211,7 +211,7 @@ function makeQ(D, bank, it, levels){
   }
   else if (bank === 'gap') { q.k = 'gap'; q.s = it.s; q.focus = it.focus; q.why = it.why; mc(it.ans, it.wrong); }
   else if (bank === 'tf') { q.k = 'tf'; q.s = it.s; q.why = it.why; q.opts = ['True', 'False']; q.a = it.t ? 0 : 1; }
-  else if (bank === 'rw') { q.k = 'rw'; q.s = it.s; q.why = it.why; q.fix = it.fix; q.opts = ['Right', 'Wrong']; q.a = it.ok ? 0 : 1; }
+  else if (bank === 'rw') { q.k = 'rw'; q.s = it.s; q.why = it.why; q.fix = it.fix; q.opts = ['Good Grammar', 'Bad Grammar']; q.a = it.ok ? 0 : 1; }   // 8 Nov 2026 (teacher): Good Grammar / Bad Grammar, as on the topic pages
   else if (bank === 'question') { q.k = 'question'; q.s = it.q; q.cmd = it.cmd; q.why = it.why; mc(it.ans, it.wrong); }
   else if (bank === 'gk') { q.k = 'gk'; q.s = it.q; q.why = it.why; mc(it.ans, it.wrong); }
   else return null;
@@ -741,7 +741,7 @@ function finishTile(result, bump){
 const KIND = {word: 'What does it mean?', def: 'Which word?', zh: '中文 → English', gap: 'Fill the gap', tf: 'True or false', rw: 'SPAG: Right or Wrong', question: 'Answer the question', gk: 'General knowledge'};
 function qBody(q){
   const instr = {word: 'What does this word mean?', def: 'Which word means this?', zh: 'Which English word is this?', gap: 'Which word fills the gap?',
-    tf: 'True or false?', rw: 'Is this sentence right, or does it have a mistake?', question: 'Which answer does what the question asks?', gk: 'General knowledge'}[q.k];
+    tf: 'True or false?', rw: 'Grammar check: is the grammar good or bad? (Not: is it true?)', question: 'Which answer does what the question asks?', gk: 'General knowledge'}[q.k];
   let text;
   if (q.k === 'word') text = '<p class="bg-text word">' + esc(q.w) + (q.pos ? '<small>' + esc(q.pos) + '</small>' : '') + '</p>';
   else if (q.k === 'def') text = '<p class="bg-text">' + esc(q.def) + '</p>';

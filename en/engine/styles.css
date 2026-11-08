@@ -691,6 +691,22 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 @media (max-width:640px){.lp{padding:10px}.lp-play{flex:1 1 100%}.lp-n{min-width:0}}
 @media (prefers-reduced-motion:reduce){.lp-bar i,.lscript .seg{transition:none}}
 
+/* Listen switch (8 Nov 2026): 🔊 Listen in the bar of True or false, Word or meaning, General knowledge and Answer the
+   question. On: the text at the top of the card is hidden behind a Hear it button and read aloud; shown after answering. */
+.lsn-tog{cursor:pointer;font-weight:700;color:var(--ink-2);padding:6px 13px}
+.lsn-tog[aria-pressed="true"]{color:var(--paper)}
+.lsn-hide{display:none !important}
+.lsn-box{display:flex;align-items:center;flex-wrap:wrap;gap:10px 16px;border:1.5px dashed var(--rule);border-radius:12px;background:var(--paper);padding:16px;margin:4px 0 22px}
+.lsn-play{display:inline-flex;align-items:center;gap:8px;font-size:17px;min-width:170px;justify-content:center}
+.lsn-box.speaking .lsn-play{background:var(--blue);color:var(--sheet)}
+.lsn-note{flex:1 1 220px;font-size:14px;color:var(--ink-2)}
+.lsn-note.lsn-warn{color:var(--bad)}
+.lsn-shown .lsn-box{border:0;background:none;padding:0;margin:0 0 12px}
+.lsn-shown .lsn-play{background:none;color:var(--ink);border:1.5px solid var(--rule);padding:6px 14px;font-size:14px;min-width:0}
+.lsn-shown .lsn-box.speaking .lsn-play{background:var(--blue-soft);border-color:var(--blue);color:var(--blue)}
+.lsn-shown .lsn-note:not(.lsn-warn){display:none}
+@media (max-width:640px){.lsn-play{flex:1 1 100%}.lsn-shown .lsn-play{flex:0 0 auto}}
+
 /* ---------- Class games (29 Oct 2026): the start / result page and the score in the bar (app.js, CLASS GAME) ---------- */
 .cg-panel{background:var(--sheet);border:1px solid var(--rule);border-radius:16px;padding:clamp(20px,4vw,34px);max-width:640px;margin:8px auto 24px;display:flex;flex-direction:column;gap:12px}
 .cg-panel h1{font-family:var(--f-display);font-weight:400;font-size:clamp(32px,6vw,46px);line-height:1.05;margin:0;letter-spacing:-.01em}
@@ -835,3 +851,13 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 @media (max-width:640px){.ws-list:not(.clues){grid-template-columns:1fr 1fr}}
 .phone .ws-list:not(.clues){grid-template-columns:1fr 1fr}
 @media (prefers-reduced-motion:reduce){.ws-marks .f.glow,.ws-list li.pop{animation:none}}
+
+/* SPAG: Right or Wrong as a grammar check (8 Nov 2026, teacher: "the fact that this is a grammar question needs to be MUCH
+   clearer"): a blue Grammar check tag, the question in bold, a note not to judge the facts, the sentence marked in blue */
+.card.gram{border-top:4px solid var(--blue)}
+.gram-head{margin:0 0 16px}
+.gram-tag{display:inline-block;font-family:var(--f-mono);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--blue);background:var(--blue-soft);border-radius:999px;padding:5px 12px}
+.gram-q{font-size:19px;font-weight:700;margin:12px 0 2px}
+.gram-note{margin:0;color:var(--ink-2);font-size:15px}
+.statement.gram-s{border-left:4px solid var(--blue);padding:4px 0 4px 16px}
+.card.gram .tfb{font-size:18px}

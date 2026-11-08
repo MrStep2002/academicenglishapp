@@ -83,7 +83,7 @@
     <h2 id="mix-h">Easy to mix up</h2>
     <ul>
       <li><b>Fill the gap</b> is one sentence (<a href="#f-gaps">gaps.csv</a>). <b>Complete the text</b> on the topic page and <b>Gap Fill</b> on the Starters page are a whole paragraph, and they share a file (<a href="#f-reads">reads.csv</a>).</li>
-      <li><b>SPAG: Right or Wrong</b> asks “is this sentence right?” (<a href="#f-right-wrong">right-wrong.csv</a>). <b>True or false</b> asks “is this fact true?” (<a href="#f-tf">tf.csv</a>). <b>Spot the error</b> is a paragraph to find the mistakes in (<a href="#f-errors">errors.csv</a>).</li>
+      <li><b>SPAG: Right or Wrong</b> asks “is the grammar good or bad?” (buttons: Good Grammar, Bad Grammar) (<a href="#f-right-wrong">right-wrong.csv</a>). <b>True or false</b> asks “is this fact true?” (<a href="#f-tf">tf.csv</a>). <b>Spot the error</b> is a paragraph to find the mistakes in (<a href="#f-errors">errors.csv</a>).</li>
       <li><b>Find the evidence</b> (English page) and <b>All-in English</b> (Chinese page) are the same game from the same file (<a href="#f-evidence">evidence.csv</a>). Its <code>side</code> column says which page a row is for.</li>
       <li><b>Word or meaning</b> on the topic page is called <b>What does it mean?</b> and <b>Which word?</b> in the board games and Starters. <b>Anagram</b> in Starters is <b>Unscramble</b> on handouts. All of these come from <a href="#f-words">words.csv</a>.</li>
     </ul>
@@ -129,7 +129,7 @@ const PLACE = {
   'chem':       {kind:'go', name:'Chemistry page · Chemistry column', href:'en/chemistry/index.html'},
   'phys':       {kind:'go', name:'Physics page · Physics column', href:'en/physics/index.html'}
 };
-const CIRC = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade'};
+const CIRC = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
 
 // The files, in the order of the topic page. one: what one row is. cols: the columns that matter. path: where it lives
 // when it is not content/<topic>/. tpl: its template in content/templates/.
@@ -137,7 +137,7 @@ const CIRC = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit
 // topic page link (#play-<p>; 'words' = the word list, '' = the page itself).
 const FILES = [
   {f:'words', one:'a word: its meaning, an example, its Chinese and its synonyms.', cols:'word, pos, meaning, example, synonyms, zh · also group, similar, accept, note, list', games:[
-    {n:'Match the meaning', w:['en-vocab'], how:'Pair each word with its meaning, or with a group of words close in meaning (from the synonyms column).', c:'short', p:'match'},
+    {n:'Match the meaning', w:['en-vocab'], how:'Pair each word with its meaning, or with a group of words close in meaning (from the synonyms column). In the Daily Circuit it has a one-minute round of its own.', c:'match', p:'match'},
     {n:'Word or meaning', w:['en-vocab'], how:'See a word and choose its meaning, or see a meaning and choose the word.', c:'short', p:'meaning'},
     {n:'Words (the word list)', w:['en-words'], how:'Every word at the student\'s level with its meaning, to look through before playing.', p:'words'},
     {n:'Save the mouse', w:['en-games'], how:'Guess the word one letter at a time before the mouse disappears.', p:'mouse'},
@@ -170,8 +170,8 @@ const FILES = [
     {n:'Fill the gap', w:['board-q', 'starters', 'handouts'], how:'A sentence with a word missing: choose it (board games) or write it (Starters, and handouts with a word bank).'}
   ]},
   {f:'right-wrong', one:'one sentence that is either right or has one mistake.', cols:'statement, answer (RIGHT or WRONG), explanation, correction', games:[
-    {n:'SPAG: Right or Wrong', w:['en-grammar'], how:'Read a sentence and decide: is it right, or is there a mistake?', c:'short', p:'rw'},
-    {n:'SPAG: Right or Wrong', w:['board-q', 'starters'], how:'Is the sentence right? In Starters, if it\'s wrong they write it correctly.'}
+    {n:'SPAG: Right or Wrong', w:['en-grammar'], how:'A grammar check: read a sentence and choose Good Grammar or Bad Grammar. It is about how the sentence is written, not whether it is true.', c:'short', p:'rw'},
+    {n:'SPAG: Right or Wrong', w:['board-q', 'starters'], how:'Good Grammar or Bad Grammar? In Starters, if it\'s bad they write it correctly.'}
   ]},
   {f:'errors', one:'a short paragraph with its mistakes marked [wrong|right|why].', cols:'title, text', games:[
     {n:'Spot the error', w:['en-grammar'], how:'Read a paragraph and tap every word with a mistake.', c:'long', p:'error'},

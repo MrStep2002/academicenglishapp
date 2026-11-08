@@ -121,7 +121,7 @@ const SECTIONS = [
   // name: as students see it. file: the file its questions come from (games.html#f-<file> says how it's played and where
   // else it is). play: the topic page's link to it (#play-<key>); zh: on the Chinese page.
   ['Vocabulary', [
-    {key:'match', name:'Match the meaning', note:'with synonym groups', file:'words', src:'words', min:6, circuit:'short'},
+    {key:'match', name:'Match the meaning', note:'with synonym groups', file:'words', src:'words', min:6, circuit:'match'},
     {key:'meaning', name:'Word or meaning', file:'words', src:'words', min:4, circuit:'short'},
     {key:'tf', name:'True or false', note:'plus statements made from words.csv', file:'tf', src:'tf', min:1, circuit:'short'}]],
   ['Grammar', [
@@ -146,7 +146,7 @@ const SECTIONS = [
     {key:'zhbuild', name:'Build the sentence', note:'rows with the zh column', file:'builds', src:'zhbuilds', min:1, circuit:'', zh:true},
     {key:'zhevidence', name:'All-in English', file:'evidence', src:'zhevidence', min:1, circuit:'', zh:true}]],
 ];
-const CIRCUIT = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade'};
+const CIRCUIT = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
 const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
   reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', knowledge:'questions'};
 
