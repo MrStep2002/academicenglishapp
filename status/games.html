@@ -99,6 +99,7 @@
   <div id="out"></div>
   <p class="key">Places: <span class="pl en">Topic page</span> <span class="pl zhp">Chinese page</span> <span class="pl t">Teacher page</span> · <span class="dc">circuit: quick-fire</span> means the Daily Circuit plays it too.</p>
 </div>
+<script src="../en/engine/subjects.js?v=2026-11-08s"></script>
 <script>
 (function(){
 'use strict';
@@ -307,7 +308,9 @@ const atFile=()=>{ if(/^#f-/.test(location.hash)) (document.fonts ? document.fon
 // The topic list: the links point at the chosen topic's page (English) and its Chinese page when there is one
 const doc=url=>fetch(url, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(t=>new DOMParser().parseFromString(t, 'text/html'));
 const SEL='a.topic-link, .ess-card a.cc-btn:not(.alt)';
-Promise.all([doc(ROOT+'en/index.html'), doc(ROOT+'zh/index.html').catch(()=>null)]).then(([en, zh])=>{
+// The English subjects come from en/engine/subjects.js (8 Nov 2026), written out as the old topic-list markup
+const enDoc=()=>new DOMParser().parseFromString(window.AEA_SUBJECTS ? AEA_SUBJECTS.legacyHtml() : '', 'text/html');
+Promise.all([enDoc(), doc(ROOT+'zh/index.html').catch(()=>null)]).then(([en, zh])=>{
   const zhSet=new Set(zh ? [...zh.querySelectorAll(SEL)].map(a=>a.getAttribute('href').split('#')[0]) : []);
   const seen=new Set();
   TOPICS=[...en.querySelectorAll(SEL)].map(a=>{ const href=a.getAttribute('href').split('#')[0]; const nm=a.querySelector('.topic-name');

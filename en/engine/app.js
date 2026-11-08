@@ -3305,6 +3305,12 @@ window.addEventListener('pagehide', ()=>{ const c=classRun; if(c && window.AEA_A
   AEA_ACCOUNT.beacon('/api/student/attempts/'+c.attempt, {score:c.score, right:c.right, wrong:c.wrong, level:chosenBand(), games:c.games}); });
 
 // ---------- router ----------
+// The last game opened on this topic page, for the home page's "Continue: …" button (redesign stage 1, 8 Nov 2026).
+// English topic pages only, not in the Daily Circuit or a class game. Saved in aea:lastgame:v1 = {"en/web-design/index.html": {key, name, t}}.
+function lastGame(key, name){
+  if(SIDE!=='en' || CFG.only || inCircuit || classRun) return;
+  try{ const k='aea:lastgame:v1', m=JSON.parse(localStorage.getItem(k))||{}; m[PAGE]={key, name, t:Date.now()}; localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
+}
 function route(){
   const h=location.hash.replace(/^#/,''), cg=/^class-(\d+)$/.exec(h);
   if(cg && (!CFG.only || CFG.only==='zh')){ if(!classRun || classRun.id!==+cg[1]) classOpen(+cg[1]); return; }
@@ -3338,9 +3344,9 @@ function route(){
   if(CATS[h]) return category(h);
   if(h.startsWith('play-')){
     const a=ARCADE.find(x=>x.key===h.slice(5));   // arcade games (not on the menu yet)
-    if(a) return a.items().length>=a.min ? a.run() : menu();
+    if(a){ if(a.items().length<a.min) return menu(); lastGame(a.key, a.name); return a.run(); }
     const g=GAMES.find(x=>x.key===(h==='play-syn'?'match':h.slice(5)));   // Synonym groups is now part of Match the meaning
-    if(g && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min) return g.run();
+    if(g && !HIDE.has(g.key) && !phoneOff(g) && g.items().length>=g.min){ lastGame(g.key, g.name); return g.run(); }
     return category(g?g.cat:'vocab');
   }
   menu();

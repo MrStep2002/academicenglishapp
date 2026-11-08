@@ -60,10 +60,11 @@ async function draw(){
   if(!list.length){ if(box){ box.remove(); box=null; } timer=setTimeout(draw, 60000); return; }
   style();
   if(!box){
+    // The new English home page (8 Nov 2026) has a place for them: [data-class-games]. The other pages: before the topic list.
+    const slot=document.querySelector('[data-class-games]'), main=document.querySelector('main.home'), before=main && main.querySelector('.topic-group, nav.units');
+    if(!slot && !main) return;
     box=document.createElement('section'); box.className='topic-group class-games'; box.setAttribute('aria-label', 'Class games 课堂游戏');
-    const main=document.querySelector('main.home'), before=main && main.querySelector('.topic-group, nav.units');
-    if(!main) return;
-    if(before) main.insertBefore(box, before); else main.appendChild(box);
+    if(slot) slot.appendChild(box); else if(before) main.insertBefore(box, before); else main.appendChild(box);
   }
   box.innerHTML=list.map(card).join('');
   timer=setTimeout(draw, list.some(g=>g.status==='playing') ? 15000 : 60000);

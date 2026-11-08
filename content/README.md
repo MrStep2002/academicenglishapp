@@ -440,6 +440,7 @@ of how much each level has, so you can see where a level is thin.
 1. Make a folder here (e.g. `content/history/`) and copy the files from `templates/` into it.
 2. Copy a topic page, e.g. `en/web-design/index.html` to `en/history/index.html`, and change `data-name`,
    `data-blurb`, `data-store` (a new name, e.g. `en-history`) and `data-content="../../content/history/"`.
-3. Add a link to it on `en/index.html` (or `zh/index.html`).
+3. English: add one line for it to `en/engine/subjects.js` (its address, name and area: copy a line there). The sidebar,
+   the Subjects menu, the home page and the landing page then all show it. Chinese: add a link to `zh/index.html`.
 
 The files load when the site is online (GitHub Pages), not from a page opened straight from your computer.

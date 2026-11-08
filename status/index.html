@@ -62,6 +62,7 @@
   <div class="when"><span id="when">Reading the topic list…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
   <div id="out"><p class="notice loading">Reading the content files…</p></div>
 </div>
+<script src="../en/engine/subjects.js?v=2026-11-08s"></script>
 <script>
 (function(){
 'use strict';
@@ -275,7 +276,7 @@ function readingTable(rc){
 // ---- Areas (4 Nov 2026) ----
 // The page used to read every file on the site (about 100) before showing anything: half a minute from China, and more
 // with every topic. It is now split into the areas of the English topic list (Essentials, English Language, Media,
-// Science…), found from en/index.html, so a new area or topic appears here by itself. Only the chosen area's files are
+// Science…), found from the English subject list (en/engine/subjects.js; en/index.html until 8 Nov 2026), so a new area or topic appears here by itself. Only the chosen area's files are
 // read, and each subject fills in as soon as its own files are in. "Everything" still counts the whole site.
 // The area is kept in the address (status/?area=media), so an area can be bookmarked; the page also remembers the last one.
 
@@ -335,7 +336,7 @@ async function show(key, areas, zhHrefs){
     <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately.</li>
     <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>
     ${body}
-    <ul class="notes"><li>Areas and subjects are found from the English topic list (<span class="k">en/index.html</span>): a new topic appears here once it is on that list. A topic still being written, with no page yet, can be added to <span class="k">PLANNED</span> near the bottom of this page's code.</li>
+    <ul class="notes"><li>Areas and subjects are found from the English subject list (<span class="k">en/engine/subjects.js</span>): a new topic appears here once it is on that list. A topic still being written, with no page yet, can be added to <span class="k">PLANNED</span> near the bottom of this page's code.</li>
     <li>This page counts rows; it does not check them. Run <span class="k">python3 tools/check_content.py</span> to find mistakes in the files.</li></ul>`;
 
   const done=new Array(subs.length).fill(null); let finished=0;
@@ -369,7 +370,9 @@ async function show(key, areas, zhHrefs){
 
 async function main(){
   const enUrl=ROOT+'en/index.html', zhUrl=ROOT+'zh/index.html';
-  const [en, zh]=await Promise.all([getDoc(enUrl), getDoc(zhUrl).catch(()=>null)]);
+  // The English subjects come from en/engine/subjects.js (8 Nov 2026: the home page is drawn from it), written out as the old topic-list markup
+  const en=new DOMParser().parseFromString(window.AEA_SUBJECTS ? AEA_SUBJECTS.legacyHtml() : '', 'text/html');
+  const zh=await getDoc(zhUrl).catch(()=>null);
   const TOPICS='a.topic-link, .ess-card a.cc-btn:not(.alt)';
   const zhHrefs=new Set(zh ? [...zh.querySelectorAll(TOPICS)].map(a=>a.getAttribute('href').split('#')[0]) : []);
   const areas=findAreas(en);

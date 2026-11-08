@@ -5,7 +5,11 @@ Fonts are stored in the repo (`fonts/`, `css/fonts.css`), so nothing loads from 
 
 ## How students move through it
 
-Homepage → **English** or **Chinese version 中文版**
+Homepage (`index.html`, the landing page since 8 Nov 2026) → **Log in** or **Play without logging in** → the English home (`en/index.html`).
+Students who already play there (logged in, chose to play without logging in, or have played before) skip the landing page and go
+straight to their home: the side chosen in the language menu, or else the side they played last. The **language menu** (top of the
+sidebar: English / 中文版) switches side. The landing page still shows when a student comes from another page of the site (the
+"← 选择语言" link on the Chinese pages) or with `?stay` in the address.
 
 - **English** (`en/`): all in English, starting at Intermediate (B1). Topics listed by subject, like the Chinese page:
   All subjects → Academic English Essentials; Media → Web design, Representation; English Language → Reading Comprehension, Descriptive language.
@@ -21,8 +25,13 @@ Homepage → **English** or **Chinese version 中文版**
 
 | Path | What it is |
 |---|---|
-| `index.html`, `css/home.css` | Homepage: choose English or Chinese |
-| `en/index.html` | English: topics as a list, grouped by subject |
+| `index.html` | Landing page (logged out): what the site is, Log in, Play without logging in, the Daily Circuit, every subject. A few lines in its `<head>` send students who already play straight to their home |
+| `en/index.html` | English home: greeting and level, class games, the Daily Circuit (this week's circuits), this week's points, Your subjects (switched on), More subjects (with the "I study this" switches), Got an idea? |
+| `css/site.css` | The new look (8 Nov 2026): the sidebar and top bar, the landing page and the English home. Colours as `--sh-…` at the top (light and dark) |
+| `en/engine/subjects.js` | **The English subject list**: the sidebar, the Subjects menu, the home page, the landing page and the Site content pages all read it |
+| `en/engine/shell.js` | The sidebar and the top bar round every English page (see *The site shell* below) |
+| `en/engine/home.js` | Draws the landing page and the English home from the subject list and the student's progress |
+| `css/home.css` | The older look: the Chinese pages, the Reading Comprehension and Daily Circuit pages, Maths |
 | `progress/index.html` | My progress: overall level, answers, days in a row, a 14-day chart and every topic played. Uses the engine with `data-only="progress"` |
 | `content/` | **All the content**: one folder per topic, one CSV file per kind of task, a level on every row. See `content/README.md` |
 | `en/essentials/`, `en/web-design/`, `en/representation/`, `en/descriptive/` | The English topics (each page loads the engine; `data-content` says which folder in `content/` it uses) |
@@ -39,6 +48,28 @@ Homepage → **English** or **Chinese version 中文版**
 | `english-games/` | Old address: now forwards to `en/descriptive/` |
 | `website-portfolio/` | Placeholder |
 
+## The site shell (8 Nov 2026)
+
+Every English student page has the same sidebar and top bar, added by `en/engine/shell.js` (styles in `css/site.css`). It wraps
+what the page already has, so the games and pages underneath are unchanged.
+
+- **Sidebar**: the logo, the language menu (English / 中文版), Home, Daily Circuit, My progress; YOUR CLASSES; MY SUBJECTS (Essentials
+  and the subjects switched on, with the current one highlighted); EXPLORE (Big Ideas, The Future); ABOUT (Who are we?, For teachers,
+  Got an idea?). Your classes, Big Ideas, The Future and Who are we? are greyed ("coming soon") until they exist: they are the
+  `soon(…)` lines in `sideHtml()` in shell.js.
+- **Top bar**: Subjects ▾ (areas on the left, their subjects on the right, with the student's level where it has been found), then the
+  days in a row, the points (Day · Week · Total) and Log in or the student's name.
+- **Phones** (under 860px wide): the sidebar becomes a menu behind the ☰ button; the points and name move into it.
+- The page's own points bar, Log in button and mouse logo are hidden; its back link stays.
+- Each English page loads, after `account.js`: `<script src="…/en/engine/subjects.js?v=…"></script>` and
+  `<script src="…/en/engine/shell.js?v=…"></script>`, with `<link rel="stylesheet" href="…/css/site.css?v=…">` in the `<head>`.
+  On My progress and Maths the shell has `data-skip-zh`: opened from the Chinese side, those pages keep their old look for now.
+  Maths uses `data-side="maths"` for its points.
+- "Continue: …" on the home page: the topic pages remember the last game opened on each topic (`aea:lastgame:v1`, `lastGame()` in app.js).
+- The Chinese pages, login and the teacher page do not have the shell yet. Coming stages: the game pages, the topic pages (with the
+  word cards), My progress, Reading Comprehension, the Daily Circuit page, login, then the Chinese version.
+- After changing `shell.js`, `subjects.js`, `home.js` or `site.css`, change the `?v=` number after them on the pages that load them.
+
 ## English games by category
 
 | Category | Games (shown only when the subject has content for them) |
@@ -51,13 +82,13 @@ Homepage → **English** or **Chinese version 中文版**
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` and add a bar to `zh/index.html`.
 
-To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add a link to `en/index.html`. Details in `content/README.md`.
+To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add one line for it to `en/engine/subjects.js` (its address, name and area). Nothing else needs changing: the sidebar, the Subjects menu, the home page, the landing page and the Site content pages all read that list. New topic pages need the shell too (copy the `site.css`, `subjects.js` and `shell.js` lines from another topic page). Details in `content/README.md`.
 
 Topic page layout: `data-layout="compact"` on a topic page (all four English topics since 24 Oct) gives the newer menu: the title, the
 level buttons, "Your level: …" with the level bar as the divider, then every game listed in three columns (Vocabulary, Grammar,
 Reading), with no category page in between. Pages without it keep the older layout. To switch a page over, add the attribute.
 
-Site content page: `status/index.html` (academicenglishapp.com/status/, not linked from anywhere, not indexed by search engines). Each time it loads it finds the subjects from `en/index.html`, reads their CSV files and the Reading Comprehension files, and shows every game each subject could have with its number of items at each level and a status (All levels / Some levels / None yet / Switched off / Needs Chinese). It counts; it does not check: use `tools/check_content.py` for mistakes. If a game is added to the engine, add it to `SECTIONS` in that page too.
+Site content page: `status/index.html` (academicenglishapp.com/status/, not linked from anywhere, not indexed by search engines). Each time it loads it finds the English subjects from `en/engine/subjects.js` (the Chinese ones from `zh/index.html`), reads their CSV files and the Reading Comprehension files, and shows every game each subject could have with its number of items at each level and a status (All levels / Some levels / None yet / Switched off / Needs Chinese). It counts; it does not check: use `tools/check_content.py` for mistakes. If a game is added to the engine, add it to `SECTIONS` in that page too.
 
 Daily Circuit (English side, 25 Oct): five stations, 4 minutes: a short game (45 s), a long game (45 s), an arcade game (60 s), a long game (45 s), a short game (45 s). Each game in `GAMES` has `form: 'short'` or `'long'` (change it there to move a game); a station picks a game of its kind from any of the student's subjects at their level, never the same game twice when there is a choice. No long game at their level in any subject (e.g. on a phone, where reading games are off): a short game instead. Time up in the middle of a long game: what the student has done is marked (Spot the error: each mistake found counts at the station, without counting against their level; Complete the text: the filled gaps are marked). The Chinese side keeps five one-minute stations. Plan in `en/engine/circuit.js` (`EN_PLAN`).
 
@@ -71,7 +102,7 @@ Never change a word `id` once students have played: streaks and progress are sto
 
 Every right answer earns points; English and Chinese version points are kept apart. The bar at the top of each page shows
 **Day**, **Week** (from Monday, with the weekly target) and **Total**, then the Log in button or the student's name (which opens My progress,
-where they can also log out). The Choose your language page shows the side the student played last. My progress also shows this session, this month,
+where they can also log out). My progress also shows this session, this month,
 a 14-day chart and a "How to earn points" table.
 
 - Points depend on the task and the level of the item (`POINTS` near the top of `en/engine/app.js`):
