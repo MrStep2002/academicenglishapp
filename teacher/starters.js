@@ -25,7 +25,7 @@ const K_START = 'aeaBoard:starter', K_GAPS = 'aeaBoard:gapfills';
 const ROOM = 6, UNITS = {small: 1, wide: 3, full: 6};
 const ACTS = [
   {k: 'gap',      size: 'small', bank: 'gap',      name: 'Fill the gap',          blurb: 'A sentence with a word missing.'},
-  {k: 'rw',       size: 'small', bank: 'rw',       name: 'SPAG: Right or Wrong',  blurb: 'Is the sentence right? If not, they correct it.'},
+  {k: 'rw',       size: 'small', bank: 'rw',       name: 'Grammar Check',  blurb: 'Good grammar or bad grammar? If it’s bad, they correct it.'},
   {k: 'word',     size: 'small', bank: 'word',     name: 'What does it mean?',    blurb: 'A word: they write its meaning.'},
   {k: 'meaning',  size: 'small', bank: 'meaning',  name: 'Which word?',           blurb: 'A meaning: they write the word.'},
   {k: 'zh',       size: 'small', bank: 'zh',       name: '中文 → English',         blurb: 'A word in Chinese: they write it in English.'},

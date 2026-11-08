@@ -68,7 +68,7 @@
 const ROOT = new URL('../', location.href).href;   // the site's top folder
 const LEVELS = [['A1','F','Foundation'], ['A2','F+','Foundation+'], ['B1','I','Intermediate'], ['B2','I+','Intermediate+'], ['C1','A','Advanced']];
 const BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence'];
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence','translation'];
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = n => Number(n).toLocaleString('en-GB');
 
@@ -126,7 +126,7 @@ const SECTIONS = [
     {key:'tf', name:'True or false', note:'plus statements made from words.csv', file:'tf', src:'tf', min:1, circuit:'short'}]],
   ['Grammar', [
     {key:'gap', name:'Fill the gap', file:'gaps', src:'gaps', min:1, circuit:'short'},
-    {key:'rw', name:'SPAG: Right or Wrong', file:'right-wrong', src:'right-wrong', min:1, circuit:'short'},
+    {key:'rw', name:'Grammar Check', note:'was SPAG: Right or Wrong', file:'right-wrong', src:'right-wrong', min:1, circuit:'short'},
     {key:'error', name:'Spot the error', file:'errors', src:'errors', min:1, circuit:'long'}]],
   ['Reading (computers only, except Build the sentence and Find the evidence)', [
     {key:'build', name:'Build the sentence', file:'builds', src:'builds', min:1, circuit:'short'},
@@ -144,11 +144,12 @@ const SECTIONS = [
   ['Chinese side', [
     {key:'zhwords', name:'Word games (8)', note:'need the zh column', file:'words', play:'', src:'zhwords', min:4, circuit:'', zh:true},
     {key:'zhbuild', name:'Build the sentence', note:'rows with the zh column', file:'builds', src:'zhbuilds', min:1, circuit:'', zh:true},
-    {key:'zhevidence', name:'All-in English', file:'evidence', src:'zhevidence', min:1, circuit:'', zh:true}]],
+    {key:'zhevidence', name:'All-in English', file:'evidence', src:'zhevidence', min:1, circuit:'', zh:true},
+    {key:'zhtranslate', name:'Translation', file:'translation', src:'zhtranslate', min:1, circuit:'', zh:true}]],
 ];
 const CIRCUIT = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
 const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
-  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', knowledge:'questions'};
+  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', zhtranslate:'sentences', knowledge:'questions'};
 
 // One subject: its page (for its content folder and settings), its Chinese page if the Chinese topic list has one at the
 // same address, and its files. A planned topic (no page yet) has only a folder. new-words.csv: words still being written.
@@ -216,6 +217,7 @@ function count(s){
     zhbuilds:{lv:perLevel(zhb, wordLevel), total:zhb.length, written:builds.length},
     evidence:{lv:perLevel(evEn, wordLevel), total:evEn.length},
     zhevidence:{lv:perLevel(evZh, wordLevel), total:evZh.length},
+    zhtranslate:(()=>{ const rs=(T.translation||[]).filter(r=>r.zh && r.english && [1,2,3,4].filter(k=>r['wrong'+k]).length>=2); return {lv:perLevel(rs), total:rs.length}; })(),
   };
   const hasZh=!!s.hasZh;
   const rows=[], tally={all:0, some:0, none:0, off:0};

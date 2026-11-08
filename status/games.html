@@ -77,13 +77,13 @@
 <div class="wrap gf" id="gf">
   <p class="mono">Academic English App · <a href="index.html" style="color:inherit">Site content</a> · not linked from the site</p>
   <h1>Games and files</h1>
-  <p class="sub">Every game name you'll see, which file its questions come from, how it's played and where it is. Click a place to open the game there. Type any name or file name to find it: <i>SPAG</i>, <i>reads</i>, <i>Gap Fill</i>…</p>
+  <p class="sub">Every game name you'll see, which file its questions come from, how it's played and where it is. Click a place to open the game there. Type any name or file name to find it: <i>Grammar Check</i>, <i>reads</i>, <i>Gap Fill</i>…</p>
 
   <section class="mix" aria-labelledby="mix-h">
     <h2 id="mix-h">Easy to mix up</h2>
     <ul>
       <li><b>Fill the gap</b> is one sentence (<a href="#f-gaps">gaps.csv</a>). <b>Complete the text</b> on the topic page and <b>Gap Fill</b> on the Starters page are a whole paragraph, and they share a file (<a href="#f-reads">reads.csv</a>).</li>
-      <li><b>SPAG: Right or Wrong</b> asks “is the grammar good or bad?” (buttons: Good Grammar, Bad Grammar) (<a href="#f-right-wrong">right-wrong.csv</a>). <b>True or false</b> asks “is this fact true?” (<a href="#f-tf">tf.csv</a>). <b>Spot the error</b> is a paragraph to find the mistakes in (<a href="#f-errors">errors.csv</a>).</li>
+      <li><b>Grammar Check</b> (called SPAG: Right or Wrong until 8 Nov) asks “is the grammar good or bad?” (buttons: Good Grammar, Bad Grammar) (<a href="#f-right-wrong">right-wrong.csv</a>). <b>True or false</b> asks “is this fact true?” (<a href="#f-tf">tf.csv</a>). <b>Spot the error</b> is a paragraph to find the mistakes in (<a href="#f-errors">errors.csv</a>).</li>
       <li><b>Find the evidence</b> (English page) and <b>All-in English</b> (Chinese page) are the same game from the same file (<a href="#f-evidence">evidence.csv</a>). Its <code>side</code> column says which page a row is for.</li>
       <li><b>Word or meaning</b> on the topic page is called <b>What does it mean?</b> and <b>Which word?</b> in the board games and Starters. <b>Anagram</b> in Starters is <b>Unscramble</b> on handouts. All of these come from <a href="#f-words">words.csv</a>.</li>
     </ul>
@@ -170,8 +170,8 @@ const FILES = [
     {n:'Fill the gap', w:['board-q', 'starters', 'handouts'], how:'A sentence with a word missing: choose it (board games) or write it (Starters, and handouts with a word bank).'}
   ]},
   {f:'right-wrong', one:'one sentence that is either right or has one mistake.', cols:'statement, answer (RIGHT or WRONG), explanation, correction', games:[
-    {n:'SPAG: Right or Wrong', w:['en-grammar'], how:'A grammar check: read a sentence and choose Good Grammar or Bad Grammar. It is about how the sentence is written, not whether it is true.', c:'short', p:'rw'},
-    {n:'SPAG: Right or Wrong', w:['board-q', 'starters'], how:'Good Grammar or Bad Grammar? In Starters, if it\'s bad they write it correctly.'}
+    {n:'Grammar Check', w:['en-grammar'], how:'Read a sentence and choose Good Grammar or Bad Grammar. It is about how the sentence is written, not whether it is true. (Was SPAG: Right or Wrong.)', c:'short', p:'rw'},
+    {n:'Grammar Check', w:['board-q', 'starters'], how:'Good Grammar or Bad Grammar? In Starters, if it\'s bad they write it correctly.'}
   ]},
   {f:'errors', one:'a short paragraph with its mistakes marked [wrong|right|why].', cols:'title, text', games:[
     {n:'Spot the error', w:['en-grammar'], how:'Read a paragraph and tap every word with a mistake.', c:'long', p:'error'},
@@ -212,7 +212,7 @@ const FILES = [
   {f:'wall', one:'a group\'s name and four or more words that belong to it.', cols:'group, word1–word6', games:[
     {n:'Connecting Wall', w:['starters'], how:'The whole board: sixteen words to sort into four groups of four. Click the words; a right group turns a colour.'}
   ]},
-  {f:'several', label:'More than one file', one:'the question types you tick: What does it mean?, Fill the gap, SPAG: Right or Wrong and the rest above.', cols:'words, gaps, tf, right-wrong, questions, knowledge', noFile:true, games:[
+  {f:'several', label:'More than one file', one:'the question types you tick: What does it mean?, Fill the gap, Grammar Check and the rest above.', cols:'words, gaps, tf, right-wrong, questions, knowledge', noFile:true, games:[
     {n:'Squaring Up', w:['board'], how:'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
     {n:'Categories', w:['board'], how:'A board of categories, like Jeopardy: questions worth 100 to 500, Daily Doubles, and a final question every team bets on.'}
   ]},

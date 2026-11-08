@@ -84,7 +84,7 @@ function notesRow(r){
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
-  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[], evidence:[]};
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[], evidence:[], translations:[]};
   const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
   const lv=(file,r)=>{ const v=(r.level||'').trim();
     if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
@@ -130,6 +130,12 @@ function buildSubject(T){
     const side=String(r.side||'').trim().toLowerCase(), only=/^(zh|cn|chinese)/.test(side) ? 'zh' : /^(en|english)/.test(side) ? 'en' : '';
     if(only && only!==SIDE) return;
     S.evidence.push({id:r.id, level:lv('evidence',r), s:r.statement, right, wrong, wid:ref1('evidence',r,r.word), why:r.explanation||''}); });
+  // Translation (Chinese version, 8 Nov 2026, teacher): a sentence in Chinese, then choose the English sentence that has the
+  // whole meaning. translation.csv: id,level,zh,english,wrong1,wrong2,wrong3,word,source,explanation (source: where the
+  // English came from, for the writers; not shown).
+  (T.translation||[]).forEach(r=>{ const wrong=[...new Set([1,2,3,4].map(k=>r['wrong'+k]).filter(Boolean))].filter(x=>x!==r.english);
+    if(!r.zh || !r.english || wrong.length<2) return warn('translation',r,'skipped: it needs zh, english and at least two wrong sentences');
+    S.translations.push({id:r.id, level:lv('translation',r), zh:r.zh, en:r.english, wrong:wrong.slice(0,3), wid:ref1('translation',r,r.word), why:r.explanation||''}); });
   (T.errors||[]).forEach(r=>{ if(!/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/.test(r.text||'')) return warn('errors',r,'skipped: the text needs at least one [wrong|right|why]');
     S.errors.push({id:r.id, level:lv('errors',r), title:r.title||'', text:r.text}); });
   (T.tf||[]).forEach(r=>{ const a=String(r.answer||'').trim().toLowerCase(), t=/^(true|t|yes|y)$/.test(a);
@@ -172,9 +178,11 @@ function buildSubject(T){
     const v=(r.level||'').trim(), level=v && levelNum(v)!=null ? v : '';
     if(v && !level) warn('knowledge',r,`level "${v}" not recognised, so it is used at every level`);
     S.gk.push({id:r.id||('gk-'+(i+1)), level, q:r.question, opts:[r.correct,...wrong], why:r.explanation||''}); });
-  // Must-know general knowledge (content/general/knowledge.csv, the same columns; 1 Nov 2026): every level, every topic page
+  // Must-know general knowledge (content/general/knowledge.csv, the same columns; 1 Nov 2026), on every topic page.
+  // Levels used since 8 Nov 2026 (MUST_LEVEL); a row with no level (or one not recognised) plays at every level.
   (T.general||[]).forEach((r,i)=>{ const wrong=wrongs(r); if(!r.question||!r.correct||!wrong.length) return;
-    S.must.push({id:r.id||('gen-gk-'+(i+1)), level:'', q:r.question, opts:[r.correct,...wrong], why:r.explanation||''}); });
+    const v=(r.level||'').trim(), level=v && levelNum(v)!=null ? v : '';
+    S.must.push({id:r.id||('gen-gk-'+(i+1)), level, q:r.question, opts:[r.correct,...wrong], why:r.explanation||''}); });
   // In your own words: each [underlined] word has word, correct, wrong1-3 (the first) or wordN, correctN, wrong1_N… (the Nth)
   (T.extracts||[]).forEach(r=>{ const n=(String(r.extract||'').match(/\[[^\]]+\]/g)||[]).length, qs=[], wids=[];
     for(let k=1;k<=9;k++){ const a=k===1?'':String(k), b=k===1?'':'_'+k; if(!r['correct'+a]) break; qs.push([r['correct'+a], wrongs(r,b)]); wids.push(ref1('extracts',r,r['word'+a])); }
@@ -205,14 +213,14 @@ function buildSubject(T){
   return S;
 }
 // Load the page's files, then start. The Chinese version only needs the words, builds.csv for Build the sentence and
-// evidence.csv for All-in English.
+// evidence.csv for All-in English, and translation.csv for Translation (a topic without that file just has none).
 // A topic folder's files. Reading passages are not among them: the Reading Comprehension pages load theirs with data-reading
 // (Read and answer on the topic pages was replaced by Close reading, and the empty reading.csv files were removed, 25 Oct).
 const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence'];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
-  const jobs=(dir ? (SIDE==='zh' ? ['words','builds','evidence'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  const jobs=(dir ? (SIDE==='zh' ? ['words','builds','evidence','translation'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
   if(dir && GEN && GEN.files) GEN.files.forEach(f=>jobs.push([f, dir+f+'.csv']));   // a science page's data tables (both sides)
   // Must-know general knowledge for everyone (content/general/, 1 Nov 2026): one round in every Daily Circuit quick-fire station
   if(dir) jobs.push(['general', ROOT+'content/general/knowledge.csv']);
@@ -264,10 +272,10 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word',
+const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
-  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong, General knowledge'], ['build','Build the sentence, Spot the error, In your own words, Find the evidence, All-in English'],
+  ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error, In your own words, Find the evidence, All-in English'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
@@ -300,7 +308,9 @@ const P = (function(){
   const record = (game, item, ok, opts) => {
     try{
       data=load();
-      const rate=!(opts && opts.noRate), t=ensure(), before=t.n, now=Date.now(), d=itemLevel(item);
+      // Must-know (8 Nov 2026) has a level of its own (MUST_LEVEL): its answers move that, not this topic's level
+      if(game==='must') MUST_LEVEL.update(item, ok);
+      const rate=!(opts && opts.noRate) && game!=='must', t=ensure(), before=t.n, now=Date.now(), d=itemLevel(item);
       if(rate){ t.n++; if(ok) t.right++; } t.last=now; t.href=location.pathname; if(CFG.name) t.name=CFG.name;
       const dk=dayKey(new Date()); data.days[dk]=(data.days[dk]||0)+1;
       let msg='';
@@ -589,6 +599,7 @@ const GAME_ROW = {games: {name:'Games'}};
 // short and long stations choose from these. A game with no form (Read and answer) is never in the circuit.
 // Columns (26 Oct, teacher): True or false moved from Grammar to Vocabulary, Spot the error from Grammar to Reading.
 // 31 Oct (teacher): Spot the error back in Grammar ("its natural home"); Right or wrong renamed "SPAG: Right or Wrong".
+// 8 Nov 2026 (teacher): SPAG: Right or Wrong renamed "Grammar Check", with Good Grammar / Bad Grammar buttons.
 // Reading games are for computers only, except the ones marked phone:true.
 const GAMES = [
   // Match the meaning (31 Oct, teacher): Synonym groups merged in. The right-hand column mixes meanings and synonym groups
@@ -601,7 +612,7 @@ const GAMES = [
   // Word search (7 Nov 2026, teacher): in the Games row, after Save the mouse; plays on phones; not in the Daily Circuit
   {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters, from the words or from their meanings.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
-  {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'A grammar check: is the sentence written correctly? Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
+  {key:'rw',       form:'short', cat:'grammar', name:'Grammar Check',    blurb:'Is the sentence written correctly? Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
@@ -1332,7 +1343,7 @@ function playTF(){
   step();
 }
 
-// ---------- GRAMMAR: Right or wrong (right-wrong.csv) ----------
+// ---------- GRAMMAR: Grammar Check (right-wrong.csv; was SPAG: Right or Wrong) ----------
 // 8 Nov 2026 (teacher): "It's not clear that it's a grammar question… The kids need to shift their heads from factual
 // accuracy to grammatical accuracy." The card says Grammar check in a blue tag, asks "Is the grammar good or bad?" and
 // tells them not to judge the facts; the buttons are Good Grammar and Bad Grammar (keys G and B, or 1 and 2).
@@ -1477,7 +1488,34 @@ function playQuestion(){
 // Must-know (1 Nov 2026, teacher: "general knowledge questions that are considered must know that will appear in all the
 // Daily Circuits"): content/general/knowledge.csv, played as General knowledge. Not on the menus: the Daily Circuit plays
 // one round of it (three questions) in every quick-fire station, on both sides (qfSwitch).
-const MUST_GAME = {key:'must', cat:'games', name:'Must-know', zh:'必知常识', items:()=>S.must, min:1, run:()=>playGK(true)};
+// 8 Nov 2026 (teacher: "I'd like the general knowledge questions applied to this system as they're tiered now"): Must-know
+// has a level of its own on each side, not a topic's (aea:must:v1 = {en:{r, n, h}, zh:{…}}, saved to the account like
+// every aea: key). It starts from the student's overall level (P.overall: their topic levels averaged), or Intermediate
+// (Foundation+ on the Chinese side) for a new student, counted as 3 answers when it comes from their topics. Every Must-know
+// answer moves it by the same rule as a topic level (P.record), with a 1 in 4 chance of a lucky guess. It chooses the questions:
+// those at that level, or the nearest level with MIN_LEVEL (6) or more questions; a level with fewer is played with the
+// nearest one. Rows with no level play at every level. Must-know answers earn points by the question's level and don't move
+// any topic's level. Nothing on screen shows this level.
+const MUST_LEVEL = (function(){
+  const STORE='aea:must:v1', side=SIDE==='zh' ? 'zh' : 'en', GUESS_MUST=.25;
+  const load=()=>{ try{ return JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ return {}; } };
+  const get=()=>{ const m=load()[side]; if(m && typeof m.r==='number') return m;
+    const o=P.overall(); return {r:o ?? (side==='zh'?2:3), n:0, h:o==null?0:3}; };
+  const levels=()=>{ const N={}; S.must.forEach(x=>{ const b=bandOf(x); if(b!=null) N[b]=(N[b]||0)+1; });
+    const L=Object.keys(N).map(Number).filter(b=>N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
+    return L.length || !Object.keys(N).length ? L : [+Object.keys(N).sort((a,b)=>N[b]-N[a])[0]]; };
+  const near=(L,b)=>L.reduce((best,x)=>Math.abs(x-b)<Math.abs(best-b)?x:best);   // a tie goes to the lower level
+  const band=()=>{ const L=levels(); return L.length ? near(L, Math.max(1, Math.min(5, Math.floor(get().r)))) : null; };
+  // The questions for the student's Must-know level (all of them when no question has a level)
+  const items=()=>{ const L=levels(), b=band(); if(b==null) return S.must;
+    const out=S.must.filter(x=>{ const xb=bandOf(x); return xb==null || near(L, xb)===b; }); return out.length ? out : S.must; };
+  const update=(item, ok)=>{ const d=itemLevel(item); if(d==null) return;
+    const all=load(), m=get(), p=GUESS_MUST+(1-GUESS_MUST)/(1+Math.exp(-2.5*(m.r-d))), k=Math.max(.12, .8/Math.sqrt(m.n+(m.h||0)+1));
+    m.r=Math.max(1, Math.min(5.99, m.r + k*((ok?1:0)-p))); m.n=(m.n||0)+1; all[side]=m;
+    try{ localStorage.setItem(STORE, JSON.stringify(all)); }catch(e){} };
+  return {get, band, items, update};
+})();
+const MUST_GAME = {key:'must', cat:'games', name:'Must-know', zh:'必知常识', items:()=>MUST_LEVEL.items(), min:1, run:()=>playGK(true)};
 function playGK(must){
   const game=must ? MUST_GAME : GAMES.find(g=>g.key==='gk'), items=game.items(), deck=Deck(items), st=Stats(game.key);
   shell(game, T('Choose the right answer. Correct answers move on by themselves.','选出正确答案。答对后会自动进入下一题。')); st.draw();
@@ -2422,6 +2460,8 @@ const ZH_GAMES = [
   {key:'zhbuild',  type:'practice',  name:'Build the sentence', zh:'连词成句',       blurb:'See the sentence in Chinese, then build it in English from the coloured pieces.', zhBlurb:'看中文句子，用彩色词块拼出英文句子。', run:()=>playBuild(), ready:()=>zhBuilds().length>0, lock:'No sentences at this level yet 本级别还没有句子'},
   // All-in English (3 Nov 2026, teacher): a statement in English, then choose the English details that match it (evidence.csv)
   {key:'zhevidence', type:'practice', name:'All-in English',   zh:'全英文练习',     blurb:'Read a sentence in English, then choose the English details that match it.', zhBlurb:'读一句英文，选出和它相符的英文细节。', run:()=>playEvidence(), ready:()=>zhEvidence().length>0, lock:'Nothing at this level yet 本级别还没有题目'},
+  // Translation (8 Nov 2026, teacher): a sentence in Chinese, then choose the English sentence that has the whole meaning (translation.csv)
+  {key:'zhtranslate', type:'practice', name:'Translation',     zh:'翻译',           blurb:'Read a sentence in Chinese, then choose the English sentence that means exactly the same.', zhBlurb:'读一句中文，选出意思完全相同的英文句子。', run:()=>playTranslate(), ready:()=>zhTranslations().length>0, lock:'Nothing at this level yet 本级别还没有题目'},
   // Odd one out was taken off the Chinese side on 26 Oct (teacher: replace it with Build the sentence). playOdd() is still
   // below; to bring it back, remove the // from the next line.
   // {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
@@ -2441,7 +2481,7 @@ ZH_GAMES.push(...GEN_ZH);
 // soon: = a card that says "Coming soon".
 const ZH_COLS = [
   {key:'vocab',     name:'Vocab',     zh:'词汇', games:['zh', 'zhmatch', 'zhtype']},
-  {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'soon:translate', 'zhevidence']},
+  {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'zhtranslate', 'zhevidence']},
   {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'zhwordsearch']}
 ];
 const ZH_SOON = {translate:['Translation','翻译'], wordsearch:['Wordsearch','单词搜索']};
@@ -2611,6 +2651,29 @@ function playZhMeaning(){
     mcCard({instr:T('Choose the meaning','选出释义'), promptHtml:`<p class="prompt-word">${esc(w.w)}${w.pos?` <small>${esc(w.pos)}</small>`:''}</p><p class="zh-under" lang="zh-CN">${esc(ZH[w.id])}</p>`,
       options:[w.def,...ds.map(x=>x.def)], answer:w.def, optClass:'long',
       onResult:(ok,card,fb)=>{ ok?fbOk(fb,w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''):fbNo(fb,'',`${wordNote(w)}${w.ex?`<span class="wd"><i>${esc(w.ex)}</i></span>`:''}`); settle(ok,card,st,deck,w,step); }});
+  };
+  step();
+}
+
+// ----- Chinese side: Translation (8 Nov 2026, teacher) -----
+// "Students see a Chinese statement and choose the English sentence that expresses the whole meaning." Four sentences: the
+// right one and three wrong ones from translation.csv (the same words with the meaning changed, broken word order, or only
+// part of the meaning). Rows at the student's level; a student past the highest level written gets the highest one below
+// (the Chinese side's sentences are A1–B1), a student below every level the lowest. One answer per sentence.
+const zhTranslations = () => { const all=S.translations||[]; if(!all.length) return [];
+  const b=chosenBand() ?? 1, at=l=>all.filter(x=>bandOf(x)===l);
+  for(let l=b; l>=1; l--){ const r=at(l); if(r.length) return r; }
+  for(let l=b+1; l<=5; l++){ const r=at(l); if(r.length) return r; }
+  return all; };
+function playTranslate(){
+  const st=Stats('zhtranslate'), deck=Deck(()=>zhTranslations());
+  zhShell(T('Translation','翻译'), T('Read the Chinese, then choose the English sentence that means exactly the same.','读中文，选出意思完全相同的英文句子。')); st.draw();
+  const step=()=>{
+    const t=deck.next(), w=t.wid ? byId[t.wid] : null;
+    mcCard({instr:T('Choose the English sentence with the whole meaning','选出完整表达这句话意思的英文句子'), promptHtml:`<p class="zh-sentence" lang="zh-CN">${esc(t.zh)}</p>`,
+      options:[t.en, ...t.wrong], answer:t.en, optClass:'long',
+      onResult:(ok,card,fb)=>{ const why=t.why ? `<span>${rich(t.why)}</span>` : '';
+        ok ? fbOk(fb, why) : fbNo(fb, '', why + (w ? wordNote(w) : '')); settle(ok,card,st,deck,t,step); }});
   };
   step();
 }

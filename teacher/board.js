@@ -33,7 +33,7 @@ const BANKS = [
   {key:'zh',       name:'中文 → English',        blurb:'A word in Chinese: choose the English word.', file:'words', hid:['zh','zhmean','zhmatch']},
   {key:'gap',      name:'Fill the gap',         blurb:'Choose the word that fits the sentence.',     file:'gaps', hid:['gap']},
   {key:'tf',       name:'True or false',        blurb:'Two answers, so quick but guessable.',        file:'tf', hid:['tf']},
-  {key:'rw',       name:'SPAG: Right or Wrong', blurb:'Does the sentence have a mistake?',           file:'right-wrong', hid:['rw']},
+  {key:'rw',       name:'Grammar Check', blurb:'Good grammar or bad grammar?',           file:'right-wrong', hid:['rw']},
   {key:'question', name:'Answer the question',  blurb:'Exam questions: which answer does what the command word asks?', file:'questions', hid:['question']},
   {key:'gk',       name:'General knowledge',    blurb:'Pub-quiz questions. No levels: they play at any level.', file:'knowledge', hid:['gk','must']}
 ];
@@ -738,7 +738,7 @@ function finishTile(result, bump){
 }
 
 // ---------- the question card ----------
-const KIND = {word: 'What does it mean?', def: 'Which word?', zh: '中文 → English', gap: 'Fill the gap', tf: 'True or false', rw: 'SPAG: Right or Wrong', question: 'Answer the question', gk: 'General knowledge'};
+const KIND = {word: 'What does it mean?', def: 'Which word?', zh: '中文 → English', gap: 'Fill the gap', tf: 'True or false', rw: 'Grammar Check', question: 'Answer the question', gk: 'General knowledge'};
 function qBody(q){
   const instr = {word: 'What does this word mean?', def: 'Which word means this?', zh: 'Which English word is this?', gap: 'Which word fills the gap?',
     tf: 'True or false?', rw: 'Grammar check: is the grammar good or bad? (Not: is it true?)', question: 'Which answer does what the question asks?', gk: 'General knowledge'}[q.k];
@@ -814,7 +814,7 @@ function drawWho(){
   const r = card.querySelector('[data-a=right]'); r.innerHTML = '✓ Right' + (o.award ? ' +' + pts : '') + ' <kbd>Y</kbd>'; r.disabled = !!o.over;   // over: nobody else can answer
   const w = card.querySelector('[data-a=wrong]'); w.innerHTML = '✗ Wrong' + (o.award && (g.cfg.wrong === 'lose' || o.wager) ? ' −' + pts : '') + ' <kbd>N</kbd>';
   w.disabled = o.tried.length >= g.teams.length || !!o.over;
-  const sw = card.querySelector('[data-a=swap]'); if (sw) sw.hidden = o.marked;   // until Right or Wrong is clicked (a disputed answer: put up another question)
+  const sw = card.querySelector('[data-a=swap]'); if (sw) sw.hidden = o.marked;   // until Right or Wrong is clicked (the teacher's marking buttons) (a disputed answer: put up another question)
 }
 // The teacher clicks the option the team chose. Right: it goes green and the explanation shows. Wrong: only that option goes
 // red (crossed out once it's marked Wrong), so the right answer stays hidden for the next team (7 Nov 2026). Show answer: the

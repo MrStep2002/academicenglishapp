@@ -23,7 +23,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `templates/` | The headings and one example row for every kind of file |
 
 Every topic folder has the same files (the table below). A file with only its heading row is simply empty for now.
-The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (sentences with their Chinese) and `evidence.csv`.
+The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (sentences with their Chinese), `evidence.csv` and `translation.csv`.
 
 | File | Games |
 |---|---|
@@ -31,9 +31,10 @@ The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (s
 | `gaps.csv` | Fill the gap |
 | `builds.csv` | Build the sentence (both versions; the Chinese version shows the sentence in Chinese) |
 | `evidence.csv` | Find the evidence (English version) and All-in English (Chinese version): a statement, then choose the details that show it |
+| `translation.csv` | Translation (Chinese version only): a sentence in Chinese, then choose the English sentence with the whole meaning |
 | `errors.csv` | Spot the error |
 | `tf.csv` | True or false |
-| `right-wrong.csv` | SPAG: Right or Wrong (is the sentence right, or does it have a mistake?) |
+| `right-wrong.csv` | Grammar Check (is the grammar good or bad? Was SPAG: Right or Wrong) |
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
 | `questions.csv` | Answer the question (exam command words) |
 | `knowledge.csv` | General knowledge (Games row; no levels needed) |
@@ -72,7 +73,10 @@ Things every student should know, whatever they study (1 Nov 2026). Every topic 
 their own.
 
 - **knowledge.csv**: must-know general knowledge, the same columns as a topic's knowledge.csv (below). Every Daily Circuit
-  quick-fire station plays one round of three of these questions, on the English and the Chinese side. No levels.
+  quick-fire station plays one round of three of these questions, on the English and the Chinese side. Levels (since
+  8 Nov 2026): each student has a Must-know level of its own, which starts from their level in their topics and moves with
+  every Must-know answer; they get the questions at that level (a level with fewer than 6 questions is played with the
+  nearest level). A row with no level plays at every level. Must-know answers don't change a topic's level.
 
 ## content/chemistry/ (Science, 3 Nov 2026)
 
@@ -261,6 +265,21 @@ English version shows the goal. Students build the sentence in English from the 
 - explanation: **not shown at the moment** (3 Nov 2026, teacher: writing them made the sentences long-winded, and content
   comes first). Leave it blank. Explanations already in the files stay there; `BUILD_WHY` in en/engine/app.js turns them back on.
 
+### translation.csv (Translation, Chinese version, 8 Nov 2026)
+
+`id,level,zh,english,wrong1,wrong2,wrong3,word,source,explanation`
+
+- **zh**: the sentence in natural Chinese. **english**: the English sentence with the whole meaning (the right answer).
+- **wrong1–wrong3**: three English sentences that do *not* say the same thing (a fourth, `wrong4`, may be added; at least two are needed). They should use many of the same words, so students have to read for meaning. Three kinds work well, one of each:
+  1. the same words with the meaning changed (who does what, the opposite, a different time or place): *The powerful man looks down at the camera.*
+  2. broken word order or grammar: *The low camera angle make powerful the man look.* (at B1, a second changed meaning instead)
+  3. only part of the meaning: *The camera is low and the man is powerful.*
+- **word** (optional): the word from words.csv the sentence practises (its id or the word). A wrong answer shows its meaning, and the student's progress with the word moves on.
+- **source** (optional): where the English sentence came from, for the writers. Not shown.
+- **explanation** (optional, shown after the answer; usually blank).
+- **level**: the Chinese version uses A1–B1 (about 40% A1, 40% A2, 20% B1). A student whose level is above the highest level written gets the highest one below.
+- Example (Advertising): `adv-tr-001,A1,这则广告以一个明亮的厨房开场。,The advert opens with a bright kitchen.,The advert ends with a bright kitchen.,The advert open with a kitchen bright.,The kitchen in the advert is bright.,adv:advert,,`
+
 ### evidence.csv (Find the evidence / All-in English, 3 Nov 2026)
 
 `id,level,statement,right1,right2,right3,wrong1,wrong2,wrong3,word,side,explanation`
@@ -312,7 +331,7 @@ expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` W
 
 - **answer**: `TRUE` or `FALSE`.
 
-### right-wrong.csv (SPAG: Right or Wrong)
+### right-wrong.csv (Grammar Check)
 
 `id,level,statement,answer,explanation` and, if you like, `correction`
 

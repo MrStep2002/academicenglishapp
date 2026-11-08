@@ -853,7 +853,7 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .phone .ws-list:not(.clues){grid-template-columns:1fr 1fr}
 @media (prefers-reduced-motion:reduce){.ws-marks .f.glow,.ws-list li.pop{animation:none}}
 
-/* SPAG: Right or Wrong as a grammar check (8 Nov 2026, teacher: "the fact that this is a grammar question needs to be MUCH
+/* Grammar Check, was SPAG: Right or Wrong (8 Nov 2026, teacher: "the fact that this is a grammar question needs to be MUCH
    clearer"): a blue Grammar check tag, the question in bold, a note not to judge the facts, the sentence marked in blue */
 .card.gram{border-top:4px solid var(--blue)}
 .gram-head{margin:0 0 16px}
