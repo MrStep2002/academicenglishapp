@@ -264,9 +264,9 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word',
+const POINT_KIND = {mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
-const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
+const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, SPAG: Right or Wrong, General knowledge'], ['build','Build the sentence, Spot the error, In your own words, Find the evidence, All-in English'],
   ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
@@ -280,7 +280,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={mouse:.05, zhmouse:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05};   // chance of a lucky guess
+  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -579,6 +579,8 @@ const GAMES = [
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or the other way round.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
   {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Read each statement and decide quickly: true or false?', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
   {key:'mouse',    cat:'games',   name:'Save the mouse',   blurb:'Guess the word one letter at a time before the mouse disappears.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
+  // Word search (7 Nov 2026, teacher): in the Games row, after Save the mouse; plays on phones; not in the Daily Circuit
+  {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters, from the words or from their meanings.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
   {key:'rw',       form:'short', cat:'grammar', name:'SPAG: Right or Wrong',    blurb:'Read a sentence and decide: is it right, or is there a mistake?', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
@@ -645,11 +647,11 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const ROWS = {match:'words',syn:'words',meaning:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence'};
+const ROWS = {match:'words',syn:'words',meaning:'words',wordsearch:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence'};
 const hasRows = g => g.gen ? g.all.length>0 : ((SYL ? SYL_FULL : S)[ROWS[g.key]]||[]).length>0;
 const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
 // Science pages: why a game card is greyed (no topic ticked yet; nothing in the ticked topics; nothing at this level)
-const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' ? S.words : g.key==='tf' ? [...S.tf, ...S.words] : S[ROWS[g.key]]||[];
+const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' || g.key==='wordsearch' ? S.words : g.key==='tf' ? [...S.tf, ...S.words] : S[ROWS[g.key]]||[];
 const offWhy = (g, n) => sylNone() ? 'Choose your topics first' : n ? 'Not enough at this level yet' : SYL && !rowsNow(g).length ? 'None in your topics yet' : 'None at this level yet';
 
 // ---------- page frame ----------
@@ -714,7 +716,7 @@ function menuCompact(){
       return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
         ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}${rest}</section>`; }).join('')}
   </div>
-  ${(()=>{ const ROW=['gk','mouse','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
+  ${(()=>{ const ROW=['gk','mouse','wordsearch','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
       ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}
   <div class="wl-link"><p>The word list has every word, its meaning and an example sentence.</p><a class="btn alt" href="#words">Open word list</a></div>`);
@@ -739,10 +741,10 @@ function levelLine(){
 }
 // One game on a menu: its name, what it is, and the student's best streak (greyed when the level has too few items)
 function gameCard(g){
-  const n=g.items().length, off=n<g.min, best=store.get((g.arcade?'best:':'streak:')+g.key,0);
+  const n=g.items().length, off=n<g.min, best=store.get((g.arcade||g.time?'best:':'streak:')+g.key,0);
   return `<a class="game${off?' off':''}" ${off?'aria-disabled="true"':`href="#play-${g.key}"`}>
     <h3>${g.name}</h3><p>${g.blurb}</p>
-    <span class="best">${off?offWhy(g, n):best?(g.arcade?'Best score: ':'Best streak: ')+best:'Not played yet'}</span></a>`;
+    <span class="best">${off?offWhy(g, n):best?(g.time?'Best time: '+mmss(best):(g.arcade?'Best score: ':'Best streak: ')+best):'Not played yet'}</span></a>`;
 }
 
 // ---------- CATEGORY: list of games ----------
@@ -867,6 +869,192 @@ function playMouse(zh){
   };
   step();
 }
+
+// ---------- GAMES: Word search (7 Nov 2026, teacher: "a board of letters, with the keywords hidden in it, and they have to click on them to find them") ----------
+// The topic's words at the student's level are hidden in a square of letters. Drag from a word's first letter to its last
+// (or click one end, then the other; or move with the arrow keys and press Enter at each end). The list beside the board
+// shows the words, or (the switch above it) their meanings on the English side and their Chinese on the Chinese side, so the
+// student works out the word first. A word found is marked in its own colour and its meaning shows in the list.
+// How hard, by level: Foundation 10 × 10 (phones 9 × 9), 7 words (phones 6), across and down; Foundation+ diagonally down too;
+// Intermediate and up 12 × 12 (phones 10 × 10), 9 words (phones 7), diagonals both ways; Intermediate+ some backwards;
+// Advanced every direction (WS_DIRS). Spaces, hyphens and apostrophes are left out of the board (close-up is CLOSEUP);
+// a word needs 4 letters or more, and no word on a board is inside another. Every word is on the board once only, and the
+// random letters never spell a rude word (WS_RUDE) in any direction.
+// Progress: each word found is a right answer (word points, and the word moves on). With the words shown it doesn't move
+// the student's level (they were given the word); with meanings or Chinese it counts like any answer, and Show the rest
+// counts the words not found as wrong. Best time (best:<key>): the fastest board finished without Show the rest.
+const WS_DIRS = [null, [[0,1],[1,0]], [[0,1],[1,0],[1,1]], [[0,1],[1,0],[1,1],[-1,1]],
+  [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0]], [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]]];
+const WS_SAY = [null, ['Words go across and down.', '单词横向或纵向排列。'], ['Words go across, down and diagonally down.', '单词横向、纵向或斜向下排列。'],
+  ['Words go across, down and diagonally.', '单词横向、纵向或斜向排列。'], ['Words go across, down and diagonally, and some are backwards.', '单词横向、纵向或斜向排列，有些是倒着的。'],
+  ['Words go in every direction, backwards too.', '单词可以朝任何方向排列，也可以倒着。']];
+const WS_FILL = 'EEEEEEAAAAAIIIIOOOOTTTTNNNNSSSSRRRRLLLHHHDDDCCCUUMMPPGGBBFFYWWKV';   // the random letters, roughly as common as in English
+const WS_RUDE = ['kcuf','tihs','tnuc','kcid','kcoc','ssip','tawt','tuls','gaf','stit','esra','ssa','nrop','knaw','izan','epar','hctib','xes','erohw'];   // never spelt by the random letters (written backwards here)
+const WS_COL = ['#f2a93b','#4ea3e8','#5cc97a','#f27fa6','#a98bf0','#f5795a','#3fc7bb','#d9c52f','#7fb6e0','#e78ae0'];
+const wsPlain = w => mouseTarget(w).normalize('NFD').replace(/[̀-ͯ]/g, '');
+const wsLetters = w => wsPlain(w).replace(/[^a-z]/g, '').toUpperCase();
+const wsShow = w => String(w.w).split(/\s*\/\s*/)[0].replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+const wsFit = (list, size) => (list||[]).filter(w=>{ const t=wsPlain(w), n=t.replace(/[^a-z]/g,'').length;
+  return /^[a-z][a-z '’\-]*$/.test(t) && t.split(/\s+/).length<=3 && n>=4 && n<=size; });
+const mmss = s => Math.floor(s/60)+':'+String(s%60).padStart(2,'0');
+// The board: the chosen words first (longest placed first), a spare word whenever one won't fit; then the random letters
+function wsMake(cands, n, size, dirs){
+  const inside=(r,c)=>r>=0 && r<size && c>=0 && c<size;
+  for(let t=0; t<30; t++){
+    const g=Array.from({length:size}, ()=>Array(size).fill('')), placed=[];
+    for(const it of [...cands.slice(0, n).sort((a,b)=>b.L.length-a.L.length), ...cands.slice(n)]){
+      if(placed.length>=n) break;
+      const L=it.L; let spot=null;
+      for(const [dr,dc] of shuffle(dirs)){   // a direction at random, then a place in that direction
+        const spots=[];
+        for(let r=0;r<size;r++) for(let c=0;c<size;c++){
+          if(!inside(r+dr*(L.length-1), c+dc*(L.length-1))) continue;
+          let ov=0, ok=true;
+          for(let i=0;i<L.length;i++){ const ch=g[r+dr*i][c+dc*i]; if(ch){ if(ch!==L[i]){ ok=false; break; } ov++; } }
+          if(ok && ov<L.length) spots.push({r, c, dr, dc, ov});
+        }
+        if(spots.length){ const cross=spots.filter(s=>s.ov); const from=cross.length && Math.random()<.4 ? cross : spots; spot=from[Math.floor(Math.random()*from.length)]; break; }
+      }
+      if(!spot) continue;
+      for(let i=0;i<L.length;i++) g[spot.r+spot.dr*i][spot.c+spot.dc*i]=L[i];
+      placed.push(Object.assign({}, it, {cells:[...Array(L.length).keys()].map(i=>(spot.r+spot.dr*i)*size+spot.c+spot.dc*i)}));
+    }
+    if(placed.length<Math.min(n, 4)) continue;
+    for(let f=0; f<60; f++){
+      const b=g.map(row=>row.map(ch=>ch || WS_FILL[Math.floor(Math.random()*WS_FILL.length)]));
+      if(wsClean(b, placed, size)) return {b, placed};
+    }
+  }
+  return null;
+}
+// Every word once only, and no rude word made by the random letters (one inside a topic word, like "class", is fine)
+function wsClean(b, placed, size){
+  const D=WS_DIRS[5];
+  const scan=W=>{ const out=[], seen=new Set();
+    for(let r=0;r<size;r++) for(let c=0;c<size;c++){ if(b[r][c]!==W[0]) continue;
+      for(const [dr,dc] of D){ const er=r+dr*(W.length-1), ec=c+dc*(W.length-1); if(er<0||er>=size||ec<0||ec>=size) continue;
+        let ok=true; for(let i=1;i<W.length;i++) if(b[r+dr*i][c+dc*i]!==W[i]){ ok=false; break; }
+        if(!ok) continue; const a=r*size+c, z=er*size+ec, k=Math.min(a,z)+'-'+Math.max(a,z);
+        if(!seen.has(k)){ seen.add(k); out.push([...Array(W.length).keys()].map(i=>(r+dr*i)*size+c+dc*i)); } } }
+    return out; };
+  if(placed.some(p=>scan(p.L).length!==1)) return false;
+  const inWord=cells=>placed.some(p=>cells.every(x=>p.cells.includes(x)));
+  return WS_RUDE.every(x=>scan([...x].reverse().join('').toUpperCase()).every(inWord));
+}
+function playWordSearch(zh){
+  const key=zh ? 'zhwordsearch' : 'wordsearch'; CUR_GAME=key;
+  const lv=Math.max(1, Math.min(5, chosenBand() || 3)), big=lv>=3;
+  const size=big ? (PHONE?10:12) : (PHONE?9:10), n=big ? (PHONE?7:9) : (PHONE?6:7), dirs=WS_DIRS[lv];
+  const how=T(`${WS_SAY[lv][0]} Drag from the first letter of a word to the last, or click one end and then the other.`,
+    `${WS_SAY[lv][1]}从单词的第一个字母拖到最后一个字母，或先点一头再点另一头。`);
+  if(zh) zhShell(T('Word search','单词搜索'), how); else shell(GAMES.find(g=>g.key==='wordsearch'), how);
+  let mode=store.get('wsmode', 'words')==='clues' ? 'clues' : 'words';
+  // The words: the student's words at their level (Chinese side: their own set), due words first; topped up from nearby levels
+  const cands=()=>{
+    const main=wsFit(rankForLevel(zh ? zhWords() : pick(S.words)).filter(w=>!hiddenItem(w)), size);
+    const more=wsFit(rankForLevel((zh ? zhBankAll().filter(w=>(bandOf(w)??9)<=zhBand()) : S.words).filter(w=>!main.includes(w))), size);
+    const out=[];
+    for(const w of [...main, ...more]){ const L=wsLetters(w), R=[...L].reverse().join('');
+      if(out.some(o=>o.L.includes(L) || L.includes(o.L) || o.L.includes(R) || o.w.def===w.def)) continue;
+      out.push({w, L}); if(out.length>=n+10) break; }
+    return out; };
+  const newBoard=()=>{
+    clearTimers(); keyHandler=null;
+    const made=wsMake(cands(), n, size, dirs);
+    if(!made){ showCard(`<p class="instr">${T('There aren\'t enough words for a word search at this level yet.','这个级别的单词还不够做单词搜索。')}</p>`); return; }
+    const {b, placed}=made, found=new Set(), best=store.get('best:'+key, 0), t0=Date.now();
+    placed.forEach((p,k)=>{ p.col=WS_COL[k%WS_COL.length]; });
+    let pend=null, drag=null, flash=null, cur=0, kb=false, done=0, gaveUp=false;
+    const card=showCard(`<div class="ws"><div class="ws-left">
+        <div class="ws-board" style="--n:${size}"><svg class="ws-marks" viewBox="0 0 ${size*10} ${size*10}" aria-hidden="true"></svg>
+          <div class="ws-grid" tabindex="0" role="application" aria-label="${esc(TX('Word search board: use the arrow keys, and Enter at the first and last letter of a word','单词搜索：用方向键移动，在单词的第一个和最后一个字母上按回车'))}">${b.flat().map((ch,i)=>`<span class="ws-c" data-i="${i}">${ch}</span>`).join('')}</div></div>
+          <div class="ws-acts"><button type="button" class="btn alt small ws-give">${T('Show the rest','显示剩下的')}</button><button type="button" class="btn alt small ws-new">${T('New puzzle','换一个')}</button></div>
+          <div class="ws-end" aria-live="polite"></div></div>
+        <div class="ws-side">
+          <div class="ws-mode" role="group" aria-label="${esc(TX('The list shows','列表显示'))}"><button type="button" data-m="words">${T('Words','单词')}</button><button type="button" data-m="clues">${zh ? T('Chinese','中文') : 'Meanings'}</button></div>
+          <ol class="ws-list"></ol>
+        </div></div>`);
+    card.classList.add('ws-card');
+    const grid=card.querySelector('.ws-grid'), svg=card.querySelector('.ws-marks'), list=card.querySelector('.ws-list'), cells=[...grid.children];
+    const centre=i=>[(i%size)*10+5, Math.floor(i/size)*10+5];
+    const line=(a, z, cls, col)=>{ const [x1,y1]=centre(a), [x2,y2]=centre(z);
+      return a===z ? `<circle class="${cls}" cx="${x1}" cy="${y1}" r="3.9"${col?` style="fill:${col}"`:''}/>` : `<line class="${cls}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"${col?` style="stroke:${col}"`:''}/>`; };
+    const marks=()=>{ svg.innerHTML=placed.map((p,k)=>found.has(k) ? line(p.cells[0], p.cells[p.cells.length-1], 'f', p.col) : gaveUp ? line(p.cells[0], p.cells[p.cells.length-1], 'm') : '').join('')
+      + (flash ? line(flash[0], flash[1], 'x') : '') + (drag ? line(drag.a, drag.z, 's') : pend!=null ? line(pend, pend, 's') : '');
+      cells.forEach((c,i)=>c.classList.toggle('cur', kb && i===cur && !done)); grid.classList.toggle('kb', kb); };
+    const stats=()=>{ const el=document.getElementById('stats'); if(!el) return; const s=Math.floor(((done||Date.now())-t0)/1000), bt=store.get('best:'+key, 0);
+      el.innerHTML=`<span>${T('Found','找到')} <b>${found.size}</b>/${placed.length}</span><span>${T('Time','用时')} <b>${mmss(s)}</b></span>${bt?`<span>${T('Best','最快')} <b>${mmss(bt)}</b></span>`:''}`; };
+    const tick=()=>{ if(done) return; stats(); later(tick, 1000); };
+    const drawList=()=>{
+      card.querySelectorAll('.ws-mode button').forEach(x=>x.setAttribute('aria-pressed', x.dataset.m===mode));
+      list.classList.toggle('clues', mode==='clues');
+      list.innerHTML=placed.map((p,k)=>{ const w=p.w, f=found.has(k), miss=gaveUp && !f, open=f||miss, zhw=zh && ZH[w.id] ? `<span class="ws-zh" lang="zh-CN">${esc(ZH[w.id])}</span>` : '';
+        const word=`<b class="ws-w">${esc(wsShow(w))}</b>`, def=`<span class="ws-def">${esc(w.def)}</span>`, len=`<span class="ws-len">${T(`${p.L.length} letters`, `${p.L.length} 个字母`)}</span>`;
+        const body = mode==='words' ? word + (open ? zhw + def : '')
+          : open ? word + (zh ? zhw + def : def) : (zh ? zhw : `<span class="ws-clue">${esc(w.def)}</span>`) + len;
+        return `<li class="${f?'found':''}${miss?' miss':''}" style="--wc:${p.col}">${body}</li>`; }).join(''); };
+    // A word picked: right if its first and last letters are those of a word on the board (either way round)
+    const tryPick=(a, z)=>{
+      const k=placed.findIndex((p,k)=>!found.has(k) && ((p.cells[0]===a && p.cells[p.cells.length-1]===z) || (p.cells[0]===z && p.cells[p.cells.length-1]===a)));
+      if(k<0){ if(placed.some((p,k)=>found.has(k) && ((p.cells[0]===a && p.cells[p.cells.length-1]===z) || (p.cells[0]===z && p.cells[p.cells.length-1]===a)))) return;
+        flash=[a, z]; marks(); later(()=>{ flash=null; marks(); }, 450); return; }
+      found.add(k); P.record(key, placed[k].w, true, mode==='words' ? {noRate:true} : null);
+      marks(); drawList(); stats();
+      const li=list.children[k]; if(li){ li.classList.add('pop'); if(PHONE) li.scrollIntoView({block:'nearest', behavior:'smooth'}); }
+      if(found.size===placed.length) finish();
+    };
+    const aligned=(a, z)=>{ const dr=Math.floor(z/size)-Math.floor(a/size), dc=z%size-a%size; return a!==z && (!dr || !dc || Math.abs(dr)===Math.abs(dc)); };
+    // Where the pointer is, as a cell; and the end of a straight line from a towards it (the nearest of the 8 directions)
+    const pos=e=>{ const r=grid.getBoundingClientRect(); return [(e.clientX-r.left)/r.width*size, (e.clientY-r.top)/r.height*size]; };
+    const cellAt=e=>{ const [x,y]=pos(e); return x<0||y<0||x>=size||y>=size ? null : Math.floor(y)*size+Math.floor(x); };
+    const snap=(a, e)=>{ const [x,y]=pos(e), ar=Math.floor(a/size), ac=a%size, dx=x-.5-ac, dy=y-.5-ar;
+      if(Math.abs(dx)<.5 && Math.abs(dy)<.5) return a;
+      const k=Math.round(Math.atan2(dy, dx)/(Math.PI/4)), dc=Math.round(Math.cos(k*Math.PI/4)), dr=Math.round(Math.sin(k*Math.PI/4));
+      let len=Math.max(0, Math.round((dx*dc+dy*dr)/(dr&&dc?2:1)));
+      while(len>0 && !(ar+dr*len>=0 && ar+dr*len<size && ac+dc*len>=0 && ac+dc*len<size)) len--;
+      return (ar+dr*len)*size+ac+dc*len; };
+    grid.addEventListener('pointerdown', e=>{ if(done || (e.pointerType==='mouse' && e.button!==0)) return; const i=cellAt(e); if(i==null) return;
+      e.preventDefault(); kb=false; cur=i; if(e.pointerType==='mouse') grid.focus({preventScroll:true}); try{ grid.setPointerCapture(e.pointerId); }catch(x){}
+      drag={a:i, z:i, id:e.pointerId, moved:false}; marks(); });
+    grid.addEventListener('pointermove', e=>{ if(!drag || e.pointerId!==drag.id) return; const z=snap(drag.a, e); if(z!==drag.z){ drag.z=z; if(z!==drag.a) drag.moved=true; marks(); } });
+    const up=e=>{ if(!drag || e.pointerId!==drag.id) return; const d=drag; drag=null;
+      if(e.type==='pointercancel'){ marks(); return; }
+      if(d.moved && d.z!==d.a){ pend=null; marks(); tryPick(d.a, d.z); return; }
+      // a click: the first end, then the other end
+      if(pend!=null && aligned(pend, d.a)){ const a=pend; pend=null; marks(); tryPick(a, d.a); }
+      else { pend = pend===d.a ? null : d.a; marks(); } };
+    grid.addEventListener('pointerup', up); grid.addEventListener('pointercancel', up);
+    grid.addEventListener('keydown', e=>{ if(done || e.metaKey || e.ctrlKey || e.altKey) return;
+      const mv={ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1]}[e.key];
+      if(mv){ e.preventDefault(); e.stopPropagation(); kb=true; cur=Math.max(0, Math.min(size-1, Math.floor(cur/size)+mv[0]))*size + Math.max(0, Math.min(size-1, cur%size+mv[1])); marks(); return; }
+      if(e.key==='Enter' || e.key===' '){ e.preventDefault(); e.stopPropagation(); kb=true;
+        if(pend!=null && aligned(pend, cur)){ const a=pend; pend=null; marks(); tryPick(a, cur); } else { pend = pend===cur ? null : cur; marks(); } return; }
+      if(e.key==='Escape'){ pend=null; marks(); } });
+    grid.addEventListener('blur', ()=>{ if(kb){ kb=false; marks(); } });
+    card.querySelectorAll('.ws-mode button').forEach(x=>x.onclick=()=>{ mode=x.dataset.m; store.set('wsmode', mode); drawList(); });
+    card.querySelector('.ws-new').onclick=newBoard;
+    card.querySelector('.ws-give').onclick=()=>{ if(done) return; gaveUp=true;
+      if(mode==='clues') placed.forEach((p,k)=>{ if(!found.has(k)) P.record(key, p.w, false); });   // with the words shown, not finding one says nothing about knowing it
+      finish(); };
+    const finish=()=>{
+      done=Date.now(); pend=null; drag=null; marks(); drawList(); stats(); card.classList.add('ws-over');
+      const secs=Math.round((done-t0)/1000), prev=store.get('best:'+key, 0), isBest=!gaveUp && (!prev || secs<prev);
+      if(isBest) store.set('best:'+key, secs);
+      card.querySelector('.ws-give').hidden=true;
+      const nb=card.querySelector('.ws-new'); nb.classList.remove('alt', 'small'); nb.focus({preventScroll:true});
+      card.querySelector('.ws-end').innerHTML = gaveUp
+        ? `<p class="ws-sum"><b>${T(`You found ${found.size} of ${placed.length}.`, `你找到了 ${found.size} 个，共 ${placed.length} 个。`)}</b> ${T('The others are marked on the board and in the list.', '其余的单词已在方阵和列表中标出。')}</p>`
+        : `<p class="ws-sum"><b>${T(`All ${placed.length} words in ${mmss(secs)}!`, `全部 ${placed.length} 个单词，用时 ${mmss(secs)}！`)}</b> ${isBest ? T('A new best time.', '新纪录！') : prev ? T(`Your best time is ${mmss(prev)}.`, `你的最快纪录是 ${mmss(prev)}。`) : ''}</p>`;
+      if(!gaveUp) sfxDone(card);
+      keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); newBoard(); } };
+    };
+    drawList(); marks(); tick();
+    if(!PHONE) grid.focus({preventScroll:true});
+  };
+  newBoard();
+}
+// All found: the board's marks light up one after another
+function sfxDone(card){ card.querySelectorAll('.ws-marks .f').forEach((l,i)=>{ l.style.animationDelay=(i*70)+'ms'; l.classList.add('glow'); }); }
 
 // ---------- VOCABULARY: Match the meaning / Synonym groups ----------
 // mode: 'def' (meanings), 'syn' (synonym groups) or 'mix' (each word on the board shows one or the other, chosen as it is dealt)
@@ -2095,6 +2283,8 @@ const ZH_GAMES = [
   // below; to bring it back, remove the // from the next line.
   // {key:'zhodd',    type:'practice',  name:'Odd one out',        zh:'找出不同类',     blurb:'Four words: three belong together. Find the one that doesn’t.', zhBlurb:'四个词里有三个是一类的，找出不同的那个。', run:()=>playOdd(), needs:()=>oddReady()},
   {key:'zhmouse',  type:'practice',  name:'Save the mouse',     zh:'拯救小老鼠',     blurb:'See the Chinese and the meaning, then guess the English word one letter at a time. Every wrong letter and the mouse loses a piece.', zhBlurb:'看中文和释义，一个字母一个字母地猜出英文单词。每猜错一次，小老鼠就少一块！', run:()=>playMouse(true)},
+  // Word search (7 Nov 2026): in the Games column, where "Wordsearch: coming soon" was
+  {key:'zhwordsearch', type:'practice', time:true, name:'Word search', zh:'单词搜索', blurb:'Find your English words hidden in a square of letters. The clues are the words or their Chinese.', zhBlurb:'在字母方阵里找出隐藏的英文单词，提示是单词本身或它的中文。', min:6, run:()=>playWordSearch(true)},
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', zhBlurb:'60 秒内看中文选英文，看你能答对多少个！', min:8, run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', zhBlurb:'三条命。看单词和中文，在时间用完前选出英文释义，会越来越快。', min:8, run:()=>playSurvival()}
 ];
@@ -2109,7 +2299,7 @@ ZH_GAMES.push(...GEN_ZH);
 const ZH_COLS = [
   {key:'vocab',     name:'Vocab',     zh:'词汇', games:['zh', 'zhmatch', 'zhtype']},
   {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'soon:translate', 'zhevidence']},
-  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'soon:wordsearch']}
+  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'zhwordsearch']}
 ];
 const ZH_SOON = {translate:['Translation','翻译'], wordsearch:['Wordsearch','单词搜索']};
 const ZH_SNAKE = {key:'snake', type:'arcade', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.',
@@ -2137,9 +2327,9 @@ function zhMenu(){
   // What the next words unlock: "Learn 4 words to unlock 4 games"
   const needs=n>=4 ? locked.filter(g=>need(g)>0).map(need) : [], next=needs.length ? Math.min(...needs) : 0, opens=locked.filter(g=>need(g)===next && !g.needs).length;
   const teaser=next ? T(`Learn ${next}${have?' more':''} word${next===1?'':'s'} to unlock ${opens} game${opens===1?'':'s'}.`, `再学 ${next} 个单词，解锁 ${opens} 个游戏。`) : '';
-  const card=g=>{ const sc=g.type==='challenge' || g.type==='arcade', best=store.get((sc?'best:':'streak:')+g.key,0);
+  const card=g=>{ const sc=g.type==='challenge' || g.type==='arcade' || g.time, best=store.get((sc?'best:':'streak:')+g.key,0);
     return `<a class="game" href="#play-${g.key}">${g.type==='challenge'?`<span class="game-tag">${T('Challenge','挑战')}</span>`:''}<h3>${T(g.name, g.zh)}</h3><p>${T(g.blurb, g.zhBlurb)}</p>
-      <span class="best">${best?(sc?T('Best score','最高分'):T('Best streak','最佳连对'))+': '+best:T('Not played yet','还没玩过')}</span></a>`; };
+      <span class="best">${best?(g.time?T('Best time','最快')+': '+mmss(best):(sc?T('Best score','最高分'):T('Best streak','最佳连对'))+': '+best):T('Not played yet','还没玩过')}</span></a>`; };
   // The grid: a game that isn't open yet keeps its place, greyed, saying what opens it
   const offCard=(name, zh, why)=>`<div class="game off" aria-disabled="true"><h3>${T(name, zh)}</h3><span class="best">${why}</span></div>`;
   const cell=k=>{

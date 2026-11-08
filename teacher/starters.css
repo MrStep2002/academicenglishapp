@@ -210,3 +210,35 @@
 .st-wacts { flex: none; display: flex; gap: .5em; justify-content: center; font-size: .45em; }
 .st-wacts .bg-btn.small { font-size: 1em; }
 @media (prefers-reduced-motion: reduce) { .st-wrow.pop .st-tile, .st-tile.shake, .st-in.on .st-a, .st-clock.up .st-time { animation: none; } }
+
+/* Word search (8 Nov 2026): the square of letters on the left, the list on the right */
+.k-wordsearch .st-in { gap: .45em; }
+.st-ws { flex: 1; min-height: 0; width: 100%; display: flex; gap: 1em; align-items: center; container-type: size; }
+.st-wsb { position: relative; flex: none; width: min(100cqh, 64cqw); height: min(100cqh, 64cqw); container-type: inline-size; touch-action: none; user-select: none;
+  -webkit-user-select: none; border-radius: .35em; background: var(--bg); border: .06em solid var(--line); }
+.st-wsm { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.st-wsm line { stroke-linecap: round; stroke-width: 7.8; }
+.st-wsm .f { opacity: .55; }
+.st-wsm .s { stroke: var(--web); fill: var(--web); opacity: .3; }
+.st-wsm .x { stroke: #c0392b; opacity: .35; }
+@media (prefers-color-scheme: dark) { .st-wsm .f { opacity: .45; } }
+.st-wsg { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); grid-template-rows: repeat(var(--n), minmax(0, 1fr)); cursor: pointer; }
+.st-wsg span { display: grid; place-items: center; font-family: var(--display); font-weight: 800; font-size: calc(100cqi / var(--n) * .58); line-height: 1; color: var(--ink); pointer-events: none; }
+.st-wsl { flex: 1; min-width: 0; align-self: stretch; list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; justify-content: center; gap: .3em; text-align: left; font-size: .82em; }
+.st-wsl:not(.clues) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; font-size: .7em; }
+.st-wsl:not(.clues) .st-wst { white-space: nowrap; }   /* a word never breaks: the text gets smaller instead */
+.st-wsl li { display: flex; align-items: center; gap: .45em; padding: .22em .45em; border-radius: .4em; border: .07em solid var(--line); background: var(--card); cursor: pointer; line-height: 1.2; transition: background .2s, border-color .2s; }
+.st-wsl li:hover { border-color: var(--muted); }
+.st-wsl li.on { border-color: var(--wc); background: color-mix(in srgb, var(--wc) 24%, var(--card)); }
+.st-wsl li.on .st-mk { background: var(--wc); color: #fff; }
+.st-wst { flex: 1; min-width: 0; }
+.st-wsl b { font-family: var(--display); font-weight: 800; }
+.st-wsl:not(.clues) li.on b::after { content: " ✓"; }
+.st-wsd { display: block; font-weight: 600; font-size: .86em; }
+.st-wsa { display: grid; font-size: .8em; margin-top: .1em; }
+.st-wsa > * { grid-area: 1 / 1; }
+.st-wsa i { font-style: normal; font-weight: 700; color: var(--muted); }
+.st-wsa b { visibility: hidden; font-size: 1.15em; color: #13774f; }
+.st-wsl li.on .st-wsa b { visibility: visible; }
+.st-wsl li.on .st-wsa i { visibility: hidden; }
+@media (prefers-color-scheme: dark) { .st-wsa b { color: #9be7bb; } }

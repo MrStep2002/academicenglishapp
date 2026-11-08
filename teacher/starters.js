@@ -37,10 +37,11 @@ const ACTS = [
   {k: 'errors',   size: 'wide',                    name: 'Spot the error',        blurb: 'A short paragraph with mistakes to find and correct.'},
   {k: 'match',    size: 'full',  words: true,      name: 'Match-up',              blurb: 'Six words and six meanings to pair up.'},
   {k: 'wall',     size: 'full',                    name: 'Connecting Wall',       blurb: 'Sixteen words to sort into four groups of four.'},
-  {k: 'gapfill',  size: 'full',                    name: 'Gap Fill',              blurb: 'A paragraph with gaps and a word bank: from the bank, or one of your own.'}
+  {k: 'gapfill',  size: 'full',                    name: 'Gap Fill',              blurb: 'A paragraph with gaps and a word bank: from the bank, or one of your own.'},
+  {k: 'wordsearch', size: 'full', words: true,     name: 'Word search',           blurb: 'Topic words hidden in a square of letters. The list shows the words, or their meanings.'}
 ];
 const ACT = Object.fromEntries(ACTS.map(a => [a.k, a]));
-const NEED = {match: 6, wall: 4};
+const NEED = {match: 6, wall: 4, wordsearch: 6};
 const GROUPS = [['small', 'One square each'], ['wide', 'Half the board'], ['full', 'The whole board']];
 const DEFAULTS = {title: '', topics: [], levels: [1, 2, 3, 4, 5], items: [], secs: 300, choices: false, clue: true};
 const PAIR = ['#c8344a', '#1f63c4', '#13804f', '#7343c9', '#b35300', '#b4286a'];   // Match-up pairs (white text reads on all of them)
@@ -102,6 +103,61 @@ const parts = w => String(w).trim().split(/\s+/);
 const anagramOK = x => /^[A-Za-z][A-Za-z'’ -]*$/.test(x.w.trim()) && parts(x.w).length <= 2 && letters(x.w).length >= 4 && letters(x.w).length <= 14 && parts(x.w).every(p => letters(p).length >= 2);
 const vowelsOK = x => { if (!anagramOK(x)) return false; const v = (x.w.match(/[aeiou]/gi) || []).length; return v >= 2 && letters(x.w).length - v >= 3; };
 const matchOK = x => x.def && x.def.length <= 140;
+// Word search (8 Nov 2026): the same rules as the students' game (playWordSearch in en/engine/app.js; keep the two in step).
+// Letters only on the board (close-up is CLOSEUP; "visitor / user" is visitor), 4 to 12 letters; size and directions by the
+// hardest level chosen; every word once only; the random letters never spell a rude word.
+const wsShow = x => String(x.w).split(/\s*\/\s*/)[0].replace(/\s*\([^)]*\)\s*/g, ' ').trim();
+const wsPlain = x => wsShow(x).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const wsL = x => wsPlain(x).replace(/[^a-z]/g, '').toUpperCase();
+const wsOK = x => { const t = wsPlain(x), n = t.replace(/[^a-z]/g, '').length; return /^[a-z][a-z '’\-]*$/.test(t) && t.split(/\s+/).length <= 3 && n >= 4 && n <= 12; };
+const WS_DIRS = [null, [[0,1],[1,0]], [[0,1],[1,0],[1,1]], [[0,1],[1,0],[1,1],[-1,1]],
+  [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0]], [[0,1],[1,0],[1,1],[-1,1],[0,-1],[-1,0],[-1,-1],[1,-1]]];
+const WS_SAY = [null, 'Words go across and down.', 'Words go across, down and diagonally down.', 'Words go across, down and diagonally.',
+  'Words go across, down and diagonally, and some are backwards.', 'Words go in every direction, backwards too.'];
+const WS_FILL = 'EEEEEEAAAAAIIIIOOOOTTTTNNNNSSSSRRRRLLLHHHDDDCCCUUMMPPGGBBFFYWWKV';
+const WS_RUDE = ['kcuf','tihs','tnuc','kcid','kcoc','ssip','tawt','tuls','gaf','stit','esra','ssa','nrop','knaw','izan','epar','hctib','xes','erohw'];   // written backwards
+const WS_COL = ['#f2a93b','#4ea3e8','#5cc97a','#f27fa6','#a98bf0','#f5795a','#3fc7bb','#d9c52f','#7fb6e0','#e78ae0'];
+function wsMake(cands, n, size, dirs){
+  const inside = (r, c) => r >= 0 && r < size && c >= 0 && c < size;
+  for (let t = 0; t < 30; t++) {
+    const g = Array.from({length: size}, () => Array(size).fill('')), placed = [];
+    for (const it of [...cands.slice(0, n).sort((a, b) => b.L.length - a.L.length), ...cands.slice(n)]) {
+      if (placed.length >= n) break;
+      const L = it.L; let spot = null;
+      for (const [dr, dc] of shuffle(dirs)) {
+        const spots = [];
+        for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) {
+          if (!inside(r + dr * (L.length - 1), c + dc * (L.length - 1))) continue;
+          let ov = 0, ok = true;
+          for (let i = 0; i < L.length; i++) { const ch = g[r + dr * i][c + dc * i]; if (ch) { if (ch !== L[i]) { ok = false; break; } ov++; } }
+          if (ok && ov < L.length) spots.push({r, c, dr, dc, ov});
+        }
+        if (spots.length) { const cross = spots.filter(x => x.ov), from = cross.length && Math.random() < .4 ? cross : spots; spot = from[Math.floor(Math.random() * from.length)]; break; }
+      }
+      if (!spot) continue;
+      for (let i = 0; i < L.length; i++) g[spot.r + spot.dr * i][spot.c + spot.dc * i] = L[i];
+      placed.push(Object.assign({}, it, {cells: [...Array(L.length).keys()].map(i => (spot.r + spot.dr * i) * size + spot.c + spot.dc * i)}));
+    }
+    if (placed.length < Math.min(n, 6)) continue;
+    for (let f = 0; f < 60; f++) {
+      const b = g.map(row => row.map(ch => ch || WS_FILL[Math.floor(Math.random() * WS_FILL.length)]));
+      if (wsClean(b, placed, size)) return {b, placed};
+    }
+  }
+  return null;
+}
+function wsClean(b, placed, size){
+  const scan = W => { const out = [], seen = new Set();
+    for (let r = 0; r < size; r++) for (let c = 0; c < size; c++) { if (b[r][c] !== W[0]) continue;
+      for (const [dr, dc] of WS_DIRS[5]) { const er = r + dr * (W.length - 1), ec = c + dc * (W.length - 1); if (er < 0 || er >= size || ec < 0 || ec >= size) continue;
+        let ok = true; for (let i = 1; i < W.length; i++) if (b[r + dr * i][c + dc * i] !== W[i]) { ok = false; break; }
+        if (!ok) continue; const a = r * size + c, z = er * size + ec, k = Math.min(a, z) + '-' + Math.max(a, z);
+        if (!seen.has(k)) { seen.add(k); out.push([...Array(W.length).keys()].map(i => (r + dr * i) * size + c + dc * i)); } } }
+    return out; };
+  if (placed.some(p => scan(p.L).length !== 1)) return false;
+  const inWord = cells => placed.some(p => cells.every(x => p.cells.includes(x)));
+  return WS_RUDE.every(x => scan([...x].reverse().join('').toUpperCase()).every(inWord));
+}
 const wordsAt = (D, lv) => eligible(D, 'word', lv);   // the topic page's word list at these levels, without words taken out through Reports
 const errorsAt = (X, t, lv) => (X.errors || []).filter(r => (r.lv == null || lv.includes(band(r.lv))) && !B.hidden(t, 'error', r.id));
 const readsAt = (X, t, lv) => (X.reads || []).filter(r => (r.lv == null || lv.includes(band(r.lv))) && !B.hidden(t, 'read', r.id));
@@ -109,7 +165,7 @@ function haveOf(k, cfg, lv){
   lv = lv || cfg.levels;
   const T = cfg.topics.filter(t => ALL.D[t] && ALL.X[t]), a = ACT[k];
   if (a.bank) return T.reduce((n, t) => n + eligible(ALL.D[t], a.bank, lv).length, 0);
-  if (a.words) return T.reduce((n, t) => n + wordsAt(ALL.D[t], lv).filter(k === 'anagram' ? anagramOK : k === 'vowels' ? vowelsOK : matchOK).length, 0);
+  if (a.words) return T.reduce((n, t) => n + wordsAt(ALL.D[t], lv).filter(k === 'anagram' ? anagramOK : k === 'vowels' ? vowelsOK : k === 'wordsearch' ? wsOK : matchOK).length, 0);
   if (k === 'errors') return T.reduce((n, t) => n + errorsAt(ALL.X[t], t, lv).length, 0);
   if (k === 'wall') return T.reduce((n, t) => n + (ALL.X[t].wall || []).length, 0);   // groups at the levels chosen come first; others fill the wall
   if (k === 'gapfill') return T.reduce((n, t) => n + readsAt(ALL.X[t], t, lv).length, 0);
@@ -202,6 +258,22 @@ function dealOne(it, cfg, used, done){
     }
     if (chosen.length < 4) return null;
     return {k: 'wall', groups: chosen.map(g => ({name: g.name, words: g.words})), order: shuffle([...Array(16).keys()])};
+  }
+  if (it.k === 'wordsearch') {
+    // The hardest level chosen sets the size and the directions; the words come from every level chosen
+    const top = Math.max(...(lv.length ? lv : [3])), big = top >= 3, size = big ? 12 : 10, n = big ? 9 : 8, cands = [];
+    for (const p of shuffle(T.flatMap(t => wordsAt(ALL.D[t], lv).filter(wsOK).map(x => ({t, x}))))) {
+      if (used.has(wkey(p.t, p.x.id))) continue;
+      const L = wsL(p.x), R = [...L].reverse().join('');
+      if (L.length > size || cands.some(o => o.L.includes(L) || L.includes(o.L) || o.L.includes(R) || o.def === p.x.def)) continue;
+      cands.push({t: p.t, id: p.x.id, w: wsShow(p.x), def: p.x.def, L}); if (cands.length >= n + 10) break;
+    }
+    if (cands.length < 6) return null;
+    const made = wsMake(cands, n, size, WS_DIRS[top]); if (!made) return null;
+    made.placed.forEach(p => used.add(wkey(p.t, p.id)));
+    // the list in a random order (not the order they were placed in, longest first), each word with its colour
+    const words = shuffle(made.placed).map((p, k) => ({w: p.w, def: p.def, n: p.L.length, a: p.cells[0], z: p.cells[p.cells.length - 1], col: WS_COL[k % WS_COL.length]}));
+    return {k: 'wordsearch', size, lv: top, b: made.b.map(r => r.join('')), words, show: it.show === 'meanings' ? 'meanings' : 'words'};
   }
   if (it.k === 'gapfill') {
     let src = it.src && it.src !== 'bank' ? gapOf(it.src) : null, title, text, extras;
@@ -303,6 +375,7 @@ function build(){
     $$('.st-act').forEach(b => b.onclick = () => {
       const a = ACT[b.dataset.k], s = status(a); if (s.off) return;
       const it = {k: a.k}; if (a.k === 'gapfill') it.src = haveOf('gapfill', cfg) || !gapfills().length ? 'bank' : gapfills()[0].id;
+      if (a.k === 'wordsearch') it.show = 'words';
       cfg.items.push(it); err(''); save(); drawAll();
     });
     const used = unitsOf(cfg.items);
@@ -318,9 +391,11 @@ function build(){
         (L.cells.length > 1 ? '<span class="st-mn">' + (n + 1) + '</span>' : '') + '<b>' + esc(a.name) + '</b>' +
         (it.k === 'gapfill' ? '<select class="small" data-src="' + c.i + '" aria-label="Which paragraph">' + '<option value="bank">From the bank: a different one each time</option>' +
           gapfills().map(g => '<option value="' + esc(g.id) + '"' + (it.src === g.id ? ' selected' : '') + '>' + esc(g.title || 'Untitled') + '</option>').join('') + '</select>' : '') +
+        (it.k === 'wordsearch' ? '<select class="small" data-show="' + c.i + '" aria-label="The list shows"><option value="words">The list shows the words</option><option value="meanings">The list shows their meanings</option></select>' : '') +
         '<button type="button" class="st-x" data-x="' + c.i + '" title="Take it off the board" aria-label="Take ' + esc(a.name) + ' off the board">×</button></div>'; }).join('');
     box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { cfg.items.splice(+b.dataset.x, 1); err(''); save(); drawAll(); });
     box.querySelectorAll('[data-src]').forEach(s => { s.value = cfg.items[+s.dataset.src].src || 'bank'; s.onchange = () => { cfg.items[+s.dataset.src].src = s.value; save(); }; });
+    box.querySelectorAll('[data-show]').forEach(s => { s.value = cfg.items[+s.dataset.show].show || 'words'; s.onchange = () => { cfg.items[+s.dataset.show].show = s.value; save(); }; });
   };
   const drawAll = () => { drawActs(); drawMini(); };
   const load = () => {
@@ -403,7 +478,8 @@ function mount(d){
       L.cells.map((c, n) => { const it = d.items[c.i];
         return '<section class="st-panel ' + ACT[it.k].size + ' k-' + it.k + '" data-i="' + c.i + '" data-n="' + (n + 1) + '" style="grid-row:' + c.r + ';grid-column:' + c.c + ' / span ' + c.span + '"></section>'; }).join('') +
     '</div>' +
-    '<p class="bg-keys">' + (one ? (d.items[0].k === 'wall' ? 'Click four tiles that belong together' : 'Click a ' + (d.items[0].k === 'match' ? 'word' : 'gap') + ', or type its number, to show its answer') + ' · <kbd>A</kbd> show all the answers'
+    '<p class="bg-keys">' + (one ? (d.items[0].k === 'wordsearch' ? 'Drag across a word, or click its first and last letters, to mark it · click a word in the list, or type its number, to show it'
+      : d.items[0].k === 'wall' ? 'Click four tiles that belong together' : 'Click a ' + (d.items[0].k === 'match' ? 'word' : 'gap') + ', or type its number, to show its answer') + ' · <kbd>A</kbd> show all the answers'
       : 'Click a square, or type its number, to show its answer · <kbd>A</kbd> show all the answers') + (S.secs ? ' · <kbd>Space</kbd> start or pause the timer' : '') + '</p>';
   document.body.appendChild(el);
   S.board = el.querySelector('.st-board');
@@ -418,6 +494,7 @@ function mount(d){
     el.querySelector('.st-go').onclick = e => { e.currentTarget.blur(); clockToggle(); };
     el.querySelector('.st-reset').onclick = e => { e.currentTarget.blur(); clockReset(); }; }
   S.board.addEventListener('click', onBoardClick);
+  ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => S.board.addEventListener(t, wsPointer));
   S.onResize = () => { sizeUp(); fitAll(); }; S.onKey = onKey; S.onFs = () => tools();
   addEventListener('resize', S.onResize); addEventListener('keydown', S.onKey, true); document.addEventListener('fullscreenchange', S.onFs);
   sizeUp(); tools(); clockDraw(); fitAll();
@@ -464,7 +541,7 @@ function clockReset(){ if (!S) return; clearInterval(S.tick); S.run = false; S.l
 
 // ---------- showing the answers ----------
 const kindOf = i => ACT[S.d.items[i].k];
-const subCount = it => it.k === 'match' ? 6 : it.k === 'gapfill' ? it.parts.filter(p => p.t === 'g').length : it.k === 'wall' ? 4 : 0;
+const subCount = it => it.k === 'match' ? 6 : it.k === 'gapfill' ? it.parts.filter(p => p.t === 'g').length : it.k === 'wall' ? 4 : it.k === 'wordsearch' ? it.words.length : 0;
 function isShown(i){ const it = S.d.items[i];
   if (it.k === 'wall') return (S.st.solved[i] || []).length === 4;
   if (ACT[it.k].size === 'full') return (S.st.sub[i] || []).length === subCount(it);
@@ -567,15 +644,74 @@ function wallHTML(i, it){
     '<div class="st-wacts">' + (solved.length < 4 ? '<button type="button" class="bg-btn small" data-wall="shuffle">Shuffle</button><button type="button" class="bg-btn small" data-wall="next">Show a group</button>' :
       '<button type="button" class="bg-btn small" data-wall="reset">Start the wall again</button>') + '</div>';
 }
+// Word search: the square on the left (marks under the letters), the list on the right. Words found (or shown) get their
+// colour on the board and in the list; with the meanings listed, the word appears where "7 letters" was.
+function wsHTML(i, it, sub){
+  const n = it.size, words = it.show !== 'meanings';
+  return instr(words ? 'Find the words and write them in your book.' : 'Find the word for each meaning and write it in your book.') +
+    '<div class="st-ws"><div class="st-wsb" style="--n:' + n + '"><svg class="st-wsm" viewBox="0 0 ' + n * 10 + ' ' + n * 10 + '" aria-hidden="true">' + wsMarks(i, it, sub) + '</svg>' +
+      '<div class="st-wsg" role="img" aria-label="The square of letters">' + it.b.join('').split('').map(ch => '<span>' + ch + '</span>').join('') + '</div></div>' +
+    '<ol class="st-wsl' + (words ? '' : ' clues') + '">' + it.words.map((w, k) => '<li data-sub="' + k + '" class="' + (sub.includes(k) ? 'on' : '') + '" style="--wc:' + w.col + '"><span class="st-mk">' + (k + 1) + '</span>' +
+      '<span class="st-wst st-ck">' + (words ? '<b>' + esc(w.w) + '</b>' : '<span class="st-wsd">' + esc(w.def) + '</span><span class="st-wsa"><i>' + w.n + ' letters</i><b>' + esc(w.w) + '</b></span>') + '</span></li>').join('') + '</ol></div>';
+}
+function wsMarks(i, it, sub){
+  const c = k => [(k % it.size) * 10 + 5, Math.floor(k / it.size) * 10 + 5];
+  const ln = (a, z, cls, col) => { const [x1, y1] = c(a), [x2, y2] = c(z);
+    return a === z ? '<circle class="' + cls + '" cx="' + x1 + '" cy="' + y1 + '" r="3.9"/>' : '<line class="' + cls + '" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '"' + (col ? ' style="stroke:' + col + '"' : '') + '/>'; };
+  const d = S.wsDrag, p = S.wsPend, f = S.wsFlash;
+  return it.words.map((w, k) => sub.includes(k) ? ln(w.a, w.z, 'f', w.col) : '').join('') + (f && f.i === i ? ln(f.a, f.z, 'x') : '') +
+    (d && d.i === i ? ln(d.a, d.z, 's') : p && p.i === i ? ln(p.a, p.a, 's') : '');
+}
+function wsRedraw(i){ const svg = S && S.board.querySelector('.st-panel[data-i="' + i + '"] .st-wsm'); if (svg) svg.innerHTML = wsMarks(i, S.d.items[i], S.st.sub[i] || []); }
+// Drag from the first letter to the last (it snaps to the nearest of the 8 directions), or click one end, then the other
+function wsPointer(e){
+  if (!S) return;
+  const d = S.wsDrag;
+  if (e.type === 'pointerdown') {
+    const g = e.target.closest && e.target.closest('.st-wsg'); if (!g || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    const i = +g.closest('.st-panel').dataset.i, it = S.d.items[i], [x, y] = wsPos(e, g, it.size); if (x < 0 || y < 0 || x >= it.size || y >= it.size) return;
+    e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (err) {}
+    const a = Math.floor(y) * it.size + Math.floor(x);
+    S.wsDrag = {i, g, a, z: a, id: e.pointerId, moved: false}; wsRedraw(i); return;
+  }
+  if (!d || e.pointerId !== d.id) return;
+  const n = S.d.items[d.i].size;
+  if (e.type === 'pointermove') {
+    const [x, y] = wsPos(e, d.g, n), ar = Math.floor(d.a / n), ac = d.a % n, dx = x - .5 - ac, dy = y - .5 - ar;
+    let z = d.a;
+    if (Math.abs(dx) >= .5 || Math.abs(dy) >= .5) {
+      const k = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)), dc = Math.round(Math.cos(k * Math.PI / 4)), dr = Math.round(Math.sin(k * Math.PI / 4));
+      let len = Math.max(0, Math.round((dx * dc + dy * dr) / (dr && dc ? 2 : 1)));
+      while (len > 0 && !(ar + dr * len >= 0 && ar + dr * len < n && ac + dc * len >= 0 && ac + dc * len < n)) len--;
+      z = (ar + dr * len) * n + ac + dc * len;
+    }
+    if (z !== d.z) { d.z = z; if (z !== d.a) d.moved = true; wsRedraw(d.i); }
+    return;
+  }
+  S.wsDrag = null;
+  if (e.type === 'pointercancel') return wsRedraw(d.i);
+  if (d.moved && d.z !== d.a) { S.wsPend = null; return wsPick(d.i, d.a, d.z); }
+  const p = S.wsPend, line = (a, z) => { const dr = Math.floor(z / n) - Math.floor(a / n), dc = z % n - a % n; return a !== z && (!dr || !dc || Math.abs(dr) === Math.abs(dc)); };
+  if (p && p.i === d.i && line(p.a, d.a)) { S.wsPend = null; return wsPick(d.i, p.a, d.a); }
+  S.wsPend = p && p.i === d.i && p.a === d.a ? null : {i: d.i, a: d.a}; wsRedraw(d.i);
+}
+const wsPos = (e, g, n) => { const r = g.getBoundingClientRect(); return [(e.clientX - r.left) / r.width * n, (e.clientY - r.top) / r.height * n]; };
+function wsPick(i, a, z){
+  const it = S.d.items[i], k = it.words.findIndex(w => (w.a === a && w.z === z) || (w.a === z && w.z === a));
+  if (k < 0) { chime('wrong'); S.wsFlash = {i, a, z}; wsRedraw(i); setTimeout(() => { if (S && S.wsFlash && S.wsFlash.i === i) { S.wsFlash = null; wsRedraw(i); } }, 450); return; }
+  const sub = S.st.sub[i] = (S.st.sub[i] || []).slice();
+  if (sub.includes(k)) return wsRedraw(i);
+  sub.push(k); chime('right'); save(); drawPanel(i); tools();
+}
 function drawPanel(i, first){
   const p = S.board.querySelector('.st-panel[data-i="' + i + '"]'); if (!p) return;
   const it = S.d.items[i], a = ACT[it.k], on = isShown(i), sub = S.st.sub[i] || [];
   const many = S.L.cells.length > 1, label = it.k === 'wall' ? (on ? 'Start again' : 'Solve the wall') : on ? 'Hide the answer' + (a.size === 'full' ? 's' : '') : 'Show the answer' + (a.size === 'full' ? 's' : '');
   p.classList.toggle('shown', on);
-  p.innerHTML = '<div class="st-ph">' + (many ? '<span class="st-n">' + p.dataset.n + '</span>' : '') + '<span class="st-k">' + esc(a.name) + '</span>' +
+  p.innerHTML = '<div class="st-ph">' + (many ? '<span class="st-n">' + p.dataset.n + '</span>' : '') + '<span class="st-k">' + esc(a.name) + (it.k === 'wordsearch' ? ' · ' + esc(WS_SAY[it.lv]) : '') + '</span>' +
     '<button type="button" class="st-eye" title="' + label + (many ? ' (' + p.dataset.n + ')' : '') + '">' + label + '</button></div>' +
-    '<div class="st-body"><div class="st-in' + (it.k === 'wall' ? ' fill' : '') + (on ? ' on' : '') + '">' +
-      (a.size === 'small' ? smallHTML(it, on) : it.k === 'errors' ? errorsHTML(it) : it.k === 'match' ? matchHTML(it, sub) : it.k === 'gapfill' ? gapfillHTML(it, sub) : wallHTML(i, it)) +
+    '<div class="st-body"><div class="st-in' + (it.k === 'wall' || it.k === 'wordsearch' ? ' fill' : '') + (on ? ' on' : '') + '">' +
+      (a.size === 'small' ? smallHTML(it, on) : it.k === 'errors' ? errorsHTML(it) : it.k === 'match' ? matchHTML(it, sub) : it.k === 'gapfill' ? gapfillHTML(it, sub) : it.k === 'wordsearch' ? wsHTML(i, it, sub) : wallHTML(i, it)) +
     '</div></div>';
   if (!first) fitPanel(p);
 }
