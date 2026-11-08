@@ -42,6 +42,13 @@
 .st td.wait{color:var(--ink-2);font-size:13px;text-align:left}
 .st .area-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:44px 0 -18px;padding-top:10px;border-top:2px solid var(--rule)}
 .st .retry{margin-left:6px;font-size:13px;padding:2px 10px}
+/* Each game's file and a link to play it (8 Nov 2026) */
+.st .nt{color:var(--ink-2);font-size:12.5px}
+.st .fx{display:block;font-size:12.5px;margin-top:2px;color:var(--ink-2)}
+.st .fx a{color:var(--ink-2);white-space:nowrap}
+.st .fx a:first-child{font-family:var(--f-mono);font-size:12px;color:var(--ink);font-weight:600}
+.st .guide{margin-top:-2px}
+.st .guide a{color:var(--ink);font-weight:700}
 @media (max-width:640px){.st td.n,.st th.n{width:auto;padding:6px 4px}.st .k{display:none}}
 </style>
 </head>
@@ -50,6 +57,7 @@
   <p class="mono">Academic English App · not linked from the site</p>
   <h1>Site content</h1>
   <p class="sub">Every subject, every game it could have, and how many questions each game has at each level. Choose an area: only its files are read, so it loads quickly. Counted from the content files each time: refresh to see the latest.</p>
+  <p class="sub guide">Which file makes which game, and how each one is played: <a href="games.html">Games and files</a>.</p>
   <div class="areas" id="areas" role="group" aria-label="Area"></div>
   <div class="when"><span id="when">Reading the topic list…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
   <div id="out"><p class="notice loading">Reading the content files…</p></div>
@@ -110,34 +118,37 @@ function perLevel(rows, wordLevel){ const c=[0,0,0,0,0,0];
 // ---- the games, as the site has them (keep in step with GAMES, ARCADE and ZH_GAMES in en/engine/app.js) ----
 // min: how many items a level needs before the game plays there
 const SECTIONS = [
+  // name: as students see it. file: the file its questions come from (games.html#f-<file> says how it's played and where
+  // else it is). play: the topic page's link to it (#play-<key>); zh: on the Chinese page.
   ['Vocabulary', [
-    {key:'match', name:'Match the meaning (with synonym groups)', src:'words', min:6, circuit:'short'},
-    {key:'meaning', name:'Word or meaning', src:'words', min:4, circuit:'short'},
-    {key:'tf', name:'True or false (tf.csv + made from the words)', src:'tf', min:1, circuit:'short'}]],
+    {key:'match', name:'Match the meaning', note:'with synonym groups', file:'words', src:'words', min:6, circuit:'short'},
+    {key:'meaning', name:'Word or meaning', file:'words', src:'words', min:4, circuit:'short'},
+    {key:'tf', name:'True or false', note:'plus statements made from words.csv', file:'tf', src:'tf', min:1, circuit:'short'}]],
   ['Grammar', [
-    {key:'gap', name:'Fill the gap', src:'gaps', min:1, circuit:'short'},
-    {key:'rw', name:'SPAG: Right or Wrong', src:'right-wrong', min:1, circuit:'short'},
-    {key:'error', name:'Spot the error', src:'errors', min:1, circuit:'long'}]],
+    {key:'gap', name:'Fill the gap', file:'gaps', src:'gaps', min:1, circuit:'short'},
+    {key:'rw', name:'SPAG: Right or Wrong', file:'right-wrong', src:'right-wrong', min:1, circuit:'short'},
+    {key:'error', name:'Spot the error', file:'errors', src:'errors', min:1, circuit:'long'}]],
   ['Reading (computers only, except Build the sentence and Find the evidence)', [
-    {key:'build', name:'Build the sentence', src:'builds', min:1, circuit:'short'},
-    {key:'evidence', name:'Find the evidence', src:'evidence', min:1, circuit:'long'},
-    {key:'read', name:'Complete the text', src:'reads', min:1, circuit:'long'},
-    {key:'own', name:'In your own words', src:'extracts', min:1, circuit:'long'},
-    {key:'question', name:'Answer the question', src:'questions', min:1, circuit:'long'}]],
+    {key:'build', name:'Build the sentence', file:'builds', src:'builds', min:1, circuit:'short'},
+    {key:'evidence', name:'Find the evidence', file:'evidence', src:'evidence', min:1, circuit:'long'},
+    {key:'read', name:'Complete the text', file:'reads', src:'reads', min:1, circuit:'long'},
+    {key:'own', name:'In your own words', file:'extracts', src:'extracts', min:1, circuit:'long'},
+    {key:'question', name:'Answer the question', file:'questions', src:'questions', min:1, circuit:'long'}]],
   ['Games (across the bottom of the page)', [
-    {key:'gk', name:'General knowledge (no levels needed: a question with no level plays at every level)', src:'knowledge', min:1, circuit:''},
-    {key:'mouse', name:'Save the mouse', src:'words', min:4},
-    {key:'wordsearch', name:'Word search (words of 4+ letters)', src:'words', min:5},
-    {key:'whack', name:'Whack-a-word', src:'words', min:6, circuit:'arcade', link:'whack'},
-    {key:'invaders', name:'Word Invaders', src:'words', min:6, circuit:'arcade', link:'invaders'},
-    {key:'snake', name:'Word Snake', src:'words', min:6, circuit:'', link:'snake'}]],
+    {key:'gk', name:'General knowledge', note:'no levels needed: a question with no level plays at every level', file:'knowledge', src:'knowledge', min:1, circuit:''},
+    {key:'mouse', name:'Save the mouse', file:'words', src:'words', min:4},
+    {key:'wordsearch', name:'Word search', note:'words of 4+ letters', file:'words', src:'words', min:5},
+    {key:'whack', name:'Whack-a-word', file:'words', src:'words', min:6, circuit:'arcade', link:'whack'},
+    {key:'invaders', name:'Word Invaders', file:'words', src:'words', min:6, circuit:'arcade', link:'invaders'},
+    {key:'snake', name:'Word Snake', file:'words', src:'words', min:6, circuit:'', link:'snake'}]],
   ['Chinese side', [
-    {key:'zhwords', name:'Word games (8)', src:'zhwords', min:4, circuit:'', zh:true},
-    {key:'zhbuild', name:'Build the sentence', src:'zhbuilds', min:1, circuit:'', zh:true},
-    {key:'zhevidence', name:'All-in English', src:'zhevidence', min:1, circuit:'', zh:true}]],
+    {key:'zhwords', name:'Word games (8)', note:'need the zh column', file:'words', play:'', src:'zhwords', min:4, circuit:'', zh:true},
+    {key:'zhbuild', name:'Build the sentence', note:'rows with the zh column', file:'builds', src:'zhbuilds', min:1, circuit:'', zh:true},
+    {key:'zhevidence', name:'All-in English', file:'evidence', src:'zhevidence', min:1, circuit:'', zh:true}]],
 ];
+const CIRCUIT = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade'};
 const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
-  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements'};
+  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', knowledge:'questions'};
 
 // One subject: its page (for its content folder and settings), its Chinese page if the Chinese topic list has one at the
 // same address, and its files. A planned topic (no page yet) has only a folder. new-words.csv: words still being written.
@@ -164,7 +175,7 @@ async function loadSubject(t, zhHrefs){
       ['builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'].forEach(k=>{ T[k]=[]; }); }
   }
   return {name:d.name||t.name||t.href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T,
-    hasZh, planned:!t.href, toWrite:(T['new-words']||[]).filter(r=>r.word).length};
+    hasZh, zhPage: hasZh ? zhUrl : null, planned:!t.href, toWrite:(T['new-words']||[]).filter(r=>r.word).length};
 }
 
 // Counts for one subject: per source, the items per level and a line saying what they are
@@ -233,8 +244,11 @@ function subjectTable(s, k){
     if(r.sect) return `<tr class="sect"><td colspan="9">${esc(r.sect)}</td></tr>`;
     const what=r.c.total ? `${fmt(r.c.total)} ${NOUN[r.g.src]}${r.c.extra?` · ${esc(r.c.extra)}`:''}` : '';
     const noLevel=r.c.lv[5] ? ` · ${r.c.lv[5]} with no level` : '';
-    const circ=r.g.circuit ? `circuit: ${r.g.circuit}` : r.g.link==='snake' ? 'not in circuit' : '';
-    return `<tr class="${r.cls==='off'?'off':''}"><td><b>${esc(r.g.name)}</b><br><span class="k">${circ}</span></td>${cells(r)}
+    const circ=r.g.circuit ? CIRCUIT[r.g.circuit] : r.g.link==='snake' ? 'not in circuit' : '';
+    const page=r.g.zh ? s.zhPage : s.page, play=r.g.play!=null ? r.g.play : r.g.key;
+    const go=page && r.cls!=='off' && r.cls!=='none' && !s.planned ? ` · <a href="${esc(page+(play?'#play-'+play:''))}" target="_blank" rel="noopener" title="Open it on the ${r.g.zh?'Chinese':'English'} page">play ↗</a>` : '';
+    return `<tr class="${r.cls==='off'?'off':''}"><td><b>${esc(r.g.name)}</b>${r.g.note?` <span class="nt">(${esc(r.g.note)})</span>`:''}
+      <span class="fx"><a href="games.html#f-${esc(r.g.file)}" title="What's in ${esc(r.g.file)}.csv, and every game it makes">${esc(r.g.file)}.csv</a>${go}${circ?`<span class="k"> · ${circ}</span>`:''}</span></td>${cells(r)}
       <td class="tot">${what}${noLevel}</td><td class="s s-${r.cls}">${esc(r.status)}</td></tr>`; }).join('');
   return `<div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>${body}</tbody></table></div>`;
 }
