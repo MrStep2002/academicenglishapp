@@ -527,7 +527,7 @@ function reportButton(card, row, miss){
 // Match the meaning is no longer in quick-fire: it has a one-minute round of its own (kind 'match', see circuitGames).
 // Only the Daily Circuit: class games and normal play are unchanged.
 const QF_EACH = 3, QF_RIGHT_MS = 1000;
-const QF_GAMES = {en:['meaning','tf','gap','rw'], zh:['zh','zhmean','zhtf','zhtype','zhodd']};
+const QF_GAMES = {en:['meaning','tf','gap','rw'], zh:['zh','zhmean','zhtf','zhtype','zhodd','zhtranslate']};   // Translation added 8 Nov 2026 (teacher)
 let qf = null;   // {pool, game, n (answers in this game), recent}
 const qfDue = () => !!qf && qf.n>=QF_EACH;
 function qfPlay(g){
