@@ -29,7 +29,7 @@ phys:equilibrium,B1,equilibrium,noun,The state of an object when there is no res
 phys:centre-of-gravity,B1,centre of gravity,noun,The point through which the whole weight of an object seems to act.,A bus with a low centre of gravity is hard to tip over.,,重心,Motion and forces 运动和力,,,,,1.5,
 phys:stable,A2,stable,adjective,Not easily knocked over.,A wide base makes a lamp more stable.,,稳定的,Motion and forces 运动和力,,,,,1.5,
 phys:momentum,B2,momentum,noun,The mass of an object multiplied by its velocity.,A heavy lorry has a lot of momentum even at a low speed.,,动量,Motion and forces 运动和力,,,,,1.6,yes
-phys:impulse,C1,impulse,noun,The force on an object multiplied by the time for which the force acts.,A crumple zone reduces the force by making the impulse last longer.,,冲量,Motion and forces 运动和力,,,,,1.6,yes
+phys:impulse,C1,impulse,noun,The force on an object multiplied by the time for which the force acts.,A crumple zone reduces the force by making the collision last longer.,,冲量,Motion and forces 运动和力,,,,,1.6,yes
 phys:collision,B1,collision,noun,An event in which two moving objects hit each other.,Total momentum is the same before and after the collision.,,碰撞,Motion and forces 运动和力,,,,,1.6,yes
 phys:energy,A1,energy,noun,"Something that is stored and transferred when things happen, measured in joules.",A battery stores energy in a chemical store.,,能量,Energy 能量,,,,,1.7,
 phys:kinetic-energy,A2,kinetic energy,noun,The energy an object has because it is moving.,The kinetic energy of the car increases as it speeds up.,,动能,Energy 能量,,,,,1.7,
