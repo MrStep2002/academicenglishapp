@@ -32,6 +32,9 @@
   .who { font-family: var(--display); font-weight: 800; font-size: 1.6rem; line-height: 1.1; margin: 0; }
   .zh { font-family: var(--zh); }
   .stat { display: inline-block; background: var(--hi); color: #151935; font-weight: 700; padding: 1px 8px; border-radius: 6px; }
+  /* Teachers log in on the Staff Room page, not here (9 Nov 2026: a teacher's login here says the name and password don't match) */
+  .teach { padding-top: 12px; border-top: 1px solid var(--line); }
+  .teach a { color: var(--sh-link, var(--web)); font-weight: 700; }
 </style>
 <link rel="stylesheet" href="../css/site.css?v=2026-11-09a">
 </head>
@@ -76,7 +79,8 @@
         '<button class="btn" type="submit" id="go">Log in <span class="zh" lang="zh">登录</span></button>' +
       '</form>' +
       '<p class="note">Your teacher gives you your name and password. <span class="zh" lang="zh">老师会给你名字和密码。</span></p>' +
-      '<p class="note">You can also play without logging in: your progress then stays on this device only. <span class="zh" lang="zh">不登录也可以玩，但进度只保存在这台设备上。</span></p>';
+      '<p class="note">You can also play without logging in: your progress then stays on this device only. <span class="zh" lang="zh">不登录也可以玩，但进度只保存在这台设备上。</span></p>' +
+      '<p class="note teach">Teacher? <a href="../teacher/index.html">Log in to the Staff Room</a> <span class="zh" lang="zh">老师请在教师办公室登录。</span></p>';
     var f = document.getElementById('f'), err = document.getElementById('err'), go = document.getElementById('go');
     var nameBox = document.getElementById('name'), pwBox = document.getElementById('pw');
     document.getElementById('showpw').onchange = function(e){ pwBox.type = e.target.checked ? 'text' : 'password'; };
