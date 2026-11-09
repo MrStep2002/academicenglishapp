@@ -159,10 +159,10 @@ Required columns are in **bold**.
 | **id**, **level** | As above. |
 | **word** | The word or phrase. `/` gives alternatives Type it accepts: `colour / color`. |
 | pos | Part of speech: noun, verb, adjective… (Word or meaning prefers wrong answers with the same pos). |
-| **meaning** | A short, clear meaning in English. |
+| **meaning** | A short, clear meaning in English. Don't use the word itself (or a form of it) in its meaning: "a person who advertises" for advertiser gives the answer away, and the crossword leaves such words out (`tools/check_content.py` lists them). |
 | example | An example sentence. |
 | synonyms | Words with a similar meaning, separated by `;`. In Match the meaning, a word with synonyms sometimes shows its synonym group instead of its meaning. |
-| zh | The Chinese meaning. Needed for the Chinese version (words without it are left out there). |
+| zh | The Chinese meaning. Needed for the Chinese version (words without it are left out there). Keep the English word out of it ("标志", not "标志（logo）"): the crossword's Chinese clues would give it away. |
 | group | A word group, e.g. `Command words 指令词`. Odd one out uses it (three from one group, one from another). |
 | similar | Words in this file so close in meaning that they must never be wrong answers for this word, separated by `;`. |
 | accept | Words Type it also accepts for this meaning, separated by `;`. |

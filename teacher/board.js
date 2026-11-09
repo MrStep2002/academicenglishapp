@@ -58,9 +58,11 @@ const GAME_TYPES = {
   squares: {name: 'Squaring Up', blurb: 'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
   taboo: {name: "Don't Say It!", blurb: 'One player guesses while their team describes the word without saying any of the red words. Each team plays once a round: 60, then 30, then 15 seconds.'},
   hints: {name: 'Hints', blurb: 'Teams guess the word from its hints, shown one at a time: 4 points on the first hint, then 3, 2 and 1. A minute a turn. A word the team can\'t get goes to the wheel, which picks another team to answer.'},
-  cats: {name: 'Categories', blurb: 'A board of categories, like Jeopardy: questions worth 100 to 500 that get harder down each column, Daily Doubles to bet on, and a final question every team bets on.'}
+  cats: {name: 'Categories', blurb: 'A board of categories, like Jeopardy: questions worth 100 to 500 that get harder down each column, Daily Doubles to bet on, and a final question every team bets on.'},
+  // Crossword (9 Nov 2026): see "Crossword" below
+  xw: {name: 'Crossword', blurb: 'A crossword of the topic\'s words. Teams take turns to choose a clue and answer it: a word is worth a point for each of its squares still empty, so a brave early guess scores most.'}
 };
-const gameType = s => { const k = s && (s.game || s.kind); return k === 'taboo' || k === 'hints' || k === 'cats' ? k : 'squares'; };
+const gameType = s => { const k = s && (s.game || s.kind); return k === 'taboo' || k === 'hints' || k === 'cats' || k === 'xw' ? k : 'squares'; };
 const wordGame = k => k === 'taboo' || k === 'hints';   // the two games played from taboo.csv, a turn at a time
 const POINTS_BY_LEVEL = {1:10, 2:15, 3:20, 4:25, 5:30};
 const MIXED = [5, 10, 15, 20, 25];
@@ -322,7 +324,8 @@ const AEA_BOARD = window.AEA_BOARD = {
     if (hash === '#/board/new/cats') return form(null, 'cats');
     if (hash === '#/board/new/taboo') return tabooForm(null, 'taboo');
     if (hash === '#/board/new/hints') return tabooForm(null, 'hints');
-    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) { const k = gameType(setOf(m[1])); return wordGame(k) ? tabooForm(m[1], k) : form(m[1], k); }
+    if (hash === '#/board/new/xw') return xwForm(null);
+    if ((m = /^#\/board\/([\w-]+)$/.exec(hash))) { const k = gameType(setOf(m[1])); return wordGame(k) ? tabooForm(m[1], k) : k === 'xw' ? xwForm(m[1]) : form(m[1], k); }
     return list();
   },
   stop
@@ -343,11 +346,15 @@ function list(){
     (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g && g.tiles ? g.tiles.filter(t => !t.done).length : 0, all = g && g.tiles ? g.tiles.filter(t => !t.empty).length : 0;
       return '<div class="card bg-item" data-id="' + esc(s.id) + '">' +
         '<span class="bg-kind">' + esc(GAME_TYPES[gameType(s)].name) + '</span><h3>' + esc(s.title || 'Board game') + '</h3>' +
-        (g ? '<span class="bg-going">' + (wordGame(g.kind) ? 'Game in progress: round ' + Math.min(g.round + 1, g.times.length) + ' of ' + g.times.length
+        (g ? '<span class="bg-going">' + (g.kind === 'xw' ? 'Game in progress: ' + (g.lay ? xwLeft(g) + ' of ' + g.lay.words.length + ' words left' : '')
+          : wordGame(g.kind) ? 'Game in progress: round ' + Math.min(g.round + 1, g.times.length) + ' of ' + g.times.length
           : g.kind === 'cats' ? 'Game in progress: ' + left + ' of ' + all + ' questions left' + (!left && g.final && g.final.stage !== 'done' ? ', then the final question' : '')
           : 'Game in progress: ' + left + ' of ' + g.tiles.length + ' squares left') + '</span>' : '') +
         '<p class="note">' + esc(s.topics.map(topicName).join(', ') || 'No topics') + '</p>' +
-        (gameType(s) === 'hints'
+        (gameType(s) === 'xw'
+          ? '<p class="note">' + esc(levelsText(s.levels)) + ' · ' + (s.n || 12) + ' words · clues: ' + esc(((X_CLUES.find(c => c[0] === s.clues) || X_CLUES[0])[1]).replace(/^The /, '').replace(/, with the Chinese under them$/, ' and Chinese')) + '</p>' +
+            '<p class="note">' + (s.teams || []).length + ' teams · ' + (s.secs ? s.secs + ' seconds to answer' : 'no timer') + '</p>'
+          : gameType(s) === 'hints'
           ? '<p class="note">' + esc(levelsText(s.levels)) + '</p>' +
             '<p class="note">' + (s.teams || []).length + ' teams · ' + (s.times || []).length + ' turn' + ((s.times || []).length === 1 ? '' : 's') + ' each of ' + ((s.times || [])[0] || 60) + ' seconds</p>'
           : gameType(s) === 'cats'
@@ -557,6 +564,14 @@ function play(id){
   if (g) return mount(g);
   C.setTitle(set.title || 'Board game'); C.header();
   C.view.innerHTML = '<p class="note">Getting the questions ready…</p>';
+  if (gameType(set) === 'xw') {
+    dataFor(set.topics).then(data => {
+      const game = newXwGame(set, data);
+      if (!game.lay) { C.view.innerHTML = '<p class="err">Not enough words for a crossword with these choices. <a href="#/board/' + esc(id) + '">Change it</a></p>'; return; }
+      saveGame(game); if (location.hash === '#/board/play/' + id) mount(game, data);
+    }).catch(x => { C.view.innerHTML = '<p><a class="backlink" href="#/board">← Saved board games</a></p><p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
+    return;
+  }
   if (wordGame(gameType(set))) {
     tabooData(set.topics).then(data => {
       const game = newTabooGame(set, data);
@@ -595,7 +610,8 @@ function mount(game, data){
     '<div class="bg-scores" role="group" aria-label="Scores. Click a team to change its score."></div>' +
     '<p class="bg-prompt" aria-live="polite"></p>' +
     '<div class="bg-stage"><div class="bg-grid"></div></div>' +
-    (game.kind === 'hints' ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>Y</kbd> got it · <kbd>N</kbd> next hint · <kbd>W</kbd> the wheel · <kbd>A</kbd> show the word · On the wheel: <kbd>Space</kbd> spin, <kbd>Y</kbd> right, <kbd>N</kbd> wrong</p>'
+    (game.kind === 'xw' ? '<p class="bg-keys">Click a clue or a square, or type a clue\'s number and then <kbd>A</kbd> (across) or <kbd>D</kbd> (down). In a clue: <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>L</kbd> reveal a letter · <kbd>S</kbd> show the answer · <kbd>Space</kbd> pause the timer · <kbd>Esc</kbd> close</p>'
+      : game.kind === 'hints' ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>Y</kbd> got it · <kbd>N</kbd> next hint · <kbd>W</kbd> the wheel · <kbd>A</kbd> show the word · On the wheel: <kbd>Space</kbd> spin, <kbd>Y</kbd> right, <kbd>N</kbd> wrong</p>'
       : game.kind === 'cats' ? '<p class="bg-keys">Click a square, or move with the arrow keys and press <kbd>Enter</kbd>. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>'
       : taboo ? '<p class="bg-keys"><kbd>Space</kbd> start, pause, next team · <kbd>G</kbd> got it · <kbd>S</kbd> skip · <kbd>X</kbd> said a red word · <kbd>H</kbd> hint</p>'
       : '<p class="bg-keys">Click a square, or type its number. In a question: <kbd>Space</kbd> pause the timer · <kbd>A</kbd>–<kbd>D</kbd> the team\'s answer · <kbd>S</kbd> show the answer · <kbd>Y</kbd> right · <kbd>N</kbd> wrong · <kbd>Esc</kbd> close</p>');
@@ -606,11 +622,12 @@ function mount(game, data){
     if (d.fullscreenElement) d.exitFullscreen().catch(() => {}); else if (d.documentElement.requestFullscreen) d.documentElement.requestFullscreen().catch(() => {}); };
   el.querySelector('[data-t=end]').onclick = () => { if (taboo) { hFlashEnd(); tPause(true); endScreen(); } else if (P.fin) { P.card.remove(); P.card = null; P.fin = false; endScreen(); } else if (!P.card) endScreen(); };
   el.querySelector('[data-t=exit]').onclick = () => { location.hash = '#/board'; };
-  P.onResize = () => { sizeUp(); if (taboo) fitWord(); else { layoutGrid(); if (P.card) fitCard(); } };
+  P.onResize = () => { sizeUp(); if (taboo) fitWord(); else if (game.kind === 'xw') xwLayout(); else { layoutGrid(); if (P.card) fitCard(); } };
   P.onKey = onKey; P.onFs = () => tools();
   addEventListener('resize', P.onResize); addEventListener('keydown', P.onKey, true); document.addEventListener('fullscreenchange', P.onFs);
   tools(); sizeUp(); drawScores();
   if (taboo) { P.paused = game.stage === 'play'; drawTaboo(); if (game.stage === 'over') endScreen(); return; }   // carried on mid-turn: the clock waits for Space
+  if (game.kind === 'xw') { P.stage.classList.add('xb-stage'); xwDraw(); if (!xwLeft(game)) endScreen(); return; }
   drawGrid(); drawPrompt();
   if (!P.data) dataFor(game.cfg.topics).then(d => { if (P && P.game === game) P.data = d; }).catch(() => {});   // for New question
   if (game.tiles.every(t => t.done)) allDone();
@@ -637,6 +654,7 @@ function drawScores(bump){
 }
 function drawPrompt(){
   if (wordGame(P.game.kind)) return tPrompt();
+  if (P.game.kind === 'xw') return xwPrompt();
   const g = P.game, left = g.tiles.filter(t => !t.done).length, t = g.teams[g.turn], cats = g.kind === 'cats';
   P.prompt.innerHTML = left ? '<b style="color:' + t.c + '">' + esc(t.name) + '</b>, choose a ' + (cats ? 'category and a value' : 'square')
     : cats && g.final && g.final.stage !== 'done' ? 'The final question' : cats ? 'Every question has been played!' : 'Every square is open!';
@@ -1116,16 +1134,16 @@ function endScreen(){
   let place = 0;
   const rows = ranked.map((t, k) => { if (k === 0 || t.s !== ranked[k - 1].s) place = k + 1;
     return '<li class="' + (t.s === top ? 'win' : '') + '" style="--tc:' + t.c + ';animation-delay:' + (k * .12) + 's"><span class="p">' + (t.s === top ? '🏆' : place) + '</span><span class="n">' + esc(t.name) + '</span><span class="s">' + t.s + '</span></li>'; }).join('');
-  const taboo = wordGame(g.kind), cats = g.kind === 'cats', finalLeft = cats && g.final && g.final.stage !== 'done' ? 1 : 0;
-  const left = taboo ? (g.stage === 'over' ? 0 : 1) : g.tiles.filter(t => !t.done).length + finalLeft;
+  const taboo = wordGame(g.kind), cats = g.kind === 'cats', xw = g.kind === 'xw', finalLeft = cats && g.final && g.final.stage !== 'done' ? 1 : 0;
+  const left = taboo ? (g.stage === 'over' ? 0 : 1) : xw ? xwLeft(g) : g.tiles.filter(t => !t.done).length + finalLeft;
   const end = document.createElement('div');
   end.className = 'bg-end';
   end.innerHTML = '<div class="bg-confetti" aria-hidden="true"></div>' +
     '<h2>' + (winners.length === g.teams.length ? 'It\'s a draw!' : winners.length > 1 ? 'A tie for first place!' : esc(winners[0].name) + ' win!') + '</h2>' +
-    '<p class="sub">' + (taboo ? (left ? 'The game was ended early' : 'Final scores') : cats ? (left ? 'Ended early: ' + left + ' question' + (left === 1 ? '' : 's') + ' not played' + (finalLeft ? ' (with the final question)' : '') : 'Final scores') : left ? left + ' square' + (left === 1 ? '' : 's') + ' not opened' : 'Final scores') + '</p>' +
+    '<p class="sub">' + (xw ? (left ? 'Ended early: ' + left + ' word' + (left === 1 ? '' : 's') + ' not answered' : 'Final scores') : taboo ? (left ? 'The game was ended early' : 'Final scores') : cats ? (left ? 'Ended early: ' + left + ' question' + (left === 1 ? '' : 's') + ' not played' + (finalLeft ? ' (with the final question)' : '') : 'Final scores') : left ? left + ' square' + (left === 1 ? '' : 's') + ' not opened' : 'Final scores') + '</p>' +
     '<div class="bg-rank"><ol>' + rows + '</ol></div>' +
-    '<div class="acts">' + (taboo && !left ? '' : '<button type="button" class="bg-btn" data-e="back">Back to the ' + (taboo ? 'game' : 'board') + '</button>') +
-      '<button type="button" class="bg-btn" data-e="again">Play again (new ' + (taboo ? 'words' : 'questions') + ')</button><button type="button" class="bg-btn solid" data-e="done">Finish</button></div>';
+    '<div class="acts">' + ((taboo || xw) && !left ? '' : '<button type="button" class="bg-btn" data-e="back">Back to the ' + (taboo ? 'game' : xw ? 'crossword' : 'board') + '</button>') +
+      '<button type="button" class="bg-btn" data-e="again">Play again (new ' + (taboo ? 'words' : xw ? 'crossword' : 'questions') + ')</button><button type="button" class="bg-btn solid" data-e="done">Finish</button></div>';
   P.stage.appendChild(end); P.endEl = end;
   if (!reduced()) { const box = end.querySelector('.bg-confetti'), cols = winners.map(w => w.c).concat(['#ffe14d', '#ffffff']);
     for (let k = 0; k < 90; k++) { const c = document.createElement('i'); c.style.left = Math.random() * 100 + '%'; c.style.background = pick(cols);
@@ -1134,8 +1152,10 @@ function endScreen(){
   const back = end.querySelector('[data-e=back]'); if (back) back.onclick = () => { end.remove(); P.endEl = null; if (taboo) drawTaboo(); else if (finalLeft && g.tiles.every(t => t.done)) finalCard(); };
   end.querySelector('[data-e=again]').onclick = () => {
     const set = setOf(g.set); if (!set) return;
-    end.querySelector('.acts').innerHTML = '<p class="sub">Getting new ' + (taboo ? 'words' : 'questions') + '…</p>';
-    (taboo ? tabooData(set.topics) : dataFor(set.topics)).then(data => { const n = taboo ? newTabooGame(set, data) : newGame(set, data); n.teams = g.teams.map(t => Object.assign({}, t, {s: 0})); saveGame(n); mount(n, data); })
+    end.querySelector('.acts').innerHTML = '<p class="sub">Getting new ' + (taboo ? 'words' : xw ? 'crossword' : 'questions') + '…</p>';
+    (taboo ? tabooData(set.topics) : dataFor(set.topics)).then(data => { const n = taboo ? newTabooGame(set, data) : xw ? newXwGame(set, data) : newGame(set, data);
+      if (xw && !n.lay) throw new Error('Not enough words for a new crossword.');
+      n.teams = g.teams.map(t => Object.assign({}, t, {s: 0})); saveGame(n); mount(n, data); })
       .catch(x => { end.querySelector('.acts').innerHTML = '<p class="err">' + esc(x.message) + '</p>'; });
   };
   end.querySelector('[data-e=done]').onclick = () => { dropGame(g.set); location.hash = '#/board'; };
@@ -1153,6 +1173,7 @@ function onKey(e){
   if (P.fin) { const lk = k.toLowerCase(), b = P.card && P.card.querySelector(lk === 's' ? '[data-a=show]' : lk === 'o' ? '[data-a=opts]' : 'x-none');
     if (b) { e.preventDefault(); b.click(); } return; }
   if (P.game.kind === 'hints') return hKey(e);
+  if (P.game.kind === 'xw') return xwKey(e);
   if (P.game.kind === 'taboo') return tKey(e);
   if (card && P.open) {
     const isQ = !card.classList.contains('surprise');
@@ -1821,6 +1842,281 @@ function hKey(e){
   else if (lk === 'n' || lk === 'h' || lk === 'x') { e.preventDefault(); hHint(); }
   else if (lk === 'w') { e.preventDefault(); hWheel(); }
   else if (lk === 'a') { e.preventDefault(); hShow(); }
+}
+
+// ---------- Crossword (9 Nov 2026, teacher: "Could we do a crosswords game? Can that be added to the board games…") ----------
+// A crossword for the whole class, made by the site's crossword maker (en/engine/crossword.js) from the topics' words.csv.
+// Teams take turns. The team whose turn it is chooses a clue (click it in the list, or click a square of its word; or type its
+// number, then A or D), and it opens beside the grid with its squares lit up. ✓ Right fills the word in, in the team's colour;
+// ✗ Wrong passes it to the next team that hasn't tried (each team once); when every team has tried, the answer is filled in
+// grey. A word is worth a point for each of its squares still empty when it's answered, so a brave early guess scores most,
+// and later words, with letters showing from the words that cross them, score less. Reveal a letter fills one square for a
+// stuck team (the word is then worth a point less); Show the answer fills it in with no points. Then it's the next team's turn.
+// Clues: the meanings, the Chinese, or both. Words: 8 to 15, from every topic and level chosen. A word whose meaning (or
+// Chinese) contains the word itself is left out: it would give itself away.
+// Saved as it goes (aeaBoard:games): the grid, the letters showing, who answered what, the clue that is open.
+const X_DEFAULTS = {game: 'xw', title: '', topics: [], levels: [1, 2, 3, 4, 5], clues: 'def', n: 12, secs: 0, teams: null};
+const XWM = () => window.AEA_XW || null;
+const X_TOPICS = TOPICS.filter(t => !t.only);
+const X_CLUES = [['def', 'The meanings'], ['zh', 'The Chinese'], ['both', 'The meanings, with the Chinese under them']];
+// The words a crossword can use from a topic: on the topic's list, at the chosen levels, not taken out through Reports, letters
+// only (spaces, hyphens and apostrophes between words), 3 to 15 letters, and a clue that doesn't give the word away
+function xwWords(D, levels, clues){
+  const X = XWM(); if (!X || !D) return [];
+  return D.words.filter(w => { if (!w.on || (w.lv != null && !levels.includes(band(w.lv))) || isHidden(D.key, 'word', w.id)) return false;
+    const t = X.show(w.w).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), n = X.letters(w.w).length;
+    if (!/^[a-z][a-z '’\-]*$/.test(t) || t.split(/[\s-]+/).filter(Boolean).length > 4 || n < 3 || n > 14) return false;
+    return (clues === 'zh' || !X.gives(w.w, w.def)) && (clues === 'def' || (w.zh && !X.gives(w.w, w.zh))); });
+}
+const xwCount = (topics, levels, data, clues, level) => topics.reduce((n, tk) => n + xwWords(data[tk], level ? [level] : levels, clues).filter(w => !level || w.lv != null).length, 0);
+function newXwGame(set, data){
+  const cfg = JSON.parse(JSON.stringify(set)), X = XWM(), pool = [], seen = new Set();
+  shuffle(cfg.topics.flatMap(tk => xwWords(data[tk], cfg.levels, cfg.clues).map(w => ({D: data[tk], w})))).forEach(({D, w}) => {
+    const L = X.letters(w.w);
+    if (seen.has(L) || pool.some(p => p.def === w.def || (w.zh && p.zh === w.zh) || (p.t === D.key && D.alike.has(p.id + '|' + w.id)))) return;
+    seen.add(L); pool.push({L, t: D.key, id: w.id, w: X.show(w.w), def: w.def, zh: w.zh, en: X.enumeration(w.w), lv: w.lv}); });
+  // the grid: as small as the words allow (8 words: up to 13 × 11; 12: 15 × 13; 15: 17 × 15)
+  const n = +cfg.n || 12, gw = n <= 10 ? 13 : n <= 12 ? 15 : 17, lay = pool.length >= 3 ? X.make(pool.slice(0, n + 30), {n, maxW: gw, maxH: gw - 2, ms: 200}) : null;
+  const names = (cfg.teams && cfg.teams.length >= 2) ? cfg.teams : funNames(4);
+  return {v: 1, kind: 'xw', set: set.id, title: cfg.title || GAME_TYPES.xw.name, cfg, started: Date.now(),
+    teams: names.map((nm, i) => ({name: nm, c: COLOURS[i % COLOURS.length], s: 0})), turn: 0,
+    lay: lay ? {w: lay.w, h: lay.h, cells: lay.cells, nums: lay.nums,
+      words: lay.words.map(x => ({L: x.L, d: x.d, num: x.num, cells: x.cells, t: x.t, id: x.id, w: x.w, def: x.def, zh: x.zh, en: x.en, lv: x.lv}))} : null,
+    rev: [], done: {}, open: null};
+}
+
+// ---------- making or changing a Crossword game ----------
+function xwForm(id){
+  const old = id ? setOf(id) : null;
+  if (id && !old) { location.hash = '#/board'; return; }
+  const cfg = Object.assign(JSON.parse(JSON.stringify(X_DEFAULTS)), old ? JSON.parse(JSON.stringify(old)) : {});
+  if (!cfg.teams || cfg.teams.length < 2) cfg.teams = funNames(4);
+  C.setTitle(old ? 'Change: Crossword' : 'New Crossword game'); C.header();
+  let data = null;
+  const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
+  const sel = (sid, label, list, cur) => '<div class="field"><label for="' + sid + '">' + label + '</label><select id="' + sid + '">' + list.map(x => opt(x[0], x[1], cur)).join('') + '</select></div>';
+  C.view.innerHTML =
+    '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Saved board games</a></p>' +
+    '<form class="card bg-form" id="bf" novalidate>' +
+    '<div class="field"><label for="b-title">Name</label><input type="text" id="b-title" maxlength="80" placeholder="e.g. 9A Representation crossword" value="' + esc(cfg.title) + '"></div>' +
+    '<fieldset><legend>Topics</legend><div class="bg-chips" id="b-topics">' + X_TOPICS.map(t =>
+      '<label class="bg-chip"><input type="checkbox" value="' + t.key + '"' + (cfg.topics.includes(t.key) ? ' checked' : '') + '><span>' + esc(t.name) + ' <small data-n="' + t.key + '">…</small></span></label>').join('') + '</div>' +
+      '<p class="note">The words come from each topic\'s words.csv. A word whose meaning contains the word itself is left out, because its clue would give it away.</p></fieldset>' +
+    '<fieldset><legend>Levels</legend><div class="bg-chips" id="b-levels"></div></fieldset>' +
+    '<p class="bg-total" id="b-total" aria-live="polite">Counting the words…</p>' +
+    '<hr><fieldset><legend>The crossword</legend><div class="bg-settings">' +
+      sel('b-clues', 'The clues are', X_CLUES, cfg.clues) +
+      sel('b-n', 'Words in the crossword', [[8, '8'], [10, '10'], [12, '12'], [15, '15']], cfg.n) +
+      sel('b-secs', 'Time to answer', [[0, 'No timer'], [20, '20 seconds'], [30, '30 seconds'], [45, '45 seconds'], [60, '1 minute']], cfg.secs) +
+    '</div><p class="note">Points: a word is worth a point for each of its squares still empty when it\'s answered, so a brave early guess scores most. ' +
+      'A wrong answer passes the clue to the next team; each team has one try.</p></fieldset>' +
+    '<hr><fieldset><legend>Teams</legend>' +
+      '<div class="row"><label class="lab" for="b-nteams">How many</label><select id="b-nteams">' + [2, 3, 4, 5, 6, 7, 8].map(n => opt(n, n, cfg.teams.length)).join('') + '</select>' +
+      '<button class="btn small alt" type="button" id="b-renames">New names for every team</button></div>' +
+      '<div class="bg-teams" id="b-teams"></div></fieldset>' +
+    '<p class="err" id="err" role="alert" hidden></p>' +
+    '<div class="row bg-saveline"><button class="btn" type="submit" data-go="play">Save and play</button><button class="btn alt" type="submit" data-go="list">Save</button><a class="btn alt" href="#/board">Cancel</a></div>' +
+    '</form>';
+  const $ = q => C.view.querySelector(q), $$ = q => [...C.view.querySelectorAll(q)];
+  const read = () => {
+    cfg.title = $('#b-title').value.trim();
+    cfg.topics = $$('#b-topics input:checked').map(i => i.value);
+    if ($$('#b-levels input').length) cfg.levels = $$('#b-levels input:checked').map(i => +i.value);
+    cfg.clues = $('#b-clues').value; cfg.n = +$('#b-n').value || 12; cfg.secs = +$('#b-secs').value || 0;
+    cfg.teams = $$('#b-teams input').map((i, k) => i.value.trim() || 'Team ' + (k + 1));
+  };
+  const count = (t, l, lv) => xwCount(t, l, data, cfg.clues, lv);
+  const drawCounts = () => {
+    $$('#b-topics [data-n]').forEach(x => { x.textContent = data ? count([x.dataset.n], cfg.levels) : '…'; });
+    $('#b-levels').innerHTML = LEVELS.map(([n, name]) => { const c = data && cfg.topics.length ? count(cfg.topics, cfg.levels, n) : null;
+      return '<label class="bg-chip"><input type="checkbox" value="' + n + '"' + (cfg.levels.includes(n) ? ' checked' : '') + '><span>' + name + (c == null ? '' : ' <small>' + c + '</small>') + '</span></label>'; }).join('');
+    $$('#b-levels input').forEach(i => i.onchange = () => { read(); drawCounts(); });
+    const el = $('#b-total'); el.classList.remove('bad');
+    if (!data) { el.textContent = 'Counting the words…'; return; }
+    if (!cfg.topics.length) { el.textContent = 'Choose at least one topic.'; return; }
+    if (!cfg.levels.length) { el.textContent = 'Choose at least one level.'; el.classList.add('bad'); return; }
+    const n = count(cfg.topics, cfg.levels);
+    if (n < 6) { el.textContent = (n ? 'Only ' + n + ' word' + (n === 1 ? '' : 's') : 'No words') + ' can go in a crossword at these levels' +
+      (cfg.clues !== 'def' ? ' with Chinese clues' : '') + '. Choose more topics or levels.'; el.classList.add('bad'); return; }
+    el.textContent = n + ' words can go in. Each crossword has up to ' + cfg.n + ' of them, chosen at random, so Play again makes a new one.';
+  };
+  const drawTeams = () => {
+    const n = +$('#b-nteams').value;
+    while (cfg.teams.length < n) cfg.teams.push(funName(cfg.teams));
+    cfg.teams = cfg.teams.slice(0, n);
+    $('#b-teams').innerHTML = cfg.teams.map((nm, i) => '<div class="bg-team"><span class="sw" style="background:' + COLOURS[i] + '"></span>' +
+      '<input type="text" maxlength="30" aria-label="Team ' + (i + 1) + ' name" value="' + esc(nm) + '">' +
+      '<button class="bg-dice" type="button" data-i="' + i + '" title="A new name" aria-label="A new name for team ' + (i + 1) + '">🎲</button></div>').join('');
+    $$('#b-teams input').forEach((inp, i) => inp.oninput = () => { cfg.teams[i] = inp.value; });
+    $$('#b-teams .bg-dice').forEach(b => b.onclick = () => { const i = +b.dataset.i; cfg.teams[i] = funName(cfg.teams.filter((_, k) => k !== i)); drawTeams(); });
+  };
+  $$('#b-topics input').forEach(i => i.onchange = () => { C.touch(); read(); drawCounts(); });
+  ['#b-clues', '#b-n', '#b-secs'].forEach(q => { $(q).onchange = () => { read(); drawCounts(); }; });
+  $('#b-nteams').onchange = () => { cfg.teams = $$('#b-teams input').map(i => i.value); drawTeams(); read(); drawCounts(); };
+  $('#b-renames').onclick = () => { cfg.teams = funNames(cfg.teams.length); drawTeams(); };
+  drawTeams(); drawCounts();
+  if (!XWM()) { const e = $('#err'); e.textContent = 'The crossword maker didn\'t load. Reload the page and try again.'; e.hidden = false; }
+  dataFor(X_TOPICS.map(t => t.key)).then(d => { data = d; read(); drawCounts(); })
+    .catch(x => { const e = $('#err'); e.textContent = x.message + ' Check your internet connection and try again.'; e.hidden = false; });
+  let go = 'play';
+  $$('#bf [type=submit]').forEach(b => b.onclick = () => { go = b.dataset.go; });
+  $('#bf').onsubmit = e => {
+    e.preventDefault(); C.touch(); read();
+    const err = $('#err'), say = m => { err.textContent = m; err.hidden = false; err.scrollIntoView({block: 'center', behavior: 'smooth'}); };
+    err.hidden = true;
+    if (!cfg.topics.length) return say('Choose at least one topic.');
+    if (!data) return say('Still counting the words. Try again in a moment.');
+    if (!cfg.levels.length) return say('Choose at least one level.');
+    if (count(cfg.topics, cfg.levels) < 6) return say('Not enough words for a crossword: choose more topics or levels.');
+    const s = Object.assign({}, cfg, {game: 'xw', id: old ? old.id : uid(), created: old ? old.created : Date.now(),
+      title: cfg.title || cfg.topics.map(topicName).join(' + ') + ' crossword'});
+    saveSet(s);
+    const g = gameOf(s.id);
+    if (g && go === 'play' && !confirm('This game is in progress. Start a new game with the new settings? (Cancel keeps the game in progress.)')) { location.hash = '#/board/play/' + s.id; return; }
+    if (g && go === 'play') dropGame(s.id);
+    location.hash = go === 'play' ? '#/board/play/' + s.id : '#/board';
+  };
+}
+
+// ---------- playing Crossword ----------
+const xwAt = (L, d, k) => L.words.findIndex(x => x.d === d && x.cells.includes(k));
+const xwShowing = g => { const s = new Set(g.rev); Object.keys(g.done).forEach(i => g.lay.words[i].cells.forEach(k => s.add(k))); return s; };
+const xwValue = (g, i) => { const s = xwShowing(g); return g.lay.words[i].cells.filter(k => !s.has(k)).length; };
+const xwLeft = g => g.lay.words.filter((x, i) => !g.done[i]).length;
+const xwDirName = d => d === 'a' ? 'Across' : 'Down';
+// A clue: the meaning and/or the Chinese (in the list, only the Chinese's first meaning: "吸引；对……有吸引力" → "吸引"), then (4,2,6)
+const xwZhShort = z => (String(z || '').split(/[；;，,]/)[0].replace(/（[^）]*）|\([^)]*\)/g, '').trim() || String(z || '').trim());
+const xwClueHTML = (g, x, big) => { const c = g.cfg.clues || 'def', zh = big ? x.zh : xwZhShort(x.zh);
+  return (c !== 'zh' ? '<span class="xb-def">' + esc(x.def) + '</span>' : '') + (c !== 'def' && x.zh ? ' <span class="xb-zh">' + esc(zh) + '</span>' : '') +
+    ' <span class="xb-en">' + esc(x.en) + '</span>'; };
+function xwPrompt(){
+  const g = P.game, t = g.teams[g.turn], o = g.open;
+  if (!xwLeft(g)) { P.prompt.innerHTML = 'Every word is in!'; return; }
+  if (o) { const x = g.lay.words[o.i], a = g.teams[o.team];
+    P.prompt.innerHTML = '<b style="color:' + a.c + '">' + esc(a.name) + '</b>' + (o.tried.length ? ' can try' : ' are answering') + ' ' + x.num + ' ' + xwDirName(x.d); return; }
+  P.prompt.innerHTML = '<b style="color:' + t.c + '">' + esc(t.name) + '</b>, choose a clue';
+}
+function xwDraw(){
+  const g = P.game, L = g.lay, show = xwShowing(g), o = g.open, on = new Set(o ? L.words[o.i].cells : []);
+  // Each square: its number, its letter once it's showing, in the colour of the team that answered (grey: nobody)
+  const by = {}; Object.keys(g.done).forEach(i => { const d = g.done[i]; L.words[i].cells.forEach(k => { if (!(k in by) || by[k] < 0) by[k] = d.team; }); });
+  if (!P.xb) {
+    P.stage.innerHTML = '<div class="xb"><div class="xb-gridbox"><div class="xb-grid" style="--w:' + L.w + ';--h:' + L.h + '">' +
+      L.cells.map((ch, k) => ch ? '<button type="button" class="xb-c" data-k="' + k + '" tabindex="-1">' + (L.nums[k] ? '<span class="n">' + L.nums[k] + '</span>' : '') + '<span class="l"></span></button>' : '<span class="xb-x"></span>').join('') +
+      '</div></div><div class="xb-side"></div></div>';
+    P.xb = P.stage.querySelector('.xb');
+    P.xb.querySelectorAll('.xb-c').forEach(b => b.onclick = () => xwSquare(+b.dataset.k));
+  }
+  P.xb.querySelectorAll('.xb-c').forEach(b => { const k = +b.dataset.k, sh = show.has(k), team = by[k];
+    b.querySelector('.l').textContent = sh ? L.cells[k] : '';
+    b.className = 'xb-c' + (on.has(k) ? ' on' : '') + (sh ? ' sh' : '') + (team != null ? (team >= 0 ? ' got' : ' gone') : '');
+    if (team != null && team >= 0) b.style.setProperty('--tc', g.teams[team].c); else b.style.removeProperty('--tc'); });
+  const side = P.xb.querySelector('.xb-side');
+  if (o) xwOpenCard(side); else xwList(side);
+  xwPrompt(); drawScores(); xwLayout();
+}
+function xwList(side){
+  const g = P.game, L = g.lay; P.card = null; P.xwFor = null; stopTimer();
+  const li = x => { const i = L.words.indexOf(x), d = g.done[i], team = d && d.team >= 0 ? g.teams[d.team] : null;
+    return '<li><button type="button" class="xb-clue' + (d ? ' done' : '') + '" data-i="' + i + '"' + (d ? ' disabled' : '') + '><span class="num">' + x.num + '</span><span class="tx">' + xwClueHTML(g, x) +
+      (d ? ' <b class="xb-ans"' + (team ? ' style="--tc:' + team.c + '"' : '') + '>' + esc(x.w) + '</b>' : '') + '</span>' +
+      (d ? (team ? '<span class="xb-by" style="--tc:' + team.c + '">+' + d.pts + '</span>' : '<span class="xb-by none">–</span>') : '<span class="xb-val">' + xwValue(g, i) + '</span>') + '</button></li>'; };
+  const across = L.words.filter(x => x.d === 'a').sort((a, b) => a.num - b.num), down = L.words.filter(x => x.d === 'd').sort((a, b) => a.num - b.num);
+  side.innerHTML = '<div class="xb-lists"><div class="xb-col"><h2>Across</h2><ol>' + across.map(li).join('') + '</ol></div><div class="xb-col"><h2>Down</h2><ol>' + down.map(li).join('') + '</ol></div></div>' +
+    '<p class="xb-tip">The number beside a clue is what it\'s worth now: a point for each empty square.</p>';
+  side.querySelectorAll('.xb-clue:not(.done)').forEach(b => b.onclick = () => xwOpen(+b.dataset.i));
+}
+function xwOpenCard(side){
+  const g = P.game, o = g.open, x = g.lay.words[o.i], val = xwValue(g, o.i), secs = +g.cfg.secs || 0;
+  side.innerHTML = '<div class="xb-open">' +
+    '<div class="bg-card-top"><span class="bg-num">' + x.num + '</span><div class="bg-meta"><span class="k">' + xwDirName(x.d) + '</span><span class="s">' + esc([topicName(x.t), x.lv != null ? LEVEL_NAME[band(x.lv)] : ''].filter(Boolean).join(' · ')) + '</span></div>' +
+      '<span class="bg-pts">' + val + ' point' + (val === 1 ? '' : 's') + '</span>' +
+      (secs ? '<button type="button" class="bg-timer" title="Pause or restart the timer (Space)" aria-label="Timer"><svg viewBox="0 0 100 100" aria-hidden="true"><circle class="trk" cx="50" cy="50" r="42"/><circle class="arc" cx="50" cy="50" r="42"/></svg><span class="t"></span></button>' : '') +
+      '<button type="button" class="bg-x" title="Close: choose another clue (Esc)" aria-label="Close">×</button></div>' +
+    '<div class="xb-q">' + xwClueHTML(g, x, true) + '</div>' +
+    '<div class="bg-mark"><div class="bg-who"><span class="lab">Answering:</span>' + g.teams.map((tm, i) => '<button type="button" data-team="' + i + '" style="--tc:' + tm.c + '">' + esc(tm.name) + '</button>').join('') + '</div>' +
+      '<div class="bg-acts">' +
+        '<button type="button" class="bg-btn" data-a="letter">Reveal a letter <kbd>L</kbd></button>' +
+        '<button type="button" class="bg-btn" data-a="show">Show the answer <kbd>S</kbd></button>' +
+        '<button type="button" class="bg-btn right" data-a="right">✓ Right +' + val + ' <kbd>Y</kbd></button>' +
+        '<button type="button" class="bg-btn wrong" data-a="wrong">✗ Wrong <kbd>N</kbd></button>' +
+      '</div><p class="bg-said' + (o.said ? ' bad' : '') + '" aria-live="polite">' + esc(o.said || '') + '</p></div></div>';
+  const card = side.querySelector('.xb-open'); P.card = card;
+  card.querySelector('.bg-x').onclick = () => xwClose();
+  card.querySelector('[data-a=letter]').onclick = () => xwLetter();
+  card.querySelector('[data-a=show]').onclick = () => xwShowAnswer();
+  card.querySelector('[data-a=right]').onclick = () => xwMark(true);
+  card.querySelector('[data-a=wrong]').onclick = () => xwMark(false);
+  card.querySelectorAll('[data-team]').forEach(b => { const i = +b.dataset.team, off = o.tried.includes(i);
+    b.setAttribute('aria-pressed', i === o.team); b.disabled = off; b.style.opacity = off ? .4 : '';
+    b.onclick = () => { if (o.tried.includes(i)) return; o.team = i; save(); xwDraw(); }; });
+  card.querySelector('[data-a=letter]').disabled = val <= 1;
+  const tb = card.querySelector('.bg-timer');   // the timer starts when the clue opens, and again for each team that tries
+  if (tb) { tb.onclick = () => toggleTimer(); if (P.xwFor !== o.k) { P.xwFor = o.k; startTimer(secs); } else if (P.timer) paintTimer(); }
+}
+// Fit: the squares as big as the space allows; the clue list's text as big as fits beside them
+function xwLayout(){
+  if (!P || !P.xb) return;
+  const g = P.game, L = g.lay, box = P.xb.querySelector('.xb-gridbox'), w = box.clientWidth, h = box.clientHeight;
+  if (w && h) P.xb.style.setProperty('--cs', Math.max(14, Math.floor(Math.min(w / L.w, h / L.h, 90 * P.u))) + 'px');
+  const side = P.xb.querySelector('.xb-side'), fit = side.querySelector('.xb-lists') || side.querySelector('.xb-q');
+  if (!fit) return;
+  const max = side.querySelector('.xb-q') ? 44 : 24;
+  let f = max * P.u; side.style.setProperty('--lf', f + 'px');
+  for (let k = 0; k < 30 && f > 11 && (fit.scrollHeight > fit.clientHeight + 1 || side.scrollHeight > side.clientHeight + 1); k++) { f *= .92; side.style.setProperty('--lf', f + 'px'); }
+}
+// Choosing a clue: the team whose turn it is answers first
+function xwOpen(i){
+  const g = P.game; if (g.open || g.done[i] || P.endEl) return;
+  C.touch(); closePop();
+  g.open = {i, k: Date.now(), team: g.turn, tried: [], said: ''};
+  save(); sfx('open'); xwDraw();
+}
+// A square: its unanswered word across (or down); the same square again, before anyone has answered, turns it the other way
+function xwSquare(k){
+  const g = P.game, L = g.lay, a = xwAt(L, 'a', k), d = xwAt(L, 'd', k), free = i => i >= 0 && !g.done[i];
+  if (g.open) { const o = g.open; if (o.tried.length || !L.words[o.i].cells.includes(k)) return;
+    const other = L.words[o.i].d === 'a' ? d : a; if (free(other)) { o.i = other; o.k = Date.now(); save(); xwDraw(); } return; }
+  const i = free(a) ? a : free(d) ? d : -1; if (i >= 0) xwOpen(i);
+}
+function xwClose(){ const g = P.game; if (!g.open) return; if (g.open.tried.length) return xwShowAnswer(); g.open = null; stopTimer(); save(); xwDraw(); }
+function xwFinish(){
+  const g = P.game; g.open = null; g.turn = (g.turn + 1) % g.teams.length; stopTimer(); save(); xwDraw();
+  if (!xwLeft(g)) setTimeout(() => { if (P && P.game === g && !P.endEl) endScreen(); }, 1600);
+}
+function xwMark(ok){
+  const g = P.game, o = g.open; if (!o) return; C.touch();
+  const x = g.lay.words[o.i];
+  if (ok) { const pts = xwValue(g, o.i), team = o.team;
+    g.done[o.i] = {team, pts}; g.teams[team].s += pts; sfx('right');
+    xwFinish(); drawScores({[team]: pts}); xwPop(x); return; }
+  sfx('wrong'); o.tried.push(o.team);
+  const next = g.teams.map((t, k) => (o.team + 1 + k) % g.teams.length).find(k => !o.tried.includes(k));
+  if (next == null) { g.done[o.i] = {team: -1, pts: 0}; xwFinish(); xwPop(x); return; }   // every team has tried: the answer goes in grey
+  o.said = g.teams[o.team].name + ': not right. ' + g.teams[next].name + ' can try.'; o.team = next; o.k = Date.now(); save(); xwDraw();
+}
+function xwLetter(){
+  const g = P.game, o = g.open; if (!o) return; const x = g.lay.words[o.i], show = xwShowing(g), hidden = x.cells.filter(k => !show.has(k));
+  if (hidden.length <= 1) return;
+  g.rev.push(hidden[Math.floor(Math.random() * hidden.length)]); C.touch(); save(); xwDraw();
+}
+function xwShowAnswer(){ const g = P.game, o = g.open; if (!o) return; const x = g.lay.words[o.i]; g.done[o.i] = {team: -1, pts: 0}; xwFinish(); xwPop(x); }
+function xwPop(x){ if (!P || !P.xb) return; x.cells.forEach((k, j) => { const b = P.xb.querySelector('.xb-c[data-k="' + k + '"]'); if (b) { b.style.animationDelay = (j * 60) + 'ms'; b.classList.add('pop'); } }); }
+function xwKey(e){
+  const g = P.game, k = e.key, lk = k.toLowerCase();
+  if (g.open) {
+    if (k === 'Escape') { e.preventDefault(); xwClose(); return; }
+    if (k === ' ') { e.preventDefault(); toggleTimer(); return; }
+    if (lk === 'y') { e.preventDefault(); xwMark(true); return; }
+    if (lk === 'n') { e.preventDefault(); xwMark(false); return; }
+    if (lk === 'l') { e.preventDefault(); xwLetter(); return; }
+    if (lk === 's') { e.preventDefault(); xwShowAnswer(); }
+    return;
+  }
+  // A clue by its number: type the number, then A (across) or D (down)
+  if (/^[0-9]$/.test(k)) { e.preventDefault(); clearTimeout(P.keyWait); P.keyBuf = (P.keyBuf + k).slice(-2); P.keyWait = setTimeout(() => { P.keyBuf = ''; }, 2500); return; }
+  if ((lk === 'a' || lk === 'd') && P.keyBuf) { e.preventDefault(); const n = +P.keyBuf; P.keyBuf = '';
+    const i = g.lay.words.findIndex(x => x.num === n && x.d === lk); if (i >= 0) xwOpen(i); }
 }
 
 // ---------- sounds (made in the browser: no files to load) ----------

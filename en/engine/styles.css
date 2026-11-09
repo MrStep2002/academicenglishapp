@@ -853,6 +853,58 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .phone .ws-list:not(.clues){grid-template-columns:1fr 1fr}
 @media (prefers-reduced-motion:reduce){.ws-marks .f.glow,.ws-list li.pop{animation:none}}
 
+/* Crossword (9 Nov 2026): the clue being answered above the grid, the grid on the left, Across and Down on the right (under
+   the grid on phones). Squares only where there are letters; the word being answered in blue, the square being typed in darker.
+   The hidden text box (.xw-in) sits over that square and takes the typing. */
+.xw-card{padding:clamp(14px,3vw,26px)}
+.xw{display:grid;grid-template-columns:minmax(0,1fr) minmax(200px,270px);gap:clamp(16px,3vw,26px);align-items:start}
+.phone .xw{grid-template-columns:minmax(0,1fr)}
+@media (max-width:700px){.xw{grid-template-columns:minmax(0,1fr)}}
+.xw-left{display:flex;flex-direction:column;gap:12px;min-width:0}
+.xw-bar{margin:0;min-height:3.1em;padding:8px 12px;border-radius:10px;background:var(--blue-soft);font-size:16px;line-height:1.4}
+.xw-bar b{font-family:var(--f-mono);font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--blue);margin-right:8px;white-space:nowrap}
+.xw-over .xw-bar{display:none}
+.xw-enum{font-family:var(--f-mono);font-size:.82em;color:var(--ink-2);white-space:nowrap}
+.xw-zh{font-family:var(--f-zh)}
+.xw-board{position:relative;width:min(100%, calc(var(--w) * 44px), max(calc(var(--w) * 24px), calc((100svh - 330px) * var(--w) / var(--h))));aspect-ratio:var(--w) / var(--h);
+  margin-inline:auto;container-type:inline-size;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.xw-grid{position:absolute;inset:0;display:grid;grid-template-columns:repeat(var(--w),minmax(0,1fr));grid-template-rows:repeat(var(--h),minmax(0,1fr))}
+.xw-c{position:relative;display:grid;place-items:center;margin:-.75px;border:1.5px solid color-mix(in srgb, var(--ink) 70%, transparent);background:var(--sheet);cursor:pointer;touch-action:manipulation}
+.xw-c.on{background:var(--blue-soft)}
+.xw-c.cur{background:color-mix(in srgb, var(--blue) 32%, var(--sheet));z-index:1}
+.xw-c.bad{background:var(--bad-soft)}
+.xw-c.bad .xw-l,.xw-c.shown .xw-l{color:var(--bad)}
+.xw-c.rev .xw-l{color:var(--blue)}
+.xw-c.ok .xw-l{color:var(--good)}
+.xw-n{position:absolute;left:4%;top:2%;font-family:var(--f-mono);font-size:9px;font-size:calc(100cqi / var(--w) * .27);line-height:1;color:var(--ink-2);pointer-events:none}
+.xw-l{font-family:var(--f-mono);font-weight:700;font-size:16px;font-size:calc(100cqi / var(--w) * .56);line-height:1;color:var(--ink);margin-top:10%;pointer-events:none}
+.xw-in{position:absolute;width:calc(100% / var(--w));height:calc(100% / var(--h));margin:0;padding:0;border:0;opacity:0;font-size:16px;background:transparent;color:transparent;caret-color:transparent;pointer-events:none}
+.xw-over .xw-c{cursor:default}
+.xw-c.glow{animation:xw-glow .5s ease both}
+@keyframes xw-glow{40%{background:var(--good-soft)}}
+.xw-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+.xw-acts .btn.small{margin-left:0}
+.xw-acts [hidden]{display:none}
+.xw-msg{margin:0;text-align:center;font-size:15px;color:var(--ink-2);min-height:1.4em}
+.xw-msg:empty{min-height:0}
+.xw-end:empty{display:none}
+.xw-sum{margin:0;font-size:17px;text-align:center}
+.xw-side{display:flex;flex-direction:column;gap:8px;min-width:0}
+.xw-h{margin:6px 0 0;font-family:var(--f-mono);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.xw-list{list-style:none;margin:0;padding:0;display:grid;gap:3px}
+.xw-list li{display:grid;grid-template-columns:2.1em minmax(0,1fr);padding:5px 8px;border-radius:8px;border-left:4px solid transparent;font-size:15px;line-height:1.35;cursor:pointer;overflow-wrap:anywhere}
+.xw-list li:hover{background:color-mix(in srgb, var(--blue-soft) 60%, transparent)}
+.xw-list li.on{background:var(--blue-soft);border-left-color:var(--blue)}
+.xw-list li.ok{color:var(--ink-2)}
+.xw-list li.ok .xw-num::after{content:"✓";margin-left:2px;color:var(--good)}
+.xw-list li.miss{background:var(--bad-soft)}
+.xw-list li.pop{animation:ws-pop .4s ease}
+.xw-over .xw-list li{cursor:default}
+.xw-num{font-family:var(--f-mono);font-weight:700;font-size:14px}
+.xw-ans{font-family:var(--f-mono);font-weight:700;color:var(--ink);white-space:nowrap}
+.xw-mode{margin-bottom:2px}
+@media (prefers-reduced-motion:reduce){.xw-c.glow,.xw-list li.pop{animation:none}}
+
 /* Grammar Check, was SPAG: Right or Wrong (8 Nov 2026, teacher: "the fact that this is a grammar question needs to be MUCH
    clearer"): a blue Grammar check tag, the question in bold, a note not to judge the facts, the sentence marked in blue */
 .card.gram{border-top:4px solid var(--blue)}

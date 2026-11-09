@@ -281,7 +281,7 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word',
+const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word', crossword:'type', zhcrossword:'type',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error (shared between its errors), In your own words, Find the evidence, All-in English'],
@@ -301,7 +301,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05};   // chance of a lucky guess
+  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, crossword:.05, zhcrossword:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -649,6 +649,8 @@ const GAMES = [
   {key:'mouse',    cat:'games',   name:'Save the mouse',   blurb:'Guess the word one letter at a time before the mouse disappears.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
   // Word search (7 Nov 2026, teacher): in the Games row, after Save the mouse; plays on phones; not in the Daily Circuit
   {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
+  // Crossword (9 Nov 2026, teacher): in the Games row, after Word search; plays on phones; not in the Daily Circuit
+  {key:'crossword', cat:'games', phone:true, time:true, name:'Crossword', blurb:'Fill in the grid with the topic\'s words. Each clue is a word\'s meaning.', items:()=>xwFit(pick(S.words), false, 13), min:6, run:()=>playCrossword()},
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
   {key:'rw',       form:'short', cat:'grammar', name:'Grammar Check',    blurb:'Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
@@ -715,11 +717,11 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const ROWS = {match:'words',syn:'words',meaning:'words',wordsearch:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence'};
+const ROWS = {match:'words',syn:'words',meaning:'words',wordsearch:'words',crossword:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence'};
 const hasRows = g => g.gen ? g.all.length>0 : ((SYL ? SYL_FULL : S)[ROWS[g.key]]||[]).length>0;
 const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
 // Science pages: why a game card is greyed (no topic ticked yet; nothing in the ticked topics; nothing at this level)
-const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' || g.key==='wordsearch' ? S.words : g.key==='tf' ? [...S.tf, ...S.words] : S[ROWS[g.key]]||[];
+const rowsNow = g => g.gen ? genPool(g) : g.arcade || g.key==='mouse' || g.key==='wordsearch' || g.key==='crossword' ? S.words : g.key==='tf' ? [...S.tf, ...S.words] : S[ROWS[g.key]]||[];
 const offWhy = (g, n) => sylNone() ? 'Choose your topics first' : n ? 'Not enough at this level yet' : SYL && !rowsNow(g).length ? 'None in your topics yet' : 'None at this level yet';
 
 // ---------- page frame ----------
@@ -815,7 +817,7 @@ function gameColumnsHtml(){
       return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
         ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}${rest}</section>`; }).join('')}
   </div>
-  ${(()=>{ const ROW=['gk','mouse','wordsearch','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
+  ${(()=>{ const ROW=['gk','mouse','wordsearch','crossword','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
       ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}`;
 }
@@ -1010,19 +1012,20 @@ const KEY_HELP = {
   evidence:[['1–9','choose a detail'],['Enter','check']], read:[['1–9','put a word in the next gap'],['Backspace','take the last one out'],['Enter','check']],
   mouse:[['A–Z','guess a letter'],['Enter','next word']],
   wordsearch:[['Arrow keys','move on the board'],['Enter','first and last letter of a word'],['Esc','start again']],
+  crossword:[['A–Z','type a letter'],['Arrow keys','move on the grid'],['Space','across or down'],['Tab','next clue'],['Backspace','take a letter out']],
   passage:[['1–9','choose an answer'],['Enter','confirm']], notes:[['1–9','choose a note'],['Enter','check']],
   snake:[['Arrow keys','steer (or W A S D)'],['Space','start']], whack:[['1–9','whack that hole'],['Space','start']],
   invaders:[['1–9','fire at that word'],['Space','start']], listen:[['P','play or pause'],['Enter','check']]
 };
 // The Chinese side (stage 4): its games' keys (the same games underneath), and the Chinese for each key and what it does
 const ZH_KEYS = {zh:KEY_HELP.meaning, zhmean:KEY_HELP.meaning, zhtranslate:KEY_HELP.meaning, learn:KEY_HELP.meaning, zhtf:KEY_HELP.tf,
-  zhbuild:KEY_HELP.build, zhevidence:KEY_HELP.evidence, zhmouse:KEY_HELP.mouse, zhwordsearch:KEY_HELP.wordsearch, zhodd:[['1–4','choose an answer']],
+  zhbuild:KEY_HELP.build, zhevidence:KEY_HELP.evidence, zhmouse:KEY_HELP.mouse, zhwordsearch:KEY_HELP.wordsearch, zhcrossword:KEY_HELP.crossword, zhodd:[['1–4','choose an answer']],
   zhtype:[['Enter','check']], zhspeed:[['1–4','choose an answer']], zhsurvive:[['1–4','choose an answer']], zhmatch:null};
 const KEY_ZH = {'choose an answer':'选择答案', 'next question':'下一题', 'true':'对', 'false':'错', 'good grammar':'语法正确', 'bad grammar':'语法错误',
   'check':'检查', 'choose a detail':'选择细节', 'put a word in the next gap':'把单词填进下一个空', 'take the last one out':'拿出最后一个',
   'guess a letter':'猜一个字母', 'next word':'下一个单词', 'move on the board':'在方阵上移动', 'first and last letter of a word':'选单词的第一个和最后一个字母',
   'start again':'重新选', 'choose an answer ':'选择答案', 'confirm':'确认', 'choose a note':'选择笔记', 'steer (or W A S D)':'转向（或 W A S D）', 'start':'开始',
-  'whack that hole':'打那个洞', 'fire at that word':'射击那个单词', 'play or pause':'播放或暂停', 'Arrow keys':'方向键', 'Space':'空格键'};
+  'whack that hole':'打那个洞', 'type a letter':'输入字母', 'move on the grid':'在方格中移动', 'across or down':'横向或纵向', 'next clue':'下一条提示', 'take a letter out':'删除一个字母', 'fire at that word':'射击那个单词', 'play or pause':'播放或暂停', 'Arrow keys':'方向键', 'Space':'空格键'};
 const keysFor = k => SIDE==='zh' && k in ZH_KEYS ? ZH_KEYS[k] : KEY_HELP[k];
 const keyT = s => SIDE==='zh' && KEY_ZH[s] ? T(s, KEY_ZH[s]) : s;
 // The score boxes: [[label, value, after the value, id of the value], …] as <dl> items
@@ -1060,7 +1063,7 @@ function gameLayout(game, note, o){
 function sidePanel(game){
   const keys=keysFor(game.key), free=!inCircuit && !classRun;
   return `<aside class="g-side" aria-label="${TX('About this game','关于这个游戏')}">
-    <section class="g-box g-round" aria-labelledby="gRoundH"><h2 id="gRoundH">${isArcade(game) || game.key==='wordsearch' || game.key==='zhwordsearch' ? T('This game','本局') : T('This round','本轮')}</h2><dl class="g-stats" id="stats"></dl></section>
+    <section class="g-box g-round" aria-labelledby="gRoundH"><h2 id="gRoundH">${isArcade(game) || ['wordsearch','zhwordsearch','crossword','zhcrossword'].includes(game.key) ? T('This game','本局') : T('This round','本轮')}</h2><dl class="g-stats" id="stats"></dl></section>
     <section class="g-box g-tools" id="gTools" aria-label="${TX('Settings','设置')}" hidden></section>
     ${LEVELS.length ? `<section class="g-box g-level" id="gLevelBox" aria-labelledby="gLevelH">${levelBoxInner()}</section>` : ''}
     ${keys ? `<section class="g-box g-keys" aria-labelledby="gKeysH"><h2 id="gKeysH">${T('Keys','按键')}</h2><ul>${keys.map(([k,t])=>`<li><kbd>${keyT(k)}</kbd> ${keyT(t)}</li>`).join('')}</ul></section>` : ''}
@@ -1414,6 +1417,191 @@ function playWordSearch(zh){
 }
 // All found: the board's marks light up one after another
 function sfxDone(card){ card.querySelectorAll('.ws-marks .f').forEach((l,i)=>{ l.style.animationDelay=(i*70)+'ms'; l.classList.add('glow'); }); }
+
+// ---------- GAMES: Crossword (9 Nov 2026, teacher: "Could we do a crosswords game?") ----------
+// The topic's words at the student's level, fitted into a crossword by the maker in en/engine/crossword.js (shared with the
+// teacher page's board game, starter and handout). The clues are the meanings; on the Chinese side the Chinese, or the
+// meanings (the switch above the clues, remembered as xwmode). Each clue ends with its letter counts, "(4,2,6)" for a phrase,
+// as in printed crosswords (teacher: "have them as 4,2,6 as normal crosswords do"). A word whose meaning (or Chinese) contains
+// the word itself is left out, because that clue would give it away (tools/check_content.py lists those words).
+// Words by level: Foundation 6, Foundation+ 7, Intermediate 8, Intermediate+ 9, Advanced 10; the grid is at most 11 × 11 at
+// Foundation and Foundation+ and 13 × 13 above (phones: 10 squares across).
+// Playing: click a square or a clue and type; the letters move along the word; click the square again (or Space) to go
+// across or down; arrow keys move, Tab and Enter go to the next clue, Backspace takes a letter out. A word with every letter
+// right is ticked in the list, its squares are kept, and the next clue comes up. Check turns the wrong letters red; Reveal a
+// letter fills in the square you're on (or the first empty or wrong one in that word); Show the rest fills in everything.
+// Progress: a word solved with none of its letters revealed is a right answer ('type' points, like Save the mouse); a word
+// with a revealed letter, or filled in by Show the rest, is a wrong one. Best time (best:crossword / best:zhcrossword): the
+// fastest puzzle finished with nothing revealed.
+// Phones: a hidden text box over the square takes the typing, so the phone's keyboard comes up when a square is tapped (also
+// typing through a Chinese input method: the letters are read as they are typed).
+const XW_N = [0, 6, 7, 8, 9, 10];
+const xwOK = w => { const t=wsPlain(w); return /^[a-z][a-z '’\-]*$/.test(t) && t.split(/[\s-]+/).filter(Boolean).length<=4 && wsLetters(w).length>=3; };
+const xwSize = lv => ({w: PHONE ? 10 : lv>=3 ? 13 : 11, h: lv>=3 ? 13 : 11});
+// Words that can be answers: letters only (spaces, hyphens and apostrophes between words), short enough, and a meaning (on the
+// Chinese side a Chinese too) that doesn't give the word away
+const xwFit = (list, zh, max) => !window.AEA_XW ? [] : (list||[]).filter(w=>xwOK(w) && wsLetters(w).length<=max && !AEA_XW.gives(w.w, w.def)
+  && (!zh || (ZH[w.id] && !AEA_XW.gives(w.w, ZH[w.id]))));
+function playCrossword(zh){
+  const key=zh ? 'zhcrossword' : 'crossword', XW=window.AEA_XW; CUR_GAME=key;
+  const lv=Math.max(1, Math.min(5, chosenBand() || 3)), n=XW_N[lv], sz=xwSize(lv), max=Math.max(sz.w, sz.h);
+  const how=PHONE ? T('Tap a square or a clue and type. Tap the square again to go across or down.', '点一个方格或一条提示，然后输入。再点一次方格可以在横向和纵向之间切换。')
+    : T('Click a square or a clue and type. Click the square again (or press Space) to go across or down.', '点一个方格或一条提示，然后输入。再点一次方格（或按空格键）可以在横向和纵向之间切换。');
+  if(zh) zhShell(T('Crossword','填字游戏'), how); else shell(GAMES.find(g=>g.key==='crossword'), how);
+  let mode=zh && store.get('xwmode', 'zh')!=='def' ? 'zh' : 'def';
+  // The words: the student's words at their level (Chinese side: their own set), due words first; topped up from nearby levels.
+  // Never two with the same letters, the same meaning, the same Chinese, or marked as similar in words.csv.
+  const cands=()=>{
+    const main=xwFit(rankForLevel(zh ? zhWords() : pick(S.words)).filter(w=>!hiddenItem(w)), zh, max);
+    const more=xwFit(rankForLevel((zh ? zhBankAll().filter(w=>(bandOf(w)??9)<=zhBand()) : S.words).filter(w=>!main.includes(w) && !hiddenItem(w))), zh, max);
+    const out=[];
+    for(const w of [...main, ...more]){ const L=wsLetters(w);
+      if(out.some(o=>o.L===L || o.w.def===w.def || (zh && ZH[o.w.id]===ZH[w.id]) || areAlike(o.w.id, w.id))) continue;
+      out.push({w, L}); if(out.length>=n+12) break; }
+    return out; };
+  const newPuzzle=()=>{
+    clearTimers(); keyHandler=null;
+    const lay=XW ? XW.make(cands(), {n, maxW:sz.w, maxH:sz.h}) : null;
+    if(!lay || lay.words.length<4){ showCard(`<p class="instr">${T('There aren\'t enough words for a crossword at this level yet.','这个级别的单词还不够做填字游戏。')}</p>`); return; }
+    const {w:W, h:H, cells:ans, words}=lay, N=W*H, best=store.get('best:'+key, 0), t0=Date.now();
+    const val=Array(N).fill(''), rev=new Set(), bad=new Set(), shown=new Set(), solved=new Set();
+    const at={a:Array(N).fill(-1), d:Array(N).fill(-1)}; words.forEach((x,i)=>x.cells.forEach(k=>{ at[x.d][k]=i; }));
+    const order=[...lay.across, ...lay.down].map(x=>words.indexOf(x));   // the clues in order: across, then down
+    let cur={k:words[order[0]].cells[0], d:words[order[0]].d}, done=0, gaveUp=false, helped=false, comp='';
+    const other=d=>d==='a' ? 'd' : 'a';
+    const DIR={a:T('Across','横向'), d:T('Down','纵向')}, DIRX={a:TX('Across','横向'), d:TX('Down','纵向')};
+    const enumOf=x=>XW.enumeration(x.w.w), clueOf=x=>mode==='zh' ? ZH[x.w.id] : x.w.def;
+    const card=showCard(`<div class="xw"><div class="xw-left">
+        <p class="xw-bar"></p>
+        <div class="xw-board" style="--w:${W};--h:${H}"><div class="xw-grid">${ans.map((ch,k)=>ch ? `<div class="xw-c" data-k="${k}">${lay.nums[k]?`<span class="xw-n">${lay.nums[k]}</span>`:''}<span class="xw-l"></span></div>` : '<div class="xw-x"></div>').join('')}</div>
+          <input class="xw-in" type="text" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" enterkeyhint="next" lang="en"></div>
+        <div class="xw-acts"><button type="button" class="btn alt small xw-check">${T('Check','检查')}</button><button type="button" class="btn alt small xw-rev">${T('Reveal a letter','显示一个字母')}</button><button type="button" class="btn alt small xw-give">${T('Show the rest','显示剩下的')}</button><button type="button" class="btn alt small xw-new">${T('New puzzle','换一个')}</button></div>
+        <p class="xw-msg" aria-live="polite"></p><div class="xw-end" aria-live="polite"></div></div>
+        <div class="xw-side">${zh ? `<div class="ws-mode xw-mode" role="group" aria-label="${esc(TX('The clues are','提示是'))}"><button type="button" data-m="zh">${T('Chinese','中文')}</button><button type="button" data-m="def">${T('Meanings','英文释义')}</button></div>` : ''}
+          ${['a','d'].map(d=>`<h3 class="xw-h">${DIR[d]}</h3><ol class="xw-list" data-d="${d}">${(d==='a' ? lay.across : lay.down).map(x=>`<li data-i="${words.indexOf(x)}"></li>`).join('')}</ol>`).join('')}</div></div>`);
+    card.classList.add('xw-card');
+    const grid=card.querySelector('.xw-grid'), inp=card.querySelector('.xw-in'), bar=card.querySelector('.xw-bar'), msg=card.querySelector('.xw-msg');
+    const els=Array(N).fill(null); grid.querySelectorAll('.xw-c').forEach(el=>{ els[+el.dataset.k]=el; });
+    const items=[...card.querySelectorAll('.xw-list li')];
+    const wordOn=()=>{ const i=at[cur.d][cur.k]; return i>=0 ? i : at[other(cur.d)][cur.k]; };
+    const locked=k=>rev.has(k) || (at.a[k]>=0 && solved.has(at.a[k])) || (at.d[k]>=0 && solved.has(at.d[k]));
+    const stats=()=>{ const el=document.getElementById('stats'); if(!el) return; const s=Math.floor(((done||Date.now())-t0)/1000), bt=store.get('best:'+key, 0);
+      el.innerHTML=NEW_UI ? gStats([[T('Solved','完成'), solved.size, '/'+words.length], [T('Time','时间'), mmss(s)], [T('Best','最佳'), bt ? mmss(bt) : '–']])
+        : `<span>${T('Solved','完成')} <b>${solved.size}</b>/${words.length}</span><span>${T('Time','用时')} <b>${mmss(s)}</b></span>${bt?`<span>${T('Best','最快')} <b>${mmss(bt)}</b></span>`:''}`; };
+    const tick=()=>{ if(done) return; stats(); later(tick, 1000); };
+    const clueHtml=x=>`<span class="xw-clue${mode==='zh'?' xw-zh':''}"${mode==='zh'?' lang="zh-CN"':''}>${esc(clueOf(x))}</span> <span class="xw-enum">${enumOf(x)}</span>`;
+    const drawList=()=>{
+      card.querySelectorAll('.xw-mode button').forEach(b=>b.setAttribute('aria-pressed', b.dataset.m===mode));
+      items.forEach(li=>{ const i=+li.dataset.i, x=words[i], ok=solved.has(i), miss=gaveUp && !ok;
+        li.className=(ok?'ok':'')+(miss?' miss':'');
+        li.innerHTML=`<span class="xw-num">${x.num}</span><span class="xw-txt">${clueHtml(x)}${ok||miss?` <b class="xw-ans">${esc(wsShow(x.w))}</b>`:''}</span>`; }); };
+    const draw=()=>{
+      const wi=done ? -1 : wordOn(), on=new Set(wi>=0 ? words[wi].cells : []);
+      els.forEach((el,k)=>{ if(!el) return; el.lastChild.textContent=val[k];
+        const ok=(at.a[k]>=0 && solved.has(at.a[k])) || (at.d[k]>=0 && solved.has(at.d[k]));
+        el.className='xw-c'+(on.has(k)?' on':'')+(k===cur.k && !done?' cur':'')+(bad.has(k)?' bad':'')+(rev.has(k)?' rev':'')+(ok&&!rev.has(k)?' ok':'')+(shown.has(k)?' shown':''); });
+      items.forEach(li=>li.classList.toggle('on', +li.dataset.i===wi));
+      if(wi>=0){ const x=words[wi]; bar.innerHTML=`<b>${x.num} ${DIR[x.d]}</b>${clueHtml(x)}`;
+        inp.setAttribute('aria-label', `${x.num} ${DIRX[x.d]}: ${clueOf(x)} ${enumOf(x)}`); }
+      inp.style.left=(cur.k%W)*100/W+'%'; inp.style.top=Math.floor(cur.k/W)*100/H+'%'; };
+    const say=t=>{ msg.innerHTML=t||''; };
+    // Choosing: a word (its first empty square), a square (the same square again turns across into down)
+    const go=i=>{ const x=words[i]; cur={d:x.d, k:x.cells.find(k=>!val[k] && !locked(k)) ?? x.cells.find(k=>!locked(k)) ?? x.cells[0]}; say(''); draw(); };
+    const pickSq=k=>{ if(k===cur.k){ if(at[other(cur.d)][k]>=0) cur.d=other(cur.d); } else { cur.k=k; if(at[cur.d][k]<0) cur.d=other(cur.d); } say(''); draw(); };
+    const nextClue=step=>{ const wi=wordOn(); let j=order.indexOf(wi);
+      for(let t=0; t<order.length; t++){ j=(j+step+order.length)%order.length; if(!solved.has(order[j])) return go(order[j]); } };
+    const flip=()=>{ if(at[other(cur.d)][cur.k]>=0){ cur.d=other(cur.d); draw(); } };
+    const along=step=>{ const wi=wordOn(); if(wi<0) return false; const c=words[wi].cells; let j=c.indexOf(cur.k)+step;
+      while(j>=0 && j<c.length && locked(c[j])) j+=step;
+      if(j>=0 && j<c.length){ cur.k=c[j]; return true; } return false; };
+    // A word with every letter right: ticked, kept, and counted (right unless one of its letters was revealed)
+    const settle=()=>{ let fresh=-1;
+      words.forEach((x,i)=>{ if(solved.has(i) || !x.cells.every(k=>val[k]===ans[k])) return; solved.add(i); fresh=i;
+        x.cells.forEach(k=>bad.delete(k));
+        P.record(key, x.w, !x.cells.some(k=>rev.has(k)));
+        const li=items.find(l=>+l.dataset.i===i); if(li){ li.classList.add('pop'); } });
+      drawList(); stats();
+      if(solved.size===words.length) return finish();
+      if(fresh>=0 && fresh===wordOn() && !along(1)) nextClue(1); else if(fresh>=0 && words[fresh].cells.every(locked) && solved.has(wordOn())) nextClue(1);
+      draw(); };
+    const type=ch=>{ if(done) return; const k=cur.k; if(!locked(k)){ val[k]=ch; bad.delete(k); } along(1); settle(); draw(); };
+    const back=()=>{ if(done) return; const k=cur.k;
+      if(val[k] && !locked(k)){ val[k]=''; bad.delete(k); }
+      else if(along(-1) && !locked(cur.k)){ val[cur.k]=''; bad.delete(cur.k); }
+      draw(); };
+    const arrow=(dr,dc)=>{ const d=dc ? 'a' : 'd';
+      if(cur.d!==d && at[d][cur.k]>=0){ cur.d=d; draw(); return; }
+      let r=Math.floor(cur.k/W)+dr, c=cur.k%W+dc;
+      while(r>=0 && r<H && c>=0 && c<W){ const k=r*W+c; if(ans[k]){ cur.k=k; if(at[cur.d][k]<0) cur.d=other(cur.d); break; } r+=dr; c+=dc; }
+      draw(); };
+    const keyed=e=>{ const k=e.key;
+      if(done){ if(k==='Enter'){ e.preventDefault(); newPuzzle(); } return; }
+      if(/^[a-zA-Z]$/.test(k)){ e.preventDefault(); type(k.toUpperCase()); return; }
+      const mv={ArrowUp:[-1,0], ArrowDown:[1,0], ArrowLeft:[0,-1], ArrowRight:[0,1]}[k];
+      if(mv){ e.preventDefault(); arrow(...mv); return; }
+      if(k==='Backspace'){ e.preventDefault(); back(); return; }
+      if(k==='Delete'){ e.preventDefault(); if(!locked(cur.k)){ val[cur.k]=''; bad.delete(cur.k); draw(); } return; }
+      if(k==='Tab'){ e.preventDefault(); nextClue(e.shiftKey ? -1 : 1); return; }
+      if(k==='Enter'){ e.preventDefault(); nextClue(1); return; }
+      if(k===' '){ e.preventDefault(); flip(); } };
+    // The hidden text box: keys on computers; on phones (and with an input method) the letters arrive as text instead
+    const keep=()=>{ inp.value=' '; try{ inp.setSelectionRange(1, 1); }catch(x){} };
+    const typeAll=s=>{ for(const ch of String(s).replace(/[^a-z]/gi, '').toUpperCase()) type(ch); };
+    inp.addEventListener('keydown', e=>{ if(e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return; keyed(e); });
+    inp.addEventListener('beforeinput', e=>{ if(e.isComposing || /Composition/.test(e.inputType||'')) return;
+      if(done){ e.preventDefault(); return; }
+      if(/^insert/.test(e.inputType||'')){ e.preventDefault(); typeAll(e.data||''); keep(); }
+      else if(/^delete/.test(e.inputType||'')){ e.preventDefault(); back(); keep(); } });
+    inp.addEventListener('input', e=>{
+      if(e.inputType==='deleteCompositionText') return;   // an input method putting in what was chosen: its letters are in already
+      if(e.inputType==='insertFromComposition'){ keep(); return; }
+      if(e.isComposing || e.inputType==='insertCompositionText'){ if(/[^\x00-\x7f]/.test(inp.value)) return;   // a Chinese word chosen: the letters stay
+        const s=inp.value.replace(/[^a-z]/gi, '').toUpperCase();   // an input method: the letters so far
+        if(s.length>comp.length && s.startsWith(comp)) typeAll(s.slice(comp.length));
+        else if(s.length<comp.length && comp.startsWith(s)) for(let i=s.length; i<comp.length; i++) back();
+        comp=s; return; }
+      const v=inp.value; if(v===' ') return;   // a browser whose beforeinput can't be stopped
+      if(!v) back(); else typeAll(v); keep(); });
+    inp.addEventListener('compositionstart', ()=>{ comp=''; });
+    inp.addEventListener('compositionend', ()=>{ comp=''; setTimeout(keep, 0); });
+    keep();
+    const focus=()=>{ if(!done) inp.focus(PHONE ? undefined : {preventScroll:true}); };
+    keyHandler=e=>{ if(e.target && /^(BUTTON|A|SELECT|TEXTAREA)$/.test(e.target.tagName) && /^(Tab|Enter| )$/.test(e.key)) return;   // those keys keep working on buttons and links
+      keyed(e); if(!done && (/^[a-z]$/i.test(e.key) || /^Arrow|^Backspace$/.test(e.key))) focus(); };
+    grid.addEventListener('click', e=>{ const c=e.target.closest('.xw-c'); if(!c || done) return; pickSq(+c.dataset.k); focus(); });
+    items.forEach(li=>li.addEventListener('click', ()=>{ if(done) return; go(+li.dataset.i); focus(); }));
+    card.querySelectorAll('.xw-mode button').forEach(b=>b.onclick=()=>{ mode=b.dataset.m; store.set('xwmode', mode); drawList(); draw(); });
+    card.querySelector('.xw-new').onclick=newPuzzle;
+    card.querySelector('.xw-check').onclick=()=>{ if(done) return; let typed=0;
+      val.forEach((v,k)=>{ if(!v || locked(k)) return; typed++; if(v!==ans[k]) bad.add(k); });
+      const nb=[...bad].length;
+      say(!typed ? T('Type some letters first.','先输入一些字母。') : nb ? T(`${nb} letter${nb===1?' is':'s are'} wrong: ${nb===1?'it\'s':'they\'re'} in red.`, `有 ${nb} 个字母错了，已标成红色。`)
+        : T('Every letter so far is right.','到目前为止，所有字母都对。'));
+      draw(); focus(); };
+    card.querySelector('.xw-rev').onclick=()=>{ if(done) return; const wi=wordOn();
+      const k=!locked(cur.k) && val[cur.k]!==ans[cur.k] ? cur.k : wi>=0 ? words[wi].cells.find(c=>!locked(c) && val[c]!==ans[c]) : undefined;
+      if(k==null){ say(T('That word is already right.','这个单词已经对了。')); return; }
+      val[k]=ans[k]; rev.add(k); bad.delete(k); helped=true; say(''); settle(); draw(); focus(); };
+    card.querySelector('.xw-give').onclick=()=>{ if(done) return; gaveUp=true;
+      words.forEach((x,i)=>{ if(!solved.has(i)) P.record(key, x.w, false); });
+      val.forEach((v,k)=>{ if(ans[k] && v!==ans[k]){ val[k]=ans[k]; shown.add(k); } }); bad.clear();
+      finish(); };
+    const finish=()=>{
+      done=Date.now(); inp.blur(); say(''); drawList(); draw(); stats(); card.classList.add('xw-over');
+      const secs=Math.round((done-t0)/1000), prev=store.get('best:'+key, 0), isBest=!gaveUp && !helped && (!prev || secs<prev);
+      if(isBest) store.set('best:'+key, secs);
+      card.querySelectorAll('.xw-check, .xw-rev, .xw-give').forEach(b=>{ b.hidden=true; });
+      const nb=card.querySelector('.xw-new'); nb.classList.remove('alt', 'small'); nb.focus({preventScroll:true});
+      card.querySelector('.xw-end').innerHTML = gaveUp
+        ? `<p class="xw-sum"><b>${T(`You solved ${solved.size} of ${words.length}.`, `你完成了 ${solved.size} 个，共 ${words.length} 个。`)}</b> ${T('The rest are filled in, in red.', '其余的已用红色填好。')}</p>`
+        : `<p class="xw-sum"><b>${T(`All ${words.length} words in ${mmss(secs)}!`, `全部 ${words.length} 个单词，用时 ${mmss(secs)}！`)}</b> ${isBest ? T('A new best time.', '新纪录！') : helped ? T('Letters were revealed, so it doesn\'t count as a best time.', '因为显示过字母，这次不算最快纪录。') : prev ? T(`Your best time is ${mmss(prev)}.`, `你的最快纪录是 ${mmss(prev)}。`) : ''}</p>`;
+      if(!gaveUp) card.querySelectorAll('.xw-c').forEach((el,i)=>{ el.style.animationDelay=(i*12)+'ms'; el.classList.add('glow'); });
+      keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); newPuzzle(); } };
+    };
+    drawList(); draw(); tick(); focus();
+  };
+  newPuzzle();
+}
 
 // ---------- VOCABULARY: Match the meaning / Synonym groups ----------
 // mode: 'def' (meanings), 'syn' (synonym groups) or 'mix' (each word on the board shows one or the other, chosen as it is dealt)
@@ -2883,6 +3071,8 @@ const ZH_GAMES = [
   {key:'zhmouse',  type:'practice',  name:'Save the mouse',     zh:'拯救小老鼠',     blurb:'See the Chinese and the meaning, then guess the English word one letter at a time. Every wrong letter and the mouse loses a piece.', zhBlurb:'看中文和释义，一个字母一个字母地猜出英文单词。每猜错一次，小老鼠就少一块！', run:()=>playMouse(true)},
   // Word search (7 Nov 2026): in the Games column, where "Wordsearch: coming soon" was
   {key:'zhwordsearch', type:'practice', time:true, name:'Word search', zh:'单词搜索', blurb:'Find your English words hidden in a square of letters. The clues are the words or their Chinese.', zhBlurb:'在字母方阵里找出隐藏的英文单词，提示是单词本身或它的中文。', min:6, run:()=>playWordSearch(true)},
+  // Crossword (9 Nov 2026): in the Games column, under Word search
+  {key:'zhcrossword', type:'practice', time:true, name:'Crossword', zh:'填字游戏', blurb:'Fill in the grid with your English words. The clues are their Chinese or their meanings.', zhBlurb:'用你的英文单词填满方格，提示是它们的中文或英文释义。', min:6, run:()=>playCrossword(true), needs:()=>xwFit(zhWords(), true, 13).length>=6},
   {key:'zhspeed',  type:'challenge', name:'Speed round',        zh:'限时挑战',       blurb:'60 seconds. See the Chinese, choose the English word. How many can you get?', zhBlurb:'60 秒内看中文选英文，看你能答对多少个！', min:8, run:()=>playSpeed()},
   {key:'zhsurvive',type:'challenge', name:'Survival',           zh:'生存挑战',       blurb:'Three lives. See the word and its Chinese, then choose the English meaning before time runs out. It gets faster.', zhBlurb:'三条命。看单词和中文，在时间用完前选出英文释义，会越来越快。', min:8, run:()=>playSurvival()}
 ];
@@ -2899,7 +3089,7 @@ ZH_GAMES.forEach(g=>{ const run=g.run; g.run=()=>{ ZH_NOW=g; return run(); }; })
 const ZH_COLS = [
   {key:'vocab',     name:'Vocab',     zh:'词汇', games:['zh', 'zhmatch', 'zhtype']},
   {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'zhtranslate', 'zhevidence']},
-  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'zhwordsearch']}
+  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'zhwordsearch', 'zhcrossword']}
 ];
 const ZH_SOON = {translate:['Translation','翻译'], wordsearch:['Wordsearch','单词搜索']};
 const ZH_SNAKE = {key:'snake', type:'arcade', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.',

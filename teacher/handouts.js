@@ -7,12 +7,12 @@
    Lives on the teacher page (teacher/index.html calls AEA_HANDOUT.route for #/handouts).
    Words from content/<topic>/words.csv (word, pos, meaning, zh, example, group, level); Fill the gap uses gaps.csv sentences
    whose answer is the word (or a form of it), else the word's example sentence. The word search comes from the Starters'
-   maker (AEA_START.ws in teacher/starters.js).
+   maker (AEA_START.ws in teacher/starters.js); the crossword from the site's crossword maker (en/engine/crossword.js, AEA_XW).
    The Word file is made here, in the browser: a .docx is a zip of XML files (docx() and zip() below), so nothing is loaded from
    outside the site. Sizes: twips (1 cm = 567). Saved in this browser: "aeaBoard:handout" (the last topic, words, title, activities). */
 (function(){
 'use strict';
-const B = window.AEA_BOARD && window.AEA_BOARD.lib, WS = window.AEA_START && window.AEA_START.ws;
+const B = window.AEA_BOARD && window.AEA_BOARD.lib, WS = window.AEA_START && window.AEA_START.ws, XW = window.AEA_XW;
 if (!B) return;
 const {TOPICS, LEVELS, LEVEL_NAME, parseCSV, levelNum, band, esc, shuffle, getJ, setJ, topicName} = B;
 const ROOT = '../', K = 'aeaBoard:handout', MAX = 15, SIDE2 = 24.3;   // cm of side 2 the activities may use
@@ -23,6 +23,8 @@ const ACTS = [
   {k: 'zh',       name: 'Chinese → English',          zh: '看中文，写英文', how: 'Write the English word for each Chinese meaning.', blurb: 'The Chinese of every word: they write the English.'},
   {k: 'lcwc',     name: 'Look, cover, write, check',  zh: '看、盖、写、查', how: 'Look at the word, cover it, write it, then check it. Do it twice.', blurb: 'Spelling practice: every word written twice.'},
   {k: 'ws',       name: 'Word search',                zh: '单词搜索',       how: 'Find the English words for these Chinese meanings. Words go across, down and diagonally.', blurb: 'Up to 10 of the words hidden in a square of letters, with Chinese clues.'},
+  // Crossword (9 Nov 2026, teacher): the clues are the Chinese, with the letters in each word as in printed crosswords: (4,2,6)
+  {k: 'xw',       name: 'Crossword',                  zh: '填字游戏',       how: 'Write the English word for each Chinese clue in the grid. The numbers in brackets are how many letters it has.', blurb: 'Up to 10 of the words in a crossword, with Chinese clues.'},
   {k: 'gap',      name: 'Fill the gap',               zh: '填空',           how: 'Write the missing word in each sentence. Use the word bank.', blurb: 'Up to 6 sentences with a word missing, and a word bank.'},
   {k: 'anagram',  name: 'Unscramble',                 zh: '字母重组',       how: 'Put the letters in order to make the word. The Chinese is a clue.', blurb: 'Up to 8 of the words with their letters mixed up.'},
   {k: 'sentence', name: 'Use it in a sentence',       zh: '造句',           how: 'Write a sentence of your own with each word.', blurb: 'Three of the words, with lines to write on.'}
@@ -58,6 +60,10 @@ function gapFor(w, T){
   return m ? {s: w.ex.slice(0, m.index) + '___' + w.ex.slice(m.index + m[0].length), a: m[0]} : null;
 }
 const letters = s => String(s).replace(/[^A-Za-z]/g, '');
+// Crossword: words of letters only (spaces, hyphens and apostrophes between words; 4 words at most), and a Chinese clue that
+// doesn't contain the English word
+const xwOK = w => { const t = XW.show(w.w).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  return /^[a-z][a-z '’\-]*$/.test(t) && t.split(/[\s-]+/).filter(Boolean).length <= 4 && XW.letters(w.w).length >= 3 && XW.letters(w.w).length <= 13 && !XW.gives(w.w, zhShort(w.zh)); };
 // Side 2's clues use the first, short Chinese meaning ("锚定（文字固定图像意义）" → "锚定"; "迅速走红；在网上疯传" → "迅速走红"); side 1 has it all
 const zhShort = z => (String(z || '').split(/[；;，,]/)[0].replace(/（[^）]*）|\([^)]*\)/g, '').trim() || String(z || '').trim());
 function scramble(word){
@@ -78,6 +84,15 @@ function makeAct(k, words, T){
     const n = Math.min(10, fit.length), size = fit.slice(0, n).some(c => c.L.length > 10) || n > 7 ? 12 : 10;
     const made = WS.wsMake(fit, n, size, WS.WS_DIRS[3]); if (!made) return null;
     return {k, size, b: made.b.map(r => r.join('')), words: shuffle(made.placed).map(p => ({w: p.w, zh: p.zh, n: p.L.length, cells: p.cells}))};
+  }
+  if (k === 'xw') {
+    if (!XW) return null;
+    const fit = shuffle(words.filter(xwOK)).map(w => ({w: w.w, zh: zhShort(w.zh), en: XW.enumeration(w.w), L: XW.letters(w.w)}))
+      .filter((c, i, all) => !all.slice(0, i).some(o => o.L === c.L || o.zh === c.zh));
+    if (fit.length < 4) return null;
+    const lay = XW.make(fit, {n: Math.min(10, fit.length), maxW: 13, maxH: 13}); if (!lay || lay.words.length < 4) return null;
+    const clue = x => ({num: x.num, zh: x.zh, en: x.en, w: x.w});
+    return {k, w: lay.w, h: lay.h, cells: lay.cells, nums: lay.nums, across: lay.across.map(clue), down: lay.down.map(clue)};
   }
   if (k === 'gap') {
     const items = [];
@@ -109,6 +124,7 @@ function actHeight(a){
     case 'zh': return HEAD + rowsCm('zh', a.items);
     case 'lcwc': return HEAD + 0.75 + a.items.length * 0.72;
     case 'ws': return HEAD + Math.max(a.size * 0.6, a.words.length * 0.6 + 0.6) + 0.25;
+    case 'xw': return HEAD + Math.max(a.h * 0.6, 1.4 + (a.across.length + a.down.length) * 0.6) + 0.3;
     case 'gap': return HEAD + a.items.reduce((h, x) => h + (x.s.length > 85 ? 1.25 : 0.8), 0) + 1.2;
     case 'anagram': return HEAD + rowsCm('anagram', a.items);
     case 'sentence': return HEAD + a.items.length * 2.15;
@@ -186,7 +202,7 @@ function page(){
     box.querySelector('span').textContent = !ws.length ? 'Choose some words first' : 'Side 2 is ' + pct + '% full';
     $('#ho-acts').innerHTML = ACTS.map(a => { const on = st.acts.includes(a.k), dry = ws.length && T ? makeAct(a.k, ws, T) : null;
       const h = dry ? actHeight(dry) : 0, fits = on || used + h <= SIDE2, can = !!dry, off = !on && (!can || !fits);
-      const why = !ws.length ? '' : !can ? (a.k === 'ws' ? 'Needs 4 words of 4 to 12 letters' : a.k === 'gap' ? 'Not enough sentences for these words' : a.k === 'anagram' ? 'Needs 3 one- or two-word words' : '') : !fits ? 'No room left on side 2' : '';
+      const why = !ws.length ? '' : !can ? (a.k === 'ws' ? 'Needs 4 words of 4 to 12 letters' : a.k === 'xw' ? 'Needs 4 words of 3 to 13 letters that cross' : a.k === 'gap' ? 'Not enough sentences for these words' : a.k === 'anagram' ? 'Needs 3 one- or two-word words' : '') : !fits ? 'No room left on side 2' : '';
       return '<label class="ho-act' + (on ? ' on' : '') + (off ? ' off' : '') + '"><input type="checkbox" value="' + a.k + '"' + (on ? ' checked' : '') + (off ? ' disabled' : '') + '>' +
         '<span><b>' + esc(a.name) + '</b> <span class="ho-zh">' + esc(a.zh) + '</span><span class="note">' + esc(why || a.blurb) + '</span></span></label>'; }).join('');
     $$('#ho-acts input').forEach(i => i.onchange = () => { st.acts = ACTS.map(a => a.k).filter(k => k === i.value ? i.checked : st.acts.includes(k)); save(); remake(); drawActs(); drawPreview(); });
@@ -257,6 +273,9 @@ function previewHTML(title, topic, m){
     if (a.k === 'lcwc') return head(n, d) + '<table class="hp-lcwc"><tr><th>Word</th><th>Look, cover, write</th><th>✓</th><th>Write it again</th><th>✓</th></tr>' + a.items.map(x => '<tr><td>' + H(x.w) + '</td><td></td><td></td><td></td><td></td></tr>').join('') + '</table>';
     if (a.k === 'ws') return head(n, d) + '<div class="hp-ws"><table class="hp-grid">' + Array.from({length: a.size}, (_, r) => '<tr>' + a.b[r].split('').map(ch => '<td>' + ch + '</td>').join('') + '</tr>').join('') + '</table>' +
       '<div class="hp-clues">' + a.words.map(x => '<div>☐ ' + H(x.zh) + ' <span class="hp-pos">(' + x.n + ')</span></div>').join('') + '</div></div>';
+    if (a.k === 'xw') return head(n, d) + '<div class="hp-ws"><table class="hp-xw">' + Array.from({length: a.h}, (_, r) => '<tr>' + Array.from({length: a.w}, (_, c) => { const k = r * a.w + c;
+        return a.cells[k] ? '<td class="on">' + (a.nums[k] ? '<span class="hp-xn">' + a.nums[k] + '</span>' : '') + '</td>' : '<td></td>'; }).join('') + '</tr>').join('') + '</table>' +
+      '<div class="hp-clues">' + [['Across 横向', a.across], ['Down 纵向', a.down]].map(([h, l]) => '<div class="hp-xh">' + h + '</div>' + l.map(x => '<div><b>' + x.num + '</b> ' + H(x.zh) + ' <span class="hp-pos">' + H(x.en) + '</span></div>').join('')).join('') + '</div></div>';
     if (a.k === 'gap') return head(n, d) + a.items.map((x, i) => '<div class="hp-gap">' + (i + 1) + '. ' + H(x.s).replace('___', '<span class="hp-blank"></span>') + '</div>').join('') + '<div class="hp-bank">' + a.bank.map(H).join(' &nbsp;·&nbsp; ') + '</div>';
     if (a.k === 'anagram') return head(n, d) + '<div class="hp-two k-anagram">' + a.items.map((x, i) => '<div class="hp-line"><span>' + (i + 1) + '. <b class="hp-mix">' + x.mix.map(H).join(' / ') + '</b> ' + H(x.zh) + '</span><i></i></div>').join('') + '</div>';
     if (a.k === 'sentence') return head(n, d) + a.items.map((x, i) => '<div class="hp-sent">' + (i + 1) + '. <b>' + H(x.w) + '</b> ' + H(x.zh) + '<i></i><i></i></div>').join('');
@@ -280,11 +299,12 @@ function run(text, o){ o = o || {};
 }
 function para(runs, o){ o = o || {};
   const pr = (o.keepNext ? '<w:keepNext/>' : '') + (o.pageBreak ? '<w:pageBreakBefore/>' : '') +
-    '<w:spacing w:before="' + (o.before || 0) + '" w:after="' + (o.after || 0) + '"' + (o.line ? ' w:line="' + o.line + '" w:lineRule="auto"' : '') + '/>' +
+    '<w:spacing w:before="' + (o.before || 0) + '" w:after="' + (o.after || 0) + '"' + (o.line ? ' w:line="' + o.line + '" w:lineRule="' + (o.exact ? 'exact' : 'auto') + '"' : '') + '/>' +
     (o.ind ? '<w:ind w:left="' + o.ind + '"/>' : '') + (o.jc ? '<w:jc w:val="' + o.jc + '"/>' : '');
   return '<w:p><w:pPr>' + pr + '</w:pPr>' + (Array.isArray(runs) ? runs.join('') : (runs || '')) + '</w:p>';
 }
 const LINE = '<w:tcBorders><w:top w:val="nil"/><w:left w:val="nil"/><w:bottom w:val="single" w:sz="6" w:space="0" w:color="888888"/><w:right w:val="nil"/></w:tcBorders>';
+const BOX = '<w:tcBorders>' + ['top', 'left', 'bottom', 'right'].map(s => '<w:' + s + ' w:val="single" w:sz="8" w:space="0" w:color="333333"/>').join('') + '</w:tcBorders>';   // a crossword square
 // rows: [{h, exact, header, cells: [{x (paragraphs), w, shade, va, line}]}]
 function table(widths, rows, o){ o = o || {};
   const W = widths.reduce((a, b) => a + b, 0), side = s => '<w:' + s + ' w:val="single" w:sz="4" w:space="0" w:color="' + (o.color || '999999') + '"/>';
@@ -296,7 +316,7 @@ function table(widths, rows, o){ o = o || {};
     '<w:tblLook w:val="0000" w:firstRow="0" w:lastRow="0" w:firstColumn="0" w:lastColumn="0" w:noHBand="1" w:noVBand="1"/></w:tblPr>' +
     '<w:tblGrid>' + widths.map(w => '<w:gridCol w:w="' + w + '"/>').join('') + '</w:tblGrid>' +
     rows.map(r => '<w:tr><w:trPr><w:cantSplit/>' + (r.h ? '<w:trHeight w:val="' + r.h + '" w:hRule="' + (r.exact ? 'exact' : 'atLeast') + '"/>' : '') + (r.header ? '<w:tblHeader/>' : '') + '</w:trPr>' +
-      r.cells.map((c, i) => '<w:tc><w:tcPr><w:tcW w:w="' + (c.w || widths[i]) + '" w:type="dxa"/>' + (c.line ? LINE : '') +
+      r.cells.map((c, i) => '<w:tc><w:tcPr><w:tcW w:w="' + (c.w || widths[i]) + '" w:type="dxa"/>' + (c.box ? BOX : c.line ? LINE : '') +
         (c.shade ? '<w:shd w:val="clear" w:color="auto" w:fill="' + c.shade + '"/>' : '') + '<w:vAlign w:val="' + (c.va || 'center') + '"/></w:tcPr>' + (c.x || para('')) + '</w:tc>').join('') + '</w:tr>').join('') +
     '</w:tbl>';
 }
@@ -327,6 +347,17 @@ function actXML(a, n, ans){
     const left = a.size * cell + 200, clues = a.words.map((x, i) => para([run(ans ? '☑ ' : '☐ ', {sz: 11}), run(x.zh, {sz: 11}), run('  (' + x.n + ')', {sz: 9, color: GREY}),
       ans ? run('   ' + x.w, {b: true, color: ANS, sz: 10.5}) : ''], {after: 70})).join('');
     return heading(n, d) + table([left, WIDTH - left], [{cells: [{x: grid + para(''), va: 'top'}, {x: clues, va: 'top'}]}], {borders: false, pad: 0});
+  }
+  if (a.k === 'xw') {
+    // The grid: a square for each letter (its number small in the corner; the answers in blue on the answer sheet), nothing elsewhere
+    const cell = 340, grid = table(Array(a.w).fill(cell), Array.from({length: a.h}, (_, r) => ({h: cell, exact: true, cells: Array.from({length: a.w}, (_, c) => {
+      const k = r * a.w + c, ch = a.cells[k]; if (!ch) return {x: para('')};
+      return {box: true, va: 'top', x: para(a.nums[k] ? run(String(a.nums[k]), {sz: 5.5, color: '333333'}) : '', {line: 120, exact: true, ind: 30}) +
+        para(ans ? run(ch, {b: true, sz: 10.5, color: ANS}) : '', {jc: 'center', line: 210, exact: true})}; })})), {borders: false, pad: 0, padV: 0});
+    const list = (h, l) => para(run(h, {b: true, sz: 10.5}), {before: 40, after: 50}) + l.map(x => para([run(x.num + '  ', {b: true, sz: 10.5}), run(x.zh, {sz: 11}), run('  ' + x.en, {sz: 9, color: GREY}),
+      ans ? run('   ' + x.w, {b: true, color: ANS, sz: 10.5}) : ''], {after: 60, ind: 0})).join('');
+    const left = a.w * cell + 260;
+    return heading(n, d) + table([left, WIDTH - left], [{cells: [{x: grid + para(''), va: 'top'}, {x: list('Across 横向', a.across) + list('Down 纵向', a.down), va: 'top'}]}], {borders: false, pad: 0});
   }
   if (a.k === 'gap') {
     const items = a.items.map((x, i) => { const [pre, post] = x.s.split('___');

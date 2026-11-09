@@ -38,7 +38,7 @@ sidebar: English / 中文版) switches side. The landing page still shows when a
 | `en/language/`, `en/media/` | Old addresses: forward to Descriptive language and the topic list |
 | `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`), Big idea (`big-idea/`) and Note taking (`note-taking/`, `data-format="notes"`), with passages from `close-reading.csv`, `big-idea.csv` and `notes.csv` in `content/reading-comprehension/`. Computers only |
 | `tools/check_content.py` | Checks every content file before you push (`tools/check_reading.py` does the reading passages on their own) |
-| `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css` |
+| `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css`; `crossword.js`, the crossword maker (9 Nov 2026), also loaded by the teacher page (Crossword board game, starter and handout) |
 | `en/data/`, `zh/data/`, `en/reading/` | The old content files. Nothing uses them now: everything is in `content/` |
 | `zh/index.html` | Chinese version home (8 Nov 2026): the English home in Chinese (greeting and level, class games, the Daily Circuit, this week's points, Your subjects, More subjects, Got an idea?), drawn by `en/engine/home.js` from the Chinese subject list (`ZH_SUBJECTS` in `en/engine/subjects.js`) |
 | `zh/essentials/` | Academic English Essentials on the Chinese side. It shares `content/essentials/` with the English page, like every other topic (95 words, all with Chinese). `zh/keywords/` is its old address and forwards here |
@@ -111,7 +111,7 @@ what the page already has, so the games and pages underneath are unchanged.
 | Vocabulary | Match the meaning (meanings and synonym groups mixed, 31 Oct), Word or meaning, True or false |
 | Grammar | Fill the gap, Grammar Check (`right-wrong.csv`; called SPAG: Right or Wrong until 8 Nov), Spot the error (back in Grammar 31 Oct). Build the sentence moved to the Chinese version (25 Oct), and is back in Reading on the English side too (31 Oct) |
 | Reading (desktop only; Build the sentence also on phones) | Build the sentence (`builds.csv`, back on the English side 31 Oct), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
-| Games (the row across the bottom of a topic page) | General knowledge (`knowledge.csv`), Save the mouse, Word search (7 Nov 2026: the topic's words hidden in a square of letters; the list shows the words, or their meanings / their Chinese; size and directions follow the level; `playWordSearch` in app.js), Whack-a-word, Word Invaders, Word Snake. Word search is also on the Chinese topic pages (Games column, where "Wordsearch: coming soon" was) |
+| Games (the row across the bottom of a topic page) | General knowledge (`knowledge.csv`), Save the mouse, Word search (7 Nov 2026: the topic's words hidden in a square of letters; the list shows the words, or their meanings / their Chinese; size and directions follow the level; `playWordSearch` in app.js), Crossword (9 Nov 2026: the topic's words in a crossword; the clues are the meanings, on the Chinese side the Chinese or the meanings, with the letters in each word as in printed crosswords, (4,2,6); a word whose meaning contains the word itself is left out; `playCrossword` in app.js, the maker in `crossword.js`), Whack-a-word, Word Invaders, Word Snake. Word search is also on the Chinese topic pages (Games column, where "Wordsearch: coming soon" was), and Crossword under it |
 | Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` (change its `data-name`, `data-store` and `data-content`) and add one line for it to `ZH_SUBJECTS` in `en/engine/subjects.js` (since 8 Nov 2026 the Chinese home is drawn from that list).
@@ -191,11 +191,11 @@ landing page's subject boxes:
 - **Classes**: each class (with how many students) and + New class. A class can be shared with another teacher: on the
   class page, the teacher who made it types the other teacher's username and clicks Share (Stop sharing undoes it). The
   other teacher sees it in their Classes list ("from Mr Step") and can do everything with it except share it.
-- **Starters**: Build the Board (`#/starters`, the full builder), then Match Up, Gap Fill, Connecting Wall and Wordsearch,
-  each with a page of its own (`#/starters/match-up`, `gap-fill`, `connecting-wall`, `word-search`) that puts just that
+- **Starters**: Build the Board (`#/starters`, the full builder), then Match Up, Gap Fill, Connecting Wall, Wordsearch and Crossword,
+  each with a page of its own (`#/starters/match-up`, `gap-fill`, `connecting-wall`, `word-search`, `crossword`) that puts just that
   activity on the board. Each page remembers its own settings; Exit on the board comes back to it (`teacher/starters.js`).
 - **Handouts**: Vocab (`#/handouts`).
-- **Board Games**: Squaring Up, Don't Say It!, Hints, Categories (each opens its maker), and *Your saved board games* (`#/board`).
+- **Board Games**: Squaring Up, Don't Say It!, Hints, Categories, Crossword (each opens its maker), and *Your saved board games* (`#/board`).
 
 Reports and Suggestions are for the admin only, in a strip under the lists. The server decides who the admin is
 (`teachers.admin`; `sudo aea-admin make-admin <username>`, see `server/README.md`): other teachers don't see the strip and

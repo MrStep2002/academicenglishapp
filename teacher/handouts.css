@@ -56,6 +56,15 @@
 .hp-ws { display: flex; gap: 6mm; align-items: flex-start; }
 .hp-grid td { width: 0.6cm; height: 0.6cm; border: 1px solid #bbb; text-align: center; font-weight: 700; font-size: 11pt; padding: 0; }
 .hp-clues div { font-size: 11pt; margin-bottom: 4pt; }
+/* Crossword (9 Nov 2026): squares only where there are letters, the number small in the corner */
+.ho-page .hp-xw { width: auto; }
+.ho-page .hp-xw td { width: 0.6cm; min-width: 0.6cm; height: 0.6cm; padding: 0; border: 0; box-sizing: border-box; position: relative; vertical-align: top; }
+.ho-page .hp-xw td.on { border: 1px solid #333; }
+.hp-xn { position: absolute; left: 1pt; top: 0; font-size: 5.5pt; line-height: 1; color: #333; }
+.ho-page .hp-xw tr:last-child td { border-bottom: 0; }
+.ho-page .hp-xw tr:last-child td.on { border-bottom: 1px solid #333; }
+.hp-clues .hp-xh { font-weight: 700; font-size: 10.5pt; margin: 2pt 0 3pt; }
+.hp-clues .hp-xh ~ .hp-xh { margin-top: 6pt; }
 .hp-gap { font-size: 10.5pt; margin-bottom: 5pt; line-height: 1.35; }
 .hp-blank { display: inline-block; width: 3.2cm; border-bottom: 1px solid #333; }
 .hp-bank { border: 1px solid #999; padding: 4pt 6pt; text-align: center; margin-top: 4pt; }

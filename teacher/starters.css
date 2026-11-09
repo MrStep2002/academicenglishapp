@@ -293,3 +293,46 @@
 
 /* (9 Nov 2026) No line of keys under the board any more: the board goes down to the bottom of the screen */
 .st-play { padding-bottom: calc(16 * var(--u)); }
+
+/* Crossword (9 Nov 2026): the grid on the left, Check and the clues on the right. The square being typed in is yellow, its
+   word pale yellow; Check turns wrong letters red and the words that are right green; a letter given away is blue. */
+.k-crossword .st-in { gap: .45em; }
+.st-xw { flex: 1; min-height: 0; width: 100%; display: flex; gap: 1em; align-items: center; container-type: size; }
+.st-xwg { flex: none; width: min(calc(100cqh * var(--w) / var(--h)), 62cqw); aspect-ratio: var(--w) / var(--h); container-type: inline-size; user-select: none; -webkit-user-select: none;
+  display: grid; grid-template-columns: repeat(var(--w), minmax(0, 1fr)); grid-template-rows: repeat(var(--h), minmax(0, 1fr)); }
+.st-xc { position: relative; margin: -1px; border: 2px solid var(--ink); background: var(--card); display: grid; place-items: center; cursor: pointer; transition: background .15s; }
+.st-xc .n { position: absolute; left: 5%; top: 3%; font-size: calc(100cqi / var(--w) * .26); font-weight: 700; line-height: 1; color: var(--muted); pointer-events: none; }
+.st-xc .l { font-family: var(--display); font-weight: 800; font-size: calc(100cqi / var(--w) * .58); line-height: 1; margin-top: 10%; color: var(--ink); pointer-events: none; }
+.st-xc:hover { background: color-mix(in srgb, var(--tint, #3b82f6) 14%, var(--card)); }
+.st-xc.on { background: #fff3b0; }
+.st-xc.cur { background: #facc15; }
+.st-xc.on .l, .st-xc.cur .l, .st-xc.on .n, .st-xc.cur .n { color: #151935; }
+.st-xc.ok .l { color: #13774f; }
+.st-xc.ok:not(.on):not(.cur) { background: #d8f3e3; }
+.st-xc.bad .l { color: #c0392b; }
+.st-xc.bad:not(.cur) { background: #fde0dc; }
+.st-xc.giv .l { color: #1f63c4; }
+@media (prefers-color-scheme: dark) {
+  .st-xc.on { background: #5a4d12; } .st-xc.cur { background: #a88a0c; }
+  .st-xc.on .l, .st-xc.cur .l, .st-xc.on .n, .st-xc.cur .n { color: #fff; }
+  .st-xc.ok .l { color: #9be7bb; } .st-xc.ok:not(.on):not(.cur) { background: #123a25; }
+  .st-xc.bad .l { color: #ff8a78; } .st-xc.bad:not(.cur) { background: #43160f; }
+  .st-xc.giv .l { color: #8fb8ff; }
+}
+.st-xwr { flex: 1; min-width: 0; align-self: stretch; display: flex; flex-direction: column; gap: .4em; text-align: left; }
+.st-xwb { flex: none; display: flex; align-items: center; gap: .6em; font-size: .7em; }
+.st-xwb .bg-btn.small { font-size: 1em; }
+.st-xsay { font-weight: 700; color: var(--muted); }
+.st-xwl { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; font-size: .72em; }
+.st-xwl h3 { margin: .3em 0 .2em; font-family: var(--display); font-weight: 800; font-size: 1em; }
+.st-xwl h3::after { display: none; }
+.st-xwl ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .2em; }
+.st-xwl li { display: flex; align-items: baseline; gap: .45em; padding: .15em .4em; border-radius: .4em; border: .07em solid transparent; cursor: pointer; line-height: 1.22; }
+.st-xwl li:hover { border-color: var(--line); background: var(--card); }
+.st-xwl li .st-mk { align-self: flex-start; }
+.st-xwl li.cur { border-color: #facc15; background: color-mix(in srgb, #facc15 22%, var(--card)); }
+.st-xwl li.ok .st-mk { background: #13774f; }
+.st-xwl li.ok .st-xt::after { content: " ✓"; color: #13774f; font-weight: 800; }
+.st-xt { flex: 1; min-width: 0; }
+.st-xz { font-family: var(--zh); font-weight: 600; }
+.st-xe { color: var(--muted); font-size: .85em; white-space: nowrap; }

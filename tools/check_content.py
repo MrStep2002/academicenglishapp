@@ -51,6 +51,21 @@ HEADS = {
 }
 
 
+# Crossword (9 Nov 2026): a meaning that contains its word ("advertiser: a person who advertises") gives the answer away, so
+# the crossword leaves that word out when its clues are meanings. The same rule as gives() in en/engine/crossword.js: each
+# part of the word with 3+ letters (not "the", "and"…) is looked for at the start of a word in the clue, the whole part when
+# it has up to 5 letters, else its first letters (advertiser -> "advertis", so "advertises" counts).
+XW_SMALL = {'the', 'and', 'for', 'with', 'from', 'into', 'onto', 'that', 'this', 'its', 'not', 'but', 'off', 'out'}
+def xw_plain(s):
+    import unicodedata
+    return ''.join(c for c in unicodedata.normalize('NFD', str(s or '')) if not unicodedata.combining(c))
+def xw_gives(word, clue):
+    w = re.sub(r'\s*\([^)]*\)\s*', ' ', re.split(r'\s*/\s*', str(word or ''))[0]).strip()
+    stems = [p if len(p) <= 5 else p[:max(5, len(p) - 3)] for p in re.split(r'[^a-z]+', xw_plain(w).lower()) if len(p) >= 3 and p not in XW_SMALL]
+    c = ' ' + re.sub(r'[^a-z]+', ' ', xw_plain(clue).lower()) + ' '
+    return any(' ' + s in c for s in stems)
+
+
 def taboo_problems(word, taboo, hints):
     """Don't Say It!: a hint that uses the word, or one of its forbidden words, can't be read out."""
     def forms(w):
@@ -284,6 +299,12 @@ def check_folder(folder, all_word_ids):
     if words:
         no_zh = sum(1 for w in words if not w.get('zh'))
         if no_zh and no_zh < len(words): print(f'  {no_zh} word(s) have no Chinese (zh): the Chinese version leaves them out.')
+        give = [w for w in words if w.get('word') and xw_gives(w['word'], w.get('meaning', ''))]
+        if give: print(f'  Crossword: {len(give)} meaning(s) contain their word, so the crossword leaves those words out when the clues are meanings: '
+                       + '; '.join(w.get('word', '') for w in give) + '.')
+        givez = [w for w in words if w.get('word') and w.get('zh') and xw_gives(w['word'], w['zh'])]
+        if givez: print(f'  Crossword: {len(givez)} Chinese meaning(s) contain the English word, so the crossword leaves them out when the clues are Chinese: '
+                        + '; '.join(w.get('word', '') for w in givez) + '.')
     builds = data.get('builds', [])
     if builds:   # Build the sentence is on the Chinese version only: a sentence without its Chinese is not played anywhere
         with_zh = sum(1 for r in builds if r.get('zh'))

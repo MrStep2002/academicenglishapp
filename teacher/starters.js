@@ -6,11 +6,11 @@
      #/starters/gapfill          the teacher's own Gap Fill paragraphs
      #/starters/gapfill/new      make one: a paragraph from the bank (content/<topic>/reads.csv) or typed in, click words to make gaps
      #/starters/gapfill/<id>     change one
-     #/starters/match-up, #/starters/gap-fill, #/starters/connecting-wall, #/starters/word-search: one activity on its own,
+     #/starters/match-up, #/starters/gap-fill, #/starters/connecting-wall, #/starters/word-search, #/starters/crossword: one activity on its own,
                                  filling the board (9 Nov 2026: listed under Starters in the Staff Room); #/starters/match-up/words
                                  chooses its words
    Room on the board: one square for a question, half the board for Spot the error, the whole board for Match-up,
-   Connecting Wall and Gap Fill. Activities that won't fit are greyed out.
+   Connecting Wall, Gap Fill, Word search and Crossword. Activities that won't fit are greyed out.
    Content: the same CSV files as the games (through board.js: AEA_BOARD.lib), plus errors.csv (Spot the error), reads.csv
    (Gap Fill from the bank) and wall.csv (Connecting Wall: a group name and four or more words on each row).
    Saved in this browser under "aeaBoard:starter" (the choices and the starter on the board) and "aeaBoard:gapfills", not "aea:…"
@@ -44,10 +44,12 @@ const ACTS = [
   {k: 'match',    size: 'full',  words: true,      name: 'Match-up',              blurb: 'Words and meanings to pair up: random, or words you choose.'},
   {k: 'wall',     size: 'full',                    name: 'Connecting Wall',       blurb: 'Sixteen words to sort into four groups of four.'},
   {k: 'gapfill',  size: 'full',                    name: 'Gap Fill',              blurb: 'A paragraph with gaps and a word bank: from the bank, or one of your own.'},
-  {k: 'wordsearch', size: 'full', words: true,     name: 'Word search',           blurb: 'Topic words hidden in a square of letters. The list shows the words, or their meanings.'}
+  {k: 'wordsearch', size: 'full', words: true,     name: 'Word search',           blurb: 'Topic words hidden in a square of letters. The list shows the words, or their meanings.'},
+  // Crossword (9 Nov 2026): the class solves it together; you type in what they say (see "Crossword" below)
+  {k: 'crossword', size: 'full', words: true,      name: 'Crossword',             blurb: 'Topic words in a crossword. You type in what the class says; Check shows what\'s wrong.'}
 ];
 const ACT = Object.fromEntries(ACTS.map(a => [a.k, a]));
-const NEED = {match: 6, wall: 4, wordsearch: 6};
+const NEED = {match: 6, wall: 4, wordsearch: 6, crossword: 6};
 const GROUPS = [['small', 'One square each'], ['wide', 'Half the board'], ['full', 'The whole board']];
 const DEFAULTS = {title: '', topics: [], levels: [1, 2, 3, 4, 5], items: [], secs: 300, choices: false, clue: true};
 const PAIR = ['#c8344a', '#1f63c4', '#13804f', '#7343c9', '#b35300', '#b4286a', '#0b7a7a', '#4f5578'];   // Match-up pairs (white text reads on all of them)
@@ -171,7 +173,7 @@ function haveOf(k, cfg, lv){
   lv = lv || cfg.levels;
   const T = cfg.topics.filter(t => ALL.D[t] && ALL.X[t]), a = ACT[k];
   if (a.bank) return T.reduce((n, t) => n + eligible(ALL.D[t], a.bank, lv).length, 0);
-  if (a.words) return T.reduce((n, t) => n + wordsAt(ALL.D[t], lv).filter(k === 'anagram' ? anagramOK : k === 'vowels' ? vowelsOK : k === 'wordsearch' ? wsOK : matchOK).length, 0);
+  if (a.words) return T.reduce((n, t) => n + wordsAt(ALL.D[t], lv).filter(k === 'anagram' ? anagramOK : k === 'vowels' ? vowelsOK : k === 'wordsearch' ? wsOK : k === 'crossword' ? (x => xwStOK(x, 'def')) : matchOK).length, 0);
   if (k === 'errors') return T.reduce((n, t) => n + errorsAt(ALL.X[t], t, lv).length, 0);
   if (k === 'wall') return T.reduce((n, t) => n + (ALL.X[t].wall || []).length, 0);   // groups at the levels chosen come first; others fill the wall
   if (k === 'gapfill') return T.reduce((n, t) => n + readsAt(ALL.X[t], t, lv).length, 0);
@@ -289,6 +291,22 @@ function dealOne(it, cfg, used, done){
     const words = shuffle(made.placed).map((p, k) => ({w: p.w, def: p.def, n: p.L.length, a: p.cells[0], z: p.cells[p.cells.length - 1], col: WS_COL[k % WS_COL.length]}));
     return {k: 'wordsearch', size, lv: top, b: made.b.map(r => r.join('')), words, show: it.show === 'meanings' ? 'meanings' : 'words'};
   }
+  if (it.k === 'crossword') {
+    // The hardest level chosen sets how many words (Foundation and Foundation+: 8; otherwise 10); the words come from every level chosen
+    const X = XWS(); if (!X) return null;
+    const top = Math.max(...(lv.length ? lv : [3])), n = top >= 3 ? 10 : 8, clues = it.clues || 'def', cands = [];
+    for (const p of shuffle(T.flatMap(t => wordsAt(ALL.D[t], lv).filter(x => xwStOK(x, clues)).map(x => ({t, x}))))) {
+      if (used.has(wkey(p.t, p.x.id))) continue;
+      const L = X.letters(p.x.w);
+      if (cands.some(o => o.L === L || o.def === p.x.def || (p.x.zh && o.zh === p.x.zh) || (o.t === p.t && ALL.D[p.t].alike.has(o.id + '|' + p.x.id)))) continue;
+      cands.push({t: p.t, id: p.x.id, w: X.show(p.x.w), def: p.x.def, zh: p.x.zh, en: X.enumeration(p.x.w), L}); if (cands.length >= n + 20) break;
+    }
+    if (cands.length < 6) return null;
+    const lay = X.make(cands, {n, maxW: 13, maxH: 11, ms: 150}); if (!lay || lay.words.length < 5) return null;
+    lay.words.forEach(w => used.add(wkey(w.t, w.id)));
+    return {k: 'crossword', clues, lv: top, w: lay.w, h: lay.h, cells: lay.cells, nums: lay.nums,
+      words: lay.words.map(w => ({L: w.L, d: w.d, num: w.num, cells: w.cells, w: w.w, def: w.def, zh: w.zh, en: w.en}))};
+  }
   if (it.k === 'gapfill') {
     let src = it.src && it.src !== 'bank' ? gapOf(it.src) : null, title, text, extras;
     if (src) { title = src.title; text = src.text; extras = src.extras || []; }
@@ -402,6 +420,7 @@ function build(){
       const a = ACT[b.dataset.k], s = status(a); if (s.off) return;
       const it = {k: a.k}; if (a.k === 'gapfill') it.src = haveOf('gapfill', cfg) || !gapfills().length ? 'bank' : gapfills()[0].id;
       if (a.k === 'wordsearch') it.show = 'words';
+      if (a.k === 'crossword') it.clues = 'def';
       if (a.k === 'big') it.text = '';
       cfg.items.push(it); err(''); save(); drawAll();
       if (a.k === 'big') { const q = $('#s-bigq' + (cfg.items.length - 1)); if (q) q.focus(); }
@@ -420,12 +439,14 @@ function build(){
         (it.k === 'gapfill' ? '<select class="small" data-src="' + c.i + '" aria-label="Which paragraph">' + '<option value="bank">From the bank: a different one each time</option>' +
           gapfills().map(g => '<option value="' + esc(g.id) + '"' + (it.src === g.id ? ' selected' : '') + '>' + esc(g.title || 'Untitled') + '</option>').join('') + '</select>' : '') +
         (it.k === 'wordsearch' ? '<select class="small" data-show="' + c.i + '" aria-label="The list shows"><option value="words">The list shows the words</option><option value="meanings">The list shows their meanings</option></select>' : '') +
+        (it.k === 'crossword' ? '<select class="small" data-clues="' + c.i + '" aria-label="The clues are">' + XW_CLUES.map(([v, l]) => '<option value="' + v + '">The clues: ' + l.toLowerCase().replace(/^the /, '') + '</option>').join('') + '</select>' : '') +
         (it.k === 'match' ? '<span class="st-mbn">' + (it.pick && it.pick.length ? plural(it.pick.length, 'word') + ' you chose' : 'Random words') + '</span><a class="st-mbl" href="#/starters/matchup">Choose the words</a>' : '') +
         (it.k === 'big' ? '<span class="st-mbn" data-bigmini="' + c.i + '">' + esc(it.text || 'Type your question below') + '</span>' : '') +
         '<button type="button" class="st-x" data-x="' + c.i + '" title="Take it off the board" aria-label="Take ' + esc(a.name) + ' off the board">×</button></div>'; }).join('');
     box.querySelectorAll('[data-x]').forEach(b => b.onclick = () => { cfg.items.splice(+b.dataset.x, 1); err(''); save(); drawAll(); });
     box.querySelectorAll('[data-src]').forEach(s => { s.value = cfg.items[+s.dataset.src].src || 'bank'; s.onchange = () => { cfg.items[+s.dataset.src].src = s.value; save(); }; });
     box.querySelectorAll('[data-show]').forEach(s => { s.value = cfg.items[+s.dataset.show].show || 'words'; s.onchange = () => { cfg.items[+s.dataset.show].show = s.value; save(); }; });
+    box.querySelectorAll('[data-clues]').forEach(s => { s.value = cfg.items[+s.dataset.clues].clues || 'def'; s.onchange = () => { cfg.items[+s.dataset.clues].clues = s.value; save(); }; });
   };
   // The Big Question: its text box, under the small board, while it is on the board
   let bigSig = null;   // drawn again only when Big Questions are added or taken off (so typing isn't interrupted)
@@ -542,7 +563,7 @@ function mount(d){
   if (S.secs) { el.querySelector('.st-time').onclick = e => { e.currentTarget.blur(); clockToggle(); };
     el.querySelector('.st-go').onclick = e => { e.currentTarget.blur(); clockToggle(); };
     el.querySelector('.st-reset').onclick = e => { e.currentTarget.blur(); clockReset(); }; }
-  S.board.addEventListener('click', onBoardClick);
+  S.board.addEventListener('click', onBoardClick); S.board.addEventListener('dblclick', xwDouble);
   ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => S.board.addEventListener(t, wsPointer));
   S.onResize = () => { sizeUp(); fitAll(); }; S.onKey = onKey; S.onFs = () => tools();
   addEventListener('resize', S.onResize); addEventListener('keydown', S.onKey, true); document.addEventListener('fullscreenchange', S.onFs);
@@ -580,9 +601,10 @@ function clockReset(){ if (!S) return; clearInterval(S.tick); S.run = false; S.l
 
 // ---------- showing the answers ----------
 const kindOf = i => ACT[S.d.items[i].k];
-const subCount = it => it.k === 'match' ? it.pairs.length : it.k === 'gapfill' ? it.parts.filter(p => p.t === 'g').length : it.k === 'wall' ? 4 : it.k === 'wordsearch' ? it.words.length : 0;
+const subCount = it => it.k === 'crossword' ? 0 : it.k === 'match' ? it.pairs.length : it.k === 'gapfill' ? it.parts.filter(p => p.t === 'g').length : it.k === 'wall' ? 4 : it.k === 'wordsearch' ? it.words.length : 0;
 function isShown(i){ const it = S.d.items[i];
   if (it.k === 'big') return true;   // nothing to show
+  if (it.k === 'crossword') { const x = xwState(i); return it.words.every(w => xwRight(it, x, w)); }
   if (it.k === 'wall') return (S.st.solved[i] || []).length === 4;
   if (ACT[it.k].size === 'full') return (S.st.sub[i] || []).length === subCount(it);
   return !!S.st.shown[i]; }
@@ -590,6 +612,7 @@ const allShown = () => S.d.items.every((_, i) => isShown(i));
 function setShown(i, on){
   const it = S.d.items[i];
   if (it.k === 'big') return;
+  if (it.k === 'crossword') { const x = xwState(i); x.v = it.cells.map(ch => on ? ch : ''); x.g = []; x.b = []; x.ok = on ? it.words.map((w, n) => n) : []; S.xw = null; S.xwSay = null; return; }
   if (it.k === 'wall') { S.st.solved[i] = on ? wallSolveAll(i) : []; S.sel.clear(); }
   else if (ACT[it.k].size === 'full') S.st.sub[i] = on ? [...Array(subCount(it)).keys()] : [];
   else S.st.shown[i] = on;
@@ -607,8 +630,8 @@ function toggleSub(i, n){
 function navPanel(i, dir){
   const d = S.d; d.hist = d.hist || {}; d.pos = d.pos || {};
   const h = d.hist[i] = d.hist[i] || [d.items[i]], p = d.pos[i] != null ? d.pos[i] : h.length - 1;
-  const show = x => { d.items[i] = x; d.pos[i] = h.indexOf(x); ['shown', 'sub', 'solved', 'order'].forEach(k => { if (S.st[k]) delete S.st[k][i]; });
-    S.sel.clear(); S.wsPend = S.wsDrag = S.wsFlash = null; save(); drawPanel(i); tools(); };
+  const show = x => { d.items[i] = x; d.pos[i] = h.indexOf(x); ['shown', 'sub', 'solved', 'order', 'xw'].forEach(k => { if (S.st[k]) delete S.st[k][i]; });
+    S.sel.clear(); S.wsPend = S.wsDrag = S.wsFlash = S.xw = S.xwSay = null; save(); drawPanel(i); tools(); };
   if (dir < 0) { if (p > 0) show(h[p - 1]); return; }
   if (p < h.length - 1) return show(h[p + 1]);
   const cur = d.items[i]; if (!canNew(cur)) return;
@@ -629,6 +652,7 @@ function onBoardClick(e){
   const i = +p.dataset.i, it = S.d.items[i], nav = e.target.closest('[data-nav]');
   if (nav) return navPanel(i, +nav.dataset.nav);
   if (it.k === 'big') return;
+  if (it.k === 'crossword') return xwClick(e, i);
   if (it.k === 'wall') { const t = e.target.closest('.st-tile'); if (t && !t.classList.contains('solved')) wallPick(i, +t.dataset.t);
     const w = e.target.closest('[data-wall]'); if (w) wallAct(i, w.dataset.wall); return; }
   if (ACT[it.k].size === 'full') { const s = e.target.closest('[data-sub]'); if (s) toggleSub(i, +s.dataset.sub); return; }
@@ -639,6 +663,7 @@ function onKey(e){
   if (e.target && e.target.matches && e.target.matches('input, textarea, select')) return;
   if (e.ctrlKey || e.metaKey || e.altKey) return;
   const k = e.key;
+  if (S.xw && xwKey(e)) return;   // typing into the crossword
   if (k === ' ' || k === 'Spacebar') { e.preventDefault(); clockToggle(); return; }
   if (k === 'a' || k === 'A') { e.preventDefault(); allToggle(); return; }
   if (/^[1-9]$/.test(k)) {
@@ -647,6 +672,108 @@ function onKey(e){
     if (cells.length === 1 && kindOf(cells[0].i).size === 'full') { const i = cells[0].i; if (S.d.items[i].k !== 'wall') toggleSub(i, n - 1); return; }
     if (cells[n - 1]) toggle(cells[n - 1].i);
   }
+}
+
+// ---------- Crossword (9 Nov 2026, teacher: "Have the type it in first and then check shows what's wrong… Maybe have an option for
+// the teacher to give away a letter by double clicking on it?") ----------
+// The class solves it together on the board: the teacher clicks a square or a clue and types what the class calls out (the
+// letters move along the word; click the square again to go across or down; arrow keys move, Tab goes to the next clue,
+// Backspace takes a letter out, Esc stops typing). Check (or Enter) turns the wrong letters red and ticks the words that are
+// right. Double-click a square to give that letter away (blue); double-click a clue to give the whole word away. A, when no
+// square is chosen, shows every answer (and hides them again), as on every starter.
+// Made by the site's crossword maker (en/engine/crossword.js). The hardest level chosen sets the size: Foundation and
+// Foundation+ 8 words, otherwise 10. Clues: the meanings, the Chinese, or both (it.clues).
+// What's typed is saved with the starter (state.xw[i]: v the letters, g the squares given away, b the letters marked wrong,
+// ok the words ticked by Check), so a reload carries on.
+const XWS = () => window.AEA_XW || null;
+const xwStOK = (x, clues) => { const X = XWS(); if (!X) return false;
+  const t = X.show(x.w).toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, ''), n = X.letters(x.w).length;
+  if (!/^[a-z][a-z '’\-]*$/.test(t) || t.split(/[\s-]+/).filter(Boolean).length > 4 || n < 3 || n > 13) return false;
+  return (clues === 'zh' || !X.gives(x.w, x.def)) && (!clues || clues === 'def' || (x.zh && !X.gives(x.w, x.zh))); };
+const XW_CLUES = [['def', 'The meanings'], ['zh', 'The Chinese'], ['both', 'Both']];
+const xwZh = z => (String(z || '').split(/[；;，,]/)[0].replace(/（[^）]*）|\([^)]*\)/g, '').trim() || String(z || '').trim());
+function xwState(i){ const it = S.d.items[i]; S.st.xw = S.st.xw || {};
+  const x = S.st.xw[i] = S.st.xw[i] || {}; if (!Array.isArray(x.v) || x.v.length !== it.cells.length) x.v = it.cells.map(() => '');
+  x.g = x.g || []; x.b = x.b || []; x.ok = x.ok || []; return x; }
+const xwRight = (it, x, w) => w.cells.every(k => x.v[k] === it.cells[k]);
+const xwWordAt = (it, d, k) => it.words.findIndex(w => w.d === d && w.cells.includes(k));
+function xwHTML(i, it){
+  const x = xwState(i), cur = S.xw && S.xw.i === i ? S.xw : null, wi = cur ? xwCurWord(it, cur) : -1, on = new Set(wi >= 0 ? it.words[wi].cells : []);
+  const clue = w => { const c = it.clues || 'def';
+    return (c !== 'zh' ? '<span class="st-xd">' + esc(w.def) + '</span>' : '') + (c !== 'def' && w.zh ? ' <span class="st-xz" lang="zh-CN">' + esc(c === 'both' ? xwZh(w.zh) : w.zh) + '</span>' : '') + ' <span class="st-xe">' + esc(w.en) + '</span>'; };
+  const list = d => it.words.map((w, k) => [w, k]).filter(([w]) => w.d === d).sort((a, b) => a[0].num - b[0].num).map(([w, k]) =>
+    '<li data-xc="' + k + '" class="' + (k === wi ? 'cur' : '') + (x.ok.includes(k) ? ' ok' : '') + '"><span class="st-mk">' + w.num + '</span><span class="st-xt">' + clue(w) + '</span></li>').join('');
+  return '<div class="st-xw"><div class="st-xwg" style="--w:' + it.w + ';--h:' + it.h + '">' +
+      it.cells.map((ch, k) => ch ? '<div class="st-xc' + xwCls(it, x, k, on, cur) + '" data-xk="' + k + '">' + (it.nums[k] ? '<span class="n">' + it.nums[k] + '</span>' : '') + '<span class="l">' + esc(x.v[k]) + '</span></div>' : '<span></span>').join('') + '</div>' +
+    '<div class="st-xwr"><div class="st-xwb"><button type="button" class="bg-btn small" data-xa="check" title="Wrong letters go red (Enter)">Check</button>' +
+      '<span class="st-xsay">' + esc(S.xwSay && S.xwSay.i === i ? S.xwSay.t : '') + '</span></div>' +
+      '<div class="st-xwl"><h3>Across</h3><ol>' + list('a') + '</ol><h3>Down</h3><ol>' + list('d') + '</ol></div></div></div>';
+}
+const xwCls = (it, x, k, on, cur) => (on.has(k) ? ' on' : '') + (cur && cur.k === k ? ' cur' : '') + (x.b.includes(k) ? ' bad' : '') + (x.g.includes(k) ? ' giv' : '') +
+  (it.words.some((w, n) => x.ok.includes(n) && w.cells.includes(k)) ? ' ok' : '');
+const xwCurWord = (it, cur) => { const a = xwWordAt(it, cur.d, cur.k); return a >= 0 ? a : xwWordAt(it, cur.d === 'a' ? 'd' : 'a', cur.k); };
+// Only the squares and the list change while typing: the square keeps its size and its text size
+function xwPaint(i){
+  const p = S.board.querySelector('.st-panel[data-i="' + i + '"]'); if (!p) return;
+  const it = S.d.items[i], x = xwState(i), cur = S.xw && S.xw.i === i ? S.xw : null, wi = cur ? xwCurWord(it, cur) : -1, on = new Set(wi >= 0 ? it.words[wi].cells : []);
+  p.querySelectorAll('[data-xk]').forEach(c => { const k = +c.dataset.xk; c.className = 'st-xc' + xwCls(it, x, k, on, cur); c.querySelector('.l').textContent = x.v[k]; });
+  p.querySelectorAll('[data-xc]').forEach(li => { const k = +li.dataset.xc; li.className = (k === wi ? 'cur' : '') + (x.ok.includes(k) ? ' ok' : ''); });
+  const s = p.querySelector('.st-xsay'); if (s) s.textContent = S.xwSay && S.xwSay.i === i ? S.xwSay.t : '';
+  p.classList.toggle('shown', isShown(i)); tools();
+}
+const xwLocked = (x, k) => x.g.includes(k);
+function xwMove(it, x, step){ const cur = S.xw, wi = xwCurWord(it, cur); if (wi < 0) return false; const c = it.words[wi].cells; let j = c.indexOf(cur.k) + step;
+  while (j >= 0 && j < c.length && xwLocked(x, c[j])) j += step;
+  if (j >= 0 && j < c.length) { cur.k = c[j]; return true; } return false; }
+function xwGo(i, w){ const it = S.d.items[i], x = xwState(i), wd = it.words[w];
+  S.xw = {i, d: wd.d, k: wd.cells.find(k => !x.v[k] && !xwLocked(x, k)) ?? wd.cells[0]}; S.xwSay = null; xwPaint(i); }
+function xwClick(e, i){
+  const it = S.d.items[i], x = xwState(i), a = e.target.closest('[data-xa]'), c = e.target.closest('[data-xk]'), li = e.target.closest('[data-xc]');
+  if (a) { if (a.dataset.xa === 'check') xwCheck(i); a.blur(); return; }
+  if (c) { const k = +c.dataset.xk;
+    if (S.xw && S.xw.i === i && S.xw.k === k) { if (e.detail < 2) { const o = S.xw.d === 'a' ? 'd' : 'a'; if (xwWordAt(it, o, k) >= 0) S.xw.d = o; } }
+    else S.xw = {i, k, d: xwWordAt(it, 'a', k) >= 0 ? 'a' : 'd'};
+    S.xwSay = null; xwPaint(i); return; }
+  if (li) { xwGo(i, +li.dataset.xc); return; }
+  void x;
+}
+// Double-click: a square gives its letter away; a clue gives its whole word away
+function xwDouble(e){
+  if (!S) return; const p = e.target.closest('.st-panel'); if (!p) return; const i = +p.dataset.i, it = S.d.items[i]; if (!it || it.k !== 'crossword') return;
+  const x = xwState(i), c = e.target.closest('[data-xk]'), li = e.target.closest('[data-xc]');
+  const give = k => { x.v[k] = it.cells[k]; if (!x.g.includes(k)) x.g.push(k); x.b = x.b.filter(b => b !== k); };
+  if (c) give(+c.dataset.xk); else if (li) { const w = it.words[+li.dataset.xc]; w.cells.forEach(give); if (!x.ok.includes(+li.dataset.xc)) x.ok.push(+li.dataset.xc); } else return;
+  e.preventDefault(); if (window.getSelection) window.getSelection().removeAllRanges();
+  chime('right'); save(); xwPaint(i);
+}
+function xwCheck(i){
+  const it = S.d.items[i], x = xwState(i); let typed = 0;
+  x.b = []; x.v.forEach((v, k) => { if (!v || x.g.includes(k)) return; typed++; if (v !== it.cells[k]) x.b.push(k); });
+  const was = x.ok.length; x.ok = it.words.map((w, n) => n).filter(n => xwRight(it, x, it.words[n]));
+  S.xwSay = {i, t: !typed ? 'Nothing typed yet' : x.b.length ? x.b.length + ' wrong letter' + (x.b.length === 1 ? '' : 's') : x.ok.length === it.words.length ? 'All right!' : 'No wrong letters'};
+  chime(x.b.length ? 'wrong' : x.ok.length > was || x.ok.length === it.words.length ? 'right' : 'right');
+  save(); xwPaint(i);
+}
+// Keys while a square is chosen; true when the key was the crossword's
+function xwKey(e){
+  const cur = S.xw; if (!cur) return false;
+  const i = cur.i, it = S.d.items[i]; if (!it || it.k !== 'crossword') { S.xw = null; return false; }
+  const x = xwState(i), k = e.key;
+  if (/^[a-zA-Z]$/.test(k)) { e.preventDefault(); if (!xwLocked(x, cur.k)) { x.v[cur.k] = k.toUpperCase(); x.b = x.b.filter(b => b !== cur.k); } xwMove(it, x, 1); S.xwSay = null; save(); xwPaint(i); return true; }
+  if (k === 'Backspace') { e.preventDefault(); if (x.v[cur.k] && !xwLocked(x, cur.k)) x.v[cur.k] = ''; else if (xwMove(it, x, -1) && !xwLocked(x, cur.k)) x.v[cur.k] = '';
+    x.b = x.b.filter(b => x.v[b]); save(); xwPaint(i); return true; }
+  if (k === 'Delete') { e.preventDefault(); if (!xwLocked(x, cur.k)) x.v[cur.k] = ''; save(); xwPaint(i); return true; }
+  const mv = {ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1]}[k];
+  if (mv) { e.preventDefault(); const d = mv[1] ? 'a' : 'd';
+    if (cur.d !== d && xwWordAt(it, d, cur.k) >= 0) cur.d = d;
+    else { let r = Math.floor(cur.k / it.w) + mv[0], c = cur.k % it.w + mv[1];
+      while (r >= 0 && r < it.h && c >= 0 && c < it.w) { const n = r * it.w + c; if (it.cells[n]) { cur.k = n; if (xwWordAt(it, cur.d, n) < 0) cur.d = d; break; } r += mv[0]; c += mv[1]; } }
+    xwPaint(i); return true; }
+  if (k === 'Tab') { e.preventDefault(); const order = it.words.map((w, n) => n).sort((a, b) => (it.words[a].d === it.words[b].d ? it.words[a].num - it.words[b].num : it.words[a].d === 'a' ? -1 : 1));
+    const at = order.indexOf(xwCurWord(it, cur)), n = order.length; xwGo(i, order[(at + (e.shiftKey ? -1 : 1) + n) % n]); return true; }
+  if (k === 'Enter') { e.preventDefault(); xwCheck(i); return true; }
+  if (k === 'Escape') { e.preventDefault(); S.xw = null; xwPaint(i); return true; }
+  return false;
 }
 
 // ---------- the panels ----------
@@ -662,6 +789,7 @@ function headOf(it){
   if (it.k === 'match') return 'Match each word to its meaning: write <b>1 C</b>, <b>2 A</b>…';
   if (it.k === 'gapfill') return it.extra ? 'Fill the gaps from the word bank: not every word is needed' : 'Fill the gaps: use each word in the bank once';
   if (it.k === 'wordsearch') return (it.show !== 'meanings' ? 'Find the words' : 'Find the word for each meaning') + ': ' + esc(WS_SAY[it.lv]).replace(/^Words/, 'they').replace(/\.$/, '');
+  if (it.k === 'crossword') return 'Crossword: ' + (it.clues === 'zh' ? 'write the English word for each Chinese clue' : 'write the word for each clue') + '. The numbers in brackets are its letters';
   return HEAD[it.k] || esc(ACT[it.k].name);
 }
 const blank = (w, on) => '<span class="st-blank' + (on ? ' on' : '') + '"><span>' + esc(w) + '</span></span>';
@@ -786,8 +914,8 @@ function drawPanel(i, first){
     (nav ? '<span class="st-nav"><button type="button" data-nav="-1" title="Back to the one before" aria-label="Back to the one before"' + (pos > 0 ? '' : ' disabled') + '>‹</button>' +
       '<button type="button" data-nav="1" title="A different one" aria-label="A different one"' + (canNew(it) || pos < hist.length - 1 ? '' : ' disabled') + '>›</button></span>' : '') +
     '</div>' +
-    '<div class="st-body"><div class="st-in' + (it.k === 'wall' || it.k === 'wordsearch' ? ' fill' : '') + (on ? ' on' : '') + '">' +
-      (it.k === 'big' ? '<p class="st-bigq">' + esc(it.text) + '</p>' : a.size === 'small' ? smallHTML(it, on) : it.k === 'errors' ? errorsHTML(it) : it.k === 'match' ? matchHTML(it, sub) : it.k === 'gapfill' ? gapfillHTML(it, sub) : it.k === 'wordsearch' ? wsHTML(i, it, sub) : wallHTML(i, it)) +
+    '<div class="st-body"><div class="st-in' + (it.k === 'wall' || it.k === 'wordsearch' || it.k === 'crossword' ? ' fill' : '') + (on ? ' on' : '') + '">' +
+      (it.k === 'big' ? '<p class="st-bigq">' + esc(it.text) + '</p>' : a.size === 'small' ? smallHTML(it, on) : it.k === 'errors' ? errorsHTML(it) : it.k === 'match' ? matchHTML(it, sub) : it.k === 'gapfill' ? gapfillHTML(it, sub) : it.k === 'wordsearch' ? wsHTML(i, it, sub) : it.k === 'crossword' ? xwHTML(i, it) : wallHTML(i, it)) +
     '</div></div>';
   if (!first) fitPanel(p);
 }
@@ -947,16 +1075,16 @@ function mtChoose(single){
 }
 
 // ---------- One activity on its own (9 Nov 2026, teacher) ----------
-// The Staff Room lists Match Up, Gap Fill, Connecting Wall and Wordsearch under Starters, each with a page of its own: the
+// The Staff Room lists Match Up, Gap Fill, Connecting Wall, Wordsearch and Crossword under Starters, each with a page of its own: the
 // same activity as on Build the Board, filling the whole board, with its own topics, levels and settings, saved apart from
 // Build the Board's (aeaBoard:starter → one[k]). Exit on the board comes back to the page (deal.back).
 const ONE = {match: {path: 'match-up', name: 'Match Up'}, gapfill: {path: 'gap-fill', name: 'Gap Fill'},
-  wall: {path: 'connecting-wall', name: 'Connecting Wall'}, wordsearch: {path: 'word-search', name: 'Wordsearch'}};
+  wall: {path: 'connecting-wall', name: 'Connecting Wall'}, wordsearch: {path: 'word-search', name: 'Wordsearch'}, crossword: {path: 'crossword', name: 'Crossword'}};
 let gfFrom = 'board';   // where the Gap Fill paragraphs page was opened from: Build the Board, or the Gap Fill page ('one')
 function oneCfg(k){
   const m = cfgNow(), o = (store().one || {})[k] || {};
   const c = Object.assign({title: '', topics: m.topics.slice(), levels: m.levels.slice(), secs: m.secs, words: 'random'}, clone(o));
-  c.item = Object.assign({k}, k === 'wordsearch' ? {show: 'words'} : k === 'gapfill' ? {src: 'bank'} : {}, o.item ? clone(o.item) : {}, {k});
+  c.item = Object.assign({k}, k === 'wordsearch' ? {show: 'words'} : k === 'crossword' ? {clues: 'def'} : k === 'gapfill' ? {src: 'bank'} : {}, o.item ? clone(o.item) : {}, {k});
   if (k === 'gapfill' && c.item.src !== 'bank' && !gapOf(c.item.src)) c.item.src = 'bank';
   return c;
 }
@@ -970,7 +1098,8 @@ const ONE_LEAD = {
   match: 'Words and meanings to pair up, on the whole board. Students write the pairs in their books; you show the answers one by one or all at once.',
   gapfill: 'A paragraph with gaps and a word bank, on the whole board: one from the bank for the topics you choose, or one of your own.',
   wall: 'Sixteen words to sort into four groups of four, on the whole board. Click four tiles that belong together to check them.',
-  wordsearch: 'Topic words hidden in a square of letters, on the whole board. The size and the directions follow the hardest level you choose.'
+  wordsearch: 'Topic words hidden in a square of letters, on the whole board. The size and the directions follow the hardest level you choose.',
+  crossword: 'A crossword of topic words, on the whole board, for the class to solve together. Click a square or a clue and type what they say; Check (or Enter) shows the wrong letters. Double-click a square to give away its letter, or a clue to give away its word.'
 };
 function one(k){
   const o = ONE[k], c = oneCfg(k); if (k === 'gapfill') gfFrom = 'one';
@@ -987,7 +1116,12 @@ function one(k){
     wall: '<section class="card st-sec"><h2>The wall</h2><p class="note">The groups come from the topics\' Connecting Wall lists (wall.csv). Groups at the levels you choose come first; others fill the wall if needed.</p></section>',
     wordsearch: '<section class="card st-sec"><h2>The list beside the letters</h2>' +
       radio('o-show', 'words', c.item.show === 'meanings' ? '' : 'words', '<b>The words</b><br><span class="note">Students find the words they can see.</span>') +
-      radio('o-show', 'meanings', c.item.show === 'meanings' ? 'meanings' : '', '<b>Their meanings</b><br><span class="note">Students work out each word from its meaning, then find it.</span>') + '</section>'
+      radio('o-show', 'meanings', c.item.show === 'meanings' ? 'meanings' : '', '<b>Their meanings</b><br><span class="note">Students work out each word from its meaning, then find it.</span>') + '</section>',
+    crossword: '<section class="card st-sec"><h2>The clues</h2>' +
+      radio('o-clues', 'def', c.item.clues || 'def', '<b>The meanings</b>') +
+      radio('o-clues', 'zh', c.item.clues || 'def', '<b>The Chinese</b><br><span class="note">Students write the English word for each Chinese clue.</span>') +
+      radio('o-clues', 'both', c.item.clues || 'def', '<b>Both</b><br><span class="note">The meaning, with the Chinese after it.</span>') +
+      '<p class="note">A word whose meaning contains the word itself is left out: its clue would give it away. Foundation and Foundation+ have 8 words, the other levels 10.</p></section>'
   }[k];
   C.view.innerHTML =
     '<p class="note st-lead">' + esc(ONE_LEAD[k]) + '</p>' +
@@ -1037,6 +1171,7 @@ function one(k){
   if (k === 'match') $$('[name=o-words]').forEach(r => r.onchange = () => { c.words = r.value; save(); draw(); });
   if (k === 'match') $('#o-choose').onclick = e => { if (!c.topics.length) { e.preventDefault(); err('Choose at least one topic first.'); } else { c.words = 'pick'; save(); } };
   if (k === 'wordsearch') $$('[name=o-show]').forEach(r => r.onchange = () => { c.item.show = r.value; save(); });
+  if (k === 'crossword') $$('[name=o-clues]').forEach(r => r.onchange = () => { c.item.clues = r.value; save(); });
   if (k === 'gapfill') $('#o-src').onchange = () => { c.item.src = $('#o-src').value; save(); draw(); };
   $('#o-go').onclick = () => {
     err('');
