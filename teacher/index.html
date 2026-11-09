@@ -107,6 +107,12 @@
   .sg-card p { margin: 0; }
   .sg-said { margin: 0; white-space: pre-wrap; word-break: break-word; font-size: 1.05rem; line-height: 1.45; }
   .sg-kindtag { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: .82rem; font-weight: 700; background: var(--bg); border: 1.5px solid var(--line); }
+  /* Shared classes (9 Nov 2026): the line on a class page */
+  .share-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 14px; padding: 12px 16px; border: 1.5px dashed var(--line); border-radius: 12px; }
+  .share-line p, .share-line .note { margin: 0; flex-basis: 100%; }
+  .share-line label { font-weight: 700; }
+  .share-line input[type=text] { width: 13em; padding: 6px 10px; }
+  .share-line .who { display: inline-flex; align-items: center; gap: 6px; }
 </style>
 </head>
 <body class="aea-staff">
@@ -140,7 +146,10 @@
    Starters (7 Nov 2026): #/starters… a few minutes of questions on the projector at the start of a lesson (starters.js, starters.css).
    The Staff Room (9 Nov 2026, teacher): the main view is four lists, Classes, Starters (Build the Board, Match Up, Gap Fill,
    Connecting Wall, Wordsearch), Handouts (Vocab) and Board Games (Squaring Up, Don't Say It!, Hints, Categories); Reports
-   and Suggestions are for the admin only (the server says who: server/admin.js make-admin), in a strip under the lists. */
+   and Suggestions are for the admin only (the server says who: server/admin.js make-admin), in a strip under the lists.
+   Shared classes (9 Nov 2026, teacher: "I just want her to be able to connect with my class"): on a class page the teacher
+   who made the class can share it with another teacher (their username) or stop sharing it; the other teacher sees it in
+   their Classes list ("from Mr Step") and can do everything with it except share it. */
 (function(){
 'use strict';
 var API = (function(){ var a = ''; try { a = localStorage.getItem('aea:api') || ''; } catch (e) {} return (a || 'https://api.academicenglishapp.com').replace(/\/+$/, ''); })();
@@ -229,7 +238,8 @@ function showClasses(){
     isAdmin = !!r.admin;
     view.innerHTML = '<div class="aea-areas sr-cols">' +
       box('Classes', '#b4286a', r.classes.map(function(c){
-        return item('#/class/' + c.id, esc(c.name), c.students + ' student' + (c.students === 1 ? '' : 's')); }).join('') +
+        var n = c.students + ' student' + (c.students === 1 ? '' : 's');
+        return item('#/class/' + c.id, esc(c.name), n + (c.from ? ' · from ' + esc(c.from) : c.sharedWith && c.sharedWith.length ? ' · shared with ' + esc(c.sharedWith.join(', ')) : '')); }).join('') +
         '<li><a class="sr-add" href="#/new"><span>+ New class</span></a></li>',
         r.classes.length ? '' : '<p class="note sr-foot">No classes yet. Make your first one.</p>') +
       box('Starters', '#1a5cb0', item('#/starters', 'Build the Board') + item('#/starters/match-up', 'Match Up') + item('#/starters/gap-fill', 'Gap Fill') +
@@ -340,6 +350,7 @@ function showClass(id){
       '<a class="btn alt" href="#/class/' + id + '/existing">+ From your other classes</a>' +
       '<button class="btn alt" type="button" id="resetall">New passwords for everyone</button>' +
       '<button class="btn alt" type="button" id="rename">Rename</button></div></div>' +
+      shareLine(r.teachers) +
       classTabs(id, 'students') +
       '<p class="err" id="err" role="alert" hidden></p>' +
       (list.length ? '<div class="row" style="margin-bottom:10px"><span class="lab">Set everyone:</span>' + sideSelect('', 'id="allSide"').replace('<option value="en" selected>', '<option value="" selected>Version…</option><option value="en">') +
@@ -366,6 +377,7 @@ function showClass(id){
       call('/api/teacher/classes/' + id + '/rename', {name: n}).then(function(){ showClass(id); }).catch(fail());
     };
     document.getElementById('add').onclick = function(){ showAdd(id, c.name); };
+    wireShare(id, c.name);
     Array.prototype.forEach.call(view.querySelectorAll('[data-remove]'), function(b){ b.onclick = function(){
       if (!confirm('Take ' + b.getAttribute('data-name') + ' out of ' + c.name + '? They stay in ' + b.getAttribute('data-also') + ' with the same login, points and words. Their scores in this class\'s games are kept, and you can add them back.')) return;
       b.disabled = true;
@@ -386,6 +398,32 @@ function showClass(id){
       if (!confirm('Set the lowest level for everyone in ' + c.name + ' to ' + (allMin.options[allMin.selectedIndex].text) + '?' + alsoNote)) { allMin.value = ''; return; }
       call('/api/teacher/classes/' + id + '/settings', {minLevel: +allMin.value || null}).then(function(){ showClass(id); }).catch(fail()); };
   }).catch(function(x){ view.innerHTML = '<p><a class="backlink" href="#/">← Staff Room</a></p><p class="err">' + esc(x.message) + '</p>'; });
+}
+
+// Sharing the class with another teacher (only the teacher who made it). t: {mine, owner, shared: [{id, name}]}
+function shareLine(t){
+  if (!t) return '';   // an older server
+  if (!t.mine) return '<div class="share-line"><p>Shared with you by <b>' + esc(t.owner) + '</b>. Only ' + esc(t.owner) + ' can change who it is shared with.</p></div>';
+  return '<form class="share-line" id="sharef" novalidate>' +
+    (t.shared.length ? '<p>Shared with ' + t.shared.map(function(x){ return '<span class="who"><b>' + esc(x.name) + '</b> <button class="btn small alt" type="button" data-unshare="' + x.id + '" data-name="' + esc(x.name) + '">Stop sharing</button></span>'; }).join(' ') + '</p>' : '') +
+    '<label for="shu">' + (t.shared.length ? 'Share with another teacher' : 'Share this class with a teacher') + '</label>' +
+    '<input type="text" id="shu" placeholder="Their username" autocomplete="off" autocapitalize="off" spellcheck="false">' +
+    '<button class="btn small" type="submit">Share</button>' +
+    '<span class="note">They see the students, their progress and the class games, and can do everything here except share the class.</span></form>';
+}
+function wireShare(id, name){
+  var f = document.getElementById('sharef'); if (!f) return;
+  f.onsubmit = function(e){
+    e.preventDefault(); var u = document.getElementById('shu').value.trim(), b = f.querySelector('button[type=submit]');
+    if (!u) { document.getElementById('shu').focus(); return; }
+    b.disabled = true; document.getElementById('err').hidden = true;
+    call('/api/teacher/classes/' + id + '/share', {username: u}).then(function(){ showClass(id); }).catch(fail());
+  };
+  Array.prototype.forEach.call(f.querySelectorAll('[data-unshare]'), function(b){ b.onclick = function(){
+    if (!confirm('Stop sharing ' + name + ' with ' + b.getAttribute('data-name') + '? They will no longer see this class. Nothing in the class changes.')) return;
+    b.disabled = true;
+    call('/api/teacher/classes/' + id + '/unshare', {id: +b.getAttribute('data-unshare')}).then(function(){ showClass(id); }).catch(fail());
+  }; });
 }
 
 function showAdd(id, name){

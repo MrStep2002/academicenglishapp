@@ -48,8 +48,13 @@ async function newPassword() {
   } else if (cmd === 'list') {
     for (const t of db.prepare('SELECT * FROM teachers ORDER BY login').all()) {
       console.log(`Teacher ${t.login} (${t.name})${t.admin ? ' · admin' : ''}`);
-      for (const c of db.prepare('SELECT classes.name, COUNT(class_members.student_id) AS n FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name').all(t.id))
-        console.log(`  ${c.name}: ${c.n} students`);
+      for (const c of db.prepare('SELECT classes.id, classes.name, COUNT(class_members.student_id) AS n FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name').all(t.id)) {
+        const sh = db.prepare('SELECT teachers.login FROM class_teachers JOIN teachers ON teachers.id = class_teachers.teacher_id WHERE class_id = ?').all(c.id).map(x => x.login);
+        console.log(`  ${c.name}: ${c.n} students${sh.length ? ' (shared with ' + sh.join(', ') + ')' : ''}`);
+      }
+      // Classes another teacher shared with them (9 Nov 2026)
+      for (const c of db.prepare('SELECT classes.name, teachers.login FROM class_teachers JOIN classes ON classes.id = class_teachers.class_id JOIN teachers ON teachers.id = classes.teacher_id WHERE class_teachers.teacher_id = ? ORDER BY classes.name').all(t.id))
+        console.log(`  ${c.name} (shared by ${c.login})`);
     }
   } else {
     console.log('Use one of:\n  add-teacher <username> "<Display name>"\n  teacher-password <username>\n  list\n  make-admin <username>');

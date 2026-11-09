@@ -188,7 +188,9 @@ days in a row; the teacher's name, Change password and Log out are in the top ba
 site; the path in the top bar (Staff Room / …) is the way back to the Staff Room. The main view is four lists, like the
 landing page's subject boxes:
 
-- **Classes**: each class (with how many students) and + New class.
+- **Classes**: each class (with how many students) and + New class. A class can be shared with another teacher: on the
+  class page, the teacher who made it types the other teacher's username and clicks Share (Stop sharing undoes it). The
+  other teacher sees it in their Classes list ("from Mr Step") and can do everything with it except share it.
 - **Starters**: Build the Board (`#/starters`, the full builder), then Match Up, Gap Fill, Connecting Wall and Wordsearch,
   each with a page of its own (`#/starters/match-up`, `gap-fill`, `connecting-wall`, `word-search`) that puts just that
   activity on the board. Each page remembers its own settings; Exit on the board comes back to it (`teacher/starters.js`).

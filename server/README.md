@@ -122,6 +122,19 @@ sudo bash /opt/aea/server/update.sh
   only to the admin. Every reports and suggestions route answers other teachers with 403 "Only the admin can see this."
 - The column is added automatically when the updated server starts, so `update.sh` is all that's needed.
 
+## Shared classes (9 Nov 2026)
+
+- Two teachers who teach the same class (teacher: "I just want her to be able to connect with my class"). On a class page in
+  the Staff Room, the teacher who made the class types the other teacher's username and clicks **Share**; **Stop sharing**
+  undoes it. Nothing about the students changes (same logins, progress and class games).
+- The other teacher sees the class in their Classes list ("from Mr Step") and can do everything with it: the students and
+  their progress, new students and passwords, class games, renaming, adding their own students to it. Only the teacher
+  who made the class can share it or stop sharing it.
+- `sudo aea-admin list` shows "(shared with principal)" after a shared class and "(shared by mrstep)" under the other teacher.
+- Routes: `POST /api/teacher/classes/:id/share {username}`, `POST /api/teacher/classes/:id/unshare {id}`; the class page
+  (`GET /api/teacher/classes/:id`) returns `teachers: {mine, owner, shared}` and the classes list marks `mine`, `sharedWith`, `from`.
+- Table: `class_teachers`. Added automatically when the updated server starts, so `update.sh` is all that's needed.
+
 ## Suggestions box (3 Nov 2026)
 
 - A student asked for one. At the bottom of both topic lists (`en/index.html`, `zh/index.html`; the box is filled in by

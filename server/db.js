@@ -85,6 +85,14 @@ function open(file = DB_PATH) {
     CREATE INDEX IF NOT EXISTS suggestions_user_day ON suggestions(role, user_id, day);
     CREATE INDEX IF NOT EXISTS suggestions_status ON suggestions(status, created);
   `);
+  // Shared classes (9 Nov 2026, teacher: "I just want her to be able to connect with my class"): the teacher who made a
+  // class (classes.teacher_id) can share it with another teacher; one row here for each teacher it is shared with.
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS class_teachers (
+      class_id INTEGER NOT NULL REFERENCES classes(id), teacher_id INTEGER NOT NULL REFERENCES teachers(id), added INTEGER NOT NULL,
+      PRIMARY KEY (class_id, teacher_id));
+    CREATE INDEX IF NOT EXISTS class_teachers_teacher ON class_teachers(teacher_id);
+  `);
   return db;
 }
 

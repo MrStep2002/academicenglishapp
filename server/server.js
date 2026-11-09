@@ -140,9 +140,16 @@ async function makeStudents(classId, names, count) {
   catch (e) { db.exec('ROLLBACK'); throw e; }
   return made.map(({id, name, password}) => ({id, name, password}));
 }
+// Shared classes (9 Nov 2026): a class belongs to the teacher who made it (classes.teacher_id) and to any teacher they
+// shared it with (class_teachers). Both can do everything with it (students, passwords, class games, renaming) except
+// share it: only the teacher who made it shares it or stops sharing it.
+const TAUGHT = 'SELECT id FROM classes WHERE teacher_id = ? UNION SELECT class_id FROM class_teachers WHERE teacher_id = ?';
+const teaches = (teacherId, c) => !!c && (c.teacher_id === teacherId || !!db.prepare('SELECT 1 FROM class_teachers WHERE class_id = ? AND teacher_id = ?').get(c.id, teacherId));
+const teacherName = id => (db.prepare('SELECT name FROM teachers WHERE id = ?').get(id) || {}).name || '?';
+const sharedWith = classId => db.prepare('SELECT teachers.id, teachers.name FROM class_teachers JOIN teachers ON teachers.id = class_teachers.teacher_id WHERE class_id = ? ORDER BY teachers.name COLLATE NOCASE').all(classId);
 function ownClass(teacherId, classId) {
-  const c = db.prepare('SELECT * FROM classes WHERE id = ? AND teacher_id = ?').get(+classId, teacherId);
-  if (!c) throw new Oops(404, 'Class not found.');
+  const c = db.prepare('SELECT * FROM classes WHERE id = ?').get(+classId);
+  if (!teaches(teacherId, c)) throw new Oops(404, 'Class not found.');
   return c;
 }
 
@@ -155,7 +162,7 @@ const classNames = studentId => classesOf(studentId).map(c => c.name).join(', ')
 // A student in one of this teacher's classes
 function ownStudent(teacherId, studentId) {
   const s = db.prepare('SELECT * FROM students WHERE id = ?').get(+studentId);
-  if (!s || !classesOf(s.id).some(c => c.teacher_id === teacherId)) throw new Oops(404, 'Student not found.');
+  if (!s || !classesOf(s.id).some(c => teaches(teacherId, c))) throw new Oops(404, 'Student not found.');
   return s;
 }
 
@@ -238,7 +245,11 @@ route('POST', '/api/teacher/password', async (req, body) => {
 
 route('GET', '/api/teacher/classes', req => {
   const u = who(req, 'teacher');
-  return {classes: db.prepare('SELECT classes.id, classes.name, classes.created, COUNT(class_members.student_id) AS students FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name COLLATE NOCASE').all(u.id), admin: isAdmin(u.id)};   // admin: the Staff Room shows Reports and Suggestions
+  // Their own classes and the ones shared with them. mine: they made it; sharedWith: who they shared it with; from: who shared it
+  const classes = db.prepare(`SELECT classes.id, classes.name, classes.created, classes.teacher_id, COUNT(class_members.student_id) AS students FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE classes.id IN (${TAUGHT}) GROUP BY classes.id ORDER BY classes.name COLLATE NOCASE`).all(u.id, u.id)
+    .map(c => c.teacher_id === u.id ? {id: c.id, name: c.name, created: c.created, students: c.students, mine: true, sharedWith: sharedWith(c.id).map(t => t.name)}
+      : {id: c.id, name: c.name, created: c.created, students: c.students, mine: false, from: teacherName(c.teacher_id)});
+  return {classes, admin: isAdmin(u.id)};   // admin: the Staff Room shows Reports and Suggestions
 });
 
 route('POST', '/api/teacher/classes', async (req, body) => {
@@ -255,8 +266,31 @@ route('GET', '/api/teacher/classes/:id', (req, body, p) => {
   const u = who(req, 'teacher'), c = ownClass(u.id, p.id);
   const students = db.prepare(`SELECT id, name, created, last_seen, side, min_level FROM students WHERE id IN (${MEMBERS}) ORDER BY name COLLATE NOCASE`).all(c.id)
     .map(s => Object.assign({id: s.id, name: s.name, created: s.created, side: s.side, minLevel: s.min_level,
-      alsoIn: classesOf(s.id).filter(o => o.id !== c.id).map(o => ({id: o.id, name: o.name, mine: o.teacher_id === u.id}))}, summary(s.id, s.last_seen)));
-  return {class: {id: c.id, name: c.name}, students, weekStart: weekStart(now())};
+      alsoIn: classesOf(s.id).filter(o => o.id !== c.id).map(o => ({id: o.id, name: o.name, mine: teaches(u.id, o)}))}, summary(s.id, s.last_seen)));
+  // teachers: who the class belongs to (mine: this teacher made it, so can share it; owner: who made it; shared: the others)
+  return {class: {id: c.id, name: c.name}, students, weekStart: weekStart(now()),
+    teachers: {mine: c.teacher_id === u.id, owner: teacherName(c.teacher_id), shared: sharedWith(c.id)}};
+});
+
+// Share a class with another teacher (their username), or stop sharing it. Only the teacher who made the class.
+function madeClass(u, classId) {
+  const c = ownClass(u.id, classId);
+  if (c.teacher_id !== u.id) throw new Oops(403, `Only ${teacherName(c.teacher_id)}, who made this class, can share it.`);
+  return c;
+}
+route('POST', '/api/teacher/classes/:id/share', (req, body, p) => {
+  const u = who(req, 'teacher'), c = madeClass(u, p.id), key = loginKey(body.username);
+  if (!key) throw new Oops(400, 'Type the other teacher\'s username.');
+  const t = db.prepare('SELECT id, name FROM teachers WHERE login = ?').get(key);
+  if (!t) throw new Oops(404, 'There is no teacher with that username. Check it, or ask the admin.');
+  if (t.id === u.id) throw new Oops(400, 'That is your own username.');
+  db.prepare('INSERT OR IGNORE INTO class_teachers (class_id, teacher_id, added) VALUES (?,?,?)').run(c.id, t.id, now());
+  return {ok: true, teacher: {id: t.id, name: t.name}};
+});
+route('POST', '/api/teacher/classes/:id/unshare', (req, body, p) => {
+  const u = who(req, 'teacher'), c = madeClass(u, p.id);
+  db.prepare('DELETE FROM class_teachers WHERE class_id = ? AND teacher_id = ?').run(c.id, +body.id);
+  return {ok: true};
 });
 
 route('POST', '/api/teacher/classes/:id/rename', (req, body, p) => {
@@ -289,8 +323,8 @@ route('POST', '/api/teacher/classes/:id/reset-all', async (req, body, p) => {
 // All this teacher's students, with their classes: to choose some to add to another class
 route('GET', '/api/teacher/students', req => {
   const u = who(req, 'teacher');
-  const students = db.prepare('SELECT DISTINCT students.id, students.name FROM students JOIN class_members ON class_members.student_id = students.id JOIN classes ON classes.id = class_members.class_id WHERE classes.teacher_id = ? ORDER BY students.name COLLATE NOCASE').all(u.id)
-    .map(s => ({id: s.id, name: s.name, classes: classesOf(s.id).filter(c => c.teacher_id === u.id).map(c => ({id: c.id, name: c.name}))}));
+  const students = db.prepare(`SELECT DISTINCT students.id, students.name FROM students JOIN class_members ON class_members.student_id = students.id WHERE class_members.class_id IN (${TAUGHT}) ORDER BY students.name COLLATE NOCASE`).all(u.id, u.id)
+    .map(s => ({id: s.id, name: s.name, classes: classesOf(s.id).filter(c => teaches(u.id, c)).map(c => ({id: c.id, name: c.name}))}));
   return {students};
 });
 // Put students who are already in another of this teacher's classes into this class too (same account)
@@ -371,7 +405,7 @@ const attemptsOf = (gameId, studentId) => db.prepare('SELECT * FROM attempts WHE
 const studentRow = id => db.prepare('SELECT * FROM students WHERE id = ?').get(id);
 const MY_CLASSES = 'SELECT class_id FROM class_members WHERE student_id = ?';
 function ownGame(teacherId, gameId) {
-  const g = db.prepare('SELECT games.* FROM games JOIN classes ON classes.id = games.class_id WHERE games.id = ? AND classes.teacher_id = ?').get(+gameId, teacherId);
+  const g = db.prepare(`SELECT * FROM games WHERE id = ? AND class_id IN (${TAUGHT})`).get(+gameId, teacherId, teacherId);
   if (!g) throw new Oops(404, 'Game not found.');
   return g;
 }
