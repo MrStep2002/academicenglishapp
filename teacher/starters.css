@@ -87,27 +87,39 @@
 
 /* ---------- The starter on the board ---------- */
 .st-play .bg-top { flex-wrap: nowrap; }
-.st-clock { flex: none; display: flex; align-items: center; gap: 6px; }
+.st-clock { flex: none; display: flex; align-items: center; gap: calc(6 * var(--u)); }
+/* Play (or pause) and start again: small, one above the other beside the time (9 Nov 2026, teacher) */
+.st-ctl { display: flex; flex-direction: column; gap: calc(4 * var(--u)); }
+.st-ctl button { display: grid; place-items: center; width: calc(34 * var(--u)); height: calc(21 * var(--u)); min-width: 28px; min-height: 19px; padding: 0; border-radius: calc(7 * var(--u));
+  border: 1.5px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
+.st-ctl button:hover { border-color: var(--ink); }
+.st-ctl button[hidden] { display: none; }
+.st-ctl svg { width: calc(13 * var(--u)); height: calc(13 * var(--u)); min-width: 11px; min-height: 11px; }
 .st-time { font: inherit; font-family: var(--display); font-weight: 800; font-size: calc(30 * var(--u)); font-variant-numeric: tabular-nums; line-height: 1; min-width: 3.4em; text-align: center;
   padding: calc(6 * var(--u)) calc(14 * var(--u)); border-radius: calc(12 * var(--u)); border: 2px solid var(--line); background: var(--card); color: var(--ink); cursor: pointer; }
 .st-clock.run .st-time { border-color: var(--web); }
 .st-clock.low .st-time { border-color: #d6402f; color: #d6402f; animation: bg-pulse 1s ease infinite; }
 .st-clock.up .st-time { background: #c0392b; border-color: #c0392b; color: #fff; animation: st-flash 1s ease 3; }
 @keyframes st-flash { 50% { transform: scale(1.08); } }
-.st-clock .st-reset { padding: 0 10px; font-size: 18px; }
 .st-play .bg-tool kbd { font-size: .78em; }
 
 .st-board { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: calc(12 * var(--u)); }
-.st-panel { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: calc(6 * var(--u)); padding: calc(10 * var(--u)) calc(16 * var(--u)) calc(12 * var(--u));
-  border-radius: calc(18 * var(--u)); background: var(--card); border: calc(3 * var(--u)) solid var(--line); overflow: hidden; transition: border-color .25s; }
+/* Each square has its own soft colour (--tint, set by starters.js; 9 Nov 2026, teacher): a pale wash of it, a slightly
+   stronger edge, and a deep one for its number and its top line */
+.st-panel { --tint: #3b82f6; --deep: color-mix(in srgb, var(--tint) 55%, #151935);
+  position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: calc(8 * var(--u)); padding: calc(12 * var(--u)) calc(18 * var(--u)) calc(14 * var(--u));
+  border-radius: calc(18 * var(--u)); background: color-mix(in srgb, var(--tint) 10%, var(--card)); border: calc(3 * var(--u)) solid color-mix(in srgb, var(--tint) 28%, var(--card));
+  overflow: hidden; transition: border-color .25s; }
+@media (prefers-color-scheme: dark) { .st-panel { --deep: color-mix(in srgb, var(--tint) 60%, #ffffff); background: color-mix(in srgb, var(--tint) 14%, var(--card)); border-color: color-mix(in srgb, var(--tint) 38%, var(--card)); } }
 .st-panel.small, .st-panel.wide { cursor: pointer; }
-.st-panel.small:hover, .st-panel.wide:hover { border-color: var(--muted); }
+.st-panel.small:hover, .st-panel.wide:hover { border-color: color-mix(in srgb, var(--tint) 60%, var(--card)); }
 .st-panel.shown, .st-panel.shown:hover { border-color: #23a05c; }
 .st-ph { flex: none; display: flex; align-items: center; gap: calc(10 * var(--u)); min-width: 0; }
 .st-n { flex: none; display: grid; place-items: center; min-width: calc(34 * var(--u)); height: calc(34 * var(--u)); padding: 0 calc(6 * var(--u)); border-radius: calc(10 * var(--u));
-  background: var(--ink); color: var(--card); font-family: var(--display); font-weight: 800; font-size: calc(20 * var(--u)); }
+  background: color-mix(in srgb, var(--tint) 55%, #151935); color: #fff; font-family: var(--display); font-weight: 800; font-size: calc(20 * var(--u)); }
 .st-panel.shown .st-n { background: #23a05c; color: #fff; }
-.st-k { flex: 1; min-width: 0; font-weight: 700; color: var(--muted); font-size: calc(17 * var(--u)); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* The top line says what to do (the instruction, 9 Nov 2026): in the square's deep colour, up to two lines */
+.st-k { flex: 1; min-width: 0; font-weight: 700; color: var(--deep); font-size: calc(18 * var(--u)); line-height: 1.2; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .st-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; font-size: 20px; }
 .st-in { margin: auto 0; width: 100%; display: flex; flex-direction: column; align-items: center; text-align: center; gap: .35em; overflow-wrap: normal; word-break: normal; }
 .st-in.fill { margin: 0; height: 100%; }
@@ -145,7 +157,7 @@
 /* Anagram and Missing vowels */
 .st-letters { display: flex; flex-wrap: wrap; justify-content: center; gap: .3em .7em; }
 .st-lw { display: inline-flex; gap: .12em; }
-.st-lt { display: grid; place-items: center; width: 1.25em; height: 1.4em; border-radius: .18em; background: var(--ink); color: var(--card); font-family: var(--display); font-weight: 800; font-size: 1.2em; line-height: 1;
+.st-lt { display: grid; place-items: center; width: 1.25em; height: 1.4em; border-radius: .18em; background: color-mix(in srgb, var(--tint) 55%, #151935); color: #fff; font-family: var(--display); font-weight: 800; font-size: 1.2em; line-height: 1;
   box-shadow: inset 0 -.1em 0 rgba(0,0,0,.25); }
 .st-cons { margin: 0; font-family: var(--display); font-weight: 800; font-size: 1.5em; letter-spacing: .18em; line-height: 1.15; }
 .st-cons .st-sp { display: inline-block; width: .7em; }
@@ -165,7 +177,7 @@
 .st-lines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 0; }
 .st-match li { display: flex; align-items: center; gap: .45em; padding: .28em .5em; border-radius: .45em; border: .1em solid var(--line); background: var(--card); cursor: pointer; line-height: 1.22; transition: border-color .2s, background .2s; }
 .st-match li:hover { border-color: var(--muted); }
-.st-mk { flex: none; display: grid; place-items: center; min-width: 1.5em; height: 1.5em; border-radius: .35em; background: var(--ink); color: var(--card); font-family: var(--display); font-weight: 800; font-size: .85em; }
+.st-mk { flex: none; display: grid; place-items: center; min-width: 1.5em; height: 1.5em; border-radius: .35em; background: color-mix(in srgb, var(--tint, #151935) 55%, #151935); color: #fff; font-family: var(--display); font-weight: 800; font-size: .85em; }
 .st-mw { flex: 1; min-width: 0; font-family: var(--display); font-weight: 800; }
 .st-md { flex: 1; min-width: 0; font-size: .74em; font-weight: 600; }
 .st-mto { flex: none; visibility: hidden; font-family: var(--display); font-weight: 800; color: #fff; background: var(--pc); border-radius: .3em; padding: 0 .3em; }
@@ -178,7 +190,7 @@
 .st-gb { position: relative; font: inherit; color: inherit; display: inline-flex; align-items: baseline; gap: .2em; padding: 0 .15em; margin: 0 .05em; border: 0; border-bottom: .09em solid currentColor;
   background: none; cursor: pointer; line-height: 1.15; min-width: calc(var(--gw, 6ch) + 1.6em); justify-content: flex-start; }
 .st-gb i { font-style: normal; font-family: var(--display); font-weight: 800; font-size: .62em; display: inline-grid; place-items: center; min-width: 1.4em; height: 1.4em; border-radius: 99px;
-  background: var(--ink); color: var(--card); align-self: center; }
+  background: color-mix(in srgb, var(--tint, #151935) 55%, #151935); color: #fff; align-self: center; }
 .st-gb span { visibility: hidden; font-weight: 800; position: absolute; left: 1.4em; }   /* out of the way until shown: every gap is the same width */
 .st-gb.on span, .gf-prevbox .st-gb span { position: static; }
 .st-gb.on { border-bottom-color: #23a05c; background: #d8f3e3; border-radius: .12em .12em 0 0; }
@@ -258,6 +270,7 @@
 .k-big .st-in { justify-content: center; }
 .st-panel.k-big, .st-panel.k-big:hover { cursor: default; border-color: var(--hi); }   /* no answer to show; the highlighter yellow marks it out */
 .st-panel.k-big .st-k { color: var(--ink); }
+.st-panel.k-big .st-n { background: var(--ink); color: var(--card); }
 .st-bigq { margin: 0; max-width: 100%; font-family: var(--display); font-weight: 800; line-height: 1.15; letter-spacing: -.01em; text-align: center; white-space: pre-wrap; overflow-wrap: break-word; }
 #s-big:empty { display: none; }
 #s-big textarea { min-height: 84px; font-size: 1rem; }
@@ -278,5 +291,5 @@
 .mt-picked .mt-none { color: var(--muted); padding: 10px; border-style: dashed; }
 .mt-link { font: inherit; font-size: .88rem; background: none; border: 0; padding: 0; color: var(--web); text-decoration: underline; cursor: pointer; }
 
-/* No Show the answer button (8 Nov 2026): the line under the board says how, so it is a little bigger */
-.st-play .bg-keys { font-size: max(13px, calc(15 * var(--u))); }
+/* (9 Nov 2026) No line of keys under the board any more: the board goes down to the bottom of the screen */
+.st-play { padding-bottom: calc(16 * var(--u)); }

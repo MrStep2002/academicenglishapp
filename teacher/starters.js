@@ -498,8 +498,15 @@ const ICON = {
   full: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
   unfull: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>',
   on: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg>',
-  off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>'
+  off: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>',
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></svg>',
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 4.5h4v15h-4zM13.5 4.5h4v15h-4z" fill="currentColor"/></svg>',
+  again: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.6"/><path d="M4 3.5v5.1h5.1"/></svg>'
 };
+// Each square's own soft colour (9 Nov 2026, teacher: "the black and white seems like an overload… pastel colours, soft, but
+// enough to distinguish them"): the square is a pale mix of it, its number and the line at the top a deep one. The Big
+// Question keeps its yellow.
+const TINT = ['#3b82f6', '#10b981', '#a855f7', '#fb923c', '#ec4899', '#14b8a6'], TINT_BIG = '#facc15';
 function mount(d){
   stop();
   const st = d.state = Object.assign({shown: {}, sub: {}, solved: {}, order: {}}, d.state || {});
@@ -507,33 +514,28 @@ function mount(d){
   document.documentElement.classList.add('bg-on');
   const title = d.cfg.title || 'Starter';
   document.title = title + ' · Starters';
-  const L = S.L = layout(d.items), one = L.cells.length === 1 && ACT[d.items[L.cells[0].i].k].size === 'full';
+  const L = S.L = layout(d.items);
   const el = S.el = document.createElement('div');
   el.className = 'bg-play st-play';
+  // A calmer board (9 Nov 2026, teacher: "it's really busy"): the top bar is the clock (play and start again, one above the
+  // other, beside it), Full screen and Exit; no Show all the answers, New questions or Sound buttons and no line of keys
+  // under the board ("they'll have to work that out themselves"). The keys still work: a number or a click shows an answer,
+  // A shows them all, Space starts or pauses the timer; ‹ › on a square changes its question; Sound is the board games' setting.
   el.innerHTML =
     '<div class="bg-top"><h1 class="bg-title">' + esc(title) + '</h1>' +
       (S.secs ? '<div class="st-clock"><button type="button" class="st-time" title="Start or pause the timer (Space)"></button>' +
-        '<button type="button" class="bg-tool st-go"></button><button type="button" class="bg-tool st-reset" title="Start the timer again">↺</button></div>' : '') +
+        '<div class="st-ctl"><button type="button" class="st-go"></button><button type="button" class="st-reset" title="Start the timer again" aria-label="Start the timer again">' + ICON.again + '</button></div></div>' : '') +
       '<div class="bg-tools">' +
-        '<button class="bg-tool" type="button" data-t="all"></button>' +
-        '<button class="bg-tool" type="button" data-t="new" title="The same activities with different questions">🎲 New questions</button>' +
-        '<button class="bg-tool" type="button" data-t="sound"></button>' +
         '<button class="bg-tool" type="button" data-t="full"></button>' +
         '<button class="bg-tool" type="button" data-t="exit" title="Back to Starters. This starter is kept.">Exit</button></div></div>' +
     '<div class="st-board" style="grid-template-rows:repeat(' + L.rows + ', minmax(0, 1fr))">' +
       L.cells.map((c, n) => { const it = d.items[c.i];
-        return '<section class="st-panel ' + ACT[it.k].size + ' k-' + it.k + '" data-i="' + c.i + '" data-n="' + (n + 1) + '" style="grid-row:' + c.r + ';grid-column:' + c.c + ' / span ' + c.span + '"></section>'; }).join('') +
-    '</div>' +
-    '<p class="bg-keys">' + (one && d.items[0].k === 'big' ? (S.secs ? '<kbd>Space</kbd> start or pause the timer' : '') + '</p>'
-      : (one ? (d.items[0].k === 'wordsearch' ? 'Drag across a word, or click its first and last letters, to mark it · click a word in the list, or type its number, to show it'
-      : d.items[0].k === 'wall' ? 'Click four tiles that belong together' : 'Click a ' + (d.items[0].k === 'match' ? 'word' : 'gap') + ', or type its number, to show its answer') + ' · <kbd>A</kbd> show all the answers'
-      : 'Click a square, or type its number, to show its answer · <kbd>A</kbd> show all the answers') + (d.items.some(canNew) ? ' · ‹ › a different question' : '') + (S.secs ? ' · <kbd>Space</kbd> start or pause the timer' : '') + '</p>');
+        return '<section class="st-panel ' + ACT[it.k].size + ' k-' + it.k + '" data-i="' + c.i + '" data-n="' + (n + 1) + '" style="grid-row:' + c.r + ';grid-column:' + c.c + ' / span ' + c.span +
+          ';--tint:' + (it.k === 'big' ? TINT_BIG : TINT[n % TINT.length]) + '"></section>'; }).join('') +
+    '</div>';
   document.body.appendChild(el);
   S.board = el.querySelector('.st-board');
   [...S.board.children].forEach(p => drawPanel(+p.dataset.i, true));
-  el.querySelector('[data-t=all]').onclick = e => { e.currentTarget.blur(); allToggle(); };
-  el.querySelector('[data-t=new]').onclick = e => { e.currentTarget.blur(); redeal(); };
-  el.querySelector('[data-t=sound]').onclick = e => { e.currentTarget.blur(); S.sound = !S.sound; setJ(K_SOUND, S.sound); tools(); if (S.sound) chime('right'); };
   el.querySelector('[data-t=full]').onclick = e => { e.currentTarget.blur(); const doc = document;
     if (doc.fullscreenElement) doc.exitFullscreen().catch(() => {}); else if (doc.documentElement.requestFullscreen) doc.documentElement.requestFullscreen().catch(() => {}); };
   el.querySelector('[data-t=exit]').onclick = () => { location.hash = d.back || '#/starters'; };   // back: a single-activity page (one())
@@ -551,21 +553,8 @@ const save = () => { if (S) saveDeal(S.d); if (C) C.touch(); };
 function sizeUp(){ const u = Math.max(.55, Math.min(2.4, Math.min(innerWidth / 1280, innerHeight / 760))); S.u = u; S.el.style.setProperty('--u', u + 'px'); }
 function tools(){
   if (!S) return;
-  const s = S.el.querySelector('[data-t=sound]'), f = S.el.querySelector('[data-t=full]'), fs = !!document.fullscreenElement;
-  s.innerHTML = (S.sound ? ICON.on : ICON.off) + '<span>' + (S.sound ? 'Sound on' : 'Sound off') + '</span>';
+  const f = S.el.querySelector('[data-t=full]'), fs = !!document.fullscreenElement;
   f.innerHTML = (fs ? ICON.unfull : ICON.full) + '<span>' + (fs ? 'Exit full screen' : 'Full screen') + '</span>';
-  const all = S.el.querySelector('[data-t=all]'); all.hidden = S.d.items.every(x => x.k === 'big');
-  all.innerHTML = (allShown() ? 'Hide the answers' : 'Show all the answers') + ' <kbd>A</kbd>';
-  S.el.querySelector('[data-t=new]').hidden = !S.d.items.some(canNew);
-}
-function redeal(){
-  const d = S.d, b = S.el.querySelector('[data-t=new]');
-  b.disabled = true; b.textContent = 'Dealing…';
-  ensure(d.cfg.topics).then(() => {
-    const r = dealAll(d.cfg);
-    if (!r.items.length) { b.disabled = false; b.textContent = '🎲 New questions'; return; }
-    const nd = newDeal(d.cfg, r.items); if (d.back) nd.back = d.back; saveDeal(nd); if (S && S.d === d) mount(nd);
-  }).catch(() => { if (b.isConnected) { b.disabled = false; b.textContent = '🎲 New questions'; } });
 }
 
 // ---------- the timer: starts when the teacher is ready (students may still be coming in) ----------
@@ -576,7 +565,8 @@ function clockDraw(){
   const up = S.left <= 0;
   t.textContent = up ? "Time's up!" : mmss(S.left);
   c.classList.toggle('low', !up && S.left <= 10 && S.run); c.classList.toggle('up', up); c.classList.toggle('run', S.run);
-  go.innerHTML = up ? '' : S.run ? 'Pause' : S.left === S.secs ? '▶ Start' : '▶ Carry on';
+  const say = S.run ? 'Pause the timer' : S.left === S.secs ? 'Start the timer' : 'Carry on';   // a play or pause button, no words (teacher)
+  go.innerHTML = up ? '' : S.run ? ICON.pause : ICON.play; go.title = say + ' (Space)'; go.setAttribute('aria-label', say);
   go.hidden = up;
 }
 function clockToggle(){
@@ -660,7 +650,20 @@ function onKey(e){
 }
 
 // ---------- the panels ----------
-const instr = s => '<p class="st-i">' + s + '</p>';
+// The line at the top of a square (9 Nov 2026, teacher: the name and the instruction were both there, "this space could be
+// cleared up quite a bit"): one line, what to do, beside the number; the passage titles are gone too. The rest of the square
+// is the question.
+const HEAD = {gap: 'Fill the gap', rw: 'Good or bad grammar?', word: 'What does it mean?', meaning: 'Which word means this?',
+  zh: 'Write it in English', tf: 'True or false?', anagram: 'Unscramble the letters', vowels: 'Put the vowels back',
+  question: 'Which answer does what the question asks?', gk: 'General knowledge', big: 'The Big Question',
+  wall: 'Sort the sixteen words into four groups of four'};
+function headOf(it){
+  if (it.k === 'errors') return 'Find and correct the ' + (it.n === 1 ? 'mistake' : it.n + ' mistakes');
+  if (it.k === 'match') return 'Match each word to its meaning: write <b>1 C</b>, <b>2 A</b>…';
+  if (it.k === 'gapfill') return it.extra ? 'Fill the gaps from the word bank: not every word is needed' : 'Fill the gaps: use each word in the bank once';
+  if (it.k === 'wordsearch') return (it.show !== 'meanings' ? 'Find the words' : 'Find the word for each meaning') + ': ' + esc(WS_SAY[it.lv]).replace(/^Words/, 'they').replace(/\.$/, '');
+  return HEAD[it.k] || esc(ACT[it.k].name);
+}
 const blank = (w, on) => '<span class="st-blank' + (on ? ' on' : '') + '"><span>' + esc(w) + '</span></span>';
 function optsHTML(q, on){
   return '<ol class="st-opts' + (q.opts.length === 2 ? ' two' : '') + '">' + q.opts.map((o, n) => '<li class="' + (on && n === q.a ? 'ok' : on ? 'dim' : '') + '"><b>' + 'ABCD'[n] + '</b><span>' + esc(o) + '</span></li>').join('') + '</ol>';
@@ -670,29 +673,28 @@ function smallHTML(it, on){
   const ans = s => '<div class="st-a">' + s + '</div>', aw = s => '<b class="st-aw">' + esc(s) + '</b>';
   const clue = () => cfg.clue ? '<p class="st-clue"><b>Clue:</b> ' + esc(it.def) + '</p>' : '';
   switch (it.k) {
-    case 'gap': return instr('Write the missing word.') + '<p class="st-t">' + esc(q.s).replace(/_{3,}/, blank(q.opts[q.a], on)) + '</p>' + (opts ? optsHTML(q, on) : '');
-    case 'rw': return instr('Grammar check: good grammar or bad grammar? If it’s bad, write it correctly.') + '<p class="st-t">' + esc(q.s) + '</p>' +
+    case 'gap': return '<p class="st-t">' + esc(q.s).replace(/_{3,}/, blank(q.opts[q.a], on)) + '</p>' + (opts ? optsHTML(q, on) : '');
+    case 'rw': return '<p class="st-t">' + esc(q.s) + '</p>' +
       ans(q.a === 0 ? '<b class="st-ok">✓ Good grammar</b>' : '<b class="st-no">✗ Bad grammar.</b> ' + (q.fix ? '<span class="st-fix">' + esc(q.fix) + '</span>' : '<span class="st-why">' + rich(q.why) + '</span>'));
-    case 'word': return instr('Write what it means.') + '<p class="st-big">' + esc(q.w) + (q.pos ? '<small>' + esc(q.pos) + '</small>' : '') + '</p>' + (opts ? optsHTML(q, on) : ans('<span class="st-def">' + esc(q.def) + '</span>'));
-    case 'meaning': return instr('Write the word that means:') + '<p class="st-t">' + esc(q.def) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.w)));
-    case 'zh': return instr('Write the English word.') + '<p class="st-big zh" lang="zh-CN">' + esc(q.zh) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.w)));
-    case 'tf': return instr('Write true or false.') + '<p class="st-t">' + esc(q.s) + '</p>' + ans('<b class="' + (q.a === 0 ? 'st-ok">True.' : 'st-no">False.') + '</b>' + (q.why ? ' <span class="st-why">' + rich(q.why) + '</span>' : ''));
-    case 'anagram': return instr('Unscramble the letters.') + '<div class="st-letters">' + it.mix.map(m => '<span class="st-lw">' + m.split('').map(c => '<span class="st-lt">' + c + '</span>').join('') + '</span>').join('') + '</div>' +
+    case 'word': return '<p class="st-big">' + esc(q.w) + (q.pos ? '<small>' + esc(q.pos) + '</small>' : '') + '</p>' + (opts ? optsHTML(q, on) : ans('<span class="st-def">' + esc(q.def) + '</span>'));
+    case 'meaning': return '<p class="st-t">' + esc(q.def) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.w)));
+    case 'zh': return '<p class="st-big zh" lang="zh-CN">' + esc(q.zh) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.w)));
+    case 'tf': return '<p class="st-t">' + esc(q.s) + '</p>' + ans('<b class="' + (q.a === 0 ? 'st-ok">True.' : 'st-no">False.') + '</b>' + (q.why ? ' <span class="st-why">' + rich(q.why) + '</span>' : ''));
+    case 'anagram': return '<div class="st-letters">' + it.mix.map(m => '<span class="st-lw">' + m.split('').map(c => '<span class="st-lt">' + c + '</span>').join('') + '</span>').join('') + '</div>' +
       (it.lens.length > 1 ? '<p class="st-lens">' + it.lens.length + ' words: ' + it.lens.join(' + ') + ' letters</p>' : '') + clue() + ans(aw(it.w));
-    case 'vowels': return instr('Put the vowels back.') + '<p class="st-cons">' + it.cons.map(esc).join('<span class="st-sp"></span>') + '</p>' + clue() + ans(aw(it.w));
+    case 'vowels': return '<p class="st-cons">' + it.cons.map(esc).join('<span class="st-sp"></span>') + '</p>' + clue() + ans(aw(it.w));
     case 'question': { const s = esc(q.s), c = esc(q.cmd || '');
-      return instr('Write the letter of the answer that does what the question asks.') + '<p class="st-t">' + (c && s.toLowerCase().startsWith(c.toLowerCase()) ? '<span class="st-cmd">' + s.slice(0, c.length) + '</span>' + s.slice(c.length) : s) + '</p>' + optsHTML(q, on); }
-    case 'gk': return instr('Write the answer.') + '<p class="st-t">' + esc(q.s) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.opts[q.a])));
+      return '<p class="st-t">' + (c && s.toLowerCase().startsWith(c.toLowerCase()) ? '<span class="st-cmd">' + s.slice(0, c.length) + '</span>' + s.slice(c.length) : s) + '</p>' + optsHTML(q, on); }
+    case 'gk': return '<p class="st-t">' + esc(q.s) + '</p>' + (opts ? optsHTML(q, on) : ans(aw(q.opts[q.a])));
   }
   return '';
 }
 function errorsHTML(it){
-  return instr('Find and correct the ' + (it.n === 1 ? 'mistake' : it.n + ' mistakes') + '.') + (it.title ? '<p class="st-sub">' + esc(it.title) + '</p>' : '') +
-    '<p class="st-t st-para">' + it.parts.map(p => p.t === 's' ? esc(p.s) : '<span class="st-err"><span class="w">' + esc(p.w) + '</span><span class="r">' + esc(p.r) + '</span></span>').join('') + '</p>';
+  return '<p class="st-t st-para">' + it.parts.map(p => p.t === 's' ? esc(p.s) : '<span class="st-err"><span class="w">' + esc(p.w) + '</span><span class="r">' + esc(p.r) + '</span></span>').join('') + '</p>';
 }
 function matchHTML(it, sub){
   const on = n => sub.includes(n);
-  return instr('Match each word to its meaning. Write the number and the letter, like <b>1 C</b>.') + '<div class="st-match">' +
+  return '<div class="st-match">' +
     '<ol class="st-ml">' + it.pairs.map((p, n) => '<li data-sub="' + n + '" class="' + (on(n) ? 'on' : '') + '" style="--pc:' + PAIR[n] + '"><span class="st-mk">' + (n + 1) + '</span><span class="st-mw st-ck">' + esc(p.w) + '</span>' +
       '<span class="st-mto">' + 'ABCDEFGH'[it.order.indexOf(n)] + '</span></li>').join('') + '</ol>' +
     '<svg class="st-lines" aria-hidden="true"></svg>' +
@@ -701,9 +703,7 @@ function matchHTML(it, sub){
 function gapfillHTML(it, sub){
   const shownWords = it.parts.filter(p => p.t === 'g' && sub.includes(p.n - 1)).map(p => p.s.toLowerCase());
   const crossed = it.bank.map(w => { const k = shownWords.indexOf(w.toLowerCase()); if (k < 0) return false; shownWords.splice(k, 1); return true; });
-  return instr(it.extra ? 'Write the missing words. Choose from the word bank: not every word is needed.' : 'Write the missing words. Use each word in the word bank once.') +
-    (it.title ? '<p class="st-sub">' + esc(it.title) + '</p>' : '') +
-    '<p class="st-t st-para" style="--gw:' + Math.max(5, ...it.parts.filter(p => p.t === 'g').map(p => p.s.length)) + 'ch">' + it.parts.map(p => p.t === 's' ? esc(p.s) : '<button type="button" class="st-gb' + (sub.includes(p.n - 1) ? ' on' : '') + '" data-sub="' + (p.n - 1) + '" aria-label="Gap ' + p.n + '"><i>' + p.n + '</i><span>' + esc(p.s) + '</span></button>').join('') + '</p>' +
+  return '<p class="st-t st-para" style="--gw:' + Math.max(5, ...it.parts.filter(p => p.t === 'g').map(p => p.s.length)) + 'ch">' + it.parts.map(p => p.t === 's' ? esc(p.s) : '<button type="button" class="st-gb' + (sub.includes(p.n - 1) ? ' on' : '') + '" data-sub="' + (p.n - 1) + '" aria-label="Gap ' + p.n + '"><i>' + p.n + '</i><span>' + esc(p.s) + '</span></button>').join('') + '</p>' +
     '<div class="st-bank"><span class="st-bl">Word bank</span>' + it.bank.map((w, k) => '<span class="st-bw' + (crossed[k] ? ' used' : '') + '">' + esc(w) + '</span>').join('') + '</div>';
 }
 // Connecting Wall: the groups found go to the top in the order they were found, in their colour, with the group's name
@@ -714,7 +714,7 @@ function wallHTML(i, it){
   const rest = order.filter(t => !solved.includes(Math.floor(t / 4)));
   for (let r = 0; r < rest.length; r += 4) rows.push('<div class="st-wrow">' + rest.slice(r, r + 4).map(t => '<button type="button" class="st-tile' + (S.sel.has(t) ? ' sel' : '') + '" data-t="' + t + '"><span class="st-ck">' +
     esc(it.groups[Math.floor(t / 4)].words[t % 4]) + '</span></button>').join('') + '</div>');
-  return instr('Sort the sixteen words into four groups of four.') + '<div class="st-wall">' + rows.join('') + '</div>' +
+  return '<div class="st-wall">' + rows.join('') + '</div>' +
     '<div class="st-wacts">' + (solved.length < 4 ? '<button type="button" class="bg-btn small" data-wall="shuffle">Shuffle</button><button type="button" class="bg-btn small" data-wall="next">Show a group</button>' :
       '<button type="button" class="bg-btn small" data-wall="reset">Start the wall again</button>') + '</div>';
 }
@@ -722,8 +722,7 @@ function wallHTML(i, it){
 // colour on the board and in the list; with the meanings listed, the word appears where "7 letters" was.
 function wsHTML(i, it, sub){
   const n = it.size, words = it.show !== 'meanings';
-  return instr(words ? 'Find the words and write them in your book.' : 'Find the word for each meaning and write it in your book.') +
-    '<div class="st-ws"><div class="st-wsb" style="--n:' + n + '"><svg class="st-wsm" viewBox="0 0 ' + n * 10 + ' ' + n * 10 + '" aria-hidden="true">' + wsMarks(i, it, sub) + '</svg>' +
+  return '<div class="st-ws"><div class="st-wsb" style="--n:' + n + '"><svg class="st-wsm" viewBox="0 0 ' + n * 10 + ' ' + n * 10 + '" aria-hidden="true">' + wsMarks(i, it, sub) + '</svg>' +
       '<div class="st-wsg" role="img" aria-label="The square of letters">' + it.b.join('').split('').map(ch => '<span>' + ch + '</span>').join('') + '</div></div>' +
     '<ol class="st-wsl' + (words ? '' : ' clues') + '">' + it.words.map((w, k) => '<li data-sub="' + k + '" class="' + (sub.includes(k) ? 'on' : '') + '" style="--wc:' + w.col + '"><span class="st-mk">' + (k + 1) + '</span>' +
       '<span class="st-wst st-ck">' + (words ? '<b>' + esc(w.w) + '</b>' : '<span class="st-wsd">' + esc(w.def) + '</span><span class="st-wsa"><i>' + w.n + ' letters</i><b>' + esc(w.w) + '</b></span>') + '</span></li>').join('') + '</ol></div>';
@@ -780,10 +779,10 @@ function wsPick(i, a, z){
 function drawPanel(i, first){
   const p = S.board.querySelector('.st-panel[data-i="' + i + '"]'); if (!p) return;
   const it = S.d.items[i], a = ACT[it.k], on = isShown(i), sub = S.st.sub[i] || [];
-  const many = S.L.cells.length > 1;   // no Show the answer button (8 Nov 2026, teacher): click the question; the line under the board says so
+  const many = S.L.cells.length > 1;   // no Show the answer button (8 Nov 2026, teacher): click the question (or type its number)
   const hist = (S.d.hist || {})[i] || [], pos = (S.d.pos || {})[i] || 0, nav = canNew(it) || hist.length > 1;
   p.classList.toggle('shown', on && it.k !== 'big');
-  p.innerHTML = '<div class="st-ph">' + (many ? '<span class="st-n">' + p.dataset.n + '</span>' : '') + '<span class="st-k">' + esc(a.name) + (it.k === 'wordsearch' ? ' · ' + esc(WS_SAY[it.lv]) : '') + '</span>' +
+  p.innerHTML = '<div class="st-ph">' + (many ? '<span class="st-n">' + p.dataset.n + '</span>' : '') + '<span class="st-k">' + headOf(it) + '</span>' +
     (nav ? '<span class="st-nav"><button type="button" data-nav="-1" title="Back to the one before" aria-label="Back to the one before"' + (pos > 0 ? '' : ' disabled') + '>‹</button>' +
       '<button type="button" data-nav="1" title="A different one" aria-label="A different one"' + (canNew(it) || pos < hist.length - 1 ? '' : ' disabled') + '>›</button></span>' : '') +
     '</div>' +
@@ -798,13 +797,14 @@ function fitPanel(p){
   if (!S) return;
   const body = p.querySelector('.st-body'), inn = body && body.firstElementChild; if (!inn) return;
   const H = body.clientHeight, W = body.clientWidth; if (H < 10 || W < 10) return;
+  // (9 Nov 2026: a calmer board) the text stops short of filling the square, so there is space round it
   const checks = [...inn.querySelectorAll('.st-ck')], fill = inn.classList.contains('fill');
   const fits = s => { body.style.fontSize = s + 'px';
     if (!fill && inn.offsetHeight > H + 1) return false;
     if (inn.scrollWidth > inn.clientWidth + 1 || inn.scrollHeight > inn.clientHeight + 1 && fill) return false;
     return checks.every(c => c.scrollWidth <= c.clientWidth + 1 && c.offsetHeight <= c.parentElement.clientHeight + 1); };
-  const big = p.classList.contains('k-big') ? 100 : p.classList.contains('small') ? 64 : 52;
-  let lo = 7, hi = Math.max(8, Math.min(H * .4, big * S.u)), best = lo;
+  const big = p.classList.contains('k-big') ? 40 : 38;
+  let lo = 7, hi = Math.max(8, Math.min(H * .3, big * S.u)), best = lo;
   if (fits(hi)) best = hi;
   else for (let k = 0; k < 14; k++) { const m = (lo + hi) / 2; if (fits(m)) { best = m; lo = m; } else hi = m; }
   body.style.fontSize = best + 'px';
@@ -1219,7 +1219,7 @@ function gfEdit(id){
   const drawPrev = () => {
     const box = $('#gf-prev'); if (!segs) { box.innerHTML = ''; return; }
     const text = fromSegs(segs), gp = gfParts(text), bankW = gp.filter(p => p.t === 'g').map(p => p.s).concat(g.extras || []).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
-    box.innerHTML = '<h2>On the board</h2><div class="gf-prevbox">' + (($('#gf-title').value.trim()) ? '<p class="st-sub">' + esc($('#gf-title').value.trim()) + '</p>' : '') +
+    box.innerHTML = '<h2>On the board</h2><div class="gf-prevbox">' +   // the title names it in your list; the board doesn't show it (9 Nov 2026)
       '<p class="st-para">' + gp.map(p => p.t === 's' ? esc(p.s) : '<span class="st-gb"><i>' + p.n + '</i><span>' + esc(p.s) + '</span></span>').join('') + '</p>' +
       (bankW.length ? '<div class="st-bank"><span class="st-bl">Word bank</span>' + bankW.map(w => '<span class="st-bw">' + esc(w) + '</span>').join('') + '</div>' : '') + '</div>';
   };
