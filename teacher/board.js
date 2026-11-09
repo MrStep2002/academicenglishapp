@@ -334,10 +334,10 @@ AEA_BOARD.lib = {TOPICS, BANKS, LEVELS, LEVEL_NAME, parseCSV, levelNum, band, li
 
 // ---------- the list of boards ----------
 function list(){
-  C.setTitle('Board games'); C.header();
+  C.setTitle('Saved board games'); C.header();
   const all = sets();
   C.view.innerHTML =
-    '<p style="margin:0 0 14px"><a class="backlink" href="#/">← All classes</a></p>' +
+    '<p style="margin:0 0 14px"><a class="backlink" href="#/">← Staff Room</a></p>' +
     '<div class="spread" style="margin-bottom:14px"><p class="note">Games for the whole class on one screen: open a board, then put it on the projector.</p>' +
     '<a class="btn" href="#/board/new">+ New board game</a></div>' +
     (all.length ? '<div class="bg-list">' + all.map(s => { const g = gameOf(s.id), left = g && g.tiles ? g.tiles.filter(t => !t.done).length : 0, all = g && g.tiles ? g.tiles.filter(t => !t.empty).length : 0;
@@ -386,7 +386,7 @@ function form(id, kind){
   let data = {};
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
   C.view.innerHTML =
-    '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Board games</a></p>' +
+    '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Saved board games</a></p>' +
     '<form class="card bg-form" id="bf" novalidate>' +
     '<div class="field"><label for="b-title">Name</label><input type="text" id="b-title" maxlength="80" placeholder="e.g. 8B Web design quiz" value="' + esc(cfg.title) + '"></div>' +
     '<fieldset><legend>Topics</legend><div class="bg-chips" id="b-topics">' + TOPICS.map(t =>
@@ -562,14 +562,14 @@ function play(id){
       const game = newTabooGame(set, data);
       if (!game.words) { C.view.innerHTML = '<p class="err">No words are ready for this game yet. <a href="#/board/' + esc(id) + '">Change it</a></p>'; return; }
       saveGame(game); if (location.hash === '#/board/play/' + id) mount(game);
-    }).catch(x => { C.view.innerHTML = '<p><a class="backlink" href="#/board">← Board games</a></p><p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
+    }).catch(x => { C.view.innerHTML = '<p><a class="backlink" href="#/board">← Saved board games</a></p><p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
     return;
   }
   dataFor(set.topics).then(data => {
     const game = newGame(set, data);
     if (!game.tiles.length) { C.view.innerHTML = '<p class="err">No questions match this board\'s choices. <a href="#/board/' + esc(id) + '">Change the board</a></p>'; return; }
     saveGame(game); if (location.hash === '#/board/play/' + id) mount(game, data);
-  }).catch(x => { C.view.innerHTML = '<p><a class="backlink" href="#/board">← Board games</a></p><p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
+  }).catch(x => { C.view.innerHTML = '<p><a class="backlink" href="#/board">← Saved board games</a></p><p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
 }
 
 const ICON = {
@@ -1315,7 +1315,7 @@ function countTaboo(topics, levels, data, level, kind){
 // ---------- which game? ----------
 function chooser(){
   C.setTitle('New board game'); C.header();
-  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Board games</a></p>' +
+  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Saved board games</a></p>' +
     '<p class="note" style="margin:0 0 14px">Which game?</p><div class="bg-list">' +
     Object.keys(GAME_TYPES).map(k => '<a class="card bg-item bg-choice" href="#/board/new/' + k + '"><h3>' + esc(GAME_TYPES[k].name) + '</h3>' +
       '<p class="note">' + esc(GAME_TYPES[k].blurb) + '</p><span class="btn" style="align-self:flex-start;margin-top:6px">Make one</span></a>').join('') + '</div>';
@@ -1335,7 +1335,7 @@ function tabooForm(id, kind){
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + label + '</option>';
   const sel = (sid, label, list, cur) => '<div class="field"><label for="' + sid + '">' + label + '</label><select id="' + sid + '">' + list.map(x => opt(x[0], x[1], cur)).join('') + '</select></div>';
   C.view.innerHTML =
-    '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Board games</a></p>' +
+    '<p style="margin:0 0 14px"><a class="backlink" href="#/board">← Saved board games</a></p>' +
     '<form class="card bg-form" id="bf" novalidate>' +
     '<div class="field"><label for="b-title">Name</label><input type="text" id="b-title" maxlength="80" placeholder="e.g. 9A Representation words" value="' + esc(cfg.title) + '"></div>' +
     '<fieldset><legend>Topics</legend><div class="bg-chips" id="b-topics">' + T_TOPICS.map(t =>

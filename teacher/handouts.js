@@ -133,7 +133,7 @@ const AEA_HANDOUT = window.AEA_HANDOUT = {
 };
 const state = () => Object.assign(JSON.parse(JSON.stringify(DEFAULTS)), getJ(K, {}) || {});
 function page(){
-  C.setTitle('Handouts'); C.header();
+  C.setTitle('Vocab handouts'); C.header();
   const st = state();
   const topics = TOPICS.filter(t => !t.only);
   if (!topics.some(t => t.key === st.topic)) st.topic = topics[0].key;
@@ -141,7 +141,7 @@ function page(){
   let T = null, find = '', group = '', lv = [1, 2, 3, 4, 5], model = null;
   const picked = () => (st.picks[st.topic] = st.picks[st.topic] || []);
   const save = () => { setJ(K, st); C.touch(); };
-  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/">← All classes</a></p>' +
+  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/">← Staff Room</a></p>' +
     '<p class="note st-lead">A two-sided A4 sheet for learning a topic\'s key words. Choose a topic and up to ' + MAX + ' words: side 1 lists them with their Chinese and meaning, side 2 has activities to learn them. Download it as a Word file to print, or to change first.</p>' +
     '<div class="st-build"><div class="st-main"><section class="card st-sec">' +
       '<div class="mt-bar"><div class="field"><label for="ho-topic">Topic</label><select id="ho-topic">' + topics.map(t => '<option value="' + t.key + '"' + (t.key === st.topic ? ' selected' : '') + '>' + esc(t.name) + '</option>').join('') + '</select></div>' +

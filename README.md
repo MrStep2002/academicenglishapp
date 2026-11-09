@@ -53,10 +53,10 @@ sidebar: English / 中文版) switches side. The landing page still shows when a
 Every English student page has the same sidebar and top bar, added by `en/engine/shell.js` (styles in `css/site.css`). It wraps
 what the page already has, so the games and pages underneath are unchanged.
 
-- **Sidebar**: the logo, the language menu (English / 中文版), Home, Daily Circuit, My progress; YOUR CLASSES; MY SUBJECTS (Essentials
-  and the subjects switched on, with the current one highlighted); EXPLORE (Big Ideas, The Future); ABOUT (Who are we?, For teachers,
-  Got an idea?). Your classes, Big Ideas, The Future and Who are we? are greyed ("coming soon") until they exist: they are the
-  `soon(…)` lines in `sideHtml()` in shell.js.
+- **Sidebar** (order set by the teacher, 9 Nov 2026): the logo, the language menu (English / 中文版), Home, Daily Circuit, My progress,
+  Big Ideas, Staff Room (the teacher page; 教师办公室 on the Chinese side); MY CLASSES; MY SUBJECTS (Essentials and the subjects
+  switched on, with the current one highlighted); ABOUT (Who are we?, Got an idea?). My classes, Big Ideas and Who are we? are
+  greyed ("coming soon") until they exist: they are the `soon(…)` lines in `sideHtml()` in shell.js.
 - **Top bar**: Subjects ▾ (areas on the left, their subjects on the right, with the student's level where it has been found), then the
   days in a row, the points (Day · Week · Total) and Log in or the student's name.
 - **Phones** (under 860px wide): the sidebar becomes a menu behind the ☰ button; the points and name move into it.
@@ -101,7 +101,7 @@ what the page already has, so the games and pages underneath are unchanged.
   cards with the Chinese on the back, Your words, the science page's own games (练习), then the three columns of three
   (词汇, 句子, 游戏: `ZH_COLS`). The games use the same layout and side panel as the English ones (`zhShell()` → `gameLayout()`;
   the keys in `ZH_KEYS`, More from `zhMoreBox()`). The language menu in the sidebar moves between the two versions (`aea:lang`).
-- The teacher page does not have the shell.
+- The Staff Room (`teacher/index.html`) has the shell too, with `data-staff` (see *Logins* below).
 - After changing `shell.js`, `subjects.js`, `home.js`, `account.js`, `app.js` or `site.css`, change the `?v=` number after them on the pages that load them (both versions).
 
 ## English games by category
@@ -176,8 +176,26 @@ points, level and last activity at `teacher/`. Without a login everything works 
 |---|---|
 | `en/engine/account.js` | The Log in button and saving to the account. Loaded on every page after `points.js` |
 | `login/index.html` | Students log in and out |
-| `teacher/index.html` | The teacher page |
+| `teacher/index.html` | The Staff Room (the teacher page) |
 | `server/` | The login server at `api.academicenglishapp.com` (Tencent Cloud, Hong Kong). Setup, updates and teacher logins: `server/README.md` |
 
 Never rename the `aea:…` keys the games save in the browser: accounts store progress under the same names.
+
+### The Staff Room (9 Nov 2026)
+
+The teacher page is called the Staff Room and has the site's sidebar and top bar (`shell.js` with `data-staff`: no points or
+days in a row; the teacher's name, Change password and Log out are in the top bar instead). The mouse logo goes to the main
+site; the path in the top bar (Staff Room / …) is the way back to the Staff Room. The main view is four lists, like the
+landing page's subject boxes:
+
+- **Classes**: each class (with how many students) and + New class.
+- **Starters**: Build the Board (`#/starters`, the full builder), then Match Up, Gap Fill, Connecting Wall and Wordsearch,
+  each with a page of its own (`#/starters/match-up`, `gap-fill`, `connecting-wall`, `word-search`) that puts just that
+  activity on the board. Each page remembers its own settings; Exit on the board comes back to it (`teacher/starters.js`).
+- **Handouts**: Vocab (`#/handouts`).
+- **Board Games**: Squaring Up, Don't Say It!, Hints, Categories (each opens its maker), and *Your saved board games* (`#/board`).
+
+Reports and Suggestions are for the admin only, in a strip under the lists. The server decides who the admin is
+(`teachers.admin`; `sudo aea-admin make-admin <username>`, see `server/README.md`): other teachers don't see the strip and
+the server refuses them those lists.
 

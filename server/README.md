@@ -49,7 +49,8 @@ sudo bash /opt/aea/server/update.sh
 |---|---|
 | `sudo aea-admin add-teacher <username> "<Name>"` | Another teacher login |
 | `sudo aea-admin teacher-password <username>` | A forgotten teacher password |
-| `sudo aea-admin list` | Teachers, classes and how many students |
+| `sudo aea-admin list` | Teachers, classes and how many students (the admin is marked) |
+| `sudo aea-admin make-admin <username>` | Make this teacher the admin: the only one who sees Reports and Suggestions |
 | `sudo systemctl status aea-api` | Is the program running? |
 | `sudo journalctl -u aea-api -n 50 --no-pager` | Its latest messages (errors show here) |
 
@@ -112,6 +113,14 @@ sudo bash /opt/aea/server/update.sh
   question that is part of a passage or text (ids like `rep-read-004#2`) hides the whole passage.
 - Tables: `reports` (one row per report; `ip` is a hash, only used for the limit) and `report_items` (the teacher's
   decision on each question). Added automatically when the updated server starts, so `update.sh` is all that's needed.
+
+## The admin (9 Nov 2026)
+
+- Reports and Suggestions are for the admin only (the teacher: "I'm the only admin"). `teachers.admin = 1` marks the admin
+  (`sudo aea-admin make-admin <username>`). While no teacher is marked, the first teacher login made counts as the admin.
+- The login and `GET /api/teacher/classes` say `admin: true|false`; the Staff Room shows the Reports and Suggestions strip
+  only to the admin. Every reports and suggestions route answers other teachers with 403 "Only the admin can see this."
+- The column is added automatically when the updated server starts, so `update.sh` is all that's needed.
 
 ## Suggestions box (3 Nov 2026)
 

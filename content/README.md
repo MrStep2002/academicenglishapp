@@ -17,7 +17,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `advertising/` | English → Advertising, and Chinese version → Advertising (pages `en/advertising/`, `zh/advertising/`, since 5 Nov 2026). Words written level by level: `words.csv` has the written ones, `new-words.csv` the rest (the games don't read it). Ids `adv:<word>`. Words also in Representation (advert, slogan, target audience, direct address, emotive language…) are separate entries here with advertising meanings and examples, on purpose |
 | `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
 | `physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/physics/" below |
-| `mockingbird/` | English → To Kill a Mockingbird (`en/mockingbird/`, English version only, since 8 Nov 2026). Ids `tkam:<word>` for words, `tkam-tf-…`, `tkam-gk-…`, `tkam-char-…`. tf.csv has a `chapter` column (see True or false). Also `characters.csv` (below). The teacher's original word bank, `Mockingbird_empathic_word_bank_100.csv`, is not read by the games |
+| `mockingbird/` | English → To Kill a Mockingbird (`en/mockingbird/`, English version only, since 8 Nov 2026). Ids `tkam:<word>` for words, `tkam-tf-…`, `tkam-gk-…`, `tkam-char-…`. tf.csv has a `focus` column (see True or false). Also `characters.csv` (below). The teacher's original word bank, `Mockingbird_empathic_word_bank_100.csv`, is not read by the games |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
 | `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
@@ -347,8 +347,9 @@ expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` W
 `id,level,statement,answer,explanation`
 
 - **answer**: `TRUE` or `FALSE`.
-- chapter (optional, To Kill a Mockingbird): the latest chapter the statement or its explanation gives away. The games
-  ignore it for now; it is there so a "read up to chapter X" setting could hide spoilers later.
+- focus (optional, To Kill a Mockingbird): `Context`, `Characters` or `Craft`, for sorting the statements. The games ignore it.
+  Mockingbird's statements are about the times, the people and how writers build characters, not plot recall, because
+  the class writes empathic responses (as a character) to Sergel's play. Every row has an explanation, true ones too.
 
 ### right-wrong.csv (Grammar Check)
 

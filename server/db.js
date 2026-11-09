@@ -46,6 +46,11 @@ function open(file = DB_PATH) {
   const cols = db.prepare('PRAGMA table_info(students)').all().map(c => c.name);
   if (!cols.includes('side')) db.exec("ALTER TABLE students ADD COLUMN side TEXT NOT NULL DEFAULT 'en'");
   if (!cols.includes('min_level')) db.exec('ALTER TABLE students ADD COLUMN min_level INTEGER');
+  // The admin (9 Nov 2026, teacher: "I'm the only admin, so am the only one to see reports and feedback"): teachers.admin = 1
+  // sees Reports and Suggestions. Set it with: node server/admin.js make-admin <username>. While no teacher is marked, the
+  // first teacher login made counts as the admin (isAdmin in server.js).
+  const tcols = db.prepare('PRAGMA table_info(teachers)').all().map(c => c.name);
+  if (!tcols.includes('admin')) db.exec('ALTER TABLE teachers ADD COLUMN admin INTEGER NOT NULL DEFAULT 0');
   // One student in several classes (30 Oct 2026), e.g. a student the teacher has for English and for Media: one account
   // (same name, password, progress, version and lowest level) listed in each class. students.class_id stays as the
   // class the account was made in (or another of their classes if they leave that one); class_members is the full list.

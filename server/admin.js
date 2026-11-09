@@ -2,6 +2,8 @@
 //   sudo -u aea node server/admin.js add-teacher <username> "<Display name>"   make a teacher login (asks for a password)
 //   sudo -u aea node server/admin.js teacher-password <username>             set a new password for a teacher
 //   sudo -u aea node server/admin.js list                                    teachers, classes and how many students
+//   sudo -u aea node server/admin.js make-admin <username>                   the admin: the only teacher who sees Reports and
+//                                                                            Suggestions in the Staff Room (9 Nov 2026)
 'use strict';
 const readline = require('node:readline');
 const {open, loginKey, hashPassword} = require('./db');
@@ -38,14 +40,19 @@ async function newPassword() {
     db.prepare('UPDATE teachers SET pass = ? WHERE id = ?').run(await hashPassword(await newPassword()), t.id);
     db.prepare("DELETE FROM sessions WHERE role = 'teacher' AND user_id = ?").run(t.id);
     console.log('Done. The teacher is logged out everywhere and can log in with the new password.');
+  } else if (cmd === 'make-admin' && user) {
+    const t = db.prepare('SELECT * FROM teachers WHERE login = ?').get(loginKey(user));
+    if (!t) return console.log(`No teacher called ${user}.`);
+    db.prepare('UPDATE teachers SET admin = 1 WHERE id = ?').run(t.id);
+    console.log(`Done. ${t.name} is the admin: Reports and Suggestions show in their Staff Room. Other teachers don't see them.`);
   } else if (cmd === 'list') {
     for (const t of db.prepare('SELECT * FROM teachers ORDER BY login').all()) {
-      console.log(`Teacher ${t.login} (${t.name})`);
+      console.log(`Teacher ${t.login} (${t.name})${t.admin ? ' · admin' : ''}`);
       for (const c of db.prepare('SELECT classes.name, COUNT(class_members.student_id) AS n FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name').all(t.id))
         console.log(`  ${c.name}: ${c.n} students`);
     }
   } else {
-    console.log('Use one of:\n  add-teacher <username> "<Display name>"\n  teacher-password <username>\n  list');
+    console.log('Use one of:\n  add-teacher <username> "<Display name>"\n  teacher-password <username>\n  list\n  make-admin <username>');
   }
   db.close();
 })();

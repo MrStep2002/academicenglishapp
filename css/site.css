@@ -6,6 +6,7 @@
    5. Subject pages, the word list and My progress (stage 3; app.js), then Reading Comprehension, the Daily Circuit page and login
    6. The Chinese version (stage 4): the same pages in Chinese
    7. After the rebuild (8 Nov 2026): Listen beside the game's name, calmer feedback, the top bar staying in view on computers
+   8. The Staff Room (9 Nov 2026): the teacher page in the shell (teacher/index.html; shell.js data-staff)
    Everything is prefixed aea- so nothing clashes with the game pages (en/engine/styles.css) or css/home.css. */
 
 /* ---------- 1. Fonts and colours ---------- */
@@ -851,3 +852,52 @@ html.aea-zh .aea-streak i.t-zh { text-transform: none; }
   html.aea-shelled { scroll-padding-top: 84px; }
   .cr-pass { top: 80px; max-height: calc(100vh - 96px); }
 }
+
+/* ---------- 8. The Staff Room (9 Nov 2026, teacher) ----------
+   teacher/index.html in the site's sidebar and top bar (shell.js data-staff: html.aea-staffed). The top bar has the path
+   (Staff Room / …) and the teacher's name, Change password and Log out; the main view is four lists like the landing page's
+   subject boxes (.aea-areabox), and a strip for the admin (Reports, Suggestions). The pages inside keep their own look
+   (the styles in teacher/index.html, board.css, starters.css, handouts.css). */
+html.aea-staffed body.aea-staff { background: var(--sh-bg); }
+html.aea-staffed body.aea-staff .aea-content > .home { max-width: 1240px; margin: 0; padding: 30px clamp(16px, 2.6vw, 40px) 56px; gap: 22px; }
+html.aea-staffed .aea-staff .intro h1 { margin: 0; font: 400 clamp(40px, 4.2vw, 56px)/1.05 var(--sh-serif); color: var(--sh-ink); }
+/* The way back is the path in the top bar: the old "← Staff Room" links under it go (the deeper ones stay) */
+html.aea-staffed.aea-crumbed .aea-staff .aea-content .backlink[href="#/"] { display: none; }
+html.aea-staffed.aea-crumbed .aea-staff .aea-content p:has(> .backlink[href="#/"]:only-child) { display: none; }
+/* The teacher's name, Change password and Log out (index.html #me, moved into the top bar) */
+.aea-staff-slot { display: flex; align-items: center; }
+.aea-staff-slot #me { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: 0; font-size: 15px; color: var(--sh-muted); }
+.aea-staff-slot #me:empty { display: none; }
+.aea-staff-slot #me b { color: var(--sh-ink); }
+.aea-staff-slot #me a { color: var(--sh-link); font-weight: 700; text-decoration: none; }
+.aea-staff-slot #me a:hover { text-decoration: underline; }
+.aea-staff-slot #me .btn { min-height: 38px; padding: 0 14px; border: 1px solid var(--sh-line); border-radius: 10px; background: transparent; color: var(--sh-ink); font: 700 15px/1 var(--sh-body); }
+.aea-staff-slot #me .btn:hover { background: var(--sh-soft); }
+.aea-staff-me { display: none; }
+@media (max-width: 859.98px) {
+  .aea-staff-slot #me b, .aea-staff-slot #me a { display: none; }   /* in the menu instead (.aea-staff-me) */
+  .aea-staff-me { display: flex; flex-direction: column; gap: 6px; font-size: 15px; }
+  .aea-staff-me a { color: var(--sh-link); font-weight: 700; }
+  html.aea-staffed .aea-crumbs li:nth-child(1), html.aea-staffed .aea-crumbs li:nth-child(2) { display: block; }   /* Staff Room: the way back */
+  html.aea-staffed body.aea-staff .aea-content > .home { padding: 20px 16px 40px; }
+}
+/* The four lists: Classes, Starters, Handouts, Board Games (four across on a wide screen, two on a narrower one) */
+.sr-cols { grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 620px) { .sr-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1180px) { .sr-cols { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.sr-box { align-self: start; }
+.sr-box a span { display: flex; flex-direction: column; gap: 1px; padding: 8px 0; }
+.sr-box .sr-n { font: 400 13px/1.3 var(--sh-mono); color: var(--sh-muted); }
+.sr-box .sr-add { color: var(--sh-link); }
+.sr-box .sr-foot { margin: 0; padding-top: 8px; border-top: 1px solid var(--sh-line2); font-size: 15px; color: var(--sh-muted); }
+.sr-box .sr-foot a { display: inline; min-height: 0; padding: 0; color: var(--sh-link); font-weight: 700; }
+.sr-box .sr-foot a:hover { background: none; text-decoration: underline; }
+.sr-box svg { flex: none; color: var(--sh-muted); }
+/* The admin's strip (only the admin sees it: the server says who) */
+.sr-admin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 6px; padding: 14px 18px; border: 1px dashed var(--sh-line); border-radius: 10px; }
+.sr-admin-k { margin: 0 6px 0 0; font: 500 12px/1.3 var(--sh-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--sh-muted); }
+.sr-admin a { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border: 1px solid var(--sh-line); border-radius: 10px; background: var(--sh-card); color: var(--sh-ink); font-weight: 700; text-decoration: none; }
+.sr-admin a:hover { background: var(--sh-soft); }
+.sr-admin .rep-count { font-weight: 400; color: var(--sh-muted); }
+/* A board game or a starter on the projector covers the whole screen: the sidebar and the top bar step out of the way */
+html.bg-on .aea-side, html.bg-on .aea-top { visibility: hidden; }

@@ -1,8 +1,9 @@
 /* THE SITE SHELL (redesign stage 1, 8 Nov 2026): the sidebar and the top bar around every English page.
    It wraps whatever the page already has (the games, My progress, the Daily Circuit page…) and adds:
-   - the sidebar: the logo, the language menu (English / 中文版), Home, Daily Circuit, My progress, Your classes (greyed for
-     now), My subjects (Essentials + the subjects switched on), Explore (Big Ideas, The Future: greyed until they exist),
-     About (Who are we?: greyed; For teachers; Got an idea?)
+   - the sidebar: the logo, the language menu (English / 中文版), Home, Daily Circuit, My progress, Big Ideas (greyed until
+     it exists), Staff Room (the teacher page), then My classes (greyed for now), My subjects (Essentials + the subjects
+     switched on), About (Who are we?: greyed; Got an idea?). (9 Nov 2026, teacher: Big Ideas and Staff Room moved up; the
+     Explore heading and The Future gone; For teachers renamed Staff Room.)
    - the top bar: the Subjects menu (areas on the left, their subjects on the right), then the days in a row, the points
      (points.js draws them) and the Log in button or the student's name (account.js puts it next to the points)
    - on phones (under 860px) the sidebar becomes a menu that slides in from the left (the ☰ button)
@@ -18,7 +19,11 @@
      data-side="zh|maths"  the side: zh = the Chinese version; maths = the maths points (default en)
      data-auto-side        a page both sides share (My progress, Maths, Log in): the Chinese shell when the student came from
                            the Chinese side (?from=zh, a link from a zh/ page, or Maths opened from the Chinese side in this tab).
-                           (data-skip-zh, its old name, does the same.) */
+                           (data-skip-zh, its old name, does the same.)
+     data-staff            the Staff Room (teacher/index.html, 9 Nov 2026): no points or days in a row; the page's element with
+                           data-staff-top (the teacher's name, Change password, Log out) goes in the top bar instead, and on
+                           phones the sidebar shows the teacher's name and Change password. The page sets the path in the top
+                           bar (Staff Room / …) with crumbs(), so the way back to the Staff Room is always there. */
 (function(){
 'use strict';
 const me = document.currentScript;
@@ -44,6 +49,7 @@ function fromZh(){
 // LANG: the side the shell is for (en or zh). POINTS: whose points it shows (en, zh or maths).
 let POINTS = (me && me.getAttribute('data-side')) || 'en';
 const AUTO = !!me && (me.hasAttribute('data-auto-side') || me.hasAttribute('data-skip-zh'));
+const STAFF = !!me && me.hasAttribute('data-staff');
 const LANG = POINTS === 'zh' || (AUTO && fromZh()) ? 'zh' : 'en';
 if(LANG === 'zh' && POINTS === 'en') POINTS = 'zh';
 const ZH = LANG === 'zh';
@@ -92,7 +98,10 @@ function levelIn(path){
 const here = LIST.SUBJECTS.find(s=>s.path && PAGE.indexOf(norm(s.path)) === 0 && norm(s.path) !== '');
 const LANDING = PAGE === '' || PAGE === 'index.html';   // the landing page: its own list of every subject is #all
 const activeNav = ['en/index.html', 'en/', '', 'index.html', 'zh/index.html', 'zh/'].indexOf(PAGE) >= 0 ? 'home'
-  : PAGE.indexOf('en/circuit/') === 0 || PAGE.indexOf('zh/circuit/') === 0 ? 'circuit' : PAGE.indexOf('progress/') === 0 ? 'progress' : '';
+  : PAGE.indexOf('en/circuit/') === 0 || PAGE.indexOf('zh/circuit/') === 0 ? 'circuit' : PAGE.indexOf('progress/') === 0 ? 'progress'
+  : PAGE.indexOf('teacher/') === 0 ? 'staff' : '';
+// The teacher logged in to the Staff Room (teacher/index.html keeps it as aea:account:teacher)
+const teacher = () => { const t = read('aea:account:teacher'); return t && t.token && t.until > Date.now() ? t : null; };
 
 // ----- the path at the top of a game page (Home / Descriptive language / Fill the gap), set by app.js -----
 // Each step: {label, href, zh}: zh (optional) is the Chinese, shown on the Chinese side
@@ -142,7 +151,8 @@ function sideHtml(){
   return `
   <div class="aea-brand"><a class="aea-brand-a" href="${esc(homeHref())}">${logo('aea-logo')}</a>
     <button type="button" class="aea-close" aria-label="${A('Close menu', '关闭菜单')}">${icon('close', 22)}</button></div>
-  <div class="aea-me"><div class="pts" data-points-bar="${esc(POINTS)}"></div></div>
+  ${STAFF ? (teacher() ? `<div class="aea-me aea-staff-me"><b>${esc(teacher().name)}</b><a href="#/password">Change password</a></div>` : '')
+    : `<div class="aea-me"><div class="pts" data-points-bar="${esc(POINTS)}"></div></div>`}
   <div class="aea-lang">
     <button type="button" class="aea-lang-btn" aria-expanded="false" aria-controls="aea-lang-list">${icon('globe', 18)}<span${ZH ? ' lang="zh-CN"' : ''}>${ZH ? '中文版' : 'English'}</span>${icon('down', 16)}<span class="aea-sr"> ${L('(language)', '（语言）')}</span></button>
     <ul class="aea-lang-list" id="aea-lang-list" hidden>
@@ -155,17 +165,17 @@ function sideHtml(){
       ${link(homeHref(), L('Home', '首页'), 'home', activeNav === 'home')}
       ${link(ROOT + (ZH ? 'zh' : 'en') + '/circuit/index.html', L('Daily Circuit', '每日挑战'), 'circuit', activeNav === 'circuit')}
       ${link(ROOT + 'progress/index.html?from=' + LANG, L('My progress', '我的进步'), 'progress', activeNav === 'progress')}
+      ${soon(L('Big Ideas', '大概念'), 'ideas')}
+      ${link(ROOT + 'teacher/index.html', L('Staff Room', '教师办公室'), 'teach', activeNav === 'staff')}
     </ul>
-    <div class="aea-sec"><p class="aea-sec-h">${L('Your classes', '我的班级')}</p>
+    <div class="aea-sec"><p class="aea-sec-h">${L('My classes', '我的班级')}</p>
       <ul class="aea-list"><li><span class="aea-nav off" aria-disabled="true" title="${A('Coming soon', '即将推出')}"><span class="aea-badge" aria-hidden="true">${esc(badge)}</span><span>${cls}</span><span class="aea-sr"> ${L('(coming soon)', '（即将推出）')}</span></span></li></ul></div>
     <div class="aea-sec"><p class="aea-sec-h">${L('My subjects', '我的科目')}</p>
       <ul class="aea-list">${mine.map(s=>{ const on = here && here.path === s.path;
         return `<li><a class="aea-nav aea-subject${on?' on':''}" href="${esc(ROOT + s.path)}"${on?' aria-current="true"':''}><span class="aea-dot" aria-hidden="true"><i style="background:${SUBJ.areaOf(s.area).color}"></i></span><span>${nameOf(s)}</span></a></li>`; }).join('')}</ul>
       ${mine.length < 2 ? `<p class="aea-hint"><a href="${home}#more">${L('Choose your subjects', '选择你的科目')}</a></p>` : ''}</div>
-    <div class="aea-sec"><p class="aea-sec-h">${L('Explore', '探索')}</p>
-      <ul class="aea-list">${soon(L('Big Ideas', '大概念'), 'ideas')}${soon(L('The Future', '未来'), 'future')}</ul></div>
     <div class="aea-sec"><p class="aea-sec-h">${L('About', '关于')}</p>
-      <ul class="aea-list">${soon(L('Who are we?', '我们是谁？'), 'who')}${link(ROOT + 'teacher/index.html', L('For teachers', '教师'), 'teach', false)}${link(home + '#suggest', L('Got an idea?', '有想法吗？'), 'idea', false)}</ul></div>
+      <ul class="aea-list">${soon(L('Who are we?', '我们是谁？'), 'who')}${link(home + '#suggest', L('Got an idea?', '有想法吗？'), 'idea', false)}</ul></div>
   </nav>`;
 }
 
@@ -205,9 +215,9 @@ function build(){
           <div class="aea-subj-menu" id="aea-subj-menu" hidden>${menuHtml()}</div>
         </div>
         <div class="aea-crumbs-slot">${crumbsHtml()}</div>
-        <div class="aea-top-end">
+        <div class="aea-top-end">${STAFF ? '<div class="aea-staff-slot"></div>' : `
           <span class="aea-streak" hidden>${icon('flame', 18)}${ZH ? '<i class="t-zh" lang="zh-CN">连续</i>' : ''}<b></b><i>days in a row</i></span>
-          <div class="pts" data-points-bar="${esc(POINTS)}"></div>
+          <div class="pts" data-points-bar="${esc(POINTS)}"></div>`}
         </div>
       </header>
       <div class="aea-content" id="aea-content" tabindex="-1"></div>
@@ -216,6 +226,7 @@ function build(){
   // Everything the page has so far moves into the content area (scripts too: they have already run)
   Array.from(document.body.childNodes).forEach(n=>content.appendChild(n));
   document.body.insertBefore(shell, document.body.firstChild);
+  if(STAFF){ html.classList.add('aea-staffed'); const top = content.querySelector('[data-staff-top]'); if(top) shell.querySelector('.aea-staff-slot').appendChild(top); }
   wire(shell);
   if(window.AEA_POINTS) window.AEA_POINTS.render(POINTS, 0);
   drawStreak();

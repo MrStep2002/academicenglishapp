@@ -27,7 +27,8 @@ TABOO_PARTS = {'of', 'the', 'a', 'an', 'with', 'to', 'and', 'in', 'on', 'for', '
 SCIENCE = {'syllabus', 'extended'}
 # chapter: the latest chapter of a set text a row depends on (content/mockingbird/, 8 Nov 2026). The games ignore it for
 # now; it is there so a "read up to chapter X" setting can hide spoilers later.
-NOTES = {'chapter'}
+# focus: Context / Characters / Craft on content/mockingbird/tf.csv (9 Nov 2026), for the teacher's use; the games ignore it.
+NOTES = {'chapter', 'focus'}
 
 HEADS = {
     'words': ['id', 'level', 'word', 'pos', 'meaning', 'example', 'synonyms', 'zh', 'group', 'similar', 'accept', 'note', 'list'],   # list: optional, see content/README.md

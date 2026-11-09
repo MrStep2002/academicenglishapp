@@ -6,6 +6,9 @@
      #/starters/gapfill          the teacher's own Gap Fill paragraphs
      #/starters/gapfill/new      make one: a paragraph from the bank (content/<topic>/reads.csv) or typed in, click words to make gaps
      #/starters/gapfill/<id>     change one
+     #/starters/match-up, #/starters/gap-fill, #/starters/connecting-wall, #/starters/word-search: one activity on its own,
+                                 filling the board (9 Nov 2026: listed under Starters in the Staff Room); #/starters/match-up/words
+                                 chooses its words
    Room on the board: one square for a question, half the board for Spot the error, the whole board for Match-up,
    Connecting Wall and Gap Fill. Activities that won't fit are greyed out.
    Content: the same CSV files as the games (through board.js: AEA_BOARD.lib), plus errors.csv (Spot the error), reads.csv
@@ -329,6 +332,9 @@ const AEA_START = window.AEA_START = {
     if (hash === '#/starters/gapfill/new') return gfEdit(null);
     if ((m = /^#\/starters\/gapfill\/([\w-]+)$/.exec(hash))) return gfEdit(m[1]);
     if (hash === '#/starters/matchup') return mtChoose();
+    if (hash === '#/starters/match-up/words') return mtChoose(true);
+    const o = Object.keys(ONE).find(k => hash === '#/starters/' + ONE[k].path);
+    if (o) return one(o);
     return build();
   },
   stop,
@@ -337,12 +343,12 @@ const AEA_START = window.AEA_START = {
 
 // ---------- the Starters page: choose what goes on the board ----------
 function build(){
-  C.setTitle('Starters'); C.header();
+  C.setTitle('Build the Board'); C.header(); gfFrom = 'board';
   const cfg = cfgNow();
   cfg.items.forEach(it => { if (it.k === 'gapfill' && it.src && it.src !== 'bank' && !gapOf(it.src)) it.src = 'bank'; });
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + esc(label) + '</option>';
   C.view.innerHTML =
-    '<p style="margin:0 0 14px"><a class="backlink" href="#/">← All classes</a></p>' +
+    '<p style="margin:0 0 14px"><a class="backlink" href="#/">← Staff Room</a></p>' +
     '<p class="note st-lead">Something to do as students come in. Choose what goes on the board and put it on the projector. Students write their answers in their books, and every answer stays hidden until you show it.</p>' +
     '<div class="st-build"><div class="st-main">' +
       '<section class="card st-sec"><h2>Topics</h2><div class="bg-chips" id="s-topics">' + TOPICS.map(t =>
@@ -530,7 +536,7 @@ function mount(d){
   el.querySelector('[data-t=sound]').onclick = e => { e.currentTarget.blur(); S.sound = !S.sound; setJ(K_SOUND, S.sound); tools(); if (S.sound) chime('right'); };
   el.querySelector('[data-t=full]').onclick = e => { e.currentTarget.blur(); const doc = document;
     if (doc.fullscreenElement) doc.exitFullscreen().catch(() => {}); else if (doc.documentElement.requestFullscreen) doc.documentElement.requestFullscreen().catch(() => {}); };
-  el.querySelector('[data-t=exit]').onclick = () => { location.hash = '#/starters'; };
+  el.querySelector('[data-t=exit]').onclick = () => { location.hash = d.back || '#/starters'; };   // back: a single-activity page (one())
   if (S.secs) { el.querySelector('.st-time').onclick = e => { e.currentTarget.blur(); clockToggle(); };
     el.querySelector('.st-go').onclick = e => { e.currentTarget.blur(); clockToggle(); };
     el.querySelector('.st-reset').onclick = e => { e.currentTarget.blur(); clockReset(); }; }
@@ -558,7 +564,7 @@ function redeal(){
   ensure(d.cfg.topics).then(() => {
     const r = dealAll(d.cfg);
     if (!r.items.length) { b.disabled = false; b.textContent = '🎲 New questions'; return; }
-    const nd = newDeal(d.cfg, r.items); saveDeal(nd); if (S && S.d === d) mount(nd);
+    const nd = newDeal(d.cfg, r.items); if (d.back) nd.back = d.back; saveDeal(nd); if (S && S.d === d) mount(nd);
   }).catch(() => { if (b.isConnected) { b.disabled = false; b.textContent = '🎲 New questions'; } });
 }
 
@@ -868,13 +874,15 @@ function chime(kind){
 // The words of the topics chosen on the Starters page (at any level; the level chips filter the list). 4 to 8 words; saved
 // on the Match-up on the board (item.pick: word and meaning as they were), so it stays the same until it's changed.
 const MT_MIN = 4, MT_MAX = 8, MT_BEST = 6;
-function mtChoose(){
-  const cfg = cfgNow(), idx = cfg.items.findIndex(it => it.k === 'match');
+// single: for the Match Up page on its own (one('match')): its words are saved with that page, and Use comes back to it
+function mtChoose(single){
+  const back = single ? '#/starters/' + ONE.match.path : '#/starters';
+  const cfg = single ? oneCfg('match') : cfgNow(), idx = single ? 0 : cfg.items.findIndex(it => it.k === 'match'), item = single ? cfg.item : cfg.items[idx];
   const topics = cfg.topics.filter(t => !(TOPICS.find(x => x.key === t) || {}).only);
-  if (idx < 0 || !topics.length) { location.hash = '#/starters'; return; }
-  C.setTitle('Match-up: choose the words'); C.header();
-  let picked = (cfg.items[idx].pick || []).slice(), find = '', lv = cfg.levels.length ? cfg.levels.slice() : [1, 2, 3, 4, 5], topic = 'all';
-  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/starters">← Starters</a></p>' +
+  if (idx < 0 || !topics.length) { location.hash = back; return; }
+  C.setTitle(single ? 'Match Up: choose the words' : 'Match-up: choose the words'); C.header();
+  let picked = (item.pick || []).slice(), find = '', lv = cfg.levels.length ? cfg.levels.slice() : [1, 2, 3, 4, 5], topic = 'all';
+  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="' + back + '">← ' + (single ? 'Match Up' : 'Build the Board') + '</a></p>' +
     '<p class="note st-lead">Choose the words for today\'s Match-up from ' + esc(topics.map(topicName).join(', ')) + '. Six works best; you can choose from ' + MT_MIN + ' to ' + MT_MAX + '.</p>' +
     '<div class="st-build"><div class="st-main"><section class="card st-sec">' +
       '<div class="mt-bar">' + (topics.length > 1 ? '<div class="field"><label for="mt-topic">Topic</label><select id="mt-topic"><option value="all">All of them</option>' +
@@ -884,7 +892,7 @@ function mtChoose(){
       '<div class="mt-list" id="mt-list"><p class="note">Loading the words…</p></div></section></div>' +
     '<aside class="st-side"><div class="card st-sec st-stick">' +
       '<div class="spread"><h2>Your words</h2><span class="st-room" id="mt-n"></span></div>' +
-      '<div class="row"><button class="btn" type="button" id="mt-use">Use these words</button><a class="btn alt" href="#/starters">Cancel</a></div>' +
+      '<div class="row"><button class="btn" type="button" id="mt-use">Use these words</button><a class="btn alt" href="' + back + '">Cancel</a></div>' +
       '<p class="err" id="mt-err" role="alert" hidden></p>' +
       '<div class="row"><button class="btn small alt" type="button" id="mt-fill">🎲 Fill up to ' + MT_BEST + '</button><button class="btn small alt" type="button" id="mt-clear">Clear</button>' +
         '<button class="mt-link" type="button" id="mt-random">Use random words instead</button></div>' +
@@ -928,7 +936,9 @@ function mtChoose(){
   $('#mt-fill').onclick = () => { for (const x of shuffle(rows())) { if (picked.length >= MT_BEST) break;
       if (!has(x) && !picked.some(p => p.def === x.def || p.w.toLowerCase() === x.w.toLowerCase())) picked.push({t: x.t, id: x.id, w: x.w, def: x.def}); }
     err(''); draw(); };
-  const saveTo = pick => { const c = cfgNow(), k = c.items.findIndex(it => it.k === 'match'); if (k < 0) return;
+  const saveTo = pick => {
+    if (single) { const c = oneCfg('match'); if (pick) c.item.pick = pick; c.words = pick ? 'pick' : 'random'; saveOne('match', c); C.touch(); location.hash = back; return; }
+    const c = cfgNow(), k = c.items.findIndex(it => it.k === 'match'); if (k < 0) return;
     if (pick) c.items[k].pick = pick; else delete c.items[k].pick; saveCfg(c); C.touch(); location.hash = '#/starters'; };
   $('#mt-use').onclick = () => { if (picked.length < MT_MIN) return err('Choose at least ' + MT_MIN + ' words.'); saveTo(picked); };
   $('#mt-random').onclick = () => saveTo(null);
@@ -936,12 +946,125 @@ function mtChoose(){
   ensure(topics).then(drawList).catch(x => { $('#mt-list').innerHTML = '<p class="err">' + esc(x.message) + ' Check your internet connection and try again.</p>'; });
 }
 
+// ---------- One activity on its own (9 Nov 2026, teacher) ----------
+// The Staff Room lists Match Up, Gap Fill, Connecting Wall and Wordsearch under Starters, each with a page of its own: the
+// same activity as on Build the Board, filling the whole board, with its own topics, levels and settings, saved apart from
+// Build the Board's (aeaBoard:starter → one[k]). Exit on the board comes back to the page (deal.back).
+const ONE = {match: {path: 'match-up', name: 'Match Up'}, gapfill: {path: 'gap-fill', name: 'Gap Fill'},
+  wall: {path: 'connecting-wall', name: 'Connecting Wall'}, wordsearch: {path: 'word-search', name: 'Wordsearch'}};
+let gfFrom = 'board';   // where the Gap Fill paragraphs page was opened from: Build the Board, or the Gap Fill page ('one')
+function oneCfg(k){
+  const m = cfgNow(), o = (store().one || {})[k] || {};
+  const c = Object.assign({title: '', topics: m.topics.slice(), levels: m.levels.slice(), secs: m.secs, words: 'random'}, clone(o));
+  c.item = Object.assign({k}, k === 'wordsearch' ? {show: 'words'} : k === 'gapfill' ? {src: 'bank'} : {}, o.item ? clone(o.item) : {}, {k});
+  if (k === 'gapfill' && c.item.src !== 'bank' && !gapOf(c.item.src)) c.item.src = 'bank';
+  return c;
+}
+const saveOne = (k, c) => { const s = store(); s.one = s.one || {}; s.one[k] = clone(c); setJ(K_START, s); };
+// What gets dealt: one item, with the Match Up words chosen only when the page says so
+function oneDeal(c){
+  const item = clone(c.item); if (item.k === 'match' && c.words !== 'pick') delete item.pick;
+  return {title: c.title || ONE[item.k].name, topics: c.topics.slice(), levels: c.levels.slice(), items: [item], secs: c.secs, choices: false, clue: true};
+}
+const ONE_LEAD = {
+  match: 'Words and meanings to pair up, on the whole board. Students write the pairs in their books; you show the answers one by one or all at once.',
+  gapfill: 'A paragraph with gaps and a word bank, on the whole board: one from the bank for the topics you choose, or one of your own.',
+  wall: 'Sixteen words to sort into four groups of four, on the whole board. Click four tiles that belong together to check them.',
+  wordsearch: 'Topic words hidden in a square of letters, on the whole board. The size and the directions follow the hardest level you choose.'
+};
+function one(k){
+  const o = ONE[k], c = oneCfg(k); if (k === 'gapfill') gfFrom = 'one';
+  C.setTitle(o.name); C.header();
+  const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + esc(label) + '</option>';
+  const radio = (name, v, cur, html) => '<label class="choice"><input type="radio" name="' + name + '" value="' + v + '"' + (v === cur ? ' checked' : '') + '><span>' + html + '</span></label>';
+  const own = {
+    match: '<section class="card st-sec"><h2>The words</h2>' +
+      radio('o-words', 'random', c.words === 'pick' ? '' : 'random', '<b>Random words</b><br><span class="note">Six from the topics and levels you choose: different ones each time.</span>') +
+      radio('o-words', 'pick', c.words === 'pick' ? 'pick' : '', '<b>Words you choose</b> <span class="note" id="o-picked"></span><br><a href="#/starters/' + o.path + '/words" id="o-choose">Choose the words</a>') + '</section>',
+    gapfill: '<section class="card st-sec"><h2>The paragraph</h2><div class="field"><label for="o-src">Which paragraph</label><select id="o-src">' +
+      opt('bank', 'From the bank: a different one each time', c.item.src) + gapfills().map(g => opt(g.id, g.title || 'Untitled', c.item.src)).join('') + '</select></div>' +
+      '<p class="note"><a href="#/starters/gapfill">Your own paragraphs</a>: take one from the bank or type your own, then click the words that should be gaps.</p></section>',
+    wall: '<section class="card st-sec"><h2>The wall</h2><p class="note">The groups come from the topics\' Connecting Wall lists (wall.csv). Groups at the levels you choose come first; others fill the wall if needed.</p></section>',
+    wordsearch: '<section class="card st-sec"><h2>The list beside the letters</h2>' +
+      radio('o-show', 'words', c.item.show === 'meanings' ? '' : 'words', '<b>The words</b><br><span class="note">Students find the words they can see.</span>') +
+      radio('o-show', 'meanings', c.item.show === 'meanings' ? 'meanings' : '', '<b>Their meanings</b><br><span class="note">Students work out each word from its meaning, then find it.</span>') + '</section>'
+  }[k];
+  C.view.innerHTML =
+    '<p class="note st-lead">' + esc(ONE_LEAD[k]) + '</p>' +
+    '<div class="st-build"><div class="st-main">' +
+      '<section class="card st-sec"><h2>Topics</h2><div class="bg-chips" id="o-topics">' + TOPICS.filter(t => !t.only).map(t =>
+        '<label class="bg-chip"><input type="checkbox" value="' + t.key + '"' + (c.topics.includes(t.key) ? ' checked' : '') + '><span>' + esc(t.name) + '</span></label>').join('') + '</div>' +
+        '<h2>Levels</h2><div class="bg-chips" id="o-levels">' + LEVELS.map(([n, name]) =>
+        '<label class="bg-chip"><input type="checkbox" value="' + n + '"' + (c.levels.includes(n) ? ' checked' : '') + '><span>' + name + '</span></label>').join('') + '</div></section>' +
+      own +
+    '</div><aside class="st-side"><div class="card st-sec st-stick">' +
+      '<h2>On the board</h2><p class="st-have" id="o-have"></p>' +
+      '<div class="field"><label for="o-title">Name on the board</label><input type="text" id="o-title" maxlength="60" placeholder="' + esc(o.name) + '" value="' + esc(c.title) + '"></div>' +
+      '<div class="field"><label for="o-secs">Timer</label><select id="o-secs">' + TIMES.map(x => opt(x[0], x[1], c.secs)).join('') + '</select></div>' +
+      '<p class="err" id="o-err" role="alert" hidden></p>' +
+      '<div class="row"><button class="btn" type="button" id="o-go">Show on the board</button></div>' +
+      '<p class="note" id="o-last"></p>' +
+    '</div></aside></div>';
+  const $ = s => C.view.querySelector(s), $$ = s => [...C.view.querySelectorAll(s)];
+  const err = m => { const e = $('#o-err'); e.textContent = m || ''; e.hidden = !m; };
+  const save = () => { saveOne(k, c); C.touch(); };
+  const ownOnly = () => (k === 'gapfill' && c.item.src !== 'bank') || (k === 'match' && c.words === 'pick' && (c.item.pick || []).length >= MT_MIN);
+  let loading = false, failed = '';
+  // How much there is to choose from (the same counts as Build the Board)
+  const have = () => {
+    if (ownOnly()) return k === 'gapfill' ? 'Your own paragraph' : plural(c.item.pick.length, 'word') + ' you chose';
+    if (!c.topics.length) return 'Choose a topic';
+    if (failed) return failed;
+    if (loading || !ready(c.topics)) return 'Counting…';
+    const n = haveOf(k, c), need = NEED[k] || 1;
+    if (k === 'wall') return n >= need ? plural(n, 'group') + ' to choose from' : n ? 'Needs 4 groups: ' + n + ' so far' : 'No groups in ' + (c.topics.length > 1 ? 'these topics' : 'this topic') + ' yet';
+    if (n >= need) return k === 'gapfill' ? plural(n, 'paragraph') + ' in the bank' : n + ' words ready';
+    return haveOf(k, c, [1, 2, 3, 4, 5]) >= need ? 'Not enough at these levels' : 'None in ' + (c.topics.length > 1 ? 'these topics' : 'this topic') + ' yet';
+  };
+  const draw = () => { $('#o-have').textContent = have();
+    if (k === 'match') $('#o-picked').textContent = (c.item.pick || []).length ? '(' + plural(c.item.pick.length, 'word') + ')' : '';
+    const d = dealNow(), el = $('#o-last');
+    el.innerHTML = d && d.back === '#/starters/' + o.path ? '<a href="#/starters/play">Back to the last one</a> (' + esc(new Date(d.made).toLocaleString([], {weekday: 'short', hour: '2-digit', minute: '2-digit'})) + ')' : ''; };
+  const load = () => { failed = '';
+    if (!c.topics.length) { draw(); return; }
+    loading = true; draw(); const want = c.topics.slice();
+    ensure(want).then(() => { if (want.join() === c.topics.join()) { loading = false; draw(); } })
+      .catch(x => { loading = false; failed = "Couldn't load the topics"; draw(); err(x.message + ' Check your internet connection and try again.'); }); };
+  $$('#o-topics input').forEach(i => i.onchange = () => { c.topics = $$('#o-topics input:checked').map(x => x.value); save(); load(); });
+  $$('#o-levels input').forEach(i => i.onchange = () => { c.levels = $$('#o-levels input:checked').map(x => +x.value); save(); draw(); });
+  $('#o-title').oninput = () => { c.title = $('#o-title').value.trim(); save(); };
+  $('#o-secs').onchange = () => { c.secs = +$('#o-secs').value; save(); };
+  if (k === 'match') $$('[name=o-words]').forEach(r => r.onchange = () => { c.words = r.value; save(); draw(); });
+  if (k === 'match') $('#o-choose').onclick = e => { if (!c.topics.length) { e.preventDefault(); err('Choose at least one topic first.'); } else { c.words = 'pick'; save(); } };
+  if (k === 'wordsearch') $$('[name=o-show]').forEach(r => r.onchange = () => { c.item.show = r.value; save(); });
+  if (k === 'gapfill') $('#o-src').onchange = () => { c.item.src = $('#o-src').value; save(); draw(); };
+  $('#o-go').onclick = () => {
+    err('');
+    if (k === 'match' && c.words === 'pick' && (c.item.pick || []).length < MT_MIN) {
+      if (!c.topics.length) return err('Choose at least one topic first.');
+      location.hash = '#/starters/' + o.path + '/words'; return; }
+    if (!ownOnly()) {
+      if (!c.topics.length) return err('Choose at least one topic.');
+      if (!c.levels.length && k !== 'wall') return err('Choose at least one level.');
+    }
+    const go = $('#o-go'); go.disabled = true; go.textContent = 'Getting it ready…';
+    ensure(c.topics).then(() => {
+      const cfg = oneDeal(c), r = dealAll(cfg);
+      if (r.missing.length) { go.disabled = false; go.textContent = 'Show on the board';
+        return err('Not enough for a ' + o.name + ' here. Choose more topics or levels.'); }
+      const d = newDeal(cfg, r.items); d.back = '#/starters/' + o.path;
+      saveDeal(d); C.touch(); location.hash = '#/starters/play';
+    }).catch(x => { go.disabled = false; go.textContent = 'Show on the board'; err(x.message + ' Check your internet connection and try again.'); });
+  };
+  load();
+}
+
 // ---------- Gap Fill: the teacher's own paragraphs ----------
 function gfPreview(text, extras){ return String(text || '').replace(/\[\[([^\]]*?)\]\]/g, '____').slice(0, 170) + (String(text || '').length > 170 ? '…' : ''); }
 function gfList(){
   C.setTitle('Gap Fill paragraphs'); C.header();
   const all = gapfills();
-  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="#/starters">← Starters</a></p>' +
+  C.view.innerHTML = '<p style="margin:0 0 14px"><a class="backlink" href="' + (gfFrom === 'one' ? '#/starters/' + ONE.gapfill.path + '">← Gap Fill' : '#/starters">← Build the Board') + '</a></p>' +
     '<div class="spread" style="margin-bottom:14px"><p class="note">Your own Gap Fill paragraphs. Each one fills the whole board in a starter.</p><a class="btn" href="#/starters/gapfill/new">+ New Gap Fill</a></div>' +
     (all.length ? '<div class="bg-list">' + all.map(g => { const n = gapWords(g.text).length;
       return '<div class="card bg-item" data-id="' + esc(g.id) + '"><h3>' + esc(g.title || 'Untitled') + '</h3><p class="note">' + esc(gfPreview(g.text)) + '</p>' +
@@ -959,6 +1082,7 @@ function gfList(){
 }
 // A Gap Fill fills the whole board, so it replaces whatever the starter had on it
 function useInStarter(id){
+  if (gfFrom === 'one') { const c = oneCfg('gapfill'); c.item.src = id; saveOne('gapfill', c); location.hash = '#/starters/' + ONE.gapfill.path; return; }
   const cfg = cfgNow();
   if (cfg.items.length && !(cfg.items.length === 1 && cfg.items[0].k === 'gapfill') && !confirm('A Gap Fill takes the whole board, so it replaces what is on the starter board now. Carry on?')) return;
   cfg.items = [{k: 'gapfill', src: id}]; saveCfg(cfg); location.hash = '#/starters';

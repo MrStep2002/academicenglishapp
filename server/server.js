@@ -69,6 +69,14 @@ function who(req, role) {
   return {role: s.role, id: s.user_id, token: s.token};
 }
 setInterval(() => db.prepare('DELETE FROM sessions WHERE expires < ?').run(now()), 6 * 3600e3).unref();
+// Reports and Suggestions are for the admin only (9 Nov 2026, teacher). The admin is a teacher marked admin
+// (server/admin.js make-admin <username>), or, while no teacher is marked, the first teacher login made.
+function isAdmin(id) {
+  if (db.prepare('SELECT 1 FROM teachers WHERE admin = 1').get()) return !!db.prepare('SELECT 1 FROM teachers WHERE id = ? AND admin = 1').get(id);
+  const first = db.prepare('SELECT id FROM teachers ORDER BY id LIMIT 1').get();
+  return !!first && first.id === id;
+}
+function admin(req) { const u = who(req, 'teacher'); if (!isAdmin(u.id)) throw new Oops(403, 'Only the admin can see this.'); return u; }
 
 // ---------- what the teacher sees about a student, worked out from their saved progress ----------
 function summary(studentId, lastSeen) {
@@ -216,7 +224,7 @@ route('POST', '/api/teacher/login', async (req, body) => {
   if (tooMany('t:' + key, 10) || tooMany('ip:' + ip, 100)) throw new Oops(429, 'Too many tries. Wait 15 minutes and try again.');
   const t = db.prepare('SELECT * FROM teachers WHERE login = ?').get(key);
   if (!t || !(await checkPassword(body.password, t.pass))) { failed('t:' + key); failed('ip:' + ip); throw new Oops(401, 'That username and password don\'t match.'); }
-  return {token: startSession('teacher', t.id), role: 'teacher', name: t.name};
+  return {token: startSession('teacher', t.id), role: 'teacher', name: t.name, admin: isAdmin(t.id)};
 });
 
 route('POST', '/api/teacher/password', async (req, body) => {
@@ -230,7 +238,7 @@ route('POST', '/api/teacher/password', async (req, body) => {
 
 route('GET', '/api/teacher/classes', req => {
   const u = who(req, 'teacher');
-  return {classes: db.prepare('SELECT classes.id, classes.name, classes.created, COUNT(class_members.student_id) AS students FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name COLLATE NOCASE').all(u.id)};
+  return {classes: db.prepare('SELECT classes.id, classes.name, classes.created, COUNT(class_members.student_id) AS students FROM classes LEFT JOIN class_members ON class_members.class_id = classes.id WHERE teacher_id = ? GROUP BY classes.id ORDER BY classes.name COLLATE NOCASE').all(u.id), admin: isAdmin(u.id)};   // admin: the Staff Room shows Reports and Suggestions
 });
 
 route('POST', '/api/teacher/classes', async (req, body) => {
@@ -537,7 +545,7 @@ route('GET', '/api/hidden', () => ({hidden: db.prepare("SELECT topic, game, item
 
 // The teacher's list: open (reported, not decided since), removed, and kept (the last 200)
 route('GET', '/api/teacher/reports', req => {
-  const u = who(req, 'teacher');
+  const u = admin(req);
   const names = {student: {}, teacher: {}};
   const nameOf = r => {
     if (!r.role) return 'Guest';
@@ -576,7 +584,7 @@ route('GET', '/api/teacher/reports', req => {
 
 // Keep, Remove, or Put back (= keep) one question
 route('POST', '/api/teacher/reports/decide', (req, body) => {
-  const u = who(req, 'teacher'), topic = String(body.topic || ''), game = String(body.game || ''), item = String(body.item || '');
+  const u = admin(req), topic = String(body.topic || ''), game = String(body.game || ''), item = String(body.item || '');
   if (!TOPIC_RE.test(topic) || !GAME_RE.test(game) || !ITEM_RE.test(item)) throw new Oops(400, 'Bad question.');
   if (!['kept', 'removed'].includes(body.status)) throw new Oops(400, 'Choose Keep or Remove.');
   if (!db.prepare('SELECT 1 FROM reports WHERE topic = ? AND game = ? AND item = ?').get(topic, game, item)) throw new Oops(404, 'That question has no reports.');
@@ -614,7 +622,7 @@ route('POST', '/api/suggest', (req, body) => {
 
 // The teacher's list: new (oldest first, so nothing waits too long) and done (the last 300)
 route('GET', '/api/teacher/suggestions', req => {
-  const u = who(req, 'teacher');
+  const u = admin(req);
   const seen = {};
   const from = r => {
     const k = r.role + r.user_id;
@@ -632,7 +640,7 @@ route('GET', '/api/teacher/suggestions', req => {
 });
 // Done, or back to New
 route('POST', '/api/teacher/suggestions/:id/status', (req, body, p) => {
-  who(req, 'teacher');
+  admin(req);
   if (!['new', 'done'].includes(body.status)) throw new Oops(400, 'Choose Done or New.');
   const r = db.prepare('UPDATE suggestions SET status = ?, done = ? WHERE id = ?').run(body.status, body.status === 'done' ? now() : null, +p.id);
   if (!r.changes) throw new Oops(404, 'That suggestion is not there any more.');
@@ -640,7 +648,7 @@ route('POST', '/api/teacher/suggestions/:id/status', (req, body, p) => {
 });
 // Delete (a silly one, or one you've copied somewhere else)
 route('POST', '/api/teacher/suggestions/:id/delete', (req, body, p) => {
-  who(req, 'teacher');
+  admin(req);
   db.prepare('DELETE FROM suggestions WHERE id = ?').run(+p.id);
   return {ok: true};
 });
