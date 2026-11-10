@@ -48,7 +48,14 @@ HEADS = {
     'taboo': ['id', 'level', 'word', 'taboo1', 'taboo2', 'taboo3', 'taboo4', 'hint1', 'hint2', 'hint3', 'hint4'],
     # Connecting Wall (Starters on the teacher page, 7 Nov 2026): a group's name and four or more words (word5, word6… optional)
     'wall': ['id', 'level', 'group', 'word1', 'word2', 'word3', 'word4', 'word5', 'word6'],
+    # Use of English (10 Nov 2026): Word choice, Open cloze and Word formation (C1 Advanced Reading and Use of English
+    # Parts 1-3). The gaps are in the text: [[right|wrong|wrong|wrong]], [[answer]] or [[answer/other]], [[answer|STEM]].
+    # explanation (shown after Check) and source (where the text came from; not shown) may be left out.
+    'word-choice': ['id', 'level', 'title', 'text', 'explanation', 'source'],
+    'open-cloze': ['id', 'level', 'title', 'text', 'explanation', 'source'],
+    'word-formation': ['id', 'level', 'title', 'text', 'explanation', 'source'],
 }
+CLOZE = ('word-choice', 'open-cloze', 'word-formation')
 
 
 # Crossword (9 Nov 2026): a meaning that contains its word ("advertiser: a person who advertises") gives the answer away, so
@@ -119,7 +126,8 @@ def check_folder(folder, all_word_ids):
         if not os.path.exists(path): continue
         h, rows = read(path)
         missing = [c for c in head if c not in h and c not in OPTIONAL and not re.match(r'(word|correct|wrong\d)(_?\d)?$', c)
-                   and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL) and not (kind == 'evidence' and c in EVIDENCE_OPTIONAL)]
+                   and not (kind == 'knowledge' and c in KNOWLEDGE_OPTIONAL) and not (kind == 'evidence' and c in EVIDENCE_OPTIONAL)
+                   and not (kind in CLOZE and c in ('explanation', 'source'))]
         unknown = [c for c in h if c not in head and c not in SCIENCE and c not in NOTES and not re.match(r'(word|correct)\d$|wrong\d_\d$', c)
                    and not (kind == 'evidence' and re.match(r'(right|wrong)\d$', c))]
         if missing: problems.append(f'{kind}.csv: missing column(s) {", ".join(missing)}')
@@ -264,6 +272,31 @@ def check_folder(folder, all_word_ids):
                 if not r.get('group') or len({w.lower() for w in ws}) < 4: say(kind, r, 'needs a group name and at least four different words (skipped)')
                 elif len({w.lower() for w in ws}) < len(ws): say(kind, r, 'the same word is there twice')
                 ok = False
+            elif kind in CLOZE:   # Use of English (10 Nov 2026)
+                t = r.get('text', '')
+                gaps = re.findall(r'\[\[([^\]]+)\]\]', t)
+                if t.count('[[') != t.count(']]') or t.count('[[') != len(gaps): say(kind, r, 'a [[ or ]] is missing')
+                if len(gaps) < 2: say(kind, r, 'needs a text with at least 2 [[gaps]] (skipped)'); ok = False
+                rest = re.sub(r'\[\[[^\]]+\]\]', ' ', t).lower()
+                for g in gaps:
+                    bits = [x.strip() for x in g.split('|')]
+                    if kind == 'word-choice':
+                        opts = [x for x in bits if x]
+                        if len(set(x.lower() for x in opts)) < 3: say(kind, r, f'[[{g}]] needs the right word and at least two different wrong ones, separated by | (skipped)'); ok = False
+                        elif len(opts) > 4: say(kind, r, f'[[{g}]] has more than three wrong words (the game shows four at most)')
+                        continue
+                    answers = [x.strip() for x in bits[0].split('/') if x.strip()]
+                    if not answers: say(kind, r, f'[[{g}]] has no answer (skipped)'); ok = False; continue
+                    if kind == 'open-cloze':
+                        if len(bits) > 1: say(kind, r, f'[[{g}]]: open cloze gaps have no |; separate answers that are also right with /')
+                        if any(' ' in a for a in answers): say(kind, r, f'[[{g}]]: an open cloze answer is one word')
+                    else:   # word formation
+                        stem = bits[1] if len(bits) > 1 else ''
+                        if not stem: say(kind, r, f'[[{g}]] needs the word in capitals after a |, e.g. [[unusual|USUAL]] (skipped)'); ok = False; continue
+                        if any(a.lower() == stem.lower() for a in answers): say(kind, r, f'[[{g}]]: the answer is the same as the word in capitals')
+                        if re.search(r'\b' + re.escape(stem.lower()) + r'\b', rest): say(kind, r, f'[[{g}]]: "{stem.lower()}" is also in the text, which may help too much')
+                        if re.search(r'\b' + re.escape(answers[0].lower()) + r'\b', rest): say(kind, r, f'[[{g}]]: "{answers[0]}" is also in the text, which gives the answer away')
+                        if re.search(r'\b' + re.escape(answers[0].lower()) + r'\b', r.get('title', '').lower()): say(kind, r, f'[[{g}]]: "{answers[0]}" is in the title, which gives the answer away')
             if kind == 'gaps' and r.get('word') and not known(r['word']): say(kind, r, f'word: "{r["word"]}" is not in words.csv')
             if ok and b is not None: counts.setdefault(kind, {})[b] = counts.setdefault(kind, {}).get(b, 0) + 1
 
@@ -281,13 +314,13 @@ def check_folder(folder, all_word_ids):
     topic_page = 'words' in data   # a topic folder (a reading-only folder's levels are chosen on its menu page instead)
     any_zh = any(w.get('zh') for w in words)
     if kinds:
-        print('  ' + 'Level'.ljust(15) + ''.join(k.rjust(12) for k in kinds) + ('   own button?' if topic_page else ''))
+        print('  ' + 'Level'.ljust(15) + ''.join(k.rjust(max(12, len(k) + 2)) for k in kinds) + ('   own button?' if topic_page else ''))
         for b in range(1, 6):
             row = [(counts.get(k, {}) if k != 'reading' else rcount).get(b, 0) for k in kinds]
             if not any(row): continue
             zh = sum(1 for w in words if band(w.get('level')) == b and w.get('zh'))
             flag = ('yes' if sum(row) >= MIN_LEVEL else f'no: fewer than {MIN_LEVEL}, so played with the nearest level') if topic_page else ''
-            print('  ' + LEVEL_NAMES[b].ljust(15) + ''.join(str(n).rjust(12) for n in row) + ('   ' + flag if flag else '') + (f'   ({zh} with Chinese)' if any_zh else ''))
+            print('  ' + LEVEL_NAMES[b].ljust(15) + ''.join(str(n).rjust(max(12, len(k) + 2)) for n, k in zip(row, kinds)) + ('   ' + flag if flag else '') + (f'   ({zh} with Chinese)' if any_zh else ''))
     else:
         print('  (no content yet)')
     if words and any(w.get('list') for w in words):   # word lists (data-list on a page decides which list its word games deal)

@@ -6,7 +6,8 @@
      #/starters/gapfill          the teacher's own Gap Fill paragraphs
      #/starters/gapfill/new      make one: a paragraph from the bank (content/<topic>/reads.csv) or typed in, click words to make gaps
      #/starters/gapfill/<id>     change one
-     #/starters/match-up, #/starters/gap-fill, #/starters/connecting-wall, #/starters/word-search, #/starters/crossword: one activity on its own,
+     #/starters/match-up, #/starters/gap-fill, #/starters/connecting-wall, #/starters/word-search, #/starters/crossword,
+     #/starters/recall, #/starters/total-recall (10 Nov 2026): one activity on its own,
                                  filling the board (9 Nov 2026: listed under Starters in the Staff Room); #/starters/match-up/words
                                  chooses its words
    Room on the board: one square for a question, half the board for Spot the error, the whole board for Match-up,
@@ -46,11 +47,17 @@ const ACTS = [
   {k: 'gapfill',  size: 'full',                    name: 'Gap Fill',              blurb: 'A paragraph with gaps and a word bank: from the bank, or one of your own.'},
   {k: 'wordsearch', size: 'full', words: true,     name: 'Word search',           blurb: 'Topic words hidden in a square of letters. The list shows the words, or their meanings.'},
   // Crossword (9 Nov 2026): the class solves it together; you type in what they say (see "Crossword" below)
-  {k: 'crossword', size: 'full', words: true,      name: 'Crossword',             blurb: 'Topic words in a crossword. You type in what the class says; Check shows what\'s wrong.'}
+  {k: 'crossword', size: 'full', words: true,      name: 'Crossword',             blurb: 'Topic words in a crossword. You type in what the class says; Check shows what\'s wrong.'},
+  // Recall and Total Recall (10 Nov 2026, teacher): starters of their own (Staff Room → Starters), never on Build the Board.
+  // The passages are the students' files (content/reading-comprehension/recall.csv, total-recall.csv), chosen by level only.
+  {k: 'recall', size: 'full', mem: true,           name: 'Recall',                blurb: 'A passage to read and remember; then it is hidden and the class decides which statements are true.'},
+  {k: 'totalrecall', size: 'full', mem: true,      name: 'Total Recall',          blurb: 'A list to read and remember; then it is hidden and the class writes the answers to questions on it.'}
 ];
 const ACT = Object.fromEntries(ACTS.map(a => [a.k, a]));
 const NEED = {match: 6, wall: 4, wordsearch: 6, crossword: 6};
-const GROUPS = [['small', 'One square each'], ['wide', 'Half the board'], ['full', 'The whole board']];
+// Build the Board offers squares and half-board activities only (10 Nov 2026, teacher: "I'd like the full page games removed
+// from Build the Board, as they're already in the list separately"): the whole-board ones are starters of their own (ONE).
+const GROUPS = [['small', 'One square each'], ['wide', 'Half the board']];
 const DEFAULTS = {title: '', topics: [], levels: [1, 2, 3, 4, 5], items: [], secs: 300, choices: false, clue: true};
 const PAIR = ['#c8344a', '#1f63c4', '#13804f', '#7343c9', '#b35300', '#b4286a', '#0b7a7a', '#4f5578'];   // Match-up pairs (white text reads on all of them)
 const WALL = ['#1f63c4', '#13804f', '#b35300', '#7343c9'];                         // Connecting Wall: the colour of the 1st, 2nd… group found
@@ -104,6 +111,30 @@ function ensure(topics){
     Object.assign(ALL.D, D); xs.forEach(x => { if (x) ALL.X[x.key] = x; }); return ALL; });
 }
 const ready = topics => topics.every(t => ALL.D[t] && ALL.X[t]);
+// Recall and Total Recall (10 Nov 2026): the students' files, read once (ALL.M.recall, ALL.M.totalrecall)
+const MEM_FILE = {recall: 'recall', totalrecall: 'total-recall'}, memWait = {};
+ALL.M = {};
+function memLoad(k){
+  if (!memWait[k]) memWait[k] = fetch(ROOT + 'content/reading-comprehension/' + MEM_FILE[k] + '.csv', {cache: 'no-cache'})
+    .then(r => { if (!r.ok) throw new Error("Couldn't load the " + ACT[k].name + ' passages.'); return r.text(); }).then(parseCSV)
+    .then(rows => (ALL.M[k] = rows.map(r => k === 'recall' ? memRecallRow(r) : memTotalRow(r)).filter(Boolean)))
+    .catch(e => { delete memWait[k]; throw e; });
+  return memWait[k];
+}
+function memRecallRow(r){
+  const opts = []; for (let n = 1; n <= 9; n++) if ((r['option' + n] || '').trim()) opts.push(r['option' + n].trim());
+  const right = [...new Set(String(r.correct_options || '').split(/[^0-9]+/).filter(Boolean).map(Number))].filter(n => n >= 1 && n <= opts.length).map(n => n - 1);
+  if (!r.id || !r.passage || opts.length < 3 || !right.length) return null;
+  return {id: r.id, lv: levelNum(r.level), title: r.title || '', text: r.passage, q: r.question || '', opts, right};
+}
+function memTotalRow(r){
+  const qs = []; for (let n = 1; n <= 15; n++) { const a = n === 1 ? '' : String(n), q = (r['question' + a] || '').trim(), ans = String(r['answer' + a] || '').split(';').map(x => x.trim()).filter(Boolean);
+    if (q && ans.length) qs.push({q, a: ans[0]}); }
+  return r.id && r.passage && qs.length ? {id: r.id, lv: levelNum(r.level), title: r.title || '', text: r.passage, qs} : null;
+}
+const memAt = (k, lv) => (ALL.M[k] || []).filter(r => r.lv == null || lv.includes(band(r.lv)));
+// Everything a starter needs before it is dealt: the topics' files, and the passages for Recall and Total Recall
+const ensureFor = cfg => Promise.all([ensure(cfg.topics || []), ...(cfg.items || []).filter(it => ACT[it.k] && ACT[it.k].mem).map(it => memLoad(it.k))]);
 
 // ---------- what each activity can use ----------
 const letters = w => String(w).replace(/[^A-Za-z]/g, '');
@@ -177,6 +208,7 @@ function haveOf(k, cfg, lv){
   if (k === 'errors') return T.reduce((n, t) => n + errorsAt(ALL.X[t], t, lv).length, 0);
   if (k === 'wall') return T.reduce((n, t) => n + (ALL.X[t].wall || []).length, 0);   // groups at the levels chosen come first; others fill the wall
   if (k === 'gapfill') return T.reduce((n, t) => n + readsAt(ALL.X[t], t, lv).length, 0);
+  if (a.mem) return memAt(k, lv).length;
   return 0;
 }
 const unitsOf = items => items.reduce((n, it) => n + UNITS[ACT[it.k].size], 0);
@@ -210,6 +242,13 @@ function dealOne(it, cfg, used, done){
   const a = ACT[it.k], lv = cfg.levels, T = shuffle(cfg.topics.filter(t => ALL.D[t] && ALL.X[t]));
   const wkey = (t, id) => 'w|' + t + '|' + id;
   if (it.k === 'big') return String(it.text || '').trim() ? {k: 'big', text: String(it.text).trim()} : null;
+  if (a.mem) {   // Recall, Total Recall: a passage at the levels chosen that this board hasn't had
+    for (const r of shuffle(memAt(it.k, lv))) { const key = 'm|' + it.k + '|' + r.id; if (used.has(key)) continue; used.add(key);
+      const x = Object.assign({k: it.k, read: it.read == null ? 60 : +it.read}, clone(r));
+      if (x.opts) { const ord = shuffle(r.opts.map((o, n) => n)); x.opts = ord.map(n => r.opts[n]); x.right = ord.map((n, j) => r.right.includes(n) ? j : -1).filter(j => j >= 0); }
+      return x; }
+    return null;
+  }
   // Match-up with the words the teacher chose (#/starters/matchup): the same words every time, in a new order
   if (it.k === 'match' && it.pick && it.pick.length >= 4) {
     it.pick.forEach(p => used.add(wkey(p.t, p.id)));
@@ -361,21 +400,23 @@ const AEA_START = window.AEA_START = {
 
 // ---------- the Starters page: choose what goes on the board ----------
 function build(){
-  C.setTitle('Build the Board'); C.header(); gfFrom = 'board';
+  C.setTitle('Build the Board'); C.header();
   const cfg = cfgNow();
+  const gone = [...new Set(cfg.items.filter(it => ACT[it.k].size === 'full').map(it => (ONE[it.k] || ACT[it.k]).name))];
+  if (gone.length) { cfg.items = cfg.items.filter(it => ACT[it.k].size !== 'full'); saveCfg(cfg); }
   cfg.items.forEach(it => { if (it.k === 'gapfill' && it.src && it.src !== 'bank' && !gapOf(it.src)) it.src = 'bank'; });
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + esc(label) + '</option>';
   C.view.innerHTML =
     '<p style="margin:0 0 14px"><a class="backlink" href="#/">← Staff Room</a></p>' +
     '<p class="note st-lead">Something to do as students come in. Choose what goes on the board and put it on the projector. Students write their answers in their books, and every answer stays hidden until you show it.</p>' +
+    (gone.length ? '<p class="warn st-gone">' + esc(gone.join(', ')) + (gone.length > 1 ? ' have their own starter pages' : ' has its own starter page') + ' now (in the Staff Room, under Starters), so ' + (gone.length > 1 ? 'they were' : 'it was') + ' taken off this board.</p>' : '') +
     '<div class="st-build"><div class="st-main">' +
       '<section class="card st-sec"><h2>Topics</h2><div class="bg-chips" id="s-topics">' + TOPICS.map(t =>
         '<label class="bg-chip"><input type="checkbox" value="' + t.key + '"' + (cfg.topics.includes(t.key) ? ' checked' : '') + '><span>' + esc(t.name) + '</span></label>').join('') + '</div>' +
         '<h2>Levels</h2><div class="bg-chips" id="s-levels">' + LEVELS.map(([n, name]) =>
         '<label class="bg-chip"><input type="checkbox" value="' + n + '"' + (cfg.levels.includes(n) ? ' checked' : '') + '><span>' + name + '</span></label>').join('') + '</div></section>' +
       '<section class="card st-sec"><div class="spread"><h2>What goes on the board</h2><span class="st-room" id="s-room" aria-live="polite"></span></div>' +
-        '<p class="note">Click an activity to add it, as many times as you like. The board has room for six squares.</p><div id="s-acts"></div>' +
-        '<p class="note">Gap Fill uses a paragraph from the bank, or <a href="#/starters/gapfill">one of your own</a>.</p></section>' +
+        '<p class="note">Click an activity to add it, as many times as you like. The board has room for six squares. The whole-board activities (Match Up, Gap Fill, Connecting Wall, Wordsearch, Crossword, Recall, Total Recall) are starters of their own in the Staff Room.</p><div id="s-acts"></div></section>' +
     '</div><aside class="st-side"><div class="card st-sec st-stick">' +
       '<div class="spread"><h2>The board</h2><button class="btn small alt" type="button" id="s-clear" title="Take everything off the board">Clear the board</button></div>' +
       '<div class="st-mini" id="s-mini"></div><div id="s-big"></div>' +
@@ -502,7 +543,7 @@ function build(){
 let S = null;
 function stop(){
   if (!S) return;
-  clearInterval(S.tick); clearTimeout(S.fitWait);
+  clearInterval(S.tick); clearInterval(S.memTick); clearTimeout(S.fitWait);
   removeEventListener('resize', S.onResize); removeEventListener('keydown', S.onKey, true);
   document.removeEventListener('fullscreenchange', S.onFs);
   if (S.el) S.el.remove();
@@ -545,7 +586,8 @@ function mount(d){
   el.innerHTML =
     '<div class="bg-top"><h1 class="bg-title">' + esc(title) + '</h1>' +
       (S.secs ? '<div class="st-clock"><button type="button" class="st-time" title="Start or pause the timer (Space)"></button>' +
-        '<div class="st-ctl"><button type="button" class="st-go"></button><button type="button" class="st-reset" title="Start the timer again" aria-label="Start the timer again">' + ICON.again + '</button></div></div>' : '') +
+        '<div class="st-ctl"><button type="button" class="st-go"></button><button type="button" class="st-reset" title="Start the timer again" aria-label="Start the timer again">' + ICON.again + '</button></div>' +
+        '<button type="button" class="st-more" title="One more minute (+)" aria-label="One more minute">+1 min</button></div>' : '') +
       '<div class="bg-tools">' +
         '<button class="bg-tool" type="button" data-t="full"></button>' +
         '<button class="bg-tool" type="button" data-t="exit" title="Back to Starters. This starter is kept.">Exit</button></div></div>' +
@@ -562,7 +604,9 @@ function mount(d){
   el.querySelector('[data-t=exit]').onclick = () => { location.hash = d.back || '#/starters'; };   // back: a single-activity page (one())
   if (S.secs) { el.querySelector('.st-time').onclick = e => { e.currentTarget.blur(); clockToggle(); };
     el.querySelector('.st-go').onclick = e => { e.currentTarget.blur(); clockToggle(); };
-    el.querySelector('.st-reset').onclick = e => { e.currentTarget.blur(); clockReset(); }; }
+    el.querySelector('.st-reset').onclick = e => { e.currentTarget.blur(); clockReset(); };
+    el.querySelector('.st-more').onclick = e => { e.currentTarget.blur(); clockMore(); }; }
+  if (d.items.some(x => ACT[x.k].mem)) S.memTick = setInterval(memTick, 1000);   // Recall, Total Recall: the reading countdown
   S.board.addEventListener('click', onBoardClick); S.board.addEventListener('dblclick', xwDouble);
   ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach(t => S.board.addEventListener(t, wsPointer));
   S.onResize = () => { sizeUp(); fitAll(); }; S.onKey = onKey; S.onFs = () => tools();
@@ -598,10 +642,12 @@ function clockToggle(){
   clockDraw();
 }
 function clockReset(){ if (!S) return; clearInterval(S.tick); S.run = false; S.left = S.secs; clockDraw(); }
+// One more minute (10 Nov 2026): added to the time left, running or not (after Time's up: one minute, ready to start)
+function clockMore(){ if (!S || !S.secs) return; S.left = Math.max(0, S.left) + 60; clockDraw(); }
 
 // ---------- showing the answers ----------
 const kindOf = i => ACT[S.d.items[i].k];
-const subCount = it => it.k === 'crossword' ? 0 : it.k === 'match' ? it.pairs.length : it.k === 'gapfill' ? it.parts.filter(p => p.t === 'g').length : it.k === 'wall' ? 4 : it.k === 'wordsearch' ? it.words.length : 0;
+const subCount = it => it.k === 'recall' ? it.opts.length : it.k === 'totalrecall' ? it.qs.length : it.k === 'crossword' ? 0 : it.k === 'match' ? it.pairs.length : it.k === 'gapfill' ? it.parts.filter(p => p.t === 'g').length : it.k === 'wall' ? 4 : it.k === 'wordsearch' ? it.words.length : 0;
 function isShown(i){ const it = S.d.items[i];
   if (it.k === 'big') return true;   // nothing to show
   if (it.k === 'crossword') { const x = xwState(i); return it.words.every(w => xwRight(it, x, w)); }
@@ -614,7 +660,7 @@ function setShown(i, on){
   if (it.k === 'big') return;
   if (it.k === 'crossword') { const x = xwState(i); x.v = it.cells.map(ch => on ? ch : ''); x.g = []; x.b = []; x.ok = on ? it.words.map((w, n) => n) : []; S.xw = null; S.xwSay = null; return; }
   if (it.k === 'wall') { S.st.solved[i] = on ? wallSolveAll(i) : []; S.sel.clear(); }
-  else if (ACT[it.k].size === 'full') S.st.sub[i] = on ? [...Array(subCount(it)).keys()] : [];
+  else if (ACT[it.k].size === 'full') { S.st.sub[i] = on ? [...Array(subCount(it)).keys()] : []; if (on && ACT[it.k].mem) memHide(i, true); }
   else S.st.shown[i] = on;
 }
 function toggle(i){ setShown(i, !isShown(i)); save(); drawPanel(i); tools(); }
@@ -630,12 +676,12 @@ function toggleSub(i, n){
 function navPanel(i, dir){
   const d = S.d; d.hist = d.hist || {}; d.pos = d.pos || {};
   const h = d.hist[i] = d.hist[i] || [d.items[i]], p = d.pos[i] != null ? d.pos[i] : h.length - 1;
-  const show = x => { d.items[i] = x; d.pos[i] = h.indexOf(x); ['shown', 'sub', 'solved', 'order', 'xw'].forEach(k => { if (S.st[k]) delete S.st[k][i]; });
+  const show = x => { d.items[i] = x; d.pos[i] = h.indexOf(x); ['shown', 'sub', 'solved', 'order', 'xw', 'mem'].forEach(k => { if (S.st[k]) delete S.st[k][i]; });
     S.sel.clear(); S.wsPend = S.wsDrag = S.wsFlash = S.xw = S.xwSay = null; save(); drawPanel(i); tools(); };
   if (dir < 0) { if (p > 0) show(h[p - 1]); return; }
   if (p < h.length - 1) return show(h[p + 1]);
   const cur = d.items[i]; if (!canNew(cur)) return;
-  ensure(d.cfg.topics).then(() => {
+  ensureFor(d.cfg).then(() => {
     if (!S || S.d !== d) return;
     const others = d.items.filter((_, k) => k !== i), base = others.flatMap(x => x.keys || []);
     const from = cur.from || d.cfg.items[i] || {k: cur.k};
@@ -653,6 +699,7 @@ function onBoardClick(e){
   if (nav) return navPanel(i, +nav.dataset.nav);
   if (it.k === 'big') return;
   if (it.k === 'crossword') return xwClick(e, i);
+  if (ACT[it.k].mem) { const m = e.target.closest('[data-mem]'); if (m) return memAct(i, m.dataset.mem); if (memSt(i).ph === 'read') return; }
   if (it.k === 'wall') { const t = e.target.closest('.st-tile'); if (t && !t.classList.contains('solved')) wallPick(i, +t.dataset.t);
     const w = e.target.closest('[data-wall]'); if (w) wallAct(i, w.dataset.wall); return; }
   if (ACT[it.k].size === 'full') { const s = e.target.closest('[data-sub]'); if (s) toggleSub(i, +s.dataset.sub); return; }
@@ -665,6 +712,10 @@ function onKey(e){
   const k = e.key;
   if (S.xw && xwKey(e)) return;   // typing into the crossword
   if (k === ' ' || k === 'Spacebar') { e.preventDefault(); clockToggle(); return; }
+  if (k === '+' || k === '=') { e.preventDefault(); clockMore(); return; }
+  const memI = S.L.cells.length === 1 && kindOf(S.L.cells[0].i).mem ? S.L.cells[0].i : -1;   // Recall, Total Recall: H hides the passage
+  if (memI >= 0 && (k === 'h' || k === 'H')) { e.preventDefault(); memAct(memI, memSt(memI).ph === 'read' ? 'hide' : 'peek'); return; }
+  if (memI >= 0 && memSt(memI).ph === 'read' && /^[1-9aA]$/.test(k)) { e.preventDefault(); return; }   // nothing to show while they read
   if (k === 'a' || k === 'A') { e.preventDefault(); allToggle(); return; }
   if (/^[1-9]$/.test(k)) {
     e.preventDefault();
@@ -910,15 +961,69 @@ function drawPanel(i, first){
   const many = S.L.cells.length > 1;   // no Show the answer button (8 Nov 2026, teacher): click the question (or type its number)
   const hist = (S.d.hist || {})[i] || [], pos = (S.d.pos || {})[i] || 0, nav = canNew(it) || hist.length > 1;
   p.classList.toggle('shown', on && it.k !== 'big');
-  p.innerHTML = '<div class="st-ph">' + (many ? '<span class="st-n">' + p.dataset.n + '</span>' : '') + '<span class="st-k">' + headOf(it) + '</span>' +
+  p.innerHTML = '<div class="st-ph">' + (many ? '<span class="st-n">' + p.dataset.n + '</span>' : '') + '<span class="st-k">' + (a.mem ? memHead(i, it) : headOf(it)) + '</span>' +
     (nav ? '<span class="st-nav"><button type="button" data-nav="-1" title="Back to the one before" aria-label="Back to the one before"' + (pos > 0 ? '' : ' disabled') + '>‹</button>' +
       '<button type="button" data-nav="1" title="A different one" aria-label="A different one"' + (canNew(it) || pos < hist.length - 1 ? '' : ' disabled') + '>›</button></span>' : '') +
     '</div>' +
     '<div class="st-body"><div class="st-in' + (it.k === 'wall' || it.k === 'wordsearch' || it.k === 'crossword' ? ' fill' : '') + (on ? ' on' : '') + '">' +
-      (it.k === 'big' ? '<p class="st-bigq">' + esc(it.text) + '</p>' : a.size === 'small' ? smallHTML(it, on) : it.k === 'errors' ? errorsHTML(it) : it.k === 'match' ? matchHTML(it, sub) : it.k === 'gapfill' ? gapfillHTML(it, sub) : it.k === 'wordsearch' ? wsHTML(i, it, sub) : it.k === 'crossword' ? xwHTML(i, it) : wallHTML(i, it)) +
-    '</div></div>';
+      (it.k === 'big' ? '<p class="st-bigq">' + esc(it.text) + '</p>' : a.mem ? memHTML(i, it, sub) : a.size === 'small' ? smallHTML(it, on) : it.k === 'errors' ? errorsHTML(it) : it.k === 'match' ? matchHTML(it, sub) : it.k === 'gapfill' ? gapfillHTML(it, sub) : it.k === 'wordsearch' ? wsHTML(i, it, sub) : it.k === 'crossword' ? xwHTML(i, it) : wallHTML(i, it)) +
+    '</div></div>' + (a.mem ? memCtl(i, it) : '');
   if (!first) fitPanel(p);
 }
+// ---------- Recall and Total Recall on the board (10 Nov 2026, teacher) ----------
+// The passage (or list) with a reading countdown the teacher steers ("so that a teacher can retain control"): ▶ starts it,
+// Pause, +30 s as often as needed, Hide now. At 0:00 the passage is hidden. "No countdown" on the starter page: Hide now only.
+// Then the statements (Recall: which are true?) or the questions (Total Recall), numbered: click one or type its number to
+// show its answer, A for all. Show the passage brings it back beside them at any time; it comes back by itself once
+// everything is shown. H: Hide now, then show or hide the passage again.
+const memSt = i => { S.st.mem = S.st.mem || {}; const it = S.d.items[i];
+  return S.st.mem[i] || (S.st.mem[i] = {ph: 'read', left: +it.read || 0, run: false, peek: false}); };
+function memHide(i){ const m = memSt(i); m.ph = 'ask'; m.run = false; }
+function memAct(i, what){
+  const it = S.d.items[i], m = memSt(i);
+  if (what === 'go' && m.ph === 'read' && it.read > 0 && m.left > 0) m.run = !m.run;
+  else if (what === 'plus' && m.ph === 'read' && it.read > 0) m.left += 30;
+  else if (what === 'hide') memHide(i);
+  else if (what === 'peek' && m.ph === 'ask') m.peek = !m.peek;
+  save(); drawPanel(i); tools();
+}
+function memTick(){
+  if (!S) return;
+  S.d.items.forEach((it, i) => { if (!ACT[it.k].mem) return; const m = memSt(i); if (m.ph !== 'read' || !m.run) return;
+    m.left = Math.max(0, m.left - 1);
+    if (!m.left) { memHide(i); chime('up'); save(); drawPanel(i); return; }
+    if (m.left <= 5) chime('tick');
+    const t = S.board.querySelector('.st-panel[data-i="' + i + '"] .st-memtime'); if (t) { t.textContent = mmss(m.left); t.classList.toggle('low', m.left <= 10); } });
+}
+function memHead(i, it){
+  if (memSt(i).ph === 'read') return it.k === 'recall' ? 'Read it and remember it: it will be hidden' : 'Read the list and remember it: it will be hidden';
+  if (it.k === 'totalrecall') return 'Write the answers in your book';
+  return it.q ? esc(it.q) : 'Which ' + it.right.length + ' statements are true? Write their numbers';
+}
+const memParas = t => String(t || '').split(/\n\s*\n|\s*\|\|\s*/).map(x => '<p>' + esc(x.trim()).replace(/\n/g, '<br>') + '</p>').join('');
+function memHTML(i, it, sub){
+  const m = memSt(i), passage = '<div class="st-memp">' + (it.title ? '<p class="st-memt">' + esc(it.title) + '</p>' : '') + '<div class="st-memx">' + memParas(it.text) + '</div></div>';
+  if (m.ph === 'read') return passage;
+  const list = it.k === 'recall'
+    ? '<ol class="st-meml">' + it.opts.map((o, n) => { const on = sub.includes(n), ok = it.right.includes(n);
+        return '<li data-sub="' + n + '" class="' + (on ? 'on ' + (ok ? 'yes' : 'no') : '') + '"><span class="st-mk">' + (n + 1) + '</span><span class="st-mt">' + esc(o) +
+          '<b class="st-mv">' + (ok ? '✓ True' : '✗ False') + '</b></span></li>'; }).join('') + '</ol>'
+    : '<ol class="st-meml tr">' + it.qs.map((q, n) => '<li data-sub="' + n + '" class="' + (sub.includes(n) ? 'on' : '') + '"><span class="st-mk">' + (n + 1) + '</span>' +
+        '<span class="st-mt">' + esc(q.q) + '<b class="st-ma">' + esc(q.a) + '</b></span></li>').join('') + '</ol>';
+  return m.peek || sub.length === subCount(it) ? '<div class="st-memboth">' + passage + list + '</div>' : list;
+}
+function memCtl(i, it){
+  const m = memSt(i);
+  if (m.ph === 'ask') return sub_all(i, it) ? '' : '<div class="st-memc"><button type="button" class="bg-btn small" data-mem="peek">' + (m.peek ? 'Hide the passage' : 'Show the passage') + '</button></div>';
+  return '<div class="st-memc">' + (it.read > 0
+    ? '<span class="st-memtime' + (m.left <= 10 ? ' low' : '') + '" aria-label="Reading time left">' + mmss(m.left) + '</span>' +
+      '<button type="button" class="bg-btn small" data-mem="go">' + (m.run ? ICON.pause + ' Pause' : ICON.play + (m.left === it.read ? ' Start the reading time' : ' Carry on')) + '</button>' +
+      '<button type="button" class="bg-btn small" data-mem="plus">+30 s</button>'
+    : '<span class="st-memnote">Hide it when the class is ready</span>') +
+    '<button type="button" class="bg-btn small st-memhide" data-mem="hide">Hide now</button></div>';
+}
+const sub_all = (i, it) => (S.st.sub[i] || []).length === subCount(it);
+
 // Text as big as it can be: the panel's font size goes down until everything in it fits (answers hidden but in place,
 // so showing one doesn't move anything)
 function fitPanel(p){
@@ -1079,12 +1184,14 @@ function mtChoose(single){
 // same activity as on Build the Board, filling the whole board, with its own topics, levels and settings, saved apart from
 // Build the Board's (aeaBoard:starter → one[k]). Exit on the board comes back to the page (deal.back).
 const ONE = {match: {path: 'match-up', name: 'Match Up'}, gapfill: {path: 'gap-fill', name: 'Gap Fill'},
-  wall: {path: 'connecting-wall', name: 'Connecting Wall'}, wordsearch: {path: 'word-search', name: 'Wordsearch'}, crossword: {path: 'crossword', name: 'Crossword'}};
-let gfFrom = 'board';   // where the Gap Fill paragraphs page was opened from: Build the Board, or the Gap Fill page ('one')
+  wall: {path: 'connecting-wall', name: 'Connecting Wall'}, wordsearch: {path: 'word-search', name: 'Wordsearch'}, crossword: {path: 'crossword', name: 'Crossword'},
+  recall: {path: 'recall', name: 'Recall'}, totalrecall: {path: 'total-recall', name: 'Total Recall'}};
+let gfFrom = 'one';   // the Gap Fill paragraphs page is opened from the Gap Fill page (Build the Board had Gap Fill too until 10 Nov 2026)
 function oneCfg(k){
   const m = cfgNow(), o = (store().one || {})[k] || {};
   const c = Object.assign({title: '', topics: m.topics.slice(), levels: m.levels.slice(), secs: m.secs, words: 'random'}, clone(o));
-  c.item = Object.assign({k}, k === 'wordsearch' ? {show: 'words'} : k === 'crossword' ? {clues: 'def'} : k === 'gapfill' ? {src: 'bank'} : {}, o.item ? clone(o.item) : {}, {k});
+  c.item = Object.assign({k}, k === 'wordsearch' ? {show: 'words'} : k === 'crossword' ? {clues: 'def'} : k === 'gapfill' ? {src: 'bank'} : ACT[k].mem ? {read: 60} : {}, o.item ? clone(o.item) : {}, {k});
+  if (ACT[k].mem) { c.topics = []; if (o.secs == null) c.secs = 0; }   // no topics; the reading countdown instead of the clock, unless chosen
   if (k === 'gapfill' && c.item.src !== 'bank' && !gapOf(c.item.src)) c.item.src = 'bank';
   return c;
 }
@@ -1095,6 +1202,8 @@ function oneDeal(c){
   return {title: c.title || ONE[item.k].name, topics: c.topics.slice(), levels: c.levels.slice(), items: [item], secs: c.secs, choices: false, clue: true};
 }
 const ONE_LEAD = {
+  recall: 'A passage on the whole board for the class to read and remember. When the reading time is up (or you press Hide now), it is hidden and numbered statements appear: students write the numbers of the true ones, then you show the answers.',
+  totalrecall: 'A list on the whole board for the class to read and remember. When the reading time is up (or you press Hide now), it is hidden and numbered questions appear: students write the answers in their books, then you show them.',
   match: 'Words and meanings to pair up, on the whole board. Students write the pairs in their books; you show the answers one by one or all at once.',
   gapfill: 'A paragraph with gaps and a word bank, on the whole board: one from the bank for the topics you choose, or one of your own.',
   wall: 'Sixteen words to sort into four groups of four, on the whole board. Click four tiles that belong together to check them.',
@@ -1102,6 +1211,7 @@ const ONE_LEAD = {
   crossword: 'A crossword of topic words, on the whole board, for the class to solve together. Click a square or a clue and type what they say; Check (or Enter) shows the wrong letters. Double-click a square to give away its letter, or a clue to give away its word.'
 };
 function one(k){
+  if (ACT[k].mem) return memOne(k);
   const o = ONE[k], c = oneCfg(k); if (k === 'gapfill') gfFrom = 'one';
   C.setTitle(o.name); C.header();
   const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + esc(label) + '</option>';
@@ -1194,6 +1304,57 @@ function one(k){
   load();
 }
 
+// Recall and Total Recall's own page (10 Nov 2026): levels (no topics: the passages are the students' Recall files), the
+// reading time, the name and the clock. The reading countdown can be paused, extended (+30 s) or skipped (Hide now) on the board.
+const MEM_READ = [[30, '30 seconds'], [45, '45 seconds'], [60, '1 minute'], [90, '1½ minutes'], [120, '2 minutes'], [180, '3 minutes'], [0, 'No countdown: I’ll hide it myself']];
+function memOne(k){
+  const o = ONE[k], c = oneCfg(k), what = k === 'recall' ? 'passage' : 'list';
+  C.setTitle(o.name); C.header();
+  const opt = (v, label, cur) => '<option value="' + v + '"' + (String(v) === String(cur) ? ' selected' : '') + '>' + esc(label) + '</option>';
+  C.view.innerHTML =
+    '<p class="note st-lead">' + esc(ONE_LEAD[k]) + '</p>' +
+    '<div class="st-build"><div class="st-main">' +
+      '<section class="card st-sec"><h2>Levels</h2><div class="bg-chips" id="o-levels">' + LEVELS.map(([n, name]) =>
+        '<label class="bg-chip"><input type="checkbox" value="' + n + '"' + (c.levels.includes(n) ? ' checked' : '') + '><span>' + name + '</span></label>').join('') + '</div>' +
+        '<p class="note">The ' + what + 's are the ones students meet in ' + esc(o.name) + ' (Reading Comprehension).</p></section>' +
+      '<section class="card st-sec"><h2>Reading time</h2><div class="field"><label for="o-read">How long the ' + what + ' stays up</label><select id="o-read">' +
+        MEM_READ.map(x => opt(x[0], x[1], c.item.read)).join('') + '</select></div>' +
+        '<p class="note">On the board you start the reading time when the class is ready, and you can pause it, add 30 seconds as often as you like, or hide the ' + what + ' straight away.</p></section>' +
+    '</div><aside class="st-side"><div class="card st-sec st-stick">' +
+      '<h2>On the board</h2><p class="st-have" id="o-have"></p>' +
+      '<div class="field"><label for="o-title">Name on the board</label><input type="text" id="o-title" maxlength="60" placeholder="' + esc(o.name) + '" value="' + esc(c.title) + '"></div>' +
+      '<div class="field"><label for="o-secs">Clock</label><select id="o-secs">' + TIMES.map(x => opt(x[0], x[1], c.secs)).join('') + '</select></div>' +
+      '<p class="note">The clock is for the whole starter. The reading time is separate.</p>' +
+      '<p class="err" id="o-err" role="alert" hidden></p>' +
+      '<div class="row"><button class="btn" type="button" id="o-go">Show on the board</button></div>' +
+      '<p class="note" id="o-last"></p>' +
+    '</div></aside></div>';
+  const $ = s => C.view.querySelector(s), $$ = s => [...C.view.querySelectorAll(s)];
+  const err = m => { const e = $('#o-err'); e.textContent = m || ''; e.hidden = !m; };
+  const save = () => { saveOne(k, c); C.touch(); };
+  let failed = '';
+  const draw = () => {
+    const n = ALL.M[k] ? memAt(k, c.levels).length : null;
+    $('#o-have').textContent = failed || (n == null ? 'Counting…' : !c.levels.length ? 'Choose a level' : n ? plural(n, what) + ' at these levels' : 'None at these levels yet');
+    const d = dealNow(), el = $('#o-last');
+    el.innerHTML = d && d.back === '#/starters/' + o.path ? '<a href="#/starters/play">Back to the last one</a> (' + esc(new Date(d.made).toLocaleString([], {weekday: 'short', hour: '2-digit', minute: '2-digit'})) + ')' : ''; };
+  $$('#o-levels input').forEach(i => i.onchange = () => { c.levels = $$('#o-levels input:checked').map(x => +x.value); save(); draw(); });
+  $('#o-read').onchange = () => { c.item.read = +$('#o-read').value; save(); };
+  $('#o-title').oninput = () => { c.title = $('#o-title').value.trim(); save(); };
+  $('#o-secs').onchange = () => { c.secs = +$('#o-secs').value; save(); };
+  $('#o-go').onclick = () => {
+    err(''); if (!c.levels.length) return err('Choose at least one level.');
+    const go = $('#o-go'); go.disabled = true; go.textContent = 'Getting it ready…';
+    memLoad(k).then(() => {
+      const cfg = oneDeal(c), r = dealAll(cfg);
+      if (r.missing.length) { go.disabled = false; go.textContent = 'Show on the board'; return err('No ' + what + 's at these levels yet. Choose another level.'); }
+      const d = newDeal(cfg, r.items); d.back = '#/starters/' + o.path;
+      saveDeal(d); C.touch(); location.hash = '#/starters/play';
+    }).catch(x => { go.disabled = false; go.textContent = 'Show on the board'; err(x.message + ' Check your internet connection and try again.'); });
+  };
+  draw(); memLoad(k).then(draw).catch(x => { failed = "Couldn't load the " + what + 's'; draw(); err(x.message); });
+}
+
 // ---------- Gap Fill: the teacher's own paragraphs ----------
 function gfPreview(text, extras){ return String(text || '').replace(/\[\[([^\]]*?)\]\]/g, '____').slice(0, 170) + (String(text || '').length > 170 ? '…' : ''); }
 function gfList(){
@@ -1216,12 +1377,7 @@ function gfList(){
   });
 }
 // A Gap Fill fills the whole board, so it replaces whatever the starter had on it
-function useInStarter(id){
-  if (gfFrom === 'one') { const c = oneCfg('gapfill'); c.item.src = id; saveOne('gapfill', c); location.hash = '#/starters/' + ONE.gapfill.path; return; }
-  const cfg = cfgNow();
-  if (cfg.items.length && !(cfg.items.length === 1 && cfg.items[0].k === 'gapfill') && !confirm('A Gap Fill takes the whole board, so it replaces what is on the starter board now. Carry on?')) return;
-  cfg.items = [{k: 'gapfill', src: id}]; saveCfg(cfg); location.hash = '#/starters';
-}
+function useInStarter(id){ const c = oneCfg('gapfill'); c.item.src = id; saveOne('gapfill', c); location.hash = '#/starters/' + ONE.gapfill.path; }
 // The paragraph as pieces: words (w) the teacher can click, gaps (g), and everything in between (x)
 const WORD_RE = /[A-Za-z0-9À-ÖØ-öø-ÿ]+(?:['’\-][A-Za-z0-9À-ÖØ-öø-ÿ]+)*/g;
 function toSegs(text){

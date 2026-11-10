@@ -37,6 +37,9 @@ The Chinese version uses only `words.csv` (and its `zh` column), `builds.csv` (s
 | `tf.csv` | True or false |
 | `right-wrong.csv` | Grammar Check (is the grammar good or bad? Was SPAG: Right or Wrong) |
 | `reads.csv` | Complete the text (a short text whose key words are gaps, with a word bank) |
+| `word-choice.csv` | Word choice (Use of English Part 1: choose the word, A–D, that fits each gap in a short text). Only in some folders so far: a folder without it just has no Word choice |
+| `open-cloze.csv` | Open cloze (Use of English Part 2: type the one word that fits each gap). Only in some folders so far |
+| `word-formation.csv` | Word formation (Use of English Part 3: change the word in capitals to fit the gap). Only in some folders so far |
 | `questions.csv` | Answer the question (exam command words) |
 | `knowledge.csv` | General knowledge (Games row; no levels needed) |
 | `taboo.csv` | Don't Say It! and Hints (board games on the teacher page: a word, four words the team can't say, four hints) |
@@ -377,6 +380,35 @@ expensive jewellery.` / `She is drinking champagne.` / `She is eating caviar.` W
   none shows only its own key words (the last gap then fills itself).
   An extra word must not also be one of the text's `[[key words]]`.
 - **title**: shown above the text, e.g. `A perfume advert`.
+
+### word-choice.csv, open-cloze.csv, word-formation.csv (Use of English, 10 Nov 2026)
+
+`id,level,title,text,explanation,source`
+
+The Cambridge C1 Advanced exam's Reading and Use of English Parts 1–3, in short texts (about half the exam's length). Each
+file is one game; the gaps are written into the **text** in `[[double brackets]]`:
+
+| File | Game | A gap | Example |
+|---|---|---|---|
+| `word-choice.csv` | Word choice (Vocabulary column) | the right word first, then two or three wrong ones | `[[reach\|arrive\|get\|come]] a fork in the path` |
+| `open-cloze.csv` | Open cloze (Grammar column) | the answer; other answers that are also right after `/` | `[[while/as/whilst]]` |
+| `word-formation.csv` | Word formation (Grammar column) | the answer, then the word in capitals it is made from | `[[unusual\|USUAL]]` |
+
+- At least 2 gaps per text; 4 at Foundation and Foundation+ and 4–5 above that is about right for a paragraph of 50–70 words.
+- **Word choice**: all four words the same kind of word, close in meaning, with only one that fits. What decides it should be
+  the words around the gap: a collocation (*exceed* expectations), a fixed phrase (*on* occasion), the word after the gap
+  (*incapable* of, *reach* a place but *arrive* at it) or a linker. Check that no wrong word could also be argued for.
+- **Open cloze**: grammar words (prepositions, auxiliaries, pronouns, relatives, linkers, parts of fixed phrases). Give every
+  answer that would be marked right (`[[who/that]]`); the first is the one shown after Check.
+- **Word formation**: the answer must be a different form of the word in capitals (prefix, suffix, plural, -s); negative
+  prefixes are the exam's favourite (*unusual*, *irregular*, *inability*). Avoid texts where the answer or the word in
+  capitals also appears elsewhere in the text or title. British and American spellings can both go in: `[[colourful/colorful|COLOUR]]`.
+- Typed answers (Open cloze, Word formation) must be spelt right, as in the exam; capitals don't matter. A near miss is marked
+  wrong, and the feedback points to the spelling.
+- **explanation** (optional): shown after Check. **source** (optional, never shown): where the text came from, e.g.
+  `Master Lists/advert analysis paragraphs.csv line 20`, and any changes made to it.
+- `tools/check_content.py` checks the gaps (enough wrong words, a word in capitals for every formation gap, answers that
+  appear elsewhere in the text or title).
 
 ### questions.csv (Answer the question)
 

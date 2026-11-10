@@ -69,7 +69,7 @@
 const ROOT = new URL('../', location.href).href;   // the site's top folder
 const LEVELS = [['A1','F','Foundation'], ['A2','F+','Foundation+'], ['B1','I','Intermediate'], ['B2','I+','Intermediate+'], ['C1','A','Advanced']];
 const BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence','translation'];
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence','translation','word-choice','open-cloze','word-formation'];   // the last three: Use of English (10 Nov 2026), only in some folders so far
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = n => Number(n).toLocaleString('en-GB');
 
@@ -127,11 +127,14 @@ const SECTIONS = [
   ['Vocabulary', [
     {key:'match', name:'Match the meaning', note:'with synonym groups', file:'words', src:'words', min:6, circuit:'match'},
     {key:'meaning', name:'Word or meaning', file:'words', src:'words', min:4, circuit:'short'},
-    {key:'tf', name:'True or false', note:'plus statements made from words.csv', file:'tf', src:'tf', min:1, circuit:'short'}]],
+    {key:'tf', name:'True or false', note:'plus statements made from words.csv', file:'tf', src:'tf', min:1, circuit:'short'},
+    {key:'wchoice', name:'Word choice', note:'Use of English Part 1', file:'word-choice', src:'word-choice', min:1, circuit:'long'}]],
   ['Grammar', [
     {key:'gap', name:'Fill the gap', file:'gaps', src:'gaps', min:1, circuit:'short'},
     {key:'rw', name:'Grammar Check', note:'was SPAG: Right or Wrong', file:'right-wrong', src:'right-wrong', min:1, circuit:'short'},
-    {key:'error', name:'Spot the error', file:'errors', src:'errors', min:1, circuit:'long'}]],
+    {key:'error', name:'Spot the error', file:'errors', src:'errors', min:1, circuit:'long'},
+    {key:'ocloze', name:'Open cloze', note:'Use of English Part 2', file:'open-cloze', src:'open-cloze', min:1, circuit:'long'},
+    {key:'wform', name:'Word formation', note:'Use of English Part 3', file:'word-formation', src:'word-formation', min:1, circuit:'long'}]],
   ['Reading', [
     {key:'build', name:'Build the sentence', file:'builds', src:'builds', min:1, circuit:'short'},
     {key:'evidence', name:'Find the evidence', file:'evidence', src:'evidence', min:1, circuit:'long'},
@@ -154,7 +157,8 @@ const SECTIONS = [
 ];
 const CIRCUIT = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
 const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
-  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', zhtranslate:'sentences', knowledge:'questions'};
+  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', zhtranslate:'sentences', knowledge:'questions',
+  'word-choice':'texts', 'open-cloze':'texts', 'word-formation':'texts'};
 
 // One subject: its page (for its content folder and settings), its Chinese page if the Chinese topic list has one at the
 // same address, and its files. A planned topic (no page yet) has only a folder. new-words.csv: words still being written.
@@ -178,7 +182,7 @@ async function loadSubject(t, zhHrefs){
     if(d.linked){ const on=new Set(T.words.flatMap(w=>[String(w.word||'').toLowerCase(), String(w.id||'').toLowerCase()]));
       T.gaps=(T.gaps||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
       T.evidence=(T.evidence||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
-      ['builds','errors','tf','right-wrong','reads','questions','extracts','knowledge'].forEach(k=>{ T[k]=[]; }); }
+      ['builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','word-choice','open-cloze','word-formation'].forEach(k=>{ T[k]=[]; }); }
   }
   return {name:d.name||t.name||t.href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T,
     hasZh, zhPage: hasZh ? zhUrl : null, planned:!t.href, toWrite:(T['new-words']||[]).filter(r=>r.word).length};
@@ -223,6 +227,9 @@ function count(s){
     evidence:{lv:perLevel(evEn, wordLevel), total:evEn.length},
     zhevidence:{lv:perLevel(evZh, wordLevel), total:evZh.length},
     zhtranslate:(()=>{ const rs=(T.translation||[]).filter(r=>r.zh && r.english && [1,2,3,4].filter(k=>r['wrong'+k]).length>=2); return {lv:perLevel(rs), total:rs.length}; })(),
+    // Use of English (10 Nov 2026): a text plays with 2 or more [[gaps]] (the full checks are in tools/check_content.py)
+    ...Object.fromEntries(['word-choice','open-cloze','word-formation'].map(f=>{ let n=0; const rs=(T[f]||[]).filter(r=>{ const k=((r.text||'').match(/\[\[[^\]]+\]\]/g)||[]).length; if(k>=2) n+=k; return k>=2; });
+      return [f, {lv:perLevel(rs), total:rs.length, extra:`${fmt(n)} gaps`}]; })),
   };
   const hasZh=!!s.hasZh;
   const rows=[], tally={all:0, some:0, none:0, off:0};
@@ -242,7 +249,8 @@ function count(s){
     });
   });
   return {rows, tally, words:words.length,
-    items:words.length+(T.gaps||[]).length+(T.errors||[]).length+(T.tf||[]).length+(T['right-wrong']||[]).length+(T.reads||[]).length+(T.questions||[]).length+(T.extracts||[]).length+builds.length+ev.length};
+    items:words.length+(T.gaps||[]).length+(T.errors||[]).length+(T.tf||[]).length+(T['right-wrong']||[]).length+(T.reads||[]).length+(T.questions||[]).length+(T.extracts||[]).length+builds.length+ev.length
+      +['word-choice','open-cloze','word-formation'].reduce((n,f)=>n+(T[f]||[]).length,0)};
 }
 
 function subjectTable(s, k){

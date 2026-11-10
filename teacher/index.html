@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="../css/fonts.css">
 <link rel="stylesheet" href="../css/home.css?v=2026-11-03b">
 <link rel="stylesheet" href="board.css?v=2026-11-09a">
-<link rel="stylesheet" href="starters.css?v=2026-11-09b">
+<link rel="stylesheet" href="starters.css?v=2026-11-10a">
 <link rel="stylesheet" href="handouts.css?v=2026-11-09a">
 <link rel="stylesheet" href="../css/site.css?v=2026-11-09a">
 <style>
@@ -129,7 +129,7 @@
 </main>
 <script src="../en/engine/crossword.js?v=2026-11-09a"></script>
 <script src="board.js?v=2026-11-10a"></script>
-<script src="starters.js?v=2026-11-09c"></script>
+<script src="starters.js?v=2026-11-10a"></script>
 <script src="handouts.js?v=2026-11-09b"></script>
 <script src="../en/engine/subjects.js?v=2026-11-08v"></script>
 <script src="../en/engine/shell.js?v=2026-11-09a" data-staff></script>
@@ -244,7 +244,8 @@ function showClasses(){
         '<li><a class="sr-add" href="#/new"><span>+ New class</span></a></li>',
         r.classes.length ? '' : '<p class="note sr-foot">No classes yet. Make your first one.</p>') +
       box('Starters', '#1a5cb0', item('#/starters', 'Build the Board') + item('#/starters/match-up', 'Match Up') + item('#/starters/gap-fill', 'Gap Fill') +
-        item('#/starters/connecting-wall', 'Connecting Wall') + item('#/starters/word-search', 'Wordsearch') + item('#/starters/crossword', 'Crossword')) +
+        item('#/starters/connecting-wall', 'Connecting Wall') + item('#/starters/word-search', 'Wordsearch') + item('#/starters/crossword', 'Crossword') +
+        item('#/starters/recall', 'Recall') + item('#/starters/total-recall', 'Total Recall')) +
       box('Handouts', '#11694a', item('#/handouts', 'Vocab')) +
       box('Board Games', '#9a4a00', item('#/board/new/squares', 'Squaring Up') + item('#/board/new/taboo', 'Don\'t Say It!') + item('#/board/new/hints', 'Hints') + item('#/board/new/cats', 'Categories') + item('#/board/new/xw', 'Crossword'),
         '<p class="sr-foot"><a href="#/board">Your saved board games</a></p>') +

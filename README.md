@@ -108,8 +108,8 @@ what the page already has, so the games and pages underneath are unchanged.
 
 | Category | Games (shown only when the subject has content for them) |
 |---|---|
-| Vocabulary | Match the meaning (meanings and synonym groups mixed, 31 Oct), Word or meaning, True or false |
-| Grammar | Fill the gap, Grammar Check (`right-wrong.csv`; called SPAG: Right or Wrong until 8 Nov), Spot the error (back in Grammar 31 Oct). Build the sentence moved to the Chinese version (25 Oct), and is back in Reading on the English side too (31 Oct) |
+| Vocabulary | Match the meaning (meanings and synonym groups mixed, 31 Oct), Word or meaning, True or false, Word choice (`word-choice.csv`, 10 Nov 2026: Use of English Part 1 in a short text; `playCloze` in app.js) |
+| Grammar | Fill the gap, Grammar Check (`right-wrong.csv`; called SPAG: Right or Wrong until 8 Nov), Spot the error (back in Grammar 31 Oct), Open cloze (`open-cloze.csv`) and Word formation (`word-formation.csv`) (10 Nov 2026: Use of English Parts 2 and 3, typed answers; `playCloze`). Build the sentence moved to the Chinese version (25 Oct), and is back in Reading on the English side too (31 Oct) |
 | Reading | Build the sentence (`builds.csv`, back on the English side 31 Oct), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
 | Games (the row across the bottom of a topic page) | General knowledge (`knowledge.csv`), Save the mouse, Word search (7 Nov 2026: the topic's words hidden in a square of letters; the list shows the words, or their meanings / their Chinese; size and directions follow the level; `playWordSearch` in app.js), Crossword (9 Nov 2026: the topic's words in a crossword; the clues are the meanings, on the Chinese side the Chinese or the meanings, with the letters in each word as in printed crosswords, (4,2,6); a word whose meaning contains the word itself is left out; `playCrossword` in app.js, the maker in `crossword.js`), Whack-a-word, Word Invaders, Word Snake. Word search is also on the Chinese topic pages (Games column, where "Wordsearch: coming soon" was), and Crossword under it |
 | Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
@@ -191,9 +191,12 @@ landing page's subject boxes:
 - **Classes**: each class (with how many students) and + New class. A class can be shared with another teacher: on the
   class page, the teacher who made it types the other teacher's username and clicks Share (Stop sharing undoes it). The
   other teacher sees it in their Classes list ("from Mr Step") and can do everything with it except share it.
-- **Starters**: Build the Board (`#/starters`, the full builder), then Match Up, Gap Fill, Connecting Wall, Wordsearch and Crossword,
-  each with a page of its own (`#/starters/match-up`, `gap-fill`, `connecting-wall`, `word-search`, `crossword`) that puts just that
-  activity on the board. Each page remembers its own settings; Exit on the board comes back to it (`teacher/starters.js`).
+- **Starters**: Build the Board (`#/starters`: squares and half-board activities only since 10 Nov 2026), then Match Up, Gap Fill,
+  Connecting Wall, Wordsearch, Crossword, Recall and Total Recall, each with a page of its own (`#/starters/match-up`, `gap-fill`,
+  `connecting-wall`, `word-search`, `crossword`, `recall`, `total-recall`) that puts just that activity on the whole board. Each page
+  remembers its own settings; Exit on the board comes back to it (`teacher/starters.js`). Recall and Total Recall use the students'
+  passages (by level): a reading countdown the teacher steers (start, Pause, +30 s, Hide now, or no countdown), then numbered
+  statements or questions to show one by one. Every starter's clock has **+1 min** (or the + key).
 - **Handouts**: Vocab (`#/handouts`).
 - **Board Games**: Squaring Up, Don't Say It!, Hints, Categories, Crossword (each opens its maker), and *Your saved board games* (`#/board`).
 

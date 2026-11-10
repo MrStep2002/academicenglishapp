@@ -82,7 +82,7 @@
   <section class="mix" aria-labelledby="mix-h">
     <h2 id="mix-h">Easy to mix up</h2>
     <ul>
-      <li><b>Fill the gap</b> is one sentence (<a href="#f-gaps">gaps.csv</a>). <b>Complete the text</b> on the topic page and <b>Gap Fill</b> on the Starters page are a whole paragraph, and they share a file (<a href="#f-reads">reads.csv</a>).</li>
+      <li><b>Fill the gap</b> is one sentence (<a href="#f-gaps">gaps.csv</a>). <b>Complete the text</b> on the topic page and <b>Gap Fill</b> on the Starters page are a whole paragraph, and they share a file (<a href="#f-reads">reads.csv</a>). <b>Word choice</b>, <b>Open cloze</b> and <b>Word formation</b> are paragraphs too, in the style of the C1 Advanced exam, each with a file of its own (<a href="#f-word-choice">word-choice.csv</a>, <a href="#f-open-cloze">open-cloze.csv</a>, <a href="#f-word-formation">word-formation.csv</a>).</li>
       <li><b>Grammar Check</b> (called SPAG: Right or Wrong until 8 Nov) asks “is the grammar good or bad?” (buttons: Good Grammar, Bad Grammar) (<a href="#f-right-wrong">right-wrong.csv</a>). <b>True or false</b> asks “is this fact true?” (<a href="#f-tf">tf.csv</a>). <b>Spot the error</b> is a paragraph to find the mistakes in (<a href="#f-errors">errors.csv</a>).</li>
       <li><b>Find the evidence</b> (English page) and <b>All-in English</b> (Chinese page) are the same game from the same file (<a href="#f-evidence">evidence.csv</a>). Its <code>side</code> column says which page a row is for.</li>
       <li><b>Word or meaning</b> on the topic page is called <b>What does it mean?</b> and <b>Which word?</b> in the board games and Starters. <b>Anagram</b> in Starters is <b>Unscramble</b> on handouts. All of these come from <a href="#f-words">words.csv</a>.</li>
@@ -200,6 +200,15 @@ const FILES = [
     {n:'Complete the text', w:['en-reading'], how:'Read a short text and put the key words into the gaps from a word bank.', c:'long', p:'read'},
     {n:'Gap Fill', w:['starters'], how:'The whole board: a paragraph with gaps and a word bank, from reads.csv or one you type in.'}
   ]},
+  {f:'word-choice', one:'a short text with gaps; each gap has the right word first, then two or three wrong ones: [[right|wrong|wrong|wrong]].', cols:'title, text, explanation, source (not shown)', games:[
+    {n:'Word choice', w:['en-vocab'], how:'Use of English Part 1 (C1 Advanced): read a short text and choose the word (A–D) that fits each gap.', c:'long', p:'wchoice'}
+  ]},
+  {f:'open-cloze', one:'a short text with one-word gaps: [[answer]], or [[answer/other]] when more than one word is right.', cols:'title, text, explanation, source (not shown)', games:[
+    {n:'Open cloze', w:['en-grammar'], how:'Use of English Part 2 (C1 Advanced): type the one word that fits each gap. The spelling must be right.', c:'long', p:'ocloze'}
+  ]},
+  {f:'word-formation', one:'a short text with gaps and the word each answer is made from: [[answer|STEM]].', cols:'title, text, explanation, source (not shown)', games:[
+    {n:'Word formation', w:['en-grammar'], how:'Use of English Part 3 (C1 Advanced): change the word in capitals so that it fits the gap. The spelling must be right.', c:'long', p:'wform'}
+  ]},
   {f:'extracts', one:'a sentence or two with up to three [bracketed] words to explain.', cols:'extract, word, correct, wrong1–wrong3 · then word2, correct2… and word3, correct3…', games:[
     {n:'In your own words', w:['en-reading'], how:'Paper 1 style: what does each underlined word mean here?', c:'long', p:'own'}
   ]},
@@ -246,7 +255,7 @@ const FILES = [
     {n:'Units · Equations · Calculate it · EM spectrum · Inside the nucleus', w:['phys'], how:'The Physics column, made the same way (the equations are in en/engine/phys.js).'}
   ]}
 ];
-const TEMPLATES = new Set(['words','gaps','right-wrong','errors','tf','builds','evidence','reads','extracts','questions','knowledge','taboo','wall','reading','notes','listening']);
+const TEMPLATES = new Set(['words','gaps','right-wrong','errors','tf','builds','evidence','reads','extracts','questions','knowledge','taboo','wall','reading','notes','listening','word-choice','open-cloze','word-formation']);
 const fileName = F => F.noFile ? F.label : (F.path ? F.path.split('/').pop() : F.f+'.csv');
 
 // Every game once, with its file

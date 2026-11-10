@@ -336,3 +336,45 @@
 .st-xt { flex: 1; min-width: 0; }
 .st-xz { font-family: var(--zh); font-weight: 600; }
 .st-xe { color: var(--muted); font-size: .85em; white-space: nowrap; }
+
+/* One more minute (10 Nov 2026): beside the play and start-again buttons */
+.st-more { align-self: stretch; padding: 0 calc(10 * var(--u)); min-width: 44px; border-radius: calc(10 * var(--u)); border: 1.5px solid var(--line); background: var(--card); color: var(--ink);
+  font: inherit; font-weight: 800; font-size: max(13px, calc(15 * var(--u))); cursor: pointer; white-space: nowrap; }
+.st-more:hover { border-color: var(--ink); }
+
+/* Recall and Total Recall on the board (10 Nov 2026): the passage, then the numbered statements or questions */
+.k-recall .st-in, .k-totalrecall .st-in { gap: .5em; }
+.st-memp { width: 100%; text-align: left; }
+.st-memt { margin: 0 0 .35em; font-family: var(--display); font-weight: 800; font-size: 1.15em; line-height: 1.1; color: var(--deep, var(--ink)); }
+.st-memx p { margin: 0 0 .55em; font-weight: 600; line-height: 1.45; }
+.st-memx p:last-child { margin-bottom: 0; }
+.st-meml { list-style: none; margin: 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .35em .6em; text-align: left; }
+.st-meml li { display: flex; align-items: flex-start; gap: .5em; padding: .3em .5em; border-radius: .45em; border: .08em solid color-mix(in srgb, var(--tint, #888) 30%, var(--card)); background: var(--card); cursor: pointer; line-height: 1.25; }
+.st-meml li:hover { border-color: var(--muted); }
+.st-meml .st-mk { margin-top: .05em; }
+.st-mt { flex: 1; min-width: 0; font-weight: 600; }
+.st-mv, .st-ma { display: block; visibility: hidden; margin-top: .15em; font-family: var(--display); font-weight: 800; }
+.st-mv { display: inline-block; margin: 0 0 0 .45em; white-space: nowrap; }   /* True / False at the end of the statement: less height */
+.st-meml li.on .st-mv, .st-meml li.on .st-ma { visibility: visible; animation: st-in .35s ease both; }
+.st-meml li.on.yes { border-color: #23a05c; background: #d8f3e3; }
+.st-meml li.on.yes .st-mv { color: #13774f; }
+.st-meml li.on.no { opacity: .6; }
+.st-meml li.on.no .st-mv { color: #b0281a; }
+.st-meml li.on .st-mk { background: #23a05c; }
+.st-meml li.on.no .st-mk { background: var(--muted); }
+.st-meml.tr li.on { border-color: #23a05c; }
+.st-ma { color: #13774f; }
+@media (prefers-color-scheme: dark) { .st-meml li.on.yes { background: #123a25; } .st-meml li.on.yes .st-mv, .st-ma { color: #9be7bb; } .st-meml li.on.no .st-mv { color: #ff8a78; } }
+/* Everything shown (or Show the passage): the passage beside the list */
+.st-memboth { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 1.2em; align-items: start; }
+.st-memboth .st-memp { padding-right: 1em; border-right: .08em solid color-mix(in srgb, var(--tint, #888) 30%, var(--card)); font-size: .8em; }
+.st-memboth .st-meml { grid-template-columns: minmax(0, 1fr); }
+/* The reading countdown: start (▶), Pause, +30 s, Hide now */
+.st-memc { flex: none; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: calc(8 * var(--u)) calc(12 * var(--u)); padding-top: calc(8 * var(--u));
+  border-top: 1px solid color-mix(in srgb, var(--tint, #888) 25%, var(--card)); font-size: max(14px, calc(17 * var(--u))); }
+.st-memc .bg-btn.small { font-size: 1em; display: inline-flex; align-items: center; gap: .4em; }
+.st-memc .bg-btn svg { width: 1em; height: 1em; }
+.st-memtime { min-width: 3.2em; text-align: center; font-family: var(--display); font-weight: 800; font-size: 1.9em; font-variant-numeric: tabular-nums; line-height: 1; color: var(--ink); }
+.st-memtime.low { color: #d6402f; }
+.st-memnote { color: var(--muted); font-weight: 700; }
+.st-memc .st-memhide { background: var(--ink); border-color: var(--ink); color: var(--card); }

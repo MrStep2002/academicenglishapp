@@ -108,9 +108,36 @@ function totalRow(r){
   return {id:r.id, level:r.level, title:r.title, text:r.passage, qs, why:r.explanation||''};
 }
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
+// Use of English (10 Nov 2026): Word choice (word-choice.csv), Open cloze (open-cloze.csv) and Word formation
+// (word-formation.csv): Cambridge C1 Advanced Reading and Use of English Parts 1-3, in a topic's short texts. Columns: id,
+// level, title, text, explanation (optional, shown after Check), source (where the text came from, for the writers; not
+// shown). Every gap is in [[double brackets]] in the text:
+//   Word choice     [[right|wrong1|wrong2|wrong3]]   the right word first, then two or three wrong ones
+//   Open cloze      [[answer]] or [[answer/other]]   every answer that is right, separated by / (the first is shown)
+//   Word formation  [[answer|STEM]]                  the word in capitals the answer is made from (answer/other also works)
+// A text needs at least 2 gaps. Returns {id, title, parts (text and {i: gap number}), gaps, why}, or nothing (with a warning).
+function clozeRow(file, r, warn){
+  if(!r.text) return warn(file, r, 'skipped: it needs a text');
+  const parts=[], gaps=[], re=/\[\[([^\]]+)\]\]/g; let last=0, m, bad='';
+  while((m=re.exec(r.text))){
+    parts.push(r.text.slice(last, m.index)); last=re.lastIndex;
+    const bits=m[1].split('|').map(s=>s.trim()), g={};
+    if(file==='word-choice'){ g.opts=[...new Set(bits.filter(Boolean))]; g.ans=[g.opts[0]];
+      if(g.opts.length<3) bad=bad||`[[${m[1]}]] needs the right word and at least two wrong ones, separated by |`; }
+    else { g.ans=String(bits[0]||'').split('/').map(s=>s.trim()).filter(Boolean);
+      if(!g.ans.length) bad=bad||`[[${m[1]}]] has no answer`;
+      if(file==='word-formation'){ g.stem=bits[1]||''; if(!g.stem) bad=bad||`[[${m[1]}]] needs the word in capitals after a |, e.g. [[unusual|USUAL]]`; } }
+    parts.push({i:gaps.length}); gaps.push(g);
+  }
+  parts.push(r.text.slice(last));
+  if(bad) return warn(file, r, 'skipped: '+bad);
+  if(gaps.length<2) return warn(file, r, 'skipped: the text needs at least 2 [[gaps]]');
+  return {id:r.id, title:r.title||'', parts, gaps, why:r.explanation||''};
+}
+const CLOZE_FILES = {'word-choice':'wchoice', 'open-cloze':'ocloze', 'word-formation':'wform'};   // file → where buildSubject keeps it
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
-  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[], evidence:[], translations:[]};
+  const S={key:KEY, words:[], alike:[], accept:[], gaps:[], builds:[], errors:[], tf:[], rw:[], reads:[], questions:[], extracts:[], passages:[], gk:[], must:[], evidence:[], translations:[], wchoice:[], ocloze:[], wform:[]};
   const warn=(file,r,msg)=>console.warn(`${file}.csv${r&&r.id?' ('+r.id+')':''}: ${msg}`);
   const lv=(file,r)=>{ const v=(r.level||'').trim();
     if(!v){ warn(file,r,'no level, so it is used at every level'); return ''; }
@@ -194,6 +221,8 @@ function buildSubject(T){
     if((text.match(/\[\[[^\]]+\]\]/g)||[]).length<2) return warn('reads',r,'skipped: the text needs at least 2 [[gaps]]');
     const extras=['extra1','extra2','extra3'].map(k=>(r[k]||'').trim()).filter(Boolean);
     S.reads.push({id:r.id, level:lv('reads',r), title:r.title||'', text, extras}); });
+  // Use of English: Word choice, Open cloze, Word formation (see clozeRow)
+  Object.entries(CLOZE_FILES).forEach(([file,k])=>(T[file]||[]).forEach(r=>{ const it=clozeRow(file, r, warn); if(it){ it.level=lv(file, r); S[k].push(it); } }));
   (T.questions||[]).forEach(r=>{ const wrong=wrongs(r);
     if(!r.question||!r.correct||!wrong.length) return warn('questions',r,'skipped: it needs a question, a correct answer and a wrong answer');
     S.questions.push({id:r.id, level:lv('questions',r), cmd:r.command||'', q:r.question, opts:[r.correct,...wrong], a:0, why:r.explanation||''}); });
@@ -236,7 +265,7 @@ function buildSubject(T){
     S.words=S.words.filter(w=>!w.lists.length || w.lists.some(l=>want.includes(l)));
     if(CFG.linked){ const on=new Set(S.words.map(w=>w.id));
       S.gaps=S.gaps.filter(g=>g.wid && on.has(g.wid)); S.evidence=S.evidence.filter(g=>g.wid && on.has(g.wid));
-      ['builds','errors','tf','rw','reads','questions','extracts','gk'].forEach(k=>{ S[k]=[]; }); }
+      ['builds','errors','tf','rw','reads','questions','extracts','gk','wchoice','ocloze','wform'].forEach(k=>{ S[k]=[]; }); }
   }
   return S;
 }
@@ -244,7 +273,9 @@ function buildSubject(T){
 // evidence.csv for All-in English, and translation.csv for Translation (a topic without that file just has none).
 // A topic folder's files. Reading passages are not among them: the Reading Comprehension pages load theirs with data-reading
 // (Read and answer on the topic pages was replaced by Close reading, and the empty reading.csv files were removed, 25 Oct).
-const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence'];
+// The Use of English files (10 Nov 2026) are only in the topic folders that have them so far; a topic without them just has
+// none of those games (its browser console notes the missing files, as the Chinese side does for translation.csv).
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence', ...Object.keys(CLOZE_FILES)];
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
@@ -301,14 +332,14 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word', crossword:'type', zhcrossword:'type',
-  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage', recall:'passage', totalrecall:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', wchoice:'short', ocloze:'short', wform:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage', recall:'passage', totalrecall:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error (shared between its errors), In your own words, Find the evidence, All-in English'],
-  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Recall, Total Recall, Listening (Recall and Total Recall add a speed bonus)']];
+  ['short','Complete the text, Word choice, Open cloze and Word formation (shared between the gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Recall, Total Recall, Listening (Recall and Total Recall add a speed bonus)']];
 // The same, in Chinese (My progress opened from the Chinese side, stage 4)
 const POINT_KINDS_ZH = {word:'单词游戏：学习单词、单词配释义、看中文选英文、选出释义、判断对错、单词贪吃蛇、单词打地鼠、单词入侵者、单词搜索、限时挑战、生存挑战',
   type:'拼写单词、拯救小老鼠', grammar:'填空、判断对错、语法检查、常识题、翻译', build:'连词成句、找错（分摊到每个错误）、用自己的话说、找证据、全英文练习',
-  short:'完成短文（分摊到每个空）、回答问题', passage:'阅读文章或听力测试：精读、主旨、笔记、听力'};
+  short:'完成短文、选词填空、开放式填空、构词填空（分摊到每个空）、回答问题', passage:'阅读文章或听力测试：精读、主旨、笔记、听力'};
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
 const levelName = code => { const n=levelNum(code); return n==null ? String(code||'') : LEVEL_NAMES[LEVEL_CODES[Math.max(1,Math.min(5,Math.floor(n)))]]; };
 // For the big serif headings: the serif font's + is tiny, so it is set in the body font
@@ -320,7 +351,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, crossword:.05, zhcrossword:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05, recall:.05, totalrecall:0};   // chance of a lucky guess
+  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, crossword:.05, zhcrossword:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05, recall:.05, totalrecall:0, ocloze:0, wform:0};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -426,7 +457,7 @@ function toastLevel(msg){ const t=document.createElement('div'); t.className='lv
 // The games use the student's own level for this topic. A student can choose another level to push themselves;
 // that choice is saved for this topic until they press "Use my level" (or their level reaches it).
 const MIN_LEVEL = 6;
-const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages','evidence'].flatMap(k=>S[k]||[]).concat((S.gen||[]).flatMap(g=>g.items||[]));   // + generated questions (science pages)
+const ON_PAGE = SIDE==='zh' ? S.words.filter(w=>w.zh) : ['words','gaps','builds','errors','tf','rw','reads','questions','extracts','passages','evidence','wchoice','ocloze','wform'].flatMap(k=>S[k]||[]).concat((S.gen||[]).flatMap(g=>g.items||[]));   // + generated questions (science pages)
 const bandOf = x => { const n=itemLevel(x); return n==null ? null : Math.max(1, Math.min(5, Math.floor(n))); };
 const BAND_N = {}; ON_PAGE.forEach(x=>{ const b=bandOf(x); if(b!=null) BAND_N[b]=(BAND_N[b]||0)+1; });
 let LEVELS = Object.keys(BAND_N).map(Number).filter(b=>BAND_N[b]>=MIN_LEVEL).sort((a,b)=>a-b);
@@ -669,6 +700,9 @@ const GAMES = [
   // {key:'syn',      form:'short', cat:'vocab',   name:'Synonym groups',    blurb:'Match each word to a group of words with a similar meaning.', items:()=>pick(S.words).filter(w=>w.syn&&w.syn.length), min:6, run:()=>playMatch('syn')},
   {key:'meaning',  form:'short', cat:'vocab',   name:'Word or meaning',   blurb:'See a word and choose its meaning, or the other way round.', items:()=>pick(S.words), min:4, run:()=>playMeaning()},
   {key:'tf',       form:'short', cat:'vocab',   name:'True or false',     blurb:'Read each statement and decide quickly: true or false?', items:()=>[...pick(S.tf), ...(pick(S.words).length>=4 ? pick(S.words) : [])], min:1, run:()=>playTF()},
+  // Use of English (10 Nov 2026, teacher): C1 Advanced Reading and Use of English Parts 1-3 in short texts (playCloze).
+  // Word choice in Vocabulary (collocations, fixed phrases, the word after the gap); Open cloze and Word formation in Grammar.
+  {key:'wchoice',  form:'long', cat:'vocab',   phone:true, name:'Word choice',      blurb:'Use of English Part 1: choose the word that fits each gap in a short text.', items:()=>pick(S.wchoice), min:1, run:()=>playCloze('wchoice')},
   {key:'mouse',    cat:'games',   name:'Save the mouse',   blurb:'Guess the word one letter at a time before the mouse disappears.', items:()=>mouseWords(pick(S.words)), min:4, run:()=>playMouse()},
   // Word search (7 Nov 2026, teacher): in the Games row, after Save the mouse; plays on phones; not in the Daily Circuit
   {key:'wordsearch', cat:'games', phone:true, time:true, name:'Word search', blurb:'Find the topic\'s words hidden in a square of letters.', items:()=>wsFit(pick(S.words), PHONE?9:10), min:5, run:()=>playWordSearch()},
@@ -677,6 +711,8 @@ const GAMES = [
   {key:'gap',      form:'short', cat:'grammar', name:'Fill the gap',      blurb:'Choose the word or form that fits the gap in each sentence.', items:()=>pick(S.gaps), min:1, run:()=>playGap()},
   {key:'rw',       form:'short', cat:'grammar', name:'Grammar Check',    blurb:'Good grammar or bad grammar? Judge the grammar, not the facts.', items:()=>pick(S.rw), min:1, run:()=>playRW()},
   {key:'error',    form:'long', cat:'grammar', phone:true, name:'Spot the error',    blurb:'Read a paragraph and tap every word with a grammar mistake.', items:()=>pick(S.errors), min:1, run:()=>playErr()},
+  {key:'ocloze',   form:'long', cat:'grammar', phone:true, name:'Open cloze',        blurb:'Use of English Part 2: type the one word that fits each gap in a short text.', items:()=>pick(S.ocloze), min:1, run:()=>playCloze('ocloze')},
+  {key:'wform',    form:'long', cat:'grammar', phone:true, name:'Word formation',    blurb:'Use of English Part 3: change the word in capitals so that it fits the gap.', items:()=>pick(S.wform), min:1, run:()=>playCloze('wform')},
   // passage: only on the Reading Comprehension pages (Close reading, Big idea), which give it their own name
   {key:'passage',  cat:'reading', name:'Read and answer',   blurb:'Read a passage, then choose the best answer to each question.', items:()=>pick(S.passages), min:1, run:()=>playPassage()},
   // Build the sentence back on the English side (31 Oct, teacher: "put it in the Reading column"); playable on phones
@@ -740,7 +776,7 @@ const HIDE = new Set(String(CFG.hide||'').split(/[\s,]+/).filter(Boolean));
 // Match the meaning: meanings and synonym groups mixed, unless this topic has no synonyms or hides them (data-hide="syn")
 const matchMode = () => !HIDE.has('syn') && S.words.some(w=>w.syn&&w.syn.length) ? 'mix' : 'def';
 // Only games this subject has content for (and has not switched off)
-const ROWS = {match:'words',syn:'words',meaning:'words',wordsearch:'words',crossword:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence'};
+const ROWS = {match:'words',syn:'words',meaning:'words',wordsearch:'words',crossword:'words',gap:'gaps',build:'builds',error:'errors',tf:'words',mouse:'words',rw:'rw',own:'extracts',read:'reads',question:'questions',passage:'passages',gk:'gk',evidence:'evidence',wchoice:'wchoice',ocloze:'ocloze',wform:'wform'};
 const hasRows = g => g.gen ? g.all.length>0 : ((SYL ? SYL_FULL : S)[ROWS[g.key]]||[]).length>0;
 const gamesIn = cat => GAMES.filter(g => g.cat===cat && !HIDE.has(g.key) && hasRows(g) && (g.key!=='syn' || S.words.some(w=>w.syn)));
 // Science pages: why a game card is greyed (no topic ticked yet; nothing in the ticked topics; nothing at this level)
@@ -1033,6 +1069,7 @@ const KEY_HELP = {
   tf:[['T','true'],['F','false'],['Enter','next question']], rw:[['G','good grammar'],['B','bad grammar'],['Enter','next question']],
   error:[['Enter','check']], build:[['Enter','check']], own:[['1–4','choose an answer']],
   evidence:[['1–9','choose a detail'],['Enter','check']], read:[['1–9','put a word in the next gap'],['Backspace','take the last one out'],['Enter','check']],
+  wchoice:[['A–D','choose a word for the gap'],['← →','another gap'],['Enter','check']], ocloze:[['Enter','next gap, then check']], wform:[['Enter','next gap, then check']],
   mouse:[['A–Z','guess a letter'],['Enter','next word']],
   wordsearch:[['Arrow keys','move on the board'],['Enter','first and last letter of a word'],['Esc','start again']],
   crossword:[['A–Z','type a letter'],['Arrow keys','move on the grid'],['Space','across or down'],['Tab','next clue'],['Backspace','take a letter out']],
@@ -2016,6 +2053,111 @@ function playRead(){
       else if(e.key==='Backspace'){ e.preventDefault(); const lastF=[...filled.keys()].filter(i=>filled[i]!=null).pop(); if(lastF!=null) takeOut(lastF); }
       else if(e.key==='Enter'){ e.preventDefault(); doCheck(); } };
     draw();
+  };
+  step();
+}
+
+// ---------- USE OF ENGLISH: Word choice, Open cloze, Word formation (10 Nov 2026) ----------
+// Teacher: games for the Cambridge C1 Advanced exam (Reading and Use of English Parts 1-3) made from a topic's own
+// paragraphs, in texts about half the exam's length ("high turnover, which suits the site's mood"). Content: see clozeRow.
+//   Word choice (Part 1): the selected gap's words (A–D) show under the text; choosing one fills the gap and moves to the
+//     next empty one. Tap a gap (or ← →) to choose for another. Check once every gap has a word.
+//   Open cloze (Part 2): type the one word that fits each gap. Word formation (Part 3): type a form of the word in capitals
+//     shown at the gap. Enter goes to the next gap, and checks after the last; Check with gaps still empty asks once first.
+// Typed answers are marked as in the exam: capitals don't matter, but the spelling must be right. A near miss (Total
+// Recall's rule: one letter out in a word of 5+ letters, two in 9+) is still wrong, and the feedback points to the
+// spelling. Each gap is one answer (the points are shared between the gaps, as in Complete the text). A text with a wrong
+// gap comes back later, and Report reports the whole text (so the teacher can remove it from the game).
+function playCloze(key){
+  const game=GAMES.find(g=>g.key===key), typed=key!=='wchoice', st=Stats(key), deck=Deck(()=>game.items());
+  shell(game, key==='wchoice' ? 'Choose the word that fits each gap. Tap a gap to change its word. Then press Check.'
+    : key==='ocloze' ? 'Type one word in each gap. Then press Check.' : 'Change the word in capitals so that it fits the gap. Then press Check.');
+  st.draw();
+  const L='ABCD';
+  const step=()=>{
+    const r=deck.next(); if(!r) return;
+    const n=r.gaps.length, opts=r.gaps.map(g=>typed ? null : shuffle(g.opts)), chosen=r.gaps.map(()=>null);
+    let sel=0, checked=false;
+    const textHtml=r.parts.map(p=>{ if(typeof p==='string') return esc(p);
+      const i=p.i, g=r.gaps[i];
+      if(!typed) return `<button class="gapslot cz-slot" type="button" data-i="${i}"><span class="cz-n">${i+1}</span><span class="cz-w"></span></button>`;
+      return `<span class="cz-gap" data-i="${i}"><span class="cz-n">${i+1}</span>${g.stem ? `<span class="cz-stem">${esc(g.stem.toUpperCase())}</span>` : ''}<input class="cz-in" type="text" data-i="${i}"
+        aria-label="Gap ${i+1}${g.stem ? ': a form of '+esc(g.stem.toUpperCase()) : ''}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="${i+1<n?'next':'done'}"></span>`; }).join('');
+    const card=showCard(`<p class="instr">${esc(r.title||game.name)}</p>
+      <div class="readtext ctext cz-text">${textHtml}</div>
+      ${typed ? '' : '<div class="cz-pick" role="group"></div>'}
+      <div class="next-row check-row"><span class="pick-n"></span><button class="btn" type="button" id="czCheck">Check</button></div><div class="fb"></div>`);
+    card.classList.add('ct-card', 'cz-card', 'cz-'+key);
+    const chk=card.querySelector('#czCheck'), pn=card.querySelector('.pick-n');
+    const slots=[...card.querySelectorAll('.cz-slot')], ins=[...card.querySelectorAll('.cz-in')], panel=card.querySelector('.cz-pick');
+    const filled=i=>typed ? !!ins[i].value.trim() : chosen[i]!=null;
+    const count=()=>{ const k=r.gaps.filter((g,i)=>filled(i)).length;
+      pn.textContent=`${k} of ${n} gap${n===1?'':'s'} filled`; if(!typed) chk.disabled=k<n; chk.textContent='Check'; delete chk.dataset.sure; };
+    // Word choice: the gaps in the text and the selected gap's words under it
+    const drawChoice=()=>{
+      slots.forEach((s,i)=>{ s.querySelector('.cz-w').textContent=chosen[i]==null ? '' : opts[i][chosen[i]];
+        s.classList.toggle('full', chosen[i]!=null); s.classList.toggle('sel', i===sel);
+        s.setAttribute('aria-label', `Gap ${i+1}${chosen[i]==null ? ', empty' : ': '+opts[i][chosen[i]]}`); });
+      panel.setAttribute('aria-label', `Words for gap ${sel+1}`);
+      panel.innerHTML=`<p class="cz-pick-h">Gap ${sel+1}</p><div class="opts cz-opts">${opts[sel].map((o,k)=>`<button class="opt${chosen[sel]===k?' on':''}" type="button" data-k="${k}" aria-pressed="${chosen[sel]===k}"><kbd>${L[k]}</kbd><span>${esc(o)}</span></button>`).join('')}</div>`;
+      panel.querySelectorAll('.opt').forEach(b=>b.onclick=()=>choose(+b.dataset.k));
+      count(); };
+    const choose=k=>{ if(checked || k>=opts[sel].length) return; chosen[sel]=k;
+      const next=[...Array(n).keys()].map(d=>(sel+1+d)%n).find(i=>chosen[i]==null);
+      if(next!=null) sel=next; drawChoice();
+      if(next==null) chk.focus({preventScroll:true}); };
+    const moveSel=d=>{ if(checked) return; sel=(sel+d+n)%n; drawChoice(); };
+    if(!typed){ slots.forEach(s=>s.onclick=()=>{ if(checked) return; sel=+s.dataset.i; drawChoice(); }); drawChoice(); }
+    else {
+      ins.forEach((x,i)=>{ const size=()=>{ x.style.width=Math.max(7, x.value.length+2)+'ch'; };
+        x.oninput=()=>{ size(); count(); };
+        x.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(i+1<n) ins[i+1].focus(); else doCheck(); } }; });
+      count();
+    }
+    // partial: the Daily Circuit's time is up. Filled gaps are marked; empty ones just show their answer and are not counted.
+    const doCheck=(partial)=>{
+      if(checked) return;
+      const empty=r.gaps.filter((g,i)=>!filled(i)).length;
+      if(partial ? empty===n : (!typed && empty)) return;
+      if(!partial && typed && empty && !chk.dataset.sure){ chk.dataset.sure='1'; chk.textContent='Check anyway';
+        pn.textContent=`${empty} gap${empty===1?' is':'s are'} empty. Check anyway?`; (ins.find(x=>!x.value.trim())||ins[0]).focus(); return; }
+      checked=true; card.classList.add('done'); card.querySelector('.check-row').remove(); if(panel) panel.remove();
+      let got=0; const marks=[], spell=[], also=[];
+      r.gaps.forEach((g,i)=>{
+        const item={id:r.id+'#'+(i+1), level:r.level, qs:n}, show=esc(g.ans[0]);
+        if(g.ans.length>1) also.push(`gap ${i+1}: ${g.ans.slice(1).map(esc).join(', ')}`);
+        if(typed){ const x=ins[i], v=x.value.trim(), m=v ? trMatch(v, g.ans) : '', ok=m==='ok';
+          const res=document.createElement('span'); res.className='cz-res '+(ok ? 'ok' : 'no');
+          res.innerHTML=ok ? esc(v) : v ? `<s>${esc(v)}</s> ${show}` : show; x.replaceWith(res);
+          if(!v && partial) return;   // the circuit's time ran out before this gap: not counted
+          if(m==='close' && !ok) spell.push(`gap ${i+1} is spelt <b>${show}</b>`);
+          if(ok) got++; marks.push([ok, item]); }
+        else { const s=slots[i], c=chosen[i]; s.disabled=true; s.classList.remove('sel');
+          if(c==null){ s.classList.add('no'); s.querySelector('.cz-w').textContent=g.ans[0]; return; }
+          const ok=opts[i][c]===g.ans[0]; s.classList.add(ok ? 'ok' : 'no');
+          if(!ok) s.querySelector('.cz-w').innerHTML=`<s>${esc(opts[i][c])}</s> ${show}`;
+          if(ok) got++; marks.push([ok, item]); } });
+      const fb=card.querySelector('.fb'), done=marks.length;
+      const more=(spell.length ? `<span>Check the spelling: ${spell.join('; ')}.</span>` : '')
+        + (also.length ? `<span>Also right: ${also.join('; ')}.</span>` : '') + (r.why ? `<span>${rich(r.why)}</span>` : '');
+      if(got===done) fbOk(fb, `<span>${done===n ? `All ${n} gaps right.` : `${got} of ${n} right. The time ran out before the others.`}</span>`+more);
+      else { const near=got>0 && got*2>=done;
+        fb.innerHTML=`<div class="feedback ${near?'near':'no'}"><span class="verdict">${near?'Nearly!':'Not quite.'} ${got} of ${done} right.</span><span>The right ${typed?'answers are':'words are'} shown in the text.</span>${more}</div>`;
+        deck.retry(r); }
+      marks.forEach(([ok, item])=>ok ? st.hit(item) : st.miss(item));
+      if(got<done) lastMiss={game:key, item:{id:r.id, level:r.level}};   // Report: the whole text
+      manualNext(card, step, 'Next text →'); };
+    chk.onclick=()=>doCheck();
+    circuitFinish=()=>doCheck(true);
+    // Word choice's keys: A–D (or 1–4) choose a word for the selected gap, ← → another gap, Enter checks.
+    // (Typed games: Enter in a box is handled by the box; keys pressed in a box never reach keyHandler.)
+    keyHandler=e=>{ if(checked) return;
+      if(e.key==='Enter'){ e.preventDefault(); doCheck(); return; }
+      if(typed) return;
+      const k=/^[1-4]$/.test(e.key) ? +e.key-1 : L.toLowerCase().indexOf(String(e.key).toLowerCase());
+      if(e.key.length===1 && k>=0){ e.preventDefault(); choose(k); }
+      else if(e.key==='ArrowRight'){ e.preventDefault(); moveSel(1); } else if(e.key==='ArrowLeft'){ e.preventDefault(); moveSel(-1); } };
+    if(typed && !PHONE) ins[0].focus({preventScroll:true});   // (on a phone the keyboard would cover the text straight away)
   };
   step();
 }
