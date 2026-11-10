@@ -70,8 +70,13 @@ function parseCSV(text){
     else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
     else cell+=c; }
   if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  // (10 Nov 2026) A file saved from a spreadsheet can start with empty rows (only commas) above the headings, or have the
+  // heading row again further down (big-idea.csv had both, and Big idea showed no passages): the headings are the first
+  // row with something in it, and a row that repeats them (3 or more cells the same as their headings) is left out.
+  while(rows.length && !rows[0].some(x=>x.trim())) rows.shift();
   const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
-  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+  const again=r=>r.filter((x,i)=>head[i] && x.trim().toLowerCase()===head[i]).length>=Math.min(3, head.filter(Boolean).length);
+  return rows.filter(r=>r.some(x=>x.trim()) && !again(r)).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
 }
 // Reading passages. Question 1 uses the plain column names; question n uses questionN, correctN, wrong1_N, wrong2_N, wrong3_N, explanationN.
 function questionsOf(r){ const qs=[];

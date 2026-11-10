@@ -83,8 +83,11 @@ function parseCSV(text){
     else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
     else cell+=c; }
   if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  // (10 Nov 2026, as the games) empty rows above the headings are skipped; a row that repeats the headings is left out
+  while(rows.length && !rows[0].some(x=>x.trim())) rows.shift();
   const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
-  return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+  const again=r=>r.filter((x,i)=>head[i] && x.trim().toLowerCase()===head[i]).length>=Math.min(3, head.filter(Boolean).length);
+  return rows.filter(r=>r.some(x=>x.trim()) && !again(r)).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
 }
 // 1-5 for a level (A1…C1, "+" = the same level; or a name), null if it has none
 function band(v){ v=String(v||'').trim(); if(!v) return null; const n=BY_NAME[v.toLowerCase().replace(/\s+/g,'')]; if(n) return n;
@@ -259,7 +262,9 @@ function subjectTable(s, k){
 
 async function readingComp(){
   const hub=new URL('en/reading-comprehension/index.html', ROOT).href, doc=await getDoc(hub);
-  const links=[...doc.querySelectorAll('a.topic')].map(a=>new URL(a.getAttribute('href'), hub).href);
+  // The activities on the Reading Comprehension page: a.aea-act since the redesign (8 Nov 2026; a.topic before, which found
+  // nothing afterwards: the section said "No passages found")
+  const links=[...new Set([...doc.querySelectorAll('a.aea-act, a.topic')].map(a=>new URL(a.getAttribute('href'), hub).href))];
   const out=await Promise.all(links.map(async url=>{ const d=(await getDoc(url)).getElementById('app'); if(!d || !d.dataset.reading) return null;
     const rows=await getCSV(new URL(d.dataset.reading, url).href)||[];
     const qs=rows.reduce((n,r)=>n+['question','question2','question3'].filter(k=>r[k]).length,0);

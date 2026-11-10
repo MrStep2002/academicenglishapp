@@ -118,8 +118,11 @@ function parseCSV(text){
     else if (c === '\n' || c === '\r') { if (c === '\r' && text[i + 1] === '\n') i++; row.push(cell); rows.push(row); row = []; cell = ''; }
     else cell += c; }
   if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  // (10 Nov 2026, as en/engine/app.js) empty rows above the headings are skipped; a row that repeats the headings is left out
+  while (rows.length && !rows[0].some(x => x.trim())) rows.shift();
   const head = (rows.shift() || []).map(h => h.trim().toLowerCase());
-  return rows.filter(r => r.some(x => x.trim())).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || '').trim()])));
+  const again = r => r.filter((x, i) => head[i] && x.trim().toLowerCase() === head[i]).length >= Math.min(3, head.filter(Boolean).length);
+  return rows.filter(r => r.some(x => x.trim()) && !again(r)).map(r => Object.fromEntries(head.map((h, i) => [h, (r[i] || '').trim()])));
 }
 // A1=1 … C1=5, "+" adds half a level; names work too. No level (or one the site doesn't know): every level (null).
 const LEVEL_BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
