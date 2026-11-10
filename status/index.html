@@ -132,7 +132,7 @@ const SECTIONS = [
     {key:'gap', name:'Fill the gap', file:'gaps', src:'gaps', min:1, circuit:'short'},
     {key:'rw', name:'Grammar Check', note:'was SPAG: Right or Wrong', file:'right-wrong', src:'right-wrong', min:1, circuit:'short'},
     {key:'error', name:'Spot the error', file:'errors', src:'errors', min:1, circuit:'long'}]],
-  ['Reading (computers only, except Build the sentence and Find the evidence)', [
+  ['Reading', [
     {key:'build', name:'Build the sentence', file:'builds', src:'builds', min:1, circuit:'short'},
     {key:'evidence', name:'Find the evidence', file:'evidence', src:'evidence', min:1, circuit:'long'},
     {key:'read', name:'Complete the text', file:'reads', src:'reads', min:1, circuit:'long'},
@@ -267,8 +267,9 @@ async function readingComp(){
   const links=[...new Set([...doc.querySelectorAll('a.aea-act, a.topic')].map(a=>new URL(a.getAttribute('href'), hub).href))];
   const out=await Promise.all(links.map(async url=>{ const d=(await getDoc(url)).getElementById('app'); if(!d || !d.dataset.reading) return null;
     const rows=await getCSV(new URL(d.dataset.reading, url).href)||[];
-    const qs=rows.reduce((n,r)=>n+['question','question2','question3'].filter(k=>r[k]).length,0);
-    return {name:d.dataset.name||url, lv:perLevel(rows), total:rows.length, qs, notes:d.dataset.format==='notes'}; }));
+    // questions: question, question2… (Total Recall up to 15); Note taking and Recall have none (one choice per passage)
+    const qs=rows.reduce((n,r)=>n+Object.keys(r).filter(k=>/^question\d*$/.test(k) && r[k]).length,0);
+    return {name:d.dataset.name||url, lv:perLevel(rows), total:rows.length, qs, notes:!qs}; }));
   return out.filter(Boolean);
 }
 function readingTable(rc){
@@ -368,7 +369,7 @@ async function show(key, areas, zhHrefs){
   };
   progress();
   const jobs=subs.map((t,i)=>one(i));
-  if(reading) jobs.push(readingComp().then(rc=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta">English side only, computers only.</p>${rc.length?readingTable(rc):'<p class="meta">No passages found.</p>'}`; },
+  if(reading) jobs.push(readingComp().then(rc=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta">English side only.</p>${rc.length?readingTable(rc):'<p class="meta">No passages found.</p>'}`; },
     e=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta err">Couldn't read its files (${esc(e.message||e)}). Refresh to try again.</p>`; })
     .then(()=>{ finished++; progress(); }));
   await Promise.all(jobs);

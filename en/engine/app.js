@@ -95,6 +95,18 @@ function notesRow(r){
   if(!r.id || !r.passage || opts.length<3 || !right.length || right.length!==count){ console.warn('Notes row '+(r.id||'?')+' skipped: check the options, select_count and correct_options'); return null; }
   return {id:r.id, level:r.level, title:r.title, text:r.passage, topic:r.topic||'', count, opts, right:right.map(n=>n-1), why:r.explanation||''};
 }
+// Recall (data-format="recall", 10 Nov 2026): id, level, title, passage, question (optional), select_count, option1…option9,
+// correct_options, explanation, source: the Note taking columns, with question in place of topic. The statements that are
+// true of the passage are chosen from memory, once the passage is hidden.
+function recallRow(r){ const n=notesRow(Object.assign({topic:''}, r)); if(!n) return null; n.q=r.question||''; return n; }
+// Total Recall (data-format="totalrecall", 10 Nov 2026): id, level, title, passage, then question, answer, question2,
+// answer2… (up to 15), explanation, source. answer: what counts as right, more than one separated by ; (the first is shown).
+function totalRow(r){
+  const qs=[]; for(let n=1;n<=15;n++){ const a=n===1?'':String(n), q=r['question'+a], ans=String(r['answer'+a]||'').split(';').map(x=>x.trim()).filter(Boolean);
+    if(q && ans.length) qs.push({q, ans}); else if(q || ans.length) console.warn('Total Recall row '+(r.id||'?')+': question '+n+' skipped (no '+(q?'answer':'question')+')'); }
+  if(!r.id || !r.passage || !qs.length){ console.warn('Total Recall row '+(r.id||'?')+' skipped: it needs an id, a passage and questions with answers'); return null; }
+  return {id:r.id, level:r.level, title:r.title, text:r.passage, qs, why:r.explanation||''};
+}
 const listOf = v => String(v||'').split(';').map(s=>s.trim()).filter(Boolean);
 // The CSV rows → the data the games use. A row that cannot be used is skipped, with a note in the browser console saying why.
 function buildSubject(T){
@@ -204,6 +216,8 @@ function buildSubject(T){
     S.extracts.push({id:r.id, level:lv('extracts',r), t:r.extract, ids:wids, qs}); });
   if(T.reading){
     if(CFG.format==='notes') S.passages=T.reading.map(notesRow).filter(Boolean);
+    else if(CFG.format==='recall') S.passages=T.reading.map(recallRow).filter(Boolean);
+    else if(CFG.format==='totalrecall') S.passages=T.reading.map(totalRow).filter(Boolean);
     else { const need=['id','title','passage','question','correct','wrong1','wrong2','wrong3'];
       S.passages=T.reading.filter(r=>{ const miss=need.filter(k=>!r[k]); if(miss.length){ warn('reading',r,'skipped: missing '+miss.join(', ')); return false; } return true; })
         .map(r=>({id:r.id, level:r.level, title:r.title, text:r.passage, qs:questionsOf(r)})); }
@@ -287,10 +301,10 @@ const POINTS = {
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
 const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word', crossword:'type', zhcrossword:'type',
-  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage'};
+  zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage', recall:'passage', totalrecall:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error (shared between its errors), In your own words, Find the evidence, All-in English'],
-  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Listening']];
+  ['short','Complete the text (shared between its gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Recall, Total Recall, Listening (Recall and Total Recall add a speed bonus)']];
 // The same, in Chinese (My progress opened from the Chinese side, stage 4)
 const POINT_KINDS_ZH = {word:'单词游戏：学习单词、单词配释义、看中文选英文、选出释义、判断对错、单词贪吃蛇、单词打地鼠、单词入侵者、单词搜索、限时挑战、生存挑战',
   type:'拼写单词、拯救小老鼠', grammar:'填空、判断对错、语法检查、常识题、翻译', build:'连词成句、找错（分摊到每个错误）、用自己的话说、找证据、全英文练习',
@@ -306,7 +320,7 @@ const itemLevel = it => { if(!it) return null; const own=levelNum(it.level); if(
   return null; };
 const P = (function(){
   const STORE='aea:progress:v1', CAL=10, DAY=864e5, WAIT=[0, 6e5, DAY, 3*DAY, 7*DAY];
-  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, crossword:.05, zhcrossword:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05};   // chance of a lucky guess
+  const GUESS={mouse:.05, zhmouse:.05, wordsearch:.05, zhwordsearch:.05, crossword:.05, zhcrossword:.05, match:.2, syn:.2, zhmatch:.2, tf:.5, rw:.5, zhtf:.5, zhbuild:.05, zhtype:0, error:.1, build:.05, evidence:.05, zhevidence:.05, recall:.05, totalrecall:0};   // chance of a lucky guess
   // Always re-read before using, so two open tabs never overwrite each other's progress
   const load=()=>{ let d; try{ d=JSON.parse(localStorage.getItem(STORE))||{}; }catch(e){ d={}; }
     d.topics=d.topics||{}; d.words=d.words||{}; d.days=d.days||{}; return d; };
@@ -351,7 +365,9 @@ const P = (function(){
       // Points: only right answers earn them (level of the item, or the side's starting level if it has none)
       let pts=0;
       if(ok){ const band=d==null ? (zhSide?2:3) : Math.max(1, Math.min(5, Math.floor(d))), row=POINTS[POINT_KIND[game]||'word'];
-        pts=row[band-1]; if(item && item.qs>1) pts=Math.ceil(pts/item.qs); t.pts=(t.pts||0)+pts; }
+        pts=row[band-1]; if(item && item.qs>1) pts=Math.ceil(pts/item.qs);
+        if(item && item.bonus>0) pts+=Math.round(item.bonus);   // Recall's speed bonus (10 Nov 2026)
+        t.pts=(t.pts||0)+pts; }
       save(); if(msg && !zhSide) toastLevel(msg);
       if(zhSide && !classRun){ const r=store.get('zhrecent', []); r.push(ok?1:0); store.set('zhrecent', r.slice(-20)); }   // pace of new words (zhPace)   // the Chinese side has its own level-up message (zhPoolWords)
       if(classRun) classCount(ok);   // a class game: +1 / -1
@@ -633,7 +649,9 @@ function Stats(game){
 const CATS = {
   vocab:   {name:'Vocabulary', blurb:'Learn what the words mean and which words go together.'},
   grammar: {name:'Grammar',    blurb:'Use the words accurately: word forms, verb forms, sentence building.'},
-  reading: {name:'Reading',    blurb:'Read longer texts and work out meaning in context.', desktop:true}
+  // Reading on phones again (10 Nov 2026, teacher: "hiding them is proving a bit of a hassle… the kids can read on their
+  // phones if they want"): no category is desktop-only now. desktop:true would grey a column out on phones again.
+  reading: {name:'Reading',    blurb:'Read longer texts and work out meaning in context.'}
 };
 // Games (31 Oct, teacher): a section that runs across the bottom of the topic page, under the three columns.
 // Not one of the columns (CATS), so the column loops leave it alone; menuCompact() draws it.
@@ -643,7 +661,7 @@ const GAME_ROW = {games: {name:'Games'}};
 // Columns (26 Oct, teacher): True or false moved from Grammar to Vocabulary, Spot the error from Grammar to Reading.
 // 31 Oct (teacher): Spot the error back in Grammar ("its natural home"); Right or wrong renamed "SPAG: Right or Wrong".
 // 8 Nov 2026 (teacher): SPAG: Right or Wrong renamed "Grammar Check", with Good Grammar / Bad Grammar buttons.
-// Reading games are for computers only, except the ones marked phone:true.
+// Reading games were for computers only until 10 Nov 2026 (CATS.reading.desktop); every game now plays on phones too.
 const GAMES = [
   // Match the meaning (31 Oct, teacher): Synonym groups merged in. The right-hand column mixes meanings and synonym groups
   // (a word with synonyms shows either). data-hide="syn" on a topic page keeps it to meanings only (Essentials).
@@ -2202,6 +2220,157 @@ function playNotes(){
       const row=NEW_UI && card.querySelector(':scope > .next-row'); if(row) card.querySelector('.cr-q').appendChild(row); };
     btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
     keyHandler=e=>{ const n=parseInt(e.key,10); if(n>=1&&n<=btns.length) toggle(btns[n-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
+  };
+  step();
+}
+
+// ---------- RECALL and TOTAL RECALL (10 Nov 2026, teacher) ----------
+// "Students read a passage and have to remember stuff, then they click on something to see the questions and the passage
+// is covered up." Read for as long as you like; I'm ready covers the passage and the questions appear; after Check the
+// passage comes back so the student can see what they missed.
+// Speed bonus (teacher: "they have a timer bonus and as the timer goes down so do their bonus points"): it starts at the
+// passage's own points for its level and runs down to nothing over MEM_PAR seconds (more for a longer passage). What is
+// left at I'm ready is added to the points if the answers are right: Recall all or nothing (as Note taking); Total Recall
+// shared between its questions, so each right answer earns its share.
+// Recall: choose the statements that are true of the passage (some are not). Total Recall: type the answers to a list of
+// questions about a list ("nightmare lists"). Typed answers: capitals, punctuation, a/an/the and numbers as words or
+// digits don't matter, and a small slip in a longer word is accepted (a number has to be exact).
+const memWords = t => (String(t||'').match(/[A-Za-z0-9'’£$%.:-]+/g)||[]).length;
+const MEM_PAR = r => Math.max(30, Math.min(150, Math.round(memWords(r.text)*0.6)));   // seconds until the bonus is gone
+const memMax = r => { const n=levelNum(r.level); return POINTS.passage[n==null ? 2 : Math.max(0, Math.min(4, Math.floor(n)-1))]; };
+// The passage on the left (on a phone: on top), and on the right the speed bonus and I'm ready. ready(card, bonus) is
+// called when the student is ready: it fills the right-hand side with the questions.
+function memCard(r, intro, ready){
+  const paras=r.text.split(/\n\s*\n|\s*\|\|\s*/).map(p=>`<p>${esc(p.trim()).replace(/\n/g,'<br>')}</p>`).join('');
+  const max=memMax(r), par=MEM_PAR(r), t0=Date.now();
+  const card=showCard(`<div class="cr mem"><article class="cr-pass mem-pass" aria-labelledby="crTitle"><p class="cr-k">Passage${r.level?` · ${esc(levelName(r.level))}`:''}</p>
+      <h2 id="crTitle">${esc(r.title||'')}</h2><div class="cr-text">${paras}</div>
+      <div class="mem-cover"><b>The passage is hidden.</b><span>Answer from memory.</span></div></article>
+    <div class="cr-qs"><section class="cr-q mem-ready"><p class="cr-k">Read it, then remember it</p><h3>${intro}</h3>
+      <div class="mem-bonus" aria-live="off"><span class="mem-bonus-k">Speed bonus</span><b class="mem-bonus-n">+${max}</b><span class="mem-bar" aria-hidden="true"><i></i></span></div>
+      <p class="mem-note">The bonus goes down while the passage is open. Take as long as you need: there is no time limit.</p>
+      <div class="cr-actions"><button class="btn cr-go mem-go" type="button">I’m ready: hide the passage</button></div></section></div></div>`);
+  card.classList.add('cr-card');
+  const n=card.querySelector('.mem-bonus-n'), bar=card.querySelector('.mem-bar i'), box=card.querySelector('.mem-bonus');
+  const left=()=>Math.max(0, Math.round(max*(1-(Date.now()-t0)/1000/par)));
+  let on=true;
+  const tick=()=>{ if(!on || !card.isConnected) return; const b=left(), f=Math.max(0, 1-(Date.now()-t0)/1000/par);
+    n.textContent=b ? `+${b}` : 'Gone'; bar.style.width=(f*100).toFixed(1)+'%'; box.classList.toggle('low', f<.3); box.classList.toggle('gone', !b);
+    if(f>0) later(tick, 250); };
+  tick();
+  const go=()=>{ if(!on) return; on=false; const bonus=left(), secs=Math.round((Date.now()-t0)/1000);
+    card.querySelector('.mem-pass').classList.add('covered'); keyHandler=null;
+    ready(card, bonus, secs); };
+  card.querySelector('.mem-go').onclick=go; card.querySelector('.mem-go').focus({preventScroll:true});
+  keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); go(); } };
+  return card;
+}
+const memTime = s => s<60 ? `${s} second${s===1?'':'s'}` : `${Math.floor(s/60)} min ${String(s%60).padStart(2,'0')} s`;
+// The line under the result: how long they read for, and the bonus (got: the bonus points earned; none: what to say if none)
+const memBonusLine = (bonus, secs, got, none) => `<span class="mem-sum">You read it in ${memTime(secs)}. ${!bonus ? 'No speed bonus this time.' : got ? `Speed bonus: <b>+${got}</b>.` : none}</span>`;
+function memReveal(card){ const p=card.querySelector('.mem-pass'); if(p){ p.classList.remove('covered'); p.classList.add('shown'); } }
+
+function playRecall(){
+  const st=Stats('recall'), game={key:'recall', name:CFG.name||'Recall', cat:'reading'};
+  shell(game, esc(CFG.blurb||'Read the passage, then choose what it said from memory.')); const items=readingTop(); if(!items) return; const deck=Deck(items);
+  st.draw();
+  const step=()=>{
+    const r=deck.next();
+    memCard(r, 'Read the passage carefully. When you’re ready, it is hidden and you choose the statements that are true of it.', (card, bonus, secs)=>{
+      const order=shuffle(r.opts.map((o,i)=>i)), picked=new Set();
+      const side=card.querySelector('.cr-qs');
+      side.innerHTML=`<section class="cr-q cr-notes mem-q"><p class="cr-k">From memory</p>
+        <p class="question">${esc(r.q || `Which ${r.count===1?'statement is':`${r.count} statements are`} true of the passage?`)}</p>
+        <div class="opts long notes">${order.map((i,k)=>`<button class="opt" type="button" data-i="${i}" aria-pressed="false"><kbd>${k+1}</kbd><span>${esc(r.opts[i])}</span></button>`).join('')}</div>
+        <div class="next-row check-row"><span class="pick-n">0 of ${r.count} chosen</span><button class="btn" type="button" id="check" disabled>Check</button></div><div class="fb"></div></section>`;
+      const sec=side.querySelector('.cr-q'), btns=[...sec.querySelectorAll('.opt')], chk=sec.querySelector('#check'), pn=sec.querySelector('.pick-n'); let done=false;
+      const toggle=b=>{ if(done) return; const i=+b.dataset.i;
+        if(picked.has(i)) picked.delete(i); else { if(picked.size>=r.count) return; picked.add(i); }
+        b.setAttribute('aria-pressed', picked.has(i)); pn.textContent=`${picked.size} of ${r.count} chosen`; chk.disabled=picked.size!==r.count; };
+      const check=()=>{ if(done || picked.size!==r.count) return; done=true; sec.querySelector('.check-row').remove();
+        const got=[...picked].filter(i=>r.right.includes(i)).length, ok=got===r.count;
+        btns.forEach(b=>{ const i=+b.dataset.i, good=r.right.includes(i); b.disabled=true; b.classList.add(picked.has(i) ? (good?'ok':'no') : (good?'missed':'dim')); });
+        memReveal(card);
+        const why=r.why ? `<div class="why">${r.why.split(/\n\s*\n/).map(p=>`<p>${rich(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}</div>` : '';
+        const fb=sec.querySelector('.fb'), line=memBonusLine(bonus, secs, ok ? bonus : 0, `The speed bonus (+${bonus}) needs every statement right.`);
+        ok ? fbOk(fb, line+why) : fbNo(fb, '', `<span>You found ${got} of ${r.count}. The ones with a dashed green border were missed. The passage is shown again.</span>${line}${why}`);
+        const item={id:r.id, level:r.level, bonus: ok ? bonus : 0};
+        if(ok) st.hit(item); else { st.miss(item); deck.retry(r); }
+        passageDone(fb, ok?1:0, 1, ok ? (r.count===1 ? 'You remembered it.' : `You remembered all ${r.count}.`) : '');
+        manualNext(card, step, 'Next passage →'); const row=card.querySelector(':scope > .next-row'); if(row) sec.appendChild(row); };
+      btns.forEach(b=>b.onclick=()=>toggle(b)); chk.onclick=check;
+      keyHandler=e=>{ const k=parseInt(e.key,10); if(k>=1 && k<=btns.length) toggle(btns[k-1]); else if(e.key==='Enter'){ e.preventDefault(); check(); } };
+      sec.scrollIntoView({block:'nearest', behavior:'smooth'});
+    });
+  };
+  step();
+}
+
+// Total Recall: typed answers. Each is compared with every answer the file accepts (answer column, separated by ;)
+const NUM_W={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,
+  sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+function trNorm(v){
+  let s=String(v||'').toLowerCase().replace(/[‘’`]/g,"'").replace(/&/g,' and ').replace(/(\d),(\d{3})\b/g,'$1$2')
+    .replace(/(\d)[:.](\d)/g,'$1.$2').replace(/(\d+\.\d*?)0+\b/g,'$1').replace(/(\d)\.(?!\d)/g,'$1')   // 7:45 = 7.45; 4.50 = 4.5; 7.00 = 7
+    .replace(/(\d)(st|nd|rd|th)\b/g,'$1')                                                                   // 8th = 8
+    .replace(/(\d)([a-z])/g,'$1 $2').replace(/([a-z])(\d)/g,'$1 $2')                                         // 750ml = 750 ml; HF2291 = hf 2291
+    .replace(/[^a-z0-9.' -]+/g,' ').replace(/(^|\s)'|'(\s|$)/g,' ').replace(/-/g,' ').replace(/\.(?!\d)/g,' ').replace(/\s+/g,' ').trim()
+    .replace(/\b0+(\d)/g,'$1');                                                                              // 08.51 = 8.51
+  const out=[]; s.split(' ').forEach(w=>{ if(w in NUM_W){ const n=NUM_W[w], prev=out.length ? out[out.length-1] : null;
+      if(typeof prev==='number' && prev>=20 && prev%10===0 && n<10) out[out.length-1]=prev+n; else out.push(n); } else out.push(w); });
+  return out.join(' ').replace(/^(the|a|an) /,'');
+}
+function trLev(a,b){ if(Math.abs(a.length-b.length)>2) return 9; let prev=[...Array(b.length+1).keys()];
+  for(let i=1;i<=a.length;i++){ const cur=[i]; for(let j=1;j<=b.length;j++) cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+(a[i-1]===b[j-1]?0:1)); prev=cur; }
+  return prev[b.length]; }
+// 'ok' (right), 'close' (right, with a small slip: shown with the spelling), or '' (wrong)
+function trMatch(typed, answers){
+  const t=trNorm(typed); if(!t) return '';
+  let best='';
+  answers.forEach(a=>{ const n=trNorm(a); if(!n || best==='ok') return;
+    if(t===n){ best='ok'; return; }
+    if(/\d/.test(t) || /\d/.test(n)) return;   // a number has to be exact
+    const allow=n.length>=9 ? 2 : n.length>=5 ? 1 : 0;
+    if(allow && trLev(t, n)<=allow) best='close'; });
+  return best;
+}
+function playTotalRecall(){
+  const st=Stats('totalrecall'), game={key:'totalrecall', name:CFG.name||'Total Recall', cat:'reading'};
+  shell(game, esc(CFG.blurb||'Read the list, then type what you remember.')); const items=readingTop(); if(!items) return; const deck=Deck(items);
+  st.draw();
+  const step=()=>{
+    const r=deck.next(), n=r.qs.length;
+    memCard(r, `Read it carefully. When you’re ready, it is hidden and you type the answers to ${n} question${n===1?'':'s'} about it.`, (card, bonus, secs)=>{
+      const side=card.querySelector('.cr-qs');
+      side.innerHTML=`<section class="cr-q tr mem-q"><p class="cr-k">From memory</p>
+        <p class="question">Type each answer. Numbers can be words or digits, and a small spelling slip is fine.</p>
+        <ol class="tr-list">${r.qs.map((q,i)=>`<li><label for="tr${i}"><span class="tr-n">${i+1}</span><span>${esc(q.q)}</span></label>
+          <input id="tr${i}" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="${i+1<n?'next':'done'}"><span class="tr-mark" hidden></span></li>`).join('')}</ol>
+        <div class="next-row check-row"><span class="pick-n">0 of ${n} answered</span><button class="btn" type="button" id="check">Check</button></div><div class="fb"></div></section>`;
+      const sec=side.querySelector('.cr-q'), ins=[...sec.querySelectorAll('input')], chk=sec.querySelector('#check'), pn=sec.querySelector('.pick-n'); let done=false;
+      const count=()=>{ const k=ins.filter(x=>x.value.trim()).length; pn.textContent=`${k} of ${n} answered`; };
+      ins.forEach((x,i)=>{ x.oninput=count; x.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); e.stopPropagation(); if(i+1<n) ins[i+1].focus(); else check(); } }; });
+      const check=()=>{ if(done) return;
+        const blank=ins.filter(x=>!x.value.trim()).length;
+        if(blank && !chk.dataset.sure){ chk.dataset.sure='1'; pn.textContent=`${blank} left blank. Check anyway?`; chk.textContent='Check anyway'; (ins.find(x=>!x.value.trim())||ins[0]).focus(); return; }
+        done=true; sec.querySelector('.check-row').remove();
+        const res=r.qs.map((q,i)=>trMatch(ins[i].value, q.ans)), got=res.filter(Boolean).length, all=got===n, share=Math.ceil(bonus/n);
+        sec.querySelectorAll('.tr-list li').forEach((li,i)=>{ const m=li.querySelector('.tr-mark'), q=r.qs[i]; ins[i].readOnly=true;
+          li.classList.add(res[i] ? 'ok' : 'no');
+          m.innerHTML=res[i]==='ok' ? '✓' : res[i]==='close' ? `✓ <span>Spelt: <b>${esc(q.ans[0])}</b></span>` : `✗ <span>${ins[i].value.trim() ? 'The answer' : 'Left blank. The answer'}: <b>${esc(q.ans[0])}</b></span>`;
+          m.hidden=false; });
+        memReveal(card);
+        const why=r.why ? `<div class="why">${r.why.split(/\n\s*\n/).map(p=>`<p>${rich(p.trim()).replace(/\n/g,'<br>')}</p>`).join('')}</div>` : '';
+        const fb=sec.querySelector('.fb'), line=memBonusLine(bonus, secs, share*got, `The speed bonus (+${bonus}) is shared between the answers you get right.`);
+        all ? fbOk(fb, line+why) : fbNo(fb, '', `<span>You remembered ${got} of ${n}. The list is shown again.</span>${line}${why}`);
+        r.qs.forEach((q,i)=>{ const item={id:r.id+(i?'#'+(i+1):''), level:r.level, qs:n, bonus: res[i] ? share : 0}; if(res[i]) st.hit(item); else st.miss(item); });
+        if(!all) deck.retry(r);
+        passageDone(fb, got, n, all ? `You remembered all ${n}.` : '');
+        manualNext(card, step, 'Next list →'); const row=card.querySelector(':scope > .next-row'); if(row) sec.appendChild(row); };
+      chk.onclick=check;
+      keyHandler=null;   // Enter in a box goes to the next box (and Check after the last)
+      ins[0].focus({preventScroll:true}); sec.scrollIntoView({block:'nearest', behavior:'smooth'});
+    });
   };
   step();
 }
@@ -4033,12 +4202,13 @@ function route(){
   if(CFG.only==='passage'){   // a page that is just one reading game (e.g. Close reading)
     const back={href:CFG.back||'../index.html', label:CFG.backLabel||'Back'};
     const listen=CFG.format==='listening', what=listen ? 'listening tests' : 'passages';   // Listening also works on phones
-    const msg = PHONE && !listen ? 'Reading games are only available on desktop devices. Open this page on a computer to play.'
-      : readingState==='loading' ? `Loading ${what}…`
+    const msg = readingState==='loading' ? `Loading ${what}…`
       : readingState==='failed' ? `The ${what} could not be loaded. They load when the site is online.`
       : !(S.passages||[]).length ? `No ${what} yet. Check back soon.` : '';
     if(msg) return frame(back, `<section class="hero"><p class="eyebrow">${esc(CFG.eyebrow||'Reading')}</p><h1>${esc(CFG.name||'')}</h1>${CFG.blurb?`<p>${esc(CFG.blurb)}</p>`:''}<p class="notice">${msg}</p></section>`, CFG.name);
     if(CFG.format==='notes') return playNotes();
+    if(CFG.format==='recall') return playRecall();
+    if(CFG.format==='totalrecall') return playTotalRecall();
     if(listen) return playListening();
     GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
     return playPassage();

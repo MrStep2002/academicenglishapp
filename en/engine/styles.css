@@ -914,3 +914,36 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .gram-note{margin:0;color:var(--ink-2);font-size:15px}
 .statement.gram-s{border-left:4px solid var(--blue);padding:4px 0 4px 16px}
 .card.gram .tfb{font-size:18px}
+
+/* ---------- Recall and Total Recall (10 Nov 2026): read, I'm ready, the passage is covered, answer from memory ---------- */
+.mem-pass .mem-cover{display:none}
+.mem-pass.covered .cr-text{display:none}
+.mem-pass.covered .mem-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:180px;padding:24px;border-radius:10px;text-align:center;
+  color:var(--sh-muted,#5b6182);background:repeating-linear-gradient(135deg,var(--sh-soft,#f0f2f8) 0 14px,transparent 14px 28px);border:1.5px dashed var(--sh-line,#dde0eb)}
+.mem-pass.covered .mem-cover b{color:var(--sh-ink,#151935);font-size:18px}
+.mem-pass.shown{animation:mem-in .4s ease both}
+@keyframes mem-in{from{opacity:.4}to{opacity:1}}
+.mem-ready h3{font-weight:600 !important}
+.mem-bonus{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 14px;padding:12px 14px;border-radius:10px;background:var(--sh-soft,#f0f2f8)}
+.mem-bonus-k{font:400 12px/1.4 var(--sh-mono,monospace);letter-spacing:.1em;text-transform:uppercase;color:var(--sh-muted,#5b6182)}
+.mem-bonus-n{justify-self:end;font:400 30px/1 var(--sh-serif,serif);color:var(--good);font-variant-numeric:tabular-nums}
+.mem-bar{grid-column:1 / -1;display:block;height:8px;border-radius:99px;background:var(--sh-track,#e2e4ec);overflow:hidden}
+.mem-bar i{display:block;height:100%;width:100%;border-radius:inherit;background:var(--good);transition:width .25s linear}
+.mem-bonus.low .mem-bonus-n{color:#b35300} .mem-bonus.low .mem-bar i{background:#e0a526}
+.mem-bonus.gone .mem-bonus-n{color:var(--sh-muted,#5b6182);font-size:22px}
+.mem-note{margin:0;font-size:14.5px;color:var(--sh-muted,#5b6182)}
+.mem-sum{display:block}
+@media (prefers-reduced-motion: reduce){.mem-bar i{transition:none}.mem-pass.shown{animation:none}}
+/* Total Recall: a numbered question and a typing box under it */
+.tr-list{list-style:none;margin:2px 0 0;padding:0;display:flex;flex-direction:column;gap:12px}
+.tr-list li{display:flex;flex-direction:column;gap:6px}
+.tr-list label{display:flex;align-items:baseline;gap:10px;font-weight:700;font-size:16.5px;line-height:1.35}
+.tr-n{flex:none;display:inline-grid;place-items:center;min-width:26px;height:26px;border-radius:7px;background:var(--sh-soft,#f0f2f8);font:700 13px/1 var(--sh-body,sans-serif)}
+.tr-list input{font:inherit;font-size:17px;padding:10px 12px;border-radius:10px;border:1.5px solid var(--sh-line,#dde0eb);background:var(--sh-card,#fff);color:var(--sh-ink,#151935);width:100%}
+.tr-list input:focus{outline:3px solid var(--blue);outline-offset:1px;border-color:var(--blue)}
+.tr-list li.ok input{border-color:var(--good);background:var(--good-soft)}
+.tr-list li.no input{border-color:var(--bad);background:var(--bad-soft)}
+.tr-mark{font-weight:700;font-size:15px}
+.tr-list li.ok .tr-mark{color:var(--good)} .tr-list li.no .tr-mark{color:var(--bad)}
+.tr-mark span{font-weight:400;color:var(--sh-ink2,#2f3553);margin-left:4px}
+.tr-mark[hidden]{display:none}

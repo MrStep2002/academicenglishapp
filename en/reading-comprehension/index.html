@@ -15,11 +15,12 @@
 </head>
 <body class="aea-page">
 <main class="aea-wrap aea-rc">
-  <!-- New look (redesign stage 3, 8 Nov 2026): the heading, the reading level, then the three activities -->
+  <!-- New look (redesign stage 3, 8 Nov 2026): the heading, the reading level, then the activities. Recall and Total Recall
+       added 10 Nov 2026; on phones too since then (teacher: "the kids can read on their phones if they want") -->
   <header class="aea-pagehead">
     <p class="aea-eyebrow" style="color:#b4286a">English Language</p>
     <h1 class="aea-h1">Reading Comprehension</h1>
-    <p class="aea-lead">Longer reading and response. These activities work on computers only.</p>
+    <p class="aea-lead">Longer reading and response, and reading to remember.</p>
   </header>
 
   <section class="aea-card aea-lv lv" aria-labelledby="t-lv">
@@ -31,22 +32,29 @@
   </section>
 
   <section class="aea-acts" aria-label="Activities">
-    <a class="aea-act needs-desktop" href="close-reading/index.html">
+    <a class="aea-act" href="close-reading/index.html">
       <span class="aea-act-name">Close reading</span>
       <span class="aea-act-sub">Read a passage carefully, then answer questions about it.</span>
-      <span class="topic-phone">Only available on desktop devices</span>
       <span class="aea-act-go" aria-hidden="true">Start <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
     </a>
-    <a class="aea-act needs-desktop" href="big-idea/index.html">
+    <a class="aea-act" href="big-idea/index.html">
       <span class="aea-act-name">Big idea</span>
       <span class="aea-act-sub">Read a passage, then choose the idea that sums it up.</span>
-      <span class="topic-phone">Only available on desktop devices</span>
       <span class="aea-act-go" aria-hidden="true">Start <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
     </a>
-    <a class="aea-act needs-desktop" href="note-taking/index.html">
+    <a class="aea-act" href="note-taking/index.html">
       <span class="aea-act-name">Note taking</span>
       <span class="aea-act-sub">Read a passage, then choose the notes that belong under a heading.</span>
-      <span class="topic-phone">Only available on desktop devices</span>
+      <span class="aea-act-go" aria-hidden="true">Start <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a>
+    <a class="aea-act" href="recall/index.html">
+      <span class="aea-act-name">Recall</span>
+      <span class="aea-act-sub">Read a passage, then choose what it said, from memory.</span>
+      <span class="aea-act-go" aria-hidden="true">Start <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
+    </a>
+    <a class="aea-act" href="total-recall/index.html">
+      <span class="aea-act-name">Total Recall</span>
+      <span class="aea-act-sub">Read a list, then type what you remember.</span>
       <span class="aea-act-go" aria-hidden="true">Start <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></span>
     </a>
   </section>
@@ -69,15 +77,6 @@
         choice = opts[i]; try { localStorage.setItem(KEY, JSON.stringify([choice])); } catch (e) {} draw(); }; });
     }
     draw();
-  })();
-  // Reading is for computers. On a phone, grey out the activities.
-  (function(){
-    var coarse = window.matchMedia && matchMedia('(pointer: coarse)').matches;
-    var small = Math.min(screen.width||9999, screen.height||9999) < 600;
-    if ((coarse && small) || window.innerWidth < 520) {
-      document.documentElement.classList.add('phone');
-      document.querySelectorAll('.needs-desktop').forEach(function(a){ a.removeAttribute('href'); a.setAttribute('aria-disabled','true'); a.classList.add('topic-off'); });
-    }
   })();
 </script>
 <script src="../engine/points.js?v=2026-10-29b" data-side="en"></script>

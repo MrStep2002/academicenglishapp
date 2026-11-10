@@ -19,7 +19,7 @@ Every row has an **id** and a **level**. The games use the level to give each st
 | `physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/physics/" below |
 | `mockingbird/` | English → To Kill a Mockingbird (`en/mockingbird/`, English version only, since 8 Nov 2026). Ids `tkam:<word>` for words, `tkam-tf-…`, `tkam-gk-…`, `tkam-char-…`. tf.csv has a `focus` column (see True or false). Also `characters.csv` (below). The teacher's original word bank, `Mockingbird_empathic_word_bank_100.csv`, is not read by the games |
 | `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
-| `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv` |
+| `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv`, `recall.csv`, `total-recall.csv` |
 | `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
 | `templates/` | The headings and one example row for every kind of file |
 
@@ -426,6 +426,32 @@ and for more questions `question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanatio
 
 - **topic**: the heading the notes go under. **select_count**: how many to choose (3).
 - **correct_options**: their numbers, e.g. `[1,3,5]`. The six options are shuffled on screen.
+
+### recall.csv (Recall, 10 Nov 2026; template: `templates/recall.csv`)
+
+`id,level,title,passage,question,select_count,option1,…,option8,correct_options,explanation,source`
+
+- The student reads the passage for as long as they like, then presses **I'm ready**: the passage is hidden and the
+  statements appear. They choose the ones that are true of the passage, from memory, then Check; the passage comes back.
+- **question** (optional): what to ask; empty = "Which N statements are true of the passage?". **select_count**: how many
+  are true. **option1–option8**: the statements (at least 4; leave the last ones empty if fewer). **correct_options**: the
+  true ones' numbers, e.g. `[1,2,3]`. They are shuffled on screen, so the true ones can come first in the file.
+- Good passages for memory: itineraries, rules, timetables, programmes, lost-property reports, agreements, short reports
+  full of figures. Wrong statements change one detail (a number, a name, a day, which thing went where).
+- Speed bonus: it starts at the passage's own points and runs down while the passage is open (to nothing after
+  0.6 seconds a word, between 30 and 150 seconds). What is left at I'm ready is added if every statement chosen is right.
+
+### total-recall.csv (Total Recall, 10 Nov 2026; template: `templates/total-recall.csv`)
+
+`id,level,title,passage,question,answer,question2,answer2,…,question15,answer15,explanation,source`
+
+- A list to remember (shopping, codes, timetables, ingredients, actions from a meeting). I'm ready hides it, then every
+  question has a box to type in. Check marks them all; the list comes back.
+- **answer**: what counts as right; more than one separated by `;` (the first is the one shown). Capitals, punctuation,
+  a/an/the, 7:45 or 7.45, 08.51 or 8.51, 8th or 8, 750ml or 750 ml and numbers as words or digits don't matter. A small
+  spelling slip in a word of 5 or more letters is accepted (shown with the spelling); a number must be exact.
+- Each question is one answer (points shared between them, like Close reading); the speed bonus is shared the same way.
+- `tools/check_reading.py` warns when no accepted answer is in the list word for word.
 
 ## Checking before you push
 

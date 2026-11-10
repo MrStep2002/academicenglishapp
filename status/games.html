@@ -126,6 +126,8 @@ const PLACE = {
   'close':      {kind:'go', name:'Reading Comprehension · Close reading', href:'en/reading-comprehension/close-reading/index.html'},
   'bigidea':    {kind:'go', name:'Reading Comprehension · Big idea', href:'en/reading-comprehension/big-idea/index.html'},
   'notes':      {kind:'go', name:'Reading Comprehension · Note taking', href:'en/reading-comprehension/note-taking/index.html'},
+  'recall':     {kind:'go', name:'Reading Comprehension · Recall', href:'en/reading-comprehension/recall/index.html'},
+  'totalrecall':{kind:'go', name:'Reading Comprehension · Total Recall', href:'en/reading-comprehension/total-recall/index.html'},
   'listening':  {kind:'go', name:'Listening', href:'en/listening/index.html'},
   'chem':       {kind:'go', name:'Chemistry page · Chemistry column', href:'en/chemistry/index.html'},
   'phys':       {kind:'go', name:'Physics page · Physics column', href:'en/physics/index.html'}
@@ -222,13 +224,19 @@ const FILES = [
     {n:'Categories', w:['board'], how:'A board of categories, like Jeopardy: questions worth 100 to 500, Daily Doubles, and a final question every team bets on.'}
   ]},
   {f:'close-reading', path:'content/reading-comprehension/close-reading.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'title, passage, question, correct, wrong1–wrong3, explanation · question2… for more', games:[
-    {n:'Close reading', w:['close'], how:'Read a passage, then choose the best answer to each question. Computers only.'}
+    {n:'Close reading', w:['close'], how:'Read a passage, then choose the best answer to each question.'}
   ]},
   {f:'big-idea', path:'content/reading-comprehension/big-idea.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'the same columns as close-reading.csv', games:[
-    {n:'Big idea', w:['bigidea'], how:'Read a passage, then choose the idea that sums up the whole passage. Computers only.'}
+    {n:'Big idea', w:['bigidea'], how:'Read a passage, then choose the idea that sums up the whole passage.'}
   ]},
   {f:'notes', path:'content/reading-comprehension/notes.csv', tpl:'notes', one:'a passage, a heading and six notes to choose from.', cols:'title, passage, topic, select_count, option1–option6, correct_options, explanation', games:[
     {n:'Note taking', w:['notes'], how:'Read a passage and choose the notes that belong under the heading.'}
+  ]},
+  {f:'recall', path:'content/reading-comprehension/recall.csv', tpl:'recall', one:'a passage and statements about it, some true and some not.', cols:'title, passage, question (optional), select_count, option1–option8, correct_options, explanation', games:[
+    {n:'Recall', w:['recall'], how:'Read the passage for as long as you like (a speed bonus runs down meanwhile), then I’m ready hides it: choose the statements that are true of it, from memory.'}
+  ]},
+  {f:'total-recall', path:'content/reading-comprehension/total-recall.csv', tpl:'total-recall', one:'a list to remember and questions on it, each answered by typing.', cols:'title, passage, question, answer (more than one: separated by ;) · question2, answer2… up to 15, explanation', games:[
+    {n:'Total Recall', w:['totalrecall'], how:'Read the list for as long as you like (a speed bonus runs down meanwhile), then I’m ready hides it: type the answers from memory.'}
   ]},
   {f:'listening', path:'content/listening/listening.csv', tpl:'listening', one:'a script the browser reads aloud, and questions on it.', cols:'title, passage (the script), question, correct, wrong1–wrong3, explanation, quote · question2… for more', games:[
     {n:'Listening', w:['listening'], how:'Press Play to hear the script, then answer the questions. The script is shown after Check.'}

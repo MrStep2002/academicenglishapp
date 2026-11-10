@@ -1,0 +1,12 @@
+﻿id,level,title,passage,question,answer,question2,answer2,question3,answer3,question4,answer4,question5,answer5,question6,answer6,question7,answer7,question8,answer8,explanation,source
+total-recall-example,A1,Mum’s shopping list,"Shopping list:
+6 eggs
+2 loaves of bread
+1 bag of rice
+4 bananas
+2 bottles of milk
+3 tins of tomatoes
+a small cheese
+washing-up liquid
+
+Don’t forget: the shop closes at 6!",How many eggs are on the list?,6,How many loaves of bread?,2,Which fruit is on the list?,bananas;banana,How many tins of tomatoes?,3,How many bottles of milk?,2,What is the last thing on the list?,washing-up liquid,What time does the shop close?,6;6 pm;6 o’clock;six o’clock,,,,Original

@@ -10,6 +10,9 @@ right answer is the longest of the four (a giveaway if it happens much more than
 
 Note taking files (notes.csv) have their own columns: id, level, title, passage, topic, select_count,
 option1…option6, correct_options (e.g. [1,3,5]), explanation, source.
+Recall (recall.csv, 10 Nov 2026) has the same columns with question (optional) in place of topic, and up to 8 options.
+Total Recall (total-recall.csv, 10 Nov 2026): id, level, title, passage, question, answer, question2, answer2… (up to 15),
+explanation, source. answer: what counts as right, more than one separated by ; (the first is the one shown).
 
 A passage can have more than one question. Question 1 uses the plain columns; question 2 adds
 question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanation2 after `source`; question 3 adds
@@ -35,26 +38,37 @@ def columns(n):
 
 NOTES_HEAD = ['id', 'level', 'title', 'passage', 'topic', 'select_count', 'option1', 'option2', 'option3',
               'option4', 'option5', 'option6', 'correct_options', 'explanation', 'source']
+RECALL_HEAD = ['id', 'level', 'title', 'passage', 'question', 'select_count'] + [f'option{n}' for n in range(1, 9)] + ['correct_options', 'explanation', 'source']
 
 def check_notes(path, head, rows):
-    """Note taking: the right notes must be checkable, and must not stand out by length."""
+    """Note taking and Recall: the right options must be checkable, and must not stand out by length."""
     problems, seen, lengths, right_len, wrong_len = [], set(), [], [], []
-    if head != NOTES_HEAD and head != NOTES_HEAD[:-1]:
+    recall = 'topic' not in head and 'question' in head
+    want = RECALL_HEAD if recall else NOTES_HEAD
+    nopt = max([int(h[6:]) for h in head if re.fullmatch(r'option\d', h)] or [6])
+    if recall:
+        if [h for h in head if not h.startswith('option')] != [h for h in want if not h.startswith('option')] or nopt < 4:
+            problems.append('Headings should be: ' + ','.join(want) + ' (option1 to option4 at least)')
+    elif head != NOTES_HEAD and head != NOTES_HEAD[:-1]:
         problems.append('Headings should be: ' + ','.join(NOTES_HEAD))
     for rownum, r in enumerate(rows, start=2):
         rid = (r.get('id') or '').strip() or f'(row {rownum})'
-        gaps = [c for c in ['id', 'title', 'passage', 'topic', 'select_count', 'correct_options'] if not (r.get(c) or '').strip()]
+        gaps = [c for c in ['id', 'title', 'passage', 'select_count', 'correct_options'] + ([] if recall else ['topic']) if not (r.get(c) or '').strip()]
         if gaps: problems.append(f'{rid}: empty {", ".join(gaps)}')
         lv = (r.get('level') or '').strip().upper()
         if lv and not LEVEL.match(lv): problems.append(f'{rid}: level "{lv}" should be A1, A2, B1, B2 or C1 (or Foundation, Foundation+, Intermediate, Intermediate+, Advanced)')
         if rid in seen: problems.append(f'{rid}: id used more than once')
         seen.add(rid)
         if (r.get('passage') or '').strip(): lengths.append(words(r['passage']))
-        opts = [(r.get(f'option{n}') or '').strip() for n in range(1, 7)]
-        if not all(opts): problems.append(f'{rid}: an option is empty')
+        opts = [(r.get(f'option{n}') or '').strip() for n in range(1, (nopt if recall else 6) + 1)]
+        if recall:   # Recall: options 1 to n, then any empty ones at the end
+            while opts and not opts[-1]: opts.pop()
+            if len(opts) < 4 or not all(opts): problems.append(f'{rid}: needs at least 4 options, with none empty before the last one')
+        elif not all(opts): problems.append(f'{rid}: an option is empty')
         if len(set(o.lower() for o in opts if o)) < len([o for o in opts if o]): problems.append(f'{rid}: two options are the same')
         nums = [int(x) for x in re.findall(r'\d+', r.get('correct_options') or '')]
-        if any(n < 1 or n > 6 for n in nums) or len(set(nums)) != len(nums): problems.append(f'{rid}: correct_options should list different numbers from 1 to 6')
+        if any(n < 1 or n > len(opts) for n in nums) or len(set(nums)) != len(nums): problems.append(f'{rid}: correct_options should list different numbers from 1 to {len(opts)}')
+        if recall and nums and len(nums) >= len(opts): problems.append(f'{rid}: every option is right: add some that are not')
         try: count = int(r.get('select_count') or 0)
         except ValueError: count = -1
         if count != len(nums): problems.append(f'{rid}: select_count is {r.get("select_count")} but correct_options lists {len(nums)}')
@@ -62,10 +76,45 @@ def check_notes(path, head, rows):
             (right_len if n in nums else wrong_len).append(len(o))
     plural = lambda n, word: f'{n} {word}' + ('' if n == 1 else 's')
     span = '' if not lengths else f', {min(lengths)}–{max(lengths)} words'
-    print(f'{path}: note taking, {plural(len(rows), "passage")}{span}')
+    what = ('recall', 'statements') if recall else ('note taking', 'notes')
+    print(f'{path}: {what[0]}, {plural(len(rows), "passage")}{span}')
     if right_len and wrong_len:
-        print(f'  Average length: right notes {round(sum(right_len)/len(right_len))} characters, '
-              f'wrong notes {round(sum(wrong_len)/len(wrong_len))}. Keep these close.')
+        print(f'  Average length: right {what[1]} {round(sum(right_len)/len(right_len))} characters, '
+              f'wrong {what[1]} {round(sum(wrong_len)/len(wrong_len))}. Keep these close.')
+    for p in problems: print('  - ' + p)
+    return len(problems)
+
+def check_total(path, head, rows):
+    """Total Recall: every question has an answer; an answer should be in the passage (or it can't be remembered)."""
+    problems, seen, lengths, asked = [], set(), [], 0
+    base = ['id', 'level', 'title', 'passage', 'question', 'answer']
+    if head[:6] != base: problems.append('Headings should start: ' + ','.join(base) + ', then question2,answer2…')
+    nums = sorted({int(m.group(1) or 1) for m in (re.fullmatch(r'question(\d*)', h) for h in head) if m})
+    for n in nums:
+        if f'answer{n if n > 1 else ""}' not in head: problems.append(f'Question {n} needs the column answer{n if n > 1 else ""}')
+    for rownum, r in enumerate(rows, start=2):
+        rid = (r.get('id') or '').strip() or f'(row {rownum})'
+        gaps = [c for c in ['id', 'title', 'passage', 'question', 'answer'] if not (r.get(c) or '').strip()]
+        if gaps: problems.append(f'{rid}: empty {", ".join(gaps)}')
+        lv = (r.get('level') or '').strip().upper()
+        if lv and not LEVEL.match(lv): problems.append(f'{rid}: level "{lv}" should be A1, A2, B1, B2 or C1 (or Foundation, Foundation+, Intermediate, Intermediate+, Advanced)')
+        if rid in seen: problems.append(f'{rid}: id used more than once')
+        seen.add(rid)
+        passage = norm(r.get('passage'))
+        if passage: lengths.append(words(r['passage']))
+        k = 0
+        for n in nums:
+            a = '' if n == 1 else str(n)
+            q, ans = (r.get('question' + a) or '').strip(), [x.strip() for x in (r.get('answer' + a) or '').split(';') if x.strip()]
+            if not q and not ans: continue
+            if not q or not ans: problems.append(f'{rid}: question {n} has {"no answer" if q else "an answer but no question"}'); continue
+            k += 1
+            if not any(norm(x) and norm(x) in passage for x in ans): problems.append(f'{rid}: no answer to question {n} ("{ans[0]}") is in the passage word for word: check it')
+        if k < 3: problems.append(f'{rid}: only {k} question{"" if k == 1 else "s"} (3 or more works best)')
+        asked += k
+    plural = lambda n, word: f'{n} {word}' + ('' if n == 1 else 's')
+    span = '' if not lengths else f', {min(lengths)}–{max(lengths)} words'
+    print(f'{path}: total recall, {plural(len(rows), "list")}, {plural(asked, "question")}{span}')
     for p in problems: print('  - ' + p)
     return len(problems)
 
@@ -80,6 +129,8 @@ def check_file(path):
         rows = list(reader)
     if 'option1' in head:
         return check_notes(path, head, rows)
+    if 'answer' in head:
+        return check_total(path, head, rows)
     problems, seen, longest, shortest, asked, lengths = [], set(), 0, 0, 0, []
     base = [h for h in head if not EXTRA.match(h) and not QUOTE.match(h)]
     extra = sorted({int(m.group(1) or m.group(2)) for m in map(EXTRA.match, head) if m})

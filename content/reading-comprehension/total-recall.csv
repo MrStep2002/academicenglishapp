@@ -1,0 +1,90 @@
+id,level,title,passage,question,answer,question2,answer2,question3,answer3,question4,answer4,question5,answer5,question6,answer6,question7,answer7,question8,answer8,explanation,source
+total-recall-001,A1,Mum’s shopping list,"Shopping list:
+6 eggs
+2 loaves of bread
+1 bag of rice
+4 bananas
+2 bottles of milk
+3 tins of tomatoes
+a small cheese
+washing-up liquid
+
+Don’t forget: the shop closes at 6!",How many eggs are on the list?,6,How many loaves of bread?,2,Which fruit is on the list?,bananas;banana,How many tins of tomatoes?,3,How many bottles of milk?,2,What is the last thing on the list?,washing-up liquid,What time does the shop close?,6;6 pm;6 o’clock;six o’clock,,,,Original
+total-recall-002,A1,Birthdays in Class 7B,"Birthdays this term:
+Leo – 3 September
+Mia – 14 September
+Sam – 2 October
+Zara – 19 October
+Omar – 25 October
+Ella – 8 November
+Jack – 30 November",Whose birthday is on 2 October?,Sam,Whose birthday is on 14 September?,Mia,How many birthdays are in October?,3,Who has the last birthday of the term?,Jack,On what date in November is Ella’s birthday?,8;8 November,Who has a birthday on 19 October?,Zara,On what date in October is Omar’s birthday?,25;25 October,,,,Original
+total-recall-003,A2,The gym timetable,"Monday: Yoga 7.00, Spin 18.30
+Tuesday: Boxfit 17.45
+Wednesday: Pilates 9.15, Spin 19.00
+Thursday: Yoga 18.00
+Friday: Circuits 7.30, Zumba 17.00
+Saturday: Family swim 10.00–12.00
+Sunday: closed",What time is Yoga on Monday?,7.00;7;7 am;7 o’clock,Which class is on Tuesday?,Boxfit;box fit,On which day is Pilates?,Wednesday;Wed,What time is Spin on Wednesday?,19.00;7 pm;7 p.m.,What time does Family swim start?,10.00;10;10 am;10 o’clock,On which day is the gym closed?,Sunday;Sun,Which class is at 17.00 on Friday?,Zumba,How many Yoga classes are there in the week?,2,,Original
+total-recall-004,A2,Packing for the camp,"Pack:
+3 T-shirts
+2 jumpers
+1 waterproof jacket
+5 pairs of socks
+walking boots
+a torch with spare batteries
+a plastic plate, a cup and a spoon (no knives!)
+sun cream
+a water bottle (1 litre)
+
+Phones are collected on the first night and given back on the last day.",How many T-shirts?,3,How many pairs of socks?,5,What should you pack with the torch?,spare batteries;batteries,Which cutlery must you not bring?,knives;knife;a knife,How big is the water bottle?,1 litre;one litre;1 liter;1 l,When are phones collected?,the first night;on the first night;first night,How many jumpers?,2,,,,Original
+total-recall-005,B1,Locker codes,"Locker codes for the swimming gala volunteers:
+Ana – 4471
+Ben – 2093
+Chloe – 7310
+Dev – 5528
+Eva – 0864
+Finn – 3197
+
+Lockers 1 to 6 are in the same order as the names. Change your code after the gala.",What is Chloe’s code?,7310,Whose code is 5528?,Dev,What is Eva’s code?,0864,Which locker number is Ben’s?,2,What is Finn’s code?,3197,Whose code starts with a 4?,Ana,When should you change your code?,after the gala,,,,Original
+total-recall-006,B1,Tomato soup,"Ingredients (serves 4):
+1 kg ripe tomatoes
+2 onions
+3 cloves of garlic
+1 red pepper
+2 tablespoons of olive oil
+750 ml vegetable stock
+1 teaspoon of sugar
+a handful of fresh basil
+salt and black pepper
+
+Cook the onions for 10 minutes before adding the garlic. Simmer everything for 25 minutes, then blend.",How many people does it serve?,4,How much vegetable stock?,750 ml;750,How many cloves of garlic?,3,What colour is the pepper?,red,Which herb is in it?,basil;fresh basil,How long do the onions cook before the garlic goes in?,10 minutes;10 mins;10,How long does everything simmer?,25 minutes;25 mins;25,How much sugar?,1 teaspoon;a teaspoon;1 tsp,,Original
+total-recall-007,B2,Kitchen deliveries this week,"Monday: fruit and vegetables (Greenfields, 7.15)
+Tuesday: dry goods (Barton & Sons, 10.30)
+Wednesday: dairy (Hillside Farm, 6.45) and fish (Coastline, 11.00)
+Thursday: bread (Miller’s Bakery, 7.00)
+Friday: meat (Rowe Butchers, 8.20)
+
+Hillside’s invoice number this week is HF-2291. Any late delivery must be signed for by Mrs Okafor, not by the kitchen staff.",What is delivered on Tuesday?,dry goods,Which company delivers the fish?,Coastline,What time does the dairy arrive?,6.45;quarter to seven,On which day does the bread come?,Thursday;Thurs,Who delivers the meat?,Rowe Butchers;Rowe;Rowe’s,What is Hillside’s invoice number?,HF-2291;HF2291,Who must sign for a late delivery?,Mrs Okafor;Okafor,How many deliveries are there on Wednesday?,2,,Original
+total-recall-008,B2,Your train journey,"Leave Leeds 08.12 from platform 6.
+Change at York (arrive 08.38).
+Leave York 08.51 from platform 3.
+Arrive Newcastle 09.47.
+Coach C, seat 42 (window, facing forwards).
+Ticket reference: TRN-58K.
+
+If you miss the York connection, you may take any later train on the same route before 18.00.",Which platform do you leave Leeds from?,6,Where do you change trains?,York,What time does your train leave York?,08.51;8.51,Which coach are you in?,C;coach C,What is your seat number?,42,What time do you arrive in Newcastle?,09.47;9.47,What is the ticket reference?,TRN-58K;TRN58K,"If you miss the connection, a later train is fine until what time?",18.00;6 pm;6 p.m.,,Original
+total-recall-009,C1,Actions from the board meeting,"Actions from the meeting on 4 March:
+1. Leila to draft the new privacy policy by 18 March.
+2. Marcus to get three quotes for the roof repair, none above £12,000.
+3. The fundraising target for the summer fair rises from £3,500 to £4,200.
+4. Hannah replaces Tomasz as minutes secretary from April.
+5. The website redesign is postponed until September.
+6. Next meeting: 15 April, 6.30 p.m., Room B12.",Who is drafting the privacy policy?,Leila,By what date?,18 March;March 18,How many quotes must Marcus get?,3,What is the most a roof quote can be?,"£12,000;12,000;12000",What is the new fundraising target?,"£4,200;4,200;4200",Who will be the new minutes secretary?,Hannah,Until when is the website redesign postponed?,September;Sept,In which room is the next meeting?,B12;Room B12,,Original
+total-recall-010,C1,The sample log,"Samples logged on Tuesday:
+S-101: soil, field 3, 9.10, pH 6.2
+S-102: water, stream, 9.40, pH 7.4
+S-103: soil, field 1, 10.05, pH 5.8
+S-104: leaf, oak tree, 10.30, no pH test
+S-105: water, pond, 11.15, pH 8.1
+
+S-103 must be tested again, as its label was damaged. All samples are kept at 4°C in fridge B.",What kind of sample is S-104?,leaf;a leaf;leaves,Which sample came from the stream?,S-102;S102;102,What was the pH of the pond water?,8.1,Which sample must be tested again?,S-103;S103;103,Why must it be tested again?,its label was damaged;the label was damaged;label was damaged;damaged label;the label is damaged,At what temperature are the samples kept?,4°C;4 degrees;4,Which field did S-101 come from?,field 3;3,Which fridge are they in?,B;fridge B,,Original

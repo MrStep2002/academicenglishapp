@@ -1,0 +1,6 @@
+﻿id,level,title,passage,question,select_count,option1,option2,option3,option4,option5,option6,option7,option8,correct_options,explanation,source
+recall-example,A1,Ben’s school bag,"Ben packs his school bag on Sunday night. He puts in two pencils, a blue pen, a ruler and his maths book.
+
+He also packs a red water bottle and an apple. His sports shoes go in a different bag, because he has PE on Monday. He leaves his phone on the kitchen table.
+
+In the morning, he adds a cheese sandwich.",,3,Ben packs a blue pen.,Ben’s water bottle is red.,Ben has PE on Monday.,Ben packs three pencils.,Ben puts his phone in his bag.,Ben packs a banana.,Ben adds a ham sandwich in the morning.,,"[1,2,3]","Ben packs two pencils, not three. His phone stays on the kitchen table. He packs an apple, and the sandwich is cheese.",Original

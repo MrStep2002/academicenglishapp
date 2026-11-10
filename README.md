@@ -14,7 +14,7 @@ sidebar: English / 中文版) switches side. The landing page still shows when a
 - **English** (`en/`): all in English, starting at Intermediate (B1). Topics listed by subject, like the Chinese page:
   All subjects → Academic English Essentials; Media → Web design, Representation; English Language → Reading Comprehension, Descriptive language.
   Each topic → Vocabulary, Grammar or Reading → a game.
-  Reading is greyed out on phones ("Only available on desktop devices"); the split is automatic.
+  Every game plays on phones too (reading included, since 10 Nov 2026: teacher, "the kids can read on their phones if they want").
 - **Chinese version** (`zh/`): vocabulary games with Chinese support. Topics are listed by subject:
   All subjects → Academic English Essentials; Media → Web design, Representation; English Language → Descriptive language.
   Every topic has 8 word games: 中文 → English, Match the meaning, Choose the meaning, Type it, True or false, Odd one out, Speed round (60 s), Survival (3 lives),
@@ -36,7 +36,7 @@ sidebar: English / 中文版) switches side. The landing page still shows when a
 | `content/` | **All the content**: one folder per topic, one CSV file per kind of task, a level on every row. See `content/README.md` |
 | `en/essentials/`, `en/web-design/`, `en/representation/`, `en/descriptive/` | The English topics (each page loads the engine; `data-content` says which folder in `content/` it uses) |
 | `en/language/`, `en/media/` | Old addresses: forward to Descriptive language and the topic list |
-| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`), Big idea (`big-idea/`) and Note taking (`note-taking/`, `data-format="notes"`), with passages from `close-reading.csv`, `big-idea.csv` and `notes.csv` in `content/reading-comprehension/`. Computers only |
+| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`), Big idea (`big-idea/`), Note taking (`note-taking/`, `data-format="notes"`), Recall (`recall/`, `data-format="recall"`: read, I'm ready hides the passage, choose the true statements; a speed bonus) and Total Recall (`total-recall/`, `data-format="totalrecall"`: a list to remember, then typed answers), with passages from `close-reading.csv`, `big-idea.csv`, `notes.csv`, `recall.csv` and `total-recall.csv` in `content/reading-comprehension/` |
 | `tools/check_content.py` | Checks every content file before you push (`tools/check_reading.py` does the reading passages on their own) |
 | `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css`; `crossword.js`, the crossword maker (9 Nov 2026), also loaded by the teacher page (Crossword board game, starter and handout) |
 | `en/data/`, `zh/data/`, `en/reading/` | The old content files. Nothing uses them now: everything is in `content/` |
@@ -110,7 +110,7 @@ what the page already has, so the games and pages underneath are unchanged.
 |---|---|
 | Vocabulary | Match the meaning (meanings and synonym groups mixed, 31 Oct), Word or meaning, True or false |
 | Grammar | Fill the gap, Grammar Check (`right-wrong.csv`; called SPAG: Right or Wrong until 8 Nov), Spot the error (back in Grammar 31 Oct). Build the sentence moved to the Chinese version (25 Oct), and is back in Reading on the English side too (31 Oct) |
-| Reading (desktop only; Build the sentence also on phones) | Build the sentence (`builds.csv`, back on the English side 31 Oct), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
+| Reading | Build the sentence (`builds.csv`, back on the English side 31 Oct), In your own words (`extracts.csv`), Complete the text (`reads.csv`), Answer the question (`questions.csv`). Longer passages are on the Reading Comprehension pages (Close reading replaced Read and answer, 25 Oct) |
 | Games (the row across the bottom of a topic page) | General knowledge (`knowledge.csv`), Save the mouse, Word search (7 Nov 2026: the topic's words hidden in a square of letters; the list shows the words, or their meanings / their Chinese; size and directions follow the level; `playWordSearch` in app.js), Crossword (9 Nov 2026: the topic's words in a crossword; the clues are the meanings, on the Chinese side the Chinese or the meanings, with the letters in each word as in printed crosswords, (4,2,6); a word whose meaning contains the word itself is left out; `playCrossword` in app.js, the maker in `crossword.js`), Whack-a-word, Word Invaders, Word Snake. Word search is also on the Chinese topic pages (Games column, where "Wordsearch: coming soon" was), and Crossword under it |
 | Arcade (not on the menus yet) | Word Snake (`#play-snake`): steer into the word that matches the meaning. Whack-a-word (`#play-whack`): tap the word that matches the meaning as words pop up. Word Invaders (`#play-invaders`): fire at the right word before the formation lands. One minute each, using `words.csv`. Open one by adding its `#play-…` to an English topic page's address. Word Invaders and Whack-a-word take turns as the middle station of the Daily Circuit (`CIRCUIT_ARCADE` in app.js); Word Snake is left out for now |
 
