@@ -32,11 +32,11 @@ const load = () => { const d=read(KEY, {}); d.days=d.days||{}; return d; };
 // ----- Subjects the student studies (the switches): {en: {"en/web-design/index.html": "Web design"}, zh: {...}} -----
 // Academic English Essentials is always on, on both sides (31 Oct 2026, teacher: "so that it always appears in the Daily
 // Circuit"). It has no switch on the topic lists; it is added here, so every part of the circuit counts it as switched on.
-const ALWAYS = {en: {'en/essentials/index.html': 'Academic English Essentials'},
-                zh: {'zh/essentials/index.html': 'Academic English Essentials 学术英语基础'}};
+const ALWAYS = {en: {'en/essentials/index.html': 'Academic Essentials'},          // renamed 11 Nov 2026 (was Academic English Essentials)
+                zh: {'zh/essentials/index.html': 'Academic Essentials 学术基础'}};
 const switchedOn = side => (read(STUDY, {})[side]) || {};
-// Reading Comprehension and Maths can be ticked in Subjects (shell.js, 11 Nov 2026) so they are on the student's home page,
-// but they have no quick-fire games: the circuit leaves them out (circuit: false in en/engine/subjects.js)
+// Reading (always on) and Maths (ticked in Subjects) have no quick-fire games yet: the circuit leaves them out (circuit: false
+// in en/engine/subjects.js) until they have stations of their own (teacher, 11 Nov 2026: "include them in the daily circuit")
 function inCircuit(path){
   const S = window.AEA_SUBJECTS, s = S ? [...S.SUBJECTS, ...(S.ZH_SUBJECTS || [])].find(x=>x.path === path) : null;
   if(s) return s.circuit !== false && !s.soon;

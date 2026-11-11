@@ -6,8 +6,8 @@
      For teachers renamed Staff Room.)
    - Subjects (11 Nov 2026, teacher: in place of Home, "people know to click on the mouse to go home"): a panel that pops out
      beside the sidebar with every subject there is, in its area, each with a tick box: the subjects ticked are the student's
-     subjects (My subjects, the home page) and the ones the Daily Circuit uses (aea:studying:v1, as before). Reading
-     Comprehension and Maths can be ticked but are not in the Daily Circuit (circuit.js leaves them out). Any element with
+     subjects (My subjects, the home page) and the ones the Daily Circuit uses (aea:studying:v1, as before). Academic
+     Essentials and Reading are always ticked (greyed); no grey notes under the names (teacher, 11 Nov 2026). Any element with
      data-open-subjects opens it (the home page, the Daily Circuit page). My classes and the Subjects menu that was in the
      top bar are gone (11 Nov 2026), and the sidebar is tighter.
    - the top bar: the path on game pages (crumbs), then the days in a row, the points (points.js draws them) and the Log in
@@ -173,7 +173,7 @@ function sideHtml(){
     <div class="aea-sec"><p class="aea-sec-h">${L('My subjects', '我的科目')}</p>
       <ul class="aea-list aea-mine">${mine.map(s=>{ const on = here && here.path === s.path;
         return `<li><a class="aea-nav aea-subject${on?' on':''}" href="${esc(ROOT + s.path)}"${on?' aria-current="true"':''}><span class="aea-dot" aria-hidden="true"><i style="background:${SUBJ.areaOf(s.area).color}"></i></span><span>${nameOf(s)}</span></a></li>`; }).join('')}</ul>
-      ${mine.length < 2 ? `<p class="aea-hint"><button type="button" class="aea-linkbtn" data-open-subjects>${L('Choose your subjects', '选择你的科目')}</button></p>` : ''}</div>
+      ${!mine.some(s=>!s.always) ? `<p class="aea-hint"><button type="button" class="aea-linkbtn" data-open-subjects>${L('Choose your subjects', '选择你的科目')}</button></p>` : ''}</div>
     <div class="aea-sec"><p class="aea-sec-h">${L('About', '关于')}</p>
       <ul class="aea-list">${soon(L('Who are we?', '我们是谁？'), 'who')}${link(home + '#suggest', L('Got an idea?', '有想法吗？'), 'idea', false)}</ul></div>
   </nav>`;
@@ -191,11 +191,10 @@ function setTicked(s, on){
 }
 function pickHtml(){
   const areas = SUBJ.AREAS.filter(a=>LIST.SUBJECTS.some(s=>s.area === a.key && !s.soon));
-  const row = s => { const off = s.circuit === false, id = 'aea-pk-' + norm(s.path).replace(/[^a-z0-9]+/gi, '-');
+  const row = s => { const id = 'aea-pk-' + norm(s.path).replace(/[^a-z0-9]+/gi, '-');
     return `<li class="aea-pick-row${s.always ? ' always' : ''}">
       <input type="checkbox" id="${id}" data-pick="${esc(s.path)}"${s.always || isTicked(s) ? ' checked' : ''}${s.always ? ' disabled' : ''}>
-      <label for="${id}"><span class="nm">${nameOf(s)}</span>${s.always ? `<span class="note">${L('Always in the Daily Circuit', '一直包含在每日挑战中')}</span>`
-        : off ? `<span class="note">${L('Not in the Daily Circuit', '不在每日挑战中')}</span>` : ''}</label>
+      <label for="${id}"><span class="nm">${nameOf(s)}</span>${s.always ? `<span class="aea-sr"> ${L('(everyone has this)', '（所有人都有）')}</span>` : ''}</label>
       <a class="aea-pick-go" href="${esc(ROOT + s.path)}" title="${esc(A('Open ' + s.name, '打开' + (s.zh || s.name)))}"><span class="aea-sr">${ZH ? L('Open ' + esc(s.name), '打开' + esc(s.zh || s.name)) : 'Open ' + esc(s.name)}</span>${icon('right', 18)}</a></li>`; };
   return `<div class="aea-pick-head"><h2 id="aea-pick-h">${L('Subjects', '科目')}</h2>
       <button type="button" class="aea-pick-x" data-pick-close aria-label="${A('Close', '关闭')}">${icon('close', 22)}</button></div>

@@ -3291,6 +3291,8 @@ function playCheeseRun(){
 // jump over the right one, and the game is over (teacher: "Jumping over the right word ends the game, yes; start slow").
 // The jump is forgiving: tap any time in the last 0.9 s before a block and he leaps high and far enough to clear it (the
 // top of the jump over the middle of the block); tap earlier and he only hops. Speed creeps up with the score, with a cap.
+// No breather after a right word (teacher, 11 Nov: "I want the sense of panic!"): the words behind it don't fade, they stay
+// on their way and count against the new meaning, and the new meaning's words follow straight on.
 // Picture frames scroll past on the wall now and then, with a saying in them (teacher: "The idea is that the frames are a
 // little distraction - stay focused kids!"). One at a time; the wall moves at half the floor's speed.
 // In the Daily Circuit and class games: one minute; a mistake makes him stumble, and the meaning comes round again.
@@ -3399,9 +3401,10 @@ function playMouseDash(){
     const cxp=b.x+b.bw/2, cyp=gy-b.bh/2;
     if(!calm) fx.push({kind:'crumbs', x:cxp, y:cyp, t0:now, bits:Array.from({length:10},(_,i)=>({a:i/10*Math.PI*2+Math.random()*0.5, d:H*(0.08+Math.random()*0.07), r:H*(0.008+Math.random()*0.007)}))});
     fx.push({kind:'pts', x:cxp, y:gy-b.bh, t0:now, text:'+'+gain});
-    blocks.forEach(o=>{ if(o.state==='live'){ o.state='poof'; o.t=now; } });   // the old meaning's other words go
     tc=Math.max(1.8, tc*0.97);
-    newQuestion(); spawnAt=now+700;
+    // The words already on their way keep coming, now judged against the new meaning (usually wrong, now and then the
+    // new right word), and the new meaning's words follow on with no pause (teacher: "I want the sense of panic!")
+    newQuestion(); blocks.forEach(o=>{ if(o.state==='live') o.right=o.w===q.w || o.w.w===q.w.w; });
   }
   function wrongWord(b, now){   // ran into a wrong word: the cheese goes off
     b.state='bad'; b.t=now;
@@ -3504,7 +3507,7 @@ function playMouseDash(){
   // A word on its block of cheese: holes near the ends (clear of the word), a bite out of the top corner.
   // Gone off (a wrong word he ran into): mould and stink lines. The right word he jumped over: a green ring for a moment.
   function drawBlock(b, now){
-    let alpha=1; if(b.state==='poof') alpha=Math.max(0, 1-(now-b.t)/300); if(alpha<=0) return;
+    const alpha=1;
     const x=b.x, y=gy-b.bh, w=b.bw, h=b.bh, r=Math.min(h*0.3, H*0.05), lw=Math.max(2, H*0.009);
     cx.font=font(fontPx); const tw=Math.max(...b.lines.map(l=>cx.measureText(l).width)), margin=(w-tw)/2;
     const br=Math.min(H*0.035, h*0.25), bx=x+w-Math.max(r*0.9, br*1.4), by=y;
@@ -3568,7 +3571,7 @@ function playMouseDash(){
       dist+=v*dt; blocks.forEach(b=>{ b.x-=v*dt; }); if(fr) fr.x-=v*0.5*dt;
       if(airborne && now>=jumpT0+jumpDur) airborne=false;
       collide(now); if(!over){ spawn(now); frames(now); }
-      blocks=blocks.filter(b=>b.x+b.bw>-30 && b.state!=='eaten' && !(b.state==='poof' && now-b.t>300));
+      blocks=blocks.filter(b=>b.x+b.bw>-30 && b.state!=='eaten');
     }
     drawRoom(); blocks.forEach(b=>drawBlock(b, now)); drawMouse(now); drawFx(now);
     requestAnimationFrame(tick);

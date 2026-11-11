@@ -4,7 +4,7 @@
    then add one line below in its area. Nothing else needs changing.
    - path: the page, from the site's top folder (the same address the Daily Circuit switches use)
    - area: one of AREAS (the order of AREAS is the order on the pages)
-   - always: always in the Daily Circuit (Academic English Essentials); no switch
+   - always: everyone has it, always ticked (Academic Essentials; Reading since 11 Nov 2026, teacher: "everyone has to do that")
    - circuit: false = not in the Daily Circuit: Reading Comprehension, Maths (they can be ticked in Subjects, so they are on
      the student's home page, but circuit.js leaves them out of the circuit)
    - soon: shown greyed as "Coming soon", no page yet
@@ -22,8 +22,9 @@ const AREAS = [
   {key: 'sci',   name: 'Science', zh: '科学', color: '#11694a'}
 ];
 const SUBJECTS = [
-  {path: 'en/essentials/index.html',            name: 'Academic English Essentials', area: 'every', always: true},
-  {path: 'en/reading-comprehension/index.html', name: 'Reading Comprehension', area: 'eng', circuit: false},
+  // Names (11 Nov 2026, teacher): "Academic Essentials" (was Academic English Essentials), "Reading" (was Reading Comprehension)
+  {path: 'en/essentials/index.html',            name: 'Academic Essentials', area: 'every', always: true},
+  {path: 'en/reading-comprehension/index.html', name: 'Reading',               area: 'eng', always: true, circuit: false},
   {path: 'en/descriptive/index.html',           name: 'Descriptive language',  area: 'eng'},
   {path: 'en/mockingbird/index.html',           name: 'To Kill a Mockingbird', area: 'eng'},   // English version only (8 Nov 2026)
   // Listening: hidden until it is ready (26 Oct 2026). The page still works at en/listening/. To show it, remove the // below.
@@ -38,9 +39,9 @@ const SUBJECTS = [
   {path: '',                                    name: 'Biology',               area: 'sci', soon: true}
 ];
 // The Chinese version (zh/): Essentials, the topics that have their Chinese, and Maths (its pages are in both languages).
-// Mockingbird and Reading Comprehension are English only.
+// Mockingbird and Reading are English only.
 const ZH_SUBJECTS = [
-  {path: 'zh/essentials/index.html',        name: 'Academic English Essentials', zh: '学术英语基础', area: 'every', always: true},
+  {path: 'zh/essentials/index.html',        name: 'Academic Essentials', zh: '学术基础', area: 'every', always: true},
   {path: 'zh/descriptive/index.html',       name: 'Descriptive language', zh: '描写性语言', area: 'eng'},
   {path: 'zh/web-design/index.html',        name: 'Web design',           zh: '网页设计',   area: 'media'},
   {path: 'zh/representation/index.html',    name: 'Representation',       zh: '再现',       area: 'media'},
