@@ -83,3 +83,65 @@
 /* The words chosen, in the side panel: just the word and its Chinese */
 #ho-picked li { padding-top: 4px; padding-bottom: 4px; }
 .ho-page table.hp-grid { width: auto; }
+
+/* ---------- Homework (10 Nov 2026, homework.js): one topic, tick the tasks, swap any question ---------- */
+.hw-tasks { display: flex; flex-direction: column; gap: 6px; }
+.hw-col { margin-top: 10px; }
+.hw-col:first-child { margin-top: 2px; }
+.hw-task { display: flex; gap: 10px; align-items: center; padding: 7px 10px; border-radius: 10px; border: 2px solid var(--line); background: var(--bg); }
+.hw-task label { flex: 1; min-width: 0; display: flex; gap: 8px; align-items: flex-start; cursor: pointer; font-size: .95rem; line-height: 1.3; }
+.hw-task input[type=checkbox] { margin-top: 3px; flex: none; width: 17px; height: 17px; accent-color: var(--ink); }
+.hw-task .note { display: block; font-size: .84rem; }
+.hw-task.on { border-color: var(--ink); }
+.hw-task.off { opacity: .55; }
+.hw-task.off label { cursor: default; }
+.hw-num { flex: none; font: inherit; font-size: .88rem; padding: 5px 8px; border-radius: 8px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); }
+.hw-sum { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 4px; font-size: .95rem; }
+.hw-sum a { color: var(--ink); font-weight: 700; }
+.hw-sum .mt-none { list-style: none; margin-left: -1.3em; color: var(--muted); }
+.hw-sheet-card { margin-top: 16px; }
+.hw-show { display: inline-flex; gap: 6px; align-items: center; font-weight: 700; font-size: .92rem; cursor: pointer; }
+.hw-sheet { display: flex; flex-direction: column; gap: 22px; }
+.hw-t { border-top: 2px solid var(--line); padding-top: 14px; scroll-margin-top: 80px; }
+.hw-t:first-child { border-top: 0; padding-top: 0; }
+.hw-th { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; }
+.hw-th h3 { margin: 0; font-size: 1.12rem; }
+.hw-how { margin: 4px 0 10px; color: var(--muted); font-size: .92rem; }
+.hw-qs { margin: 0; padding-left: 1.6em; display: flex; flex-direction: column; gap: 0; }
+.hw-q { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.hw-q::after { content: ""; display: block; clear: both; }
+.hw-q:last-child { border-bottom: 0; }
+.hw-q::marker { font-weight: 700; }
+.hw-q { display: list-item; }
+.hw-qb { display: inline-block; width: calc(100% - 92px); vertical-align: top; line-height: 1.45; }
+.hw-swap { float: right; margin-left: 8px; padding: 2px 9px !important; }
+.hw-pos { color: var(--muted); font-size: .86rem; }
+.hw-zh { font-family: var(--zh); font-size: 1.05rem; }
+.hw-pick { color: var(--muted); font-weight: 700; margin-left: 6px; white-space: nowrap; }
+.hw-blank { display: inline-block; width: 6em; border-bottom: 1.5px solid currentColor; margin: 0 3px; vertical-align: -2px; }
+.hw-gapn { font-weight: 700; font-size: .85em; }
+.hw-stem { font-size: .85em; letter-spacing: .03em; }
+.hw-text { margin: 6px 0; line-height: 1.6; }
+.hw-opts { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 2px 18px; }
+.hw-ticks { list-style: none; margin: 4px 0 0; padding: 0; }
+.hw-wc { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.hw-wc li { display: flex; flex-wrap: wrap; gap: 2px 16px; }
+.hw-sub { margin-top: 6px; }
+.hw-box { margin-top: 8px; padding: 8px 12px; border: 1.5px solid var(--line); border-radius: 10px; }
+.hw-box .hw-opts { flex-direction: column; }
+.hw-piece { display: inline-block; margin: 2px 0; padding: 1px 8px; border-radius: 6px; background: var(--web-soft); font-weight: 700; }
+.hw-puz { display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start; }
+.hw-puz .hw-clues { flex: 1 1 320px; }
+.hw-grid { border-collapse: collapse; flex: none; }
+.hw-grid td { width: 22px; height: 22px; padding: 0; border: 1px solid var(--line); text-align: center; font-weight: 700; font-size: 13px; position: relative; text-transform: none; letter-spacing: 0; white-space: normal; }
+.hw-grid.hw-xw td { border: 0; }
+.hw-grid.hw-xw td.on { border: 1.5px solid var(--ink); background: var(--card); }
+.hw-grid.hw-xw td i { position: absolute; left: 1px; top: 0; font-size: 8px; font-style: normal; line-height: 1; color: var(--muted); }
+/* The answers: shown on the page while "Show the answers" is ticked (never in the homework file) */
+.hw-a, .hw-a2 { display: none; }
+.show-ans .hw-a { display: block; margin-top: 2px; color: var(--web); font-size: .9rem; }
+.show-ans .hw-inline .hw-a { display: inline; margin: 0 0 0 14px; }   /* one-line questions: the answer on the same line */
+.show-ans .hw-a2 { display: inline; color: var(--web); }
+.show-ans .hw-right { color: var(--web); font-weight: 700; }
+.show-ans .hw-err { background: var(--rep-soft); border-radius: 3px; }
+.hw-why { color: var(--muted); }

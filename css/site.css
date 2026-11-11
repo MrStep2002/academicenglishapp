@@ -624,7 +624,7 @@ html.aea-shelled #app[data-view="progress"] { gap: 26px; }
 .fc { position: relative; z-index: 4; perspective: 1600px; cursor: pointer; }
 .fc-inner { display: grid; transition: transform .5s cubic-bezier(.3,.7,.3,1); transform-style: preserve-3d; }
 .fc.flipped .fc-inner { transform: rotateY(180deg); }
-.fc-face { grid-area: 1 / 1; min-height: 300px; display: flex; flex-direction: column; gap: 14px; padding: 26px 30px 70px; background: var(--sh-card); border: 1px solid var(--sh-fc-edge);
+.fc-face { grid-area: 1 / 1; min-height: max(300px, var(--fc-h, 0px)); display: flex; flex-direction: column; gap: 14px; padding: 26px 30px 70px; background: var(--sh-card); border: 1px solid var(--sh-fc-edge);
   border-radius: 16px; box-shadow: 0 8px 24px rgba(21,25,53,.08); color: var(--sh-ink); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
 .fc-back { transform: rotateY(180deg); }
 .fc-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -805,7 +805,7 @@ html.aea-shelled body.aea-login { background: var(--sh-bg); color: var(--sh-ink)
   .fc-area { padding: 16px; }
   .fc-stack, .fc-nav { padding-right: 0; }
   .fc-layer { display: none; }
-  .fc-face { min-height: 260px; padding: 20px 20px 66px; }
+  .fc-face { min-height: max(260px, var(--fc-h, 0px)); padding: 20px 20px 66px; }
   .fc-word { font-size: 40px; }
   .fc-word.sm { font-size: 26px; }
   .fc-def { font-size: 19px; }

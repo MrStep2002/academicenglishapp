@@ -340,25 +340,8 @@ function actXML(a, n, ans){
     return heading(n, d) + table(w, [{h: cmT(0.62), header: true, cells: hd.map(t => ({x: para(run(t, {b: true, sz: 9.5}), {jc: t === '✓' ? 'center' : ''}), shade: 'E8EAF2'}))}]
       .concat(a.items.map(x => ({h: cmT(0.72), cells: [{x: para(run(x.w, {b: true, sz: 11}))}, {}, {}, {}, {}]}))));
   }
-  if (a.k === 'ws') {
-    const cell = 340, on = new Set(ans ? a.words.flatMap(x => x.cells) : []);
-    const grid = table(Array(a.size).fill(cell), Array.from({length: a.size}, (_, r) => ({h: cell, exact: true,
-      cells: a.b[r].split('').map((ch, c) => ({x: para(run(ch, {b: true, sz: 11, font: 'Arial'}), {jc: 'center'}), shade: on.has(r * a.size + c) ? 'FFE766' : ''}))})), {pad: 0, padV: 0, color: 'BBBBBB'});
-    const left = a.size * cell + 200, clues = a.words.map((x, i) => para([run(ans ? '☑ ' : '☐ ', {sz: 11}), run(x.zh, {sz: 11}), run('  (' + x.n + ')', {sz: 9, color: GREY}),
-      ans ? run('   ' + x.w, {b: true, color: ANS, sz: 10.5}) : ''], {after: 70})).join('');
-    return heading(n, d) + table([left, WIDTH - left], [{cells: [{x: grid + para(''), va: 'top'}, {x: clues, va: 'top'}]}], {borders: false, pad: 0});
-  }
-  if (a.k === 'xw') {
-    // The grid: a square for each letter (its number small in the corner; the answers in blue on the answer sheet), nothing elsewhere
-    const cell = 340, grid = table(Array(a.w).fill(cell), Array.from({length: a.h}, (_, r) => ({h: cell, exact: true, cells: Array.from({length: a.w}, (_, c) => {
-      const k = r * a.w + c, ch = a.cells[k]; if (!ch) return {x: para('')};
-      return {box: true, va: 'top', x: para(a.nums[k] ? run(String(a.nums[k]), {sz: 5.5, color: '333333'}) : '', {line: 120, exact: true, ind: 30}) +
-        para(ans ? run(ch, {b: true, sz: 10.5, color: ANS}) : '', {jc: 'center', line: 210, exact: true})}; })})), {borders: false, pad: 0, padV: 0});
-    const list = (h, l) => para(run(h, {b: true, sz: 10.5}), {before: 40, after: 50}) + l.map(x => para([run(x.num + '  ', {b: true, sz: 10.5}), run(x.zh, {sz: 11}), run('  ' + x.en, {sz: 9, color: GREY}),
-      ans ? run('   ' + x.w, {b: true, color: ANS, sz: 10.5}) : ''], {after: 60, ind: 0})).join('');
-    const left = a.w * cell + 260;
-    return heading(n, d) + table([left, WIDTH - left], [{cells: [{x: grid + para(''), va: 'top'}, {x: list('Across 横向', a.across) + list('Down 纵向', a.down), va: 'top'}]}], {borders: false, pad: 0});
-  }
+  if (a.k === 'ws') return heading(n, d) + wsXML(a, ans);
+  if (a.k === 'xw') return heading(n, d) + xwXML(a, ans);
   if (a.k === 'gap') {
     const items = a.items.map((x, i) => { const [pre, post] = x.s.split('___');
       return para([run((i + 1) + '.  '), run(pre), ans ? run(x.a, {b: true, u: true, color: ANS}) : run('______________'), run(post || '')], {after: 110, line: 264, ind: 0}); }).join('');
@@ -372,6 +355,27 @@ function actXML(a, n, ans){
       table([WIDTH], [{h: cmT(0.85), cells: [{line: true, va: 'bottom'}]}, {h: cmT(0.85), cells: [{line: true, va: 'bottom'}]}], {borders: false, pad: 0})).join('');
   }
   return '';
+}
+// The word search and the crossword as Word tables (also used by the Homework sheets: homework.js)
+function wsXML(a, ans){
+  const cell = 340, on = new Set(ans ? a.words.flatMap(x => x.cells) : []);
+  const grid = table(Array(a.size).fill(cell), Array.from({length: a.size}, (_, r) => ({h: cell, exact: true,
+    cells: a.b[r].split('').map((ch, c) => ({x: para(run(ch, {b: true, sz: 11, font: 'Arial'}), {jc: 'center'}), shade: on.has(r * a.size + c) ? 'FFE766' : ''}))})), {pad: 0, padV: 0, color: 'BBBBBB'});
+  const left = a.size * cell + 200, clues = a.words.map((x, i) => para([run(ans ? '☑ ' : '☐ ', {sz: 11}), run(x.zh, {sz: 11}), run('  (' + x.n + ')', {sz: 9, color: GREY}),
+    ans ? run('   ' + x.w, {b: true, color: ANS, sz: 10.5}) : ''], {after: 70})).join('');
+  return table([left, WIDTH - left], [{cells: [{x: grid + para(''), va: 'top'}, {x: clues, va: 'top'}]}], {borders: false, pad: 0});
+}
+function xwXML(a, ans, heads){
+  heads = heads || ['Across 横向', 'Down 纵向'];
+  // The grid: a square for each letter (its number small in the corner; the answers in blue on the answer sheet), nothing elsewhere
+  const cell = 340, grid = table(Array(a.w).fill(cell), Array.from({length: a.h}, (_, r) => ({h: cell, exact: true, cells: Array.from({length: a.w}, (_, c) => {
+    const k = r * a.w + c, ch = a.cells[k]; if (!ch) return {x: para('')};
+    return {box: true, va: 'top', x: para(a.nums[k] ? run(String(a.nums[k]), {sz: 5.5, color: '333333'}) : '', {line: 120, exact: true, ind: 30}) +
+      para(ans ? run(ch, {b: true, sz: 10.5, color: ANS}) : '', {jc: 'center', line: 210, exact: true})}; })})), {borders: false, pad: 0, padV: 0});
+  const list = (h, l) => para(run(h, {b: true, sz: 10.5}), {before: 40, after: 50}) + l.map(x => para([run(x.num + '  ', {b: true, sz: 10.5}), run(x.zh, {sz: 11}), run('  ' + x.en, {sz: 9, color: GREY}),
+    ans ? run('   ' + x.w, {b: true, color: ANS, sz: 10.5}) : ''], {after: 60, ind: 0})).join('');
+  const left = a.w * cell + 260;
+  return table([left, WIDTH - left], [{cells: [{x: grid + para(''), va: 'top'}, {x: list(heads[0], a.across) + list(heads[1], a.down), va: 'top'}]}], {borders: false, pad: 0});
 }
 function handoutXML(title, topic, m, ans){
   let body = '';
@@ -441,4 +445,6 @@ function zip(files){
   e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, size, true); e.setUint32(16, off, true);
   return new Blob([...parts, ...central, new Uint8Array(e.buffer)], {type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
 }
+// Shared with the Homework sheets (homework.js, 10 Nov 2026): the Word file and its parts
+AEA_HANDOUT.lib = {run, para, table, docx, download, X, WIDTH, cmT, GREY, ANS, twoUp, COLS, wsXML, xwXML};
 })();

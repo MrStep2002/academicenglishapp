@@ -1,0 +1,38 @@
+CHEESE RUN: READY BUILD (made overnight, 11 Nov 2026)
+
+What this folder is
+-------------------
+This folder holds the finished Cheese Run version of Word Snake. It is NOT live.
+The site's real files have not been changed. These 41 files sit in the folder
+at the same paths they will have in the site.
+
+To put it in place, tell Claude "put Cheese Run in place". Claude will check
+first that the live files still match what it last wrote, then copy these over.
+You could also copy everything in this folder (except this note) over the repo
+root by hand.
+
+What changes
+------------
+- en/engine/app.js: Word Snake becomes Cheese Run (art, faces, crumbs, sound
+  switch, end picture). The game rules and scoring are unchanged.
+- en/engine/styles.css: overlay, sign and end-picture styles.
+- images/arcade/cheese-run/: 9 WebP images (floor + 8 mice), about 150 KB.
+- audio/arcade/crunch.mp3: your crunch, trimmed and made quieter (5 KB).
+- README.md, status/index.html, status/games.html: renamed to Cheese Run.
+- 31 html pages: version tags only (app.js / styles.css ?v=2026-11-11a), so
+  browsers pick up the new engine.
+
+Checked
+-------
+Bot play, every face, crumbs, mouldy cheese, game-over and New-best end
+screens, Chinese side, dark mode, iPhone size, sound off by default, and a
+24-page smoke test. No console errors.
+
+Still open
+----------
+1. Name: "Cheese Run" (奶酪快跑): OK?
+2. Crunch sound: where is it from, and can we use it?
+3. Five more sounds wanted: yuck, ouch, squeak, game over, new best.
+4. Hungry eye slant: 22 degrees is in; 15 and 30 previews sent.
+5. Your earlier changes (flip cards, report thanks, Homework) are on your Mac
+   but not committed yet. Commit them before or with this build, as you like.

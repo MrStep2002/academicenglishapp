@@ -12,8 +12,8 @@
 <link rel="stylesheet" href="../css/home.css?v=2026-11-03b">
 <link rel="stylesheet" href="board.css?v=2026-11-09a">
 <link rel="stylesheet" href="starters.css?v=2026-11-10a">
-<link rel="stylesheet" href="handouts.css?v=2026-11-09a">
-<link rel="stylesheet" href="../css/site.css?v=2026-11-09a">
+<link rel="stylesheet" href="handouts.css?v=2026-11-10a">
+<link rel="stylesheet" href="../css/site.css?v=2026-11-10a">
 <style>
   .home { max-width: 1040px; }
   .card { background: var(--card); border: 2px solid var(--line); border-radius: 18px; padding: 20px; display: flex; flex-direction: column; gap: 14px; }
@@ -130,7 +130,8 @@
 <script src="../en/engine/crossword.js?v=2026-11-09a"></script>
 <script src="board.js?v=2026-11-10a"></script>
 <script src="starters.js?v=2026-11-10a"></script>
-<script src="handouts.js?v=2026-11-09b"></script>
+<script src="handouts.js?v=2026-11-10a"></script>
+<script src="homework.js?v=2026-11-10a"></script>
 <script src="../en/engine/subjects.js?v=2026-11-08v"></script>
 <script src="../en/engine/shell.js?v=2026-11-09a" data-staff></script>
 <script>
@@ -144,9 +145,10 @@
    Suggestions (3 Nov 2026): #/suggestions lists the ideas students sent from the suggestions box on the topic lists.
    Board games (6 Nov 2026): #/board… a game for the whole class on the projector (board.js, board.css).
    Handouts (8 Nov 2026): #/handouts: a two-sided A4 sheet for learning key words, downloaded as a Word file (handouts.js, handouts.css).
+   Homework (10 Nov 2026): #/handouts/homework: one topic, tick the tasks, swap any question; a Word file and its answers (homework.js).
    Starters (7 Nov 2026): #/starters… a few minutes of questions on the projector at the start of a lesson (starters.js, starters.css).
    The Staff Room (9 Nov 2026, teacher): the main view is four lists, Classes, Starters (Build the Board, Match Up, Gap Fill,
-   Connecting Wall, Wordsearch), Handouts (Vocab) and Board Games (Squaring Up, Don't Say It!, Hints, Categories); Reports
+   Connecting Wall, Wordsearch), Handouts (Vocab, Homework) and Board Games (Squaring Up, Don't Say It!, Hints, Categories); Reports
    and Suggestions are for the admin only (the server says who: server/admin.js make-admin), in a strip under the lists.
    Shared classes (9 Nov 2026, teacher: "I just want her to be able to connect with my class"): on a class page the teacher
    who made the class can share it with another teacher (their username) or stop sharing it; the other teacher sees it in
@@ -246,7 +248,7 @@ function showClasses(){
       box('Starters', '#1a5cb0', item('#/starters', 'Build the Board') + item('#/starters/match-up', 'Match Up') + item('#/starters/gap-fill', 'Gap Fill') +
         item('#/starters/connecting-wall', 'Connecting Wall') + item('#/starters/word-search', 'Wordsearch') + item('#/starters/crossword', 'Crossword') +
         item('#/starters/recall', 'Recall') + item('#/starters/total-recall', 'Total Recall')) +
-      box('Handouts', '#11694a', item('#/handouts', 'Vocab')) +
+      box('Handouts', '#11694a', item('#/handouts', 'Vocab') + item('#/handouts/homework', 'Homework')) +
       box('Board Games', '#9a4a00', item('#/board/new/squares', 'Squaring Up') + item('#/board/new/taboo', 'Don\'t Say It!') + item('#/board/new/hints', 'Hints') + item('#/board/new/cats', 'Categories') + item('#/board/new/xw', 'Crossword'),
         '<p class="sr-foot"><a href="#/board">Your saved board games</a></p>') +
       '</div>' +
@@ -814,6 +816,7 @@ function route(){
   if (/^#\/board(\/|$)/.test(h) && window.AEA_BOARD) return AEA_BOARD.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
   if (/^#\/starters(\/|$)/.test(h) && window.AEA_START) return AEA_START.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
   if (h === '#/handouts' && window.AEA_HANDOUT) return AEA_HANDOUT.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
+  if (h === '#/handouts/homework' && window.AEA_HOMEWORK) return AEA_HOMEWORK.route(h, {view: view, setTitle: setTitle, header: header, touch: stillHere});
   showClasses();
 }
 addEventListener('hashchange', route);

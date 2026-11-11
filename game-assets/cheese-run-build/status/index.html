@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<title>Site content · Academic English App</title>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../en/engine/fonts.css">
+<link rel="stylesheet" href="../en/engine/styles.css">
+<style>
+/* Site content: a page for the teacher, not linked from anywhere. Everything on it is counted from the content files
+   each time it loads, so refreshing it shows the content as it is now. */
+.st h1{font-family:var(--f-display);font-weight:400;font-size:clamp(32px,5vw,44px);margin:6px 0 4px}
+.st .sub{color:var(--ink-2);margin:0 0 6px;font-size:15px}
+.st .when{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:22px}
+.st h2{font-family:var(--f-display);font-weight:400;font-size:26px;margin:34px 0 4px}
+.st .meta{color:var(--ink-2);font-size:14px;margin:0 0 10px}
+.st table{width:100%;border-collapse:collapse;font-size:14px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.st th,.st td{border-bottom:1px solid var(--rule);padding:6px 8px;text-align:left;vertical-align:top}
+.st thead th{background:var(--blue-soft);font-weight:700;font-size:13px}
+.st td.n,.st th.n{text-align:center;font-variant-numeric:tabular-nums;width:46px}
+.st td.tot{font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink-2);min-width:140px}
+.st tr.sect td{background:var(--paper);font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);padding:5px 8px}
+.st td.gap{background:var(--mark);background:color-mix(in srgb, var(--mark) 35%, var(--sheet));color:var(--ink-2)}
+.st tr.off td{color:var(--ink-2)}
+.st tr.off td.gap{background:none}
+.st .k{font-family:var(--f-mono);font-size:11px;color:var(--ink-2);white-space:nowrap}
+.st .s{font-weight:700;white-space:nowrap}
+.st .s-all{color:var(--good)} .st .s-some{color:#9a6700} .st .s-none{color:var(--bad)} .st .s-off{color:var(--ink-2)}
+@media (prefers-color-scheme: dark){.st .s-some{color:#e3b341}}
+.st .notes{color:var(--ink-2);font-size:14px;margin-top:10px;padding-left:20px}
+.st .notes li{margin:3px 0}
+.st .err{color:var(--bad)}
+.st .scroll{overflow-x:auto}
+/* Areas (4 Nov 2026): one button per area of the topic list; only the chosen area's files are read */
+.st .areas{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 6px}
+.st .areas button{font:inherit;font-size:14px;font-weight:700;padding:7px 14px;border-radius:999px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink);cursor:pointer}
+.st .areas button:hover{border-color:var(--ink)}
+.st .areas button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.st td.wait{color:var(--ink-2);font-size:13px;text-align:left}
+.st .area-h{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);margin:44px 0 -18px;padding-top:10px;border-top:2px solid var(--rule)}
+.st .retry{margin-left:6px;font-size:13px;padding:2px 10px}
+/* Each game's file and a link to play it (8 Nov 2026) */
+.st .nt{color:var(--ink-2);font-size:12.5px}
+.st .fx{display:block;font-size:12.5px;margin-top:2px;color:var(--ink-2)}
+.st .fx a{color:var(--ink-2);white-space:nowrap}
+.st .fx a:first-child{font-family:var(--f-mono);font-size:12px;color:var(--ink);font-weight:600}
+.st .guide{margin-top:-2px}
+.st .guide a{color:var(--ink);font-weight:700}
+@media (max-width:640px){.st td.n,.st th.n{width:auto;padding:6px 4px}.st .k{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap st" id="st">
+  <p class="mono">Academic English App · not linked from the site</p>
+  <h1>Site content</h1>
+  <p class="sub">Every subject, every game it could have, and how many questions each game has at each level. Choose an area: only its files are read, so it loads quickly. Counted from the content files each time: refresh to see the latest.</p>
+  <p class="sub guide">Which file makes which game, and how each one is played: <a href="games.html">Games and files</a>.</p>
+  <div class="areas" id="areas" role="group" aria-label="Area"></div>
+  <div class="when"><span id="when">Reading the topic list…</span><button class="ghost" type="button" onclick="location.reload()">Refresh</button></div>
+  <div id="out"><p class="notice loading">Reading the content files…</p></div>
+</div>
+<script src="../en/engine/subjects.js?v=2026-11-08v"></script>
+<script>
+(function(){
+'use strict';
+const ROOT = new URL('../', location.href).href;   // the site's top folder
+const LEVELS = [['A1','F','Foundation'], ['A2','F+','Foundation+'], ['B1','I','Intermediate'], ['B2','I+','Intermediate+'], ['C1','A','Advanced']];
+const BY_NAME = {'foundation':1, 'foundation+':2, 'intermediate':3, 'intermediate+':4, 'advanced':5};
+const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','evidence','translation','word-choice','open-cloze','word-formation'];   // the last three: Use of English (10 Nov 2026), only in some folders so far
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => Number(n).toLocaleString('en-GB');
+
+// The same CSV reading and level rules as the games (en/engine/app.js)
+function parseCSV(text){
+  const rows=[]; let row=[], cell='', q=false; text=text.replace(/^﻿/,'');
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ cell+='"'; i++; } else q=false; } else cell+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){ row.push(cell); cell=''; }
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n') i++; row.push(cell); rows.push(row); row=[]; cell=''; }
+    else cell+=c; }
+  if(cell!==''||row.length){ row.push(cell); rows.push(row); }
+  // (10 Nov 2026, as the games) empty rows above the headings are skipped; a row that repeats the headings is left out
+  while(rows.length && !rows[0].some(x=>x.trim())) rows.shift();
+  const head=(rows.shift()||[]).map(h=>h.trim().toLowerCase());
+  const again=r=>r.filter((x,i)=>head[i] && x.trim().toLowerCase()===head[i]).length>=Math.min(3, head.filter(Boolean).length);
+  return rows.filter(r=>r.some(x=>x.trim()) && !again(r)).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])));
+}
+// 1-5 for a level (A1…C1, "+" = the same level; or a name), null if it has none
+function band(v){ v=String(v||'').trim(); if(!v) return null; const n=BY_NAME[v.toLowerCase().replace(/\s+/g,'')]; if(n) return n;
+  const m=v.toUpperCase().match(/^([ABC])([12])\+?$/); return m ? Math.min(5, {A:0,B:2,C:4}[m[1]] + (+m[2])) : null; }
+// Fetching (4 Nov 2026): at most 6 files at a time, so on a slow connection the first subjects finish early instead of
+// every file crawling in together. A file that fails is tried twice more; after that its subject shows an error with a
+// Try again button (before, a subject whose page failed to load vanished from the page without a word, and a file that
+// failed counted as empty). A missing file (404) is simply empty.
+const LIMIT=6; let active=0; const queue=[];
+const slot=()=>new Promise(res=>{ if(active<LIMIT){ active++; res(); } else queue.push(res); });
+const free=()=>{ const next=queue.shift(); if(next) next(); else active--; };
+async function get(url){
+  for(let i=0;;i++){
+    await slot();
+    try{ const r=await fetch(url, {cache:'no-cache'});
+      if(r.status===404){ const e=new Error('missing: '+url.slice(ROOT.length)); e.missing=true; throw e; }
+      if(!r.ok) throw new Error('error '+r.status+' for '+url.slice(ROOT.length));
+      return await r.text(); }
+    catch(e){ if(e.missing || i>=2) throw e; }
+    finally{ free(); }
+    await new Promise(res=>setTimeout(res, 800*(i+1)));
+  }
+}
+const getCSV = url => get(url).then(parseCSV, e=>{ if(e.missing) return null; throw e; });   // null: the file is missing
+const getDoc = url => get(url).then(t=>new DOMParser().parseFromString(t, 'text/html'));
+
+// Rows per level: [F, F+, I, I+, A, no level]. An item without a level of its own takes its word's level, as in the games.
+function perLevel(rows, wordLevel){ const c=[0,0,0,0,0,0];
+  (rows||[]).forEach(r=>{ let b=band(r.level); if(b==null && wordLevel){ const w=(r.word||r.wid||'').toLowerCase(); b=wordLevel[w]||null; } c[b==null?5:b-1]++; });
+  return c; }
+
+// ---- the games, as the site has them (keep in step with GAMES, ARCADE and ZH_GAMES in en/engine/app.js) ----
+// min: how many items a level needs before the game plays there
+const SECTIONS = [
+  // name: as students see it. file: the file its questions come from (games.html#f-<file> says how it's played and where
+  // else it is). play: the topic page's link to it (#play-<key>); zh: on the Chinese page.
+  ['Vocabulary', [
+    {key:'match', name:'Match the meaning', note:'with synonym groups', file:'words', src:'words', min:6, circuit:'match'},
+    {key:'meaning', name:'Word or meaning', file:'words', src:'words', min:4, circuit:'short'},
+    {key:'tf', name:'True or false', note:'plus statements made from words.csv', file:'tf', src:'tf', min:1, circuit:'short'},
+    {key:'wchoice', name:'Word choice', note:'Use of English Part 1', file:'word-choice', src:'word-choice', min:1, circuit:'long'}]],
+  ['Grammar', [
+    {key:'gap', name:'Fill the gap', file:'gaps', src:'gaps', min:1, circuit:'short'},
+    {key:'rw', name:'Grammar Check', note:'was SPAG: Right or Wrong', file:'right-wrong', src:'right-wrong', min:1, circuit:'short'},
+    {key:'error', name:'Spot the error', file:'errors', src:'errors', min:1, circuit:'long'},
+    {key:'ocloze', name:'Open cloze', note:'Use of English Part 2', file:'open-cloze', src:'open-cloze', min:1, circuit:'long'},
+    {key:'wform', name:'Word formation', note:'Use of English Part 3', file:'word-formation', src:'word-formation', min:1, circuit:'long'}]],
+  ['Reading', [
+    {key:'build', name:'Build the sentence', file:'builds', src:'builds', min:1, circuit:'short'},
+    {key:'evidence', name:'Find the evidence', file:'evidence', src:'evidence', min:1, circuit:'long'},
+    {key:'read', name:'Complete the text', file:'reads', src:'reads', min:1, circuit:'long'},
+    {key:'own', name:'In your own words', file:'extracts', src:'extracts', min:1, circuit:'long'},
+    {key:'question', name:'Answer the question', file:'questions', src:'questions', min:1, circuit:'long'}]],
+  ['Games (across the bottom of the page)', [
+    {key:'gk', name:'General knowledge', note:'no levels needed: a question with no level plays at every level', file:'knowledge', src:'knowledge', min:1, circuit:''},
+    {key:'mouse', name:'Save the mouse', file:'words', src:'words', min:4},
+    {key:'wordsearch', name:'Word search', note:'words of 4+ letters', file:'words', src:'words', min:5},
+    {key:'crossword', name:'Crossword', note:'words of 3+ letters; a meaning that contains its word is left out', file:'words', src:'words', min:6},
+    {key:'whack', name:'Whack-a-word', file:'words', src:'words', min:6, circuit:'arcade', link:'whack'},
+    {key:'invaders', name:'Word Invaders', file:'words', src:'words', min:6, circuit:'arcade', link:'invaders'},
+    {key:'snake', name:'Cheese Run', file:'words', src:'words', min:6, circuit:'', link:'snake'}]],
+  ['Chinese side', [
+    {key:'zhwords', name:'Word games (9)', note:'need the zh column', file:'words', play:'', src:'zhwords', min:4, circuit:'', zh:true},
+    {key:'zhbuild', name:'Build the sentence', note:'rows with the zh column', file:'builds', src:'zhbuilds', min:1, circuit:'', zh:true},
+    {key:'zhevidence', name:'All-in English', file:'evidence', src:'zhevidence', min:1, circuit:'', zh:true},
+    {key:'zhtranslate', name:'Translation', file:'translation', src:'zhtranslate', min:1, circuit:'', zh:true}]],
+];
+const CIRCUIT = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
+const NOUN = {words:'words', syn:'words with synonyms', gaps:'sentences', builds:'sentences', errors:'paragraphs', tf:'statements', 'right-wrong':'sentences',
+  reads:'texts', extracts:'extracts', questions:'questions', zhwords:'words', zhbuilds:'sentences', evidence:'statements', zhevidence:'statements', zhtranslate:'sentences', knowledge:'questions',
+  'word-choice':'texts', 'open-cloze':'texts', 'word-formation':'texts'};
+
+// One subject: its page (for its content folder and settings), its Chinese page if the Chinese topic list has one at the
+// same address, and its files. A planned topic (no page yet) has only a folder. new-words.csv: words still being written.
+async function loadSubject(t, zhHrefs){
+  let d={}, pageUrl=null, dir;
+  if(t.href){
+    pageUrl=new URL(t.href, ROOT+'en/').href; const app=(await getDoc(pageUrl)).getElementById('app');
+    if(!app || !app.dataset.content) throw new Error('no content folder on '+t.href);
+    d=app.dataset; dir=new URL(d.content.replace(/\/*$/,'/'), pageUrl).href;
+  } else dir=ROOT+t.folder;
+  const zhUrl=t.href && zhHrefs.has(t.href) ? new URL(t.href, ROOT+'zh/').href : null;
+  const zhCheck=zhUrl ? getDoc(zhUrl).then(doc=>{ const z=doc.getElementById('app');
+    return !!(z && z.dataset.content && new URL(z.dataset.content.replace(/\/*$/,'/'), zhUrl).href===dir); }) : Promise.resolve(false);
+  const T={}; const [hasZh]=await Promise.all([zhCheck, ...FILES.concat(['new-words']).map(f=>getCSV(dir+f+'.csv').then(rows=>{ T[f]=rows; }))]);
+  // Word lists (31 Oct): a page with data-list counts only the words its word games deal; with data-linked, only the
+  // Fill the gap rows linked to those words. Every word still links content (T.allWords). See content/README.md.
+  T.allWords=T.words;
+  const want=String(d.list||'').split(/[\s,;]+/).map(x=>x.trim().toLowerCase()).filter(Boolean);
+  if(want.length && T.words){
+    T.words=T.words.filter(w=>{ const l=String(w.list||'').split(';').map(x=>x.trim().toLowerCase()).filter(Boolean); return !l.length || l.some(x=>want.includes(x)); });
+    if(d.linked){ const on=new Set(T.words.flatMap(w=>[String(w.word||'').toLowerCase(), String(w.id||'').toLowerCase()]));
+      T.gaps=(T.gaps||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
+      T.evidence=(T.evidence||[]).filter(g=>on.has(String(g.word||'').trim().toLowerCase()));
+      ['builds','errors','tf','right-wrong','reads','questions','extracts','knowledge','word-choice','open-cloze','word-formation'].forEach(k=>{ T[k]=[]; }); }
+  }
+  return {name:d.name||t.name||t.href, page:pageUrl, folder:dir.slice(ROOT.length), hide:String(d.hide||'').split(/[\s,]+/).filter(Boolean), T,
+    hasZh, zhPage: hasZh ? zhUrl : null, planned:!t.href, toWrite:(T['new-words']||[]).filter(r=>r.word).length};
+}
+
+// Counts for one subject: per source, the items per level and a line saying what they are
+function count(s){
+  const T=s.T, words=(T.words||[]).filter(w=>w.word && w.meaning), allWords=(T.allWords||T.words||[]).filter(w=>w.word && w.meaning);
+  const wordLevel={}; allWords.forEach(w=>{ const b=band(w.level); if(b){ wordLevel[w.word.toLowerCase()]=b; wordLevel[(w.id||'').toLowerCase()]=b; } });
+  const known=v=>{ v=String(v||'').trim().toLowerCase(); return !!wordLevel[v] || allWords.some(w=>w.word.toLowerCase()===v || (w.id||'').toLowerCase()===v); };
+  const err=/\[[^\]|]+\|[^\]|]+\|[^\]]+\]/g, key=/\[\[([^|\]]+)(?:\|([^\]]+))?\]\]/g;
+  // Complete the text: any word or form can be a gap; it is linked to words.csv when it is a word there or a simple form of one
+  const byWord={}; allWords.forEach(w=>{ byWord[w.word.toLowerCase()]=(w.pos||'').toLowerCase(); });
+  const NEED={s:['noun','verb'], ed:['verb'], ing:['verb']};
+  const linked=v=>{ const t=String(v||'').trim().toLowerCase(); if(t in byWord) return true; const tries=[], add=(b,k)=>{ if(b.length>=2) tries.push([b,k]); };
+    if(/ies$/.test(t)) add(t.slice(0,-3)+'y','s'); if(/es$/.test(t)) add(t.slice(0,-2),'s'); if(/[^s]s$/.test(t)) add(t.slice(0,-1),'s');
+    if(/ied$/.test(t)) add(t.slice(0,-3)+'y','ed');
+    if(/ed$/.test(t)){ add(t.slice(0,-2),'ed'); add(t.slice(0,-1),'ed'); if(/(.)\1ed$/.test(t)) add(t.slice(0,-3),'ed'); }
+    if(/ing$/.test(t)){ add(t.slice(0,-3),'ing'); add(t.slice(0,-3)+'e','ing'); if(/(.)\1ing$/.test(t)) add(t.slice(0,-4),'ing'); }
+    return tries.some(([b,k])=>(b in byWord) && (!byWord[b] || NEED[k].some(x=>byWord[b].includes(x)))); };
+  let gapsAll=0, gapsLinked=0;
+  const reads=(T.reads||[]).filter(r=>{ let n=0; (r.text||'').replace(key,(m,a,b)=>{ n++; gapsAll++; if(b ? known(b) : linked(a)) gapsLinked++; return m; }); return n>=2; });
+  const builds=T.builds||[], zhb=builds.filter(b=>b.zh);
+  // evidence.csv: a statement, at least one right detail and two wrong ones; side zh / en / blank (both)
+  const ev=(T.evidence||[]).filter(r=>r.statement && r.right1 && [1,2,3,4,5].filter(k=>r['wrong'+k]).length>=2), evSide=r=>{ const v=String(r.side||'').trim().toLowerCase(); return /^(zh|cn|chinese)/.test(v) ? 'zh' : /^(en|english)/.test(v) ? 'en' : ''; };
+  const evEn=ev.filter(r=>evSide(r)!=='zh'), evZh=ev.filter(r=>evSide(r)!=='en');
+  const C={
+    words:{lv:perLevel(words), total:words.length},
+    syn:{lv:perLevel(words.filter(w=>w.synonyms)), total:words.filter(w=>w.synonyms).length},
+    gaps:{lv:perLevel(T.gaps, wordLevel), total:(T.gaps||[]).length},
+    knowledge:(()=>{ const rs=(T.knowledge||[]).filter(r=>r.question&&r.correct), lv=perLevel(rs); return {lv:lv.slice(0,5).map(n=>n+lv[5]).concat([0]), total:rs.length}; })(),
+    builds:{lv:perLevel(builds, wordLevel), total:builds.length},
+    errors:{lv:perLevel(T.errors), total:(T.errors||[]).length, extra:`${(T.errors||[]).reduce((n,r)=>n+((r.text||'').match(err)||[]).length,0)} mistakes`},
+    tf:{lv:perLevel(T.tf, wordLevel), total:(T.tf||[]).length},
+    'right-wrong':{lv:perLevel(T['right-wrong'], wordLevel), total:(T['right-wrong']||[]).length},
+    reads:{lv:perLevel(reads), total:reads.length, extra:`${fmt(gapsAll)} gaps (${fmt(gapsLinked)} from the word list), ${reads.filter(r=>r.extra1||r.extra2||r.extra3).length} with extra words`
+      + ((T.reads||[]).length>reads.length ? `; not played (fewer than 2 gaps): ${(T.reads||[]).filter(r=>!reads.includes(r)).map(r=>r.id).join(', ')}` : '')},
+    extracts:{lv:perLevel(T.extracts, wordLevel), total:(T.extracts||[]).length, extra:`${(T.extracts||[]).reduce((n,r)=>n+((r.extract||'').match(/\[[^\]]+\]/g)||[]).length,0)} underlined words`},
+    questions:{lv:perLevel(T.questions), total:(T.questions||[]).length},
+    zhwords:{lv:perLevel(words.filter(w=>w.zh)), total:words.filter(w=>w.zh).length},
+    zhbuilds:{lv:perLevel(zhb, wordLevel), total:zhb.length, written:builds.length},
+    evidence:{lv:perLevel(evEn, wordLevel), total:evEn.length},
+    zhevidence:{lv:perLevel(evZh, wordLevel), total:evZh.length},
+    zhtranslate:(()=>{ const rs=(T.translation||[]).filter(r=>r.zh && r.english && [1,2,3,4].filter(k=>r['wrong'+k]).length>=2); return {lv:perLevel(rs), total:rs.length}; })(),
+    // Use of English (10 Nov 2026): a text plays with 2 or more [[gaps]] (the full checks are in tools/check_content.py)
+    ...Object.fromEntries(['word-choice','open-cloze','word-formation'].map(f=>{ let n=0; const rs=(T[f]||[]).filter(r=>{ const k=((r.text||'').match(/\[\[[^\]]+\]\]/g)||[]).length; if(k>=2) n+=k; return k>=2; });
+      return [f, {lv:perLevel(rs), total:rs.length, extra:`${fmt(n)} gaps`}]; })),
+  };
+  const hasZh=!!s.hasZh;
+  const rows=[], tally={all:0, some:0, none:0, off:0};
+  SECTIONS.forEach(([sect, games])=>{
+    rows.push({sect});
+    games.forEach(g=>{
+      const c=C[g.src], ok=c.lv.slice(0,5).map(x=>x>=g.min);
+      let status, cls;
+      if(s.hide.includes(g.key)){ status='Switched off'; cls='off'; }
+      else if(g.zh && !hasZh){ status='No Chinese page'; cls='off'; }
+      else if(g.src==='zhbuilds' && !c.total){ status=c.written ? `Needs Chinese (${fmt(c.written)} written)` : 'None yet'; cls=c.written ? 'some' : 'none'; }
+      else if(ok.every(Boolean)){ status='All levels'; cls='all'; }
+      else if(ok.some(Boolean)){ status='Some levels'; cls='some'; }
+      else { status='None yet'; cls='none'; }
+      if(sect.startsWith('Vocabulary')||sect.startsWith('Grammar')||sect.startsWith('Reading')||sect.startsWith('Games')) tally[cls]++;
+      rows.push({g, c, ok, status, cls});
+    });
+  });
+  return {rows, tally, words:words.length,
+    items:words.length+(T.gaps||[]).length+(T.errors||[]).length+(T.tf||[]).length+(T['right-wrong']||[]).length+(T.reads||[]).length+(T.questions||[]).length+(T.extracts||[]).length+builds.length+ev.length
+      +['word-choice','open-cloze','word-formation'].reduce((n,f)=>n+(T[f]||[]).length,0)};
+}
+
+function subjectTable(s, k){
+  const cells=(r)=>r.c.lv.slice(0,5).map((x,i)=>`<td class="n${!r.ok[i] && r.cls!=='off' ? ' gap' : ''}">${x||'–'}</td>`).join('');
+  const body=k.rows.map(r=>{
+    if(r.sect) return `<tr class="sect"><td colspan="9">${esc(r.sect)}</td></tr>`;
+    const what=r.c.total ? `${fmt(r.c.total)} ${NOUN[r.g.src]}${r.c.extra?` · ${esc(r.c.extra)}`:''}` : '';
+    const noLevel=r.c.lv[5] ? ` · ${r.c.lv[5]} with no level` : '';
+    const circ=r.g.circuit ? CIRCUIT[r.g.circuit] : r.g.link==='snake' ? 'not in circuit' : '';
+    const page=r.g.zh ? s.zhPage : s.page, play=r.g.play!=null ? r.g.play : r.g.key;
+    const go=page && r.cls!=='off' && r.cls!=='none' && !s.planned ? ` · <a href="${esc(page+(play?'#play-'+play:''))}" target="_blank" rel="noopener" title="Open it on the ${r.g.zh?'Chinese':'English'} page">play ↗</a>` : '';
+    return `<tr class="${r.cls==='off'?'off':''}"><td><b>${esc(r.g.name)}</b>${r.g.note?` <span class="nt">(${esc(r.g.note)})</span>`:''}
+      <span class="fx"><a href="games.html#f-${esc(r.g.file)}" title="What's in ${esc(r.g.file)}.csv, and every game it makes">${esc(r.g.file)}.csv</a>${go}${circ?`<span class="k"> · ${circ}</span>`:''}</span></td>${cells(r)}
+      <td class="tot">${what}${noLevel}</td><td class="s s-${r.cls}">${esc(r.status)}</td></tr>`; }).join('');
+  return `<div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>${body}</tbody></table></div>`;
+}
+
+async function readingComp(){
+  const hub=new URL('en/reading-comprehension/index.html', ROOT).href, doc=await getDoc(hub);
+  // The activities on the Reading Comprehension page: a.aea-act since the redesign (8 Nov 2026; a.topic before, which found
+  // nothing afterwards: the section said "No passages found")
+  const links=[...new Set([...doc.querySelectorAll('a.aea-act, a.topic')].map(a=>new URL(a.getAttribute('href'), hub).href))];
+  const out=await Promise.all(links.map(async url=>{ const d=(await getDoc(url)).getElementById('app'); if(!d || !d.dataset.reading) return null;
+    const rows=await getCSV(new URL(d.dataset.reading, url).href)||[];
+    // questions: question, question2… (Total Recall up to 15); Note taking and Recall have none (one choice per passage)
+    const qs=rows.reduce((n,r)=>n+Object.keys(r).filter(k=>/^question\d*$/.test(k) && r[k]).length,0);
+    return {name:d.dataset.name||url, lv:perLevel(rows), total:rows.length, qs, notes:!qs}; }));
+  return out.filter(Boolean);
+}
+function readingTable(rc){
+  return `<div class="scroll"><table><thead><tr><th>Game</th>${LEVELS.map(l=>`<th class="n" title="${l[2]}">${l[1]}</th>`).join('')}<th>Items</th><th>Status</th></tr></thead><tbody>
+    ${rc.map(r=>{ const ok=r.lv.slice(0,5).map(x=>x>0), all=ok.every(Boolean), some=ok.some(Boolean);
+      return `<tr><td><b>${esc(r.name)}</b></td>${r.lv.slice(0,5).map((x,i)=>`<td class="n${ok[i]?'':' gap'}">${x||'–'}</td>`).join('')}
+      <td class="tot">${fmt(r.total)} passages${r.notes?'':` · ${fmt(r.qs)} questions`}</td><td class="s s-${all?'all':some?'some':'none'}">${all?'All levels':some?'Some levels':'None yet'}</td></tr>`; }).join('')}
+    </tbody></table></div>`;
+}
+
+// ---- Areas (4 Nov 2026) ----
+// The page used to read every file on the site (about 100) before showing anything: half a minute from China, and more
+// with every topic. It is now split into the areas of the English topic list (Essentials, English Language, Media,
+// Science…), found from the English subject list (en/engine/subjects.js; en/index.html until 8 Nov 2026), so a new area or topic appears here by itself. Only the chosen area's files are
+// read, and each subject fills in as soon as its own files are in. "Everything" still counts the whole site.
+// The area is kept in the address (status/?area=media), so an area can be bookmarked; the page also remembers the last one.
+
+// Topics being written that have no page on the topic list yet, counted from their folder. Each is left out by itself
+// once a topic on the list links to its page address, so the line can stay until it is tidied away.
+// e.g. {name:'Advertising', area:'Media', folder:'content/advertising/', page:'advertising/index.html'} (on the list until 5 Nov 2026)
+const PLANNED = [
+];
+const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const SAVE='aea-status-area';
+
+function findAreas(en){
+  const areas=[], linked=new Set([...en.querySelectorAll('a.topic-link')].map(a=>a.getAttribute('href').split('#')[0]));
+  const add=(name, topics, reading)=>{ const a={key:slug(name), name, topics, reading}; areas.push(a); return a; };
+  const ess=en.querySelector('.ess-card a.cc-btn:not(.alt)');
+  if(ess) add('Essentials', [{href:ess.getAttribute('href').split('#')[0], name:'Academic English Essentials'}], false);
+  en.querySelectorAll('section.topic-group').forEach(sec=>{
+    const h=sec.querySelector('h2'), name=h ? h.textContent.trim() : 'Other';
+    const topics=[...sec.querySelectorAll('a.topic-link')].map(a=>({href:a.getAttribute('href').split('#')[0], name:a.textContent.trim()}));
+    const reading=[...sec.querySelectorAll('a.topic')].some(a=>/reading-comprehension\//.test(a.getAttribute('href')||''));
+    if(topics.length || reading) add(name, topics, reading);
+  });
+  PLANNED.filter(p=>!linked.has(p.page)).forEach(p=>{
+    const a=areas.find(x=>x.name.toLowerCase()===p.area.toLowerCase()) || add(p.area, [], false);
+    a.topics.push({name:p.name, folder:p.folder});
+  });
+  return areas;
+}
+
+const cellsFor=k=>`<td class="n s s-all">${k.tally.all}</td><td class="n s s-some">${k.tally.some}</td><td class="n s s-none">${k.tally.none}${k.tally.off?` <span class="k">(+${k.tally.off} off)</span>`:''}</td>`;
+
+let RUN=0;
+async function show(key, areas, zhHrefs){
+  const run=++RUN, t0=performance.now(), out=document.getElementById('out'), when=document.getElementById('when');
+  const chosen = key==='all' ? areas : areas.filter(a=>a.key===key);
+  try{ localStorage.setItem(SAVE, key); }catch(e){}
+  const u=new URL(location.href); u.searchParams.set('area', key); u.hash=''; history.replaceState(null, '', u.href);
+  document.querySelectorAll('#areas button').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.area===key)));
+  const subs=[]; chosen.forEach(a=>a.topics.forEach(t=>subs.push({...t, area:a.name})));
+  const reading=chosen.some(a=>a.reading), many=chosen.length>1;
+  const nGames=SECTIONS.slice(0,4).reduce((n,x)=>n+x[1].length,0);
+
+  let rows='', body='', lastArea=null;
+  subs.forEach((t,i)=>{
+    if(many && t.area!==lastArea){ rows+=`<tr class="sect"><td colspan="6">${esc(t.area)}</td></tr>`; body+=`<p class="area-h">${esc(t.area)}</p>`; lastArea=t.area; }
+    rows+=`<tr id="sum-${i}"><td><a href="#sub-${i}">${esc(t.name)}</a>${t.folder?' <span class="k">no page yet</span>':''}</td><td class="n wait" colspan="5">counting…</td></tr>`;
+    body+=`<section id="sub-${i}"><h2>${esc(t.name)}</h2><p class="meta">Counting…</p></section>`;
+  });
+  if(reading){ if(many){ rows+=`<tr class="sect"><td colspan="6">Reading Comprehension</td></tr>`; body+=`<p class="area-h">Reading Comprehension</p>`; }
+    rows+=`<tr><td><a href="#rc">Reading Comprehension</a></td><td class="n" colspan="5"><span class="k">passages: see below</span></td></tr>`;
+    body+=`<section id="rc"><h2>Reading Comprehension</h2><p class="meta">Counting…</p></section>`; }
+  out.innerHTML=`<h2>Summary</h2><div class="scroll"><table><thead><tr><th>Subject</th><th class="n">Words</th><th class="n">Items</th>
+    <th class="n" title="English games playable at every level">All levels</th><th class="n">Some levels</th><th class="n">None yet</th></tr></thead>
+    <tbody id="sumBody">${rows}<tr id="sumTot"><td><b>Total</b></td><td class="n"></td><td class="n"></td><td></td><td></td><td></td></tr></tbody></table></div>
+    <ul class="notes"><li>All levels / Some levels / None yet count the ${nGames} games on the English topic pages (Vocabulary, Grammar, Reading, and the Games row).</li>
+    <li>Words: words with a meaning in <span class="k">words.csv</span>; "+ to write" are the words waiting in <span class="k">new-words.csv</span>, which the games don't read.</li>
+    <li>Items: every word, sentence, paragraph, statement, text and question in the subject's files. Reading Comprehension is counted separately.</li>
+    <li>F = Foundation, F+ = Foundation+, I = Intermediate, I+ = Intermediate+, A = Advanced. A shaded cell: the game does not play at that level yet (Match the meaning and the arcade games need 6 words at a level; Word or meaning and the Chinese games need 4).</li></ul>
+    ${body}
+    <ul class="notes"><li>Areas and subjects are found from the English subject list (<span class="k">en/engine/subjects.js</span>): a new topic appears here once it is on that list. A topic still being written, with no page yet, can be added to <span class="k">PLANNED</span> near the bottom of this page's code.</li>
+    <li>This page counts rows; it does not check them. Run <span class="k">python3 tools/check_content.py</span> to find mistakes in the files.</li></ul>`;
+
+  const done=new Array(subs.length).fill(null); let finished=0;
+  const total=subs.length+(reading?1:0);
+  const progress=()=>{ if(run!==RUN) return; when.textContent = finished<total ? `Counting… ${finished} of ${total}`
+    : `Counted ${new Date().toLocaleString('en-GB', {weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'})} · ${((performance.now()-t0)/1000).toFixed(1)} s`; };
+  const totals=()=>{ const got=done.filter(Boolean), tot=document.getElementById('sumTot'); if(!tot) return;
+    tot.children[1].innerHTML=`<b>${fmt(got.reduce((n,x)=>n+x.k.words,0))}</b>`; tot.children[2].innerHTML=`<b>${fmt(got.reduce((n,x)=>n+x.k.items,0))}</b>`; };
+  const one=async i=>{
+    const t=subs[i], row=document.getElementById('sum-'+i), sec=document.getElementById('sub-'+i);
+    try{
+      const s=await loadSubject(t, zhHrefs), k=count(s); if(run!==RUN) return;
+      done[i]={s,k};
+      row.innerHTML=`<td><a href="#sub-${i}">${esc(s.name)}</a>${s.planned?' <span class="k">no page yet</span>':''}</td><td class="n">${fmt(k.words)}${s.toWrite?`<br><span class="k">+${fmt(s.toWrite)} to write</span>`:''}</td><td class="n">${fmt(k.items)}</td>${cellsFor(k)}`;
+      sec.innerHTML=`<h2>${esc(s.name)}</h2><p class="meta">${fmt(k.words)} words${s.toWrite?` (+${fmt(s.toWrite)} still to write in <span class="k">new-words.csv</span>)`:''} · ${fmt(k.items)} items · <span class="k">${esc(s.folder)}</span>${s.planned?' · no page yet: not on the topic list':''}${s.hide.length?` · switched off on its page: ${esc(s.hide.join(', '))}`:''}${s.hasZh?'':' · no Chinese page'}</p>${subjectTable(s,k)}`;
+    }catch(e){ if(run!==RUN) return;
+      const msg=`Couldn't read its files (${esc(e.message||e)}). `;
+      row.innerHTML=`<td>${esc(t.name)}</td><td class="err" colspan="5">${msg}<button class="ghost retry" type="button">Try again</button></td>`;
+      sec.innerHTML=`<h2>${esc(t.name)}</h2><p class="meta err">${msg}</p>`;
+      row.querySelector('.retry').onclick=()=>{ if(run!==RUN) return; finished--; row.innerHTML=`<td>${esc(t.name)}</td><td class="n wait" colspan="5">counting…</td>`; sec.querySelector('.meta').textContent='Counting…'; progress(); one(i); };
+    }
+    finished++; totals(); progress();
+  };
+  progress();
+  const jobs=subs.map((t,i)=>one(i));
+  if(reading) jobs.push(readingComp().then(rc=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta">English side only.</p>${rc.length?readingTable(rc):'<p class="meta">No passages found.</p>'}`; },
+    e=>{ if(run!==RUN) return; document.getElementById('rc').innerHTML=`<h2>Reading Comprehension</h2><p class="meta err">Couldn't read its files (${esc(e.message||e)}). Refresh to try again.</p>`; })
+    .then(()=>{ finished++; progress(); }));
+  await Promise.all(jobs);
+}
+
+async function main(){
+  const enUrl=ROOT+'en/index.html', zhUrl=ROOT+'zh/index.html';
+  // The English subjects come from en/engine/subjects.js (8 Nov 2026: the home page is drawn from it), written out as the old topic-list markup
+  const en=new DOMParser().parseFromString(window.AEA_SUBJECTS ? AEA_SUBJECTS.legacyHtml() : '', 'text/html');
+  const zh=await getDoc(zhUrl).catch(()=>null);
+  const TOPICS='a.topic-link, .ess-card a.cc-btn:not(.alt)';
+  const zhHrefs=new Set(zh ? [...zh.querySelectorAll(TOPICS)].map(a=>a.getAttribute('href').split('#')[0]) : []);
+  const areas=findAreas(en);
+  const bar=document.getElementById('areas');
+  bar.innerHTML=areas.map(a=>`<button type="button" data-area="${esc(a.key)}">${esc(a.name)}</button>`).join('')+`<button type="button" data-area="all">Everything</button>`;
+  bar.onclick=e=>{ const b=e.target.closest('button[data-area]'); if(b) show(b.dataset.area, areas, zhHrefs); };
+  let key=new URL(location.href).searchParams.get('area');
+  if(!key){ try{ key=localStorage.getItem(SAVE); }catch(e){} }
+  if(key!=='all' && !areas.some(a=>a.key===key)) key=areas.length ? areas[0].key : 'all';
+  await show(key, areas, zhHrefs);
+}
+main().catch(e=>{ document.getElementById('out').innerHTML=`<p class="notice err">The topic list could not be read (${esc(e.message||e)}). The files load when the site is online.</p>`; });
+})();
+</script>
+</body>
+</html>

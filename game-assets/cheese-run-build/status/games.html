@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<title>Games and files · Academic English App</title>
+<link rel="stylesheet" href="../css/fonts.css">
+<link rel="stylesheet" href="../en/engine/fonts.css">
+<link rel="stylesheet" href="../en/engine/styles.css">
+<style>
+/* Games and files (8 Nov 2026, teacher: "the names of the games, how they appear as a csv and how they appear on that
+   list, and connecting the names to how they're played, is really doing my head in"). One list of every name a student or
+   teacher sees, the file its questions come from, how it's played and where it is, with a link to open it there.
+   Not linked from the site: linked from the Site content page (status/index.html). Keep it in step with GAMES, ZH_GAMES and
+   ARCADE in en/engine/app.js, BANKS and GAMES in teacher/board.js, ACTS in teacher/starters.js and teacher/handouts.js. */
+.gf h1{font-family:var(--f-display);font-weight:400;font-size:clamp(32px,5vw,44px);margin:6px 0 4px}
+.gf .sub{color:var(--ink-2);margin:0 0 14px;font-size:15px;max-width:68ch}
+.gf .sub a, .gf .mix a{color:inherit}
+.gf .mix{background:var(--sheet);border:1px solid var(--rule);border-left:4px solid var(--mark);border-radius:10px;padding:10px 14px 10px 12px;margin:0 0 18px;font-size:14px}
+.gf .mix h2{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);font-weight:400;margin:0 0 6px}
+.gf .mix ul{margin:0;padding-left:18px}
+.gf .mix li{margin:4px 0;line-height:1.4}
+.gf .tools{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;margin:0 0 12px;position:sticky;top:0;z-index:2;background:var(--paper);padding:8px 0;border-bottom:1px solid var(--rule)}
+.gf .find{flex:1 1 260px;min-width:0;font:inherit;font-size:15px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)}
+.gf .find:focus{outline:none;border-color:var(--ink)}
+.gf .seg{display:inline-flex;border:1.5px solid var(--rule);border-radius:999px;overflow:hidden}
+.gf .seg button{font:inherit;font-size:14px;font-weight:700;padding:6px 12px;border:0;background:var(--sheet);color:var(--ink);cursor:pointer}
+.gf .seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.gf label.on{font-size:14px;color:var(--ink-2);display:flex;gap:6px;align-items:center}
+.gf select{font:inherit;font-size:14px;padding:5px 8px;border-radius:8px;border:1.5px solid var(--rule);background:var(--sheet);color:var(--ink)}
+.gf table{width:100%;border-collapse:collapse;font-size:14px;background:var(--sheet);border:1px solid var(--rule);border-radius:10px;overflow:hidden}
+.gf td{border-bottom:1px solid var(--rule);padding:7px 8px;text-align:left;vertical-align:top}
+.gf thead th{background:var(--blue-soft);font-weight:700;font-size:13px;text-align:left;padding:6px 8px}
+.gf td.nm{width:24%}
+.gf td.nm b{font-size:15px}
+.gf .zh{display:block;font-family:var(--zh, inherit);color:var(--ink-2);font-size:13px}
+.gf td.how{color:var(--ink);line-height:1.4}
+.gf .dc{display:inline-block;font-family:var(--f-mono);font-size:11px;color:var(--ink-2);border:1px solid var(--rule);border-radius:999px;padding:0 7px;margin-left:4px;white-space:nowrap}
+.gf td.wh{width:27%}
+.gf .pl{display:inline-block;font-size:13px;line-height:1.25;padding:3px 9px;margin:0 4px 4px 0;border-radius:8px;border:1.5px solid var(--rule);background:var(--paper);color:var(--ink);text-decoration:none}
+.gf a.pl:hover{border-color:var(--ink)}
+.gf a.pl::after{content:" ↗";color:var(--ink-2)}
+.gf span.pl{color:var(--ink-2)}
+.gf .pl.en{border-color:color-mix(in srgb, var(--blue) 45%, var(--rule))}
+.gf .pl.zhp{border-color:color-mix(in srgb, #c8344a 45%, var(--rule))}
+.gf .pl.t{border-style:dashed}
+.gf td.fl{width:13%;white-space:nowrap}
+.gf .file{font-family:var(--f-mono);font-size:13px;font-weight:600;color:var(--ink)}
+.gf a.file{text-decoration:none;border-bottom:1px dotted var(--ink-2)}
+.gf tr.grp{scroll-margin-top:72px}
+.gf tr.grp td{background:var(--paper);border-top:2px solid var(--rule);padding:12px 8px 8px}
+.gf tr.grp .file{font-size:16px}
+.gf tr.grp .one{color:var(--ink);margin-left:8px;font-size:14px}
+.gf tr.grp .cols{display:block;font-family:var(--f-mono);font-size:11.5px;color:var(--ink-2);margin-top:4px;line-height:1.5}
+.gf tr.grp .cols a{color:inherit}
+.gf tr.grp.flash td{animation:gfFlash 1.6s ease-out}
+@keyframes gfFlash{0%{background:var(--mark)}100%{background:var(--paper)}}
+.gf .none{color:var(--ink-2);padding:18px 4px}
+.gf .key{color:var(--ink-2);font-size:13px;margin:10px 0 0}
+.gf .key .pl{cursor:default}
+.gf .key .pl::after{content:none}
+.gf .by-file td.fl, .gf .by-file th.fl{display:none}
+@media (max-width:700px){
+  .gf thead{display:none}
+  .gf table, .gf tbody, .gf tr, .gf td{display:block;width:auto}
+  .gf tr:not(.grp){border-bottom:1px solid var(--rule);padding:8px 10px}
+  .gf tr:not(.grp) td{border:0;padding:2px 0;width:auto}
+  .gf td.fl{white-space:normal}
+  .gf tr.grp td{padding:12px 10px 8px}
+  .gf .tools{position:static}
+}
+</style>
+</head>
+<body>
+<div class="wrap gf" id="gf">
+  <p class="mono">Academic English App · <a href="index.html" style="color:inherit">Site content</a> · not linked from the site</p>
+  <h1>Games and files</h1>
+  <p class="sub">Every game name you'll see, which file its questions come from, how it's played and where it is. Click a place to open the game there. Type any name or file name to find it: <i>Grammar Check</i>, <i>reads</i>, <i>Gap Fill</i>…</p>
+
+  <section class="mix" aria-labelledby="mix-h">
+    <h2 id="mix-h">Easy to mix up</h2>
+    <ul>
+      <li><b>Fill the gap</b> is one sentence (<a href="#f-gaps">gaps.csv</a>). <b>Complete the text</b> on the topic page and <b>Gap Fill</b> on the Starters page are a whole paragraph, and they share a file (<a href="#f-reads">reads.csv</a>). <b>Word choice</b>, <b>Open cloze</b> and <b>Word formation</b> are paragraphs too, in the style of the C1 Advanced exam, each with a file of its own (<a href="#f-word-choice">word-choice.csv</a>, <a href="#f-open-cloze">open-cloze.csv</a>, <a href="#f-word-formation">word-formation.csv</a>).</li>
+      <li><b>Grammar Check</b> (called SPAG: Right or Wrong until 8 Nov) asks “is the grammar good or bad?” (buttons: Good Grammar, Bad Grammar) (<a href="#f-right-wrong">right-wrong.csv</a>). <b>True or false</b> asks “is this fact true?” (<a href="#f-tf">tf.csv</a>). <b>Spot the error</b> is a paragraph to find the mistakes in (<a href="#f-errors">errors.csv</a>).</li>
+      <li><b>Find the evidence</b> (English page) and <b>All-in English</b> (Chinese page) are the same game from the same file (<a href="#f-evidence">evidence.csv</a>). Its <code>side</code> column says which page a row is for.</li>
+      <li><b>Word or meaning</b> on the topic page is called <b>What does it mean?</b> and <b>Which word?</b> in the board games and Starters. <b>Anagram</b> in Starters is <b>Unscramble</b> on handouts. All of these come from <a href="#f-words">words.csv</a>.</li>
+    </ul>
+  </section>
+
+  <div class="tools">
+    <input class="find" id="find" type="search" placeholder="Find a game or a file…" aria-label="Find a game or a file" autocomplete="off">
+    <div class="seg" role="group" aria-label="Order">
+      <button type="button" data-mode="file" aria-pressed="true">By file</button><button type="button" data-mode="az" aria-pressed="false">A–Z by name</button>
+    </div>
+    <label class="on">Links open on <select id="topic" aria-label="Topic the links open on"><option value="">…</option></select></label>
+  </div>
+  <div id="out"></div>
+  <p class="key">Places: <span class="pl en">Topic page</span> <span class="pl zhp">Chinese page</span> <span class="pl t">Teacher page</span> · <span class="dc">circuit: quick-fire</span> means the Daily Circuit plays it too.</p>
+</div>
+<script src="../en/engine/subjects.js?v=2026-11-08v"></script>
+<script>
+(function(){
+'use strict';
+const ROOT = new URL('../', location.href).href;
+const SAVE = 'aeaStatus:guide';   // this page's own choices (topic, order) in this browser only
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+// Places. en: the English topic page (its column), zh: the Chinese topic page, t: the teacher page.
+const PLACE = {
+  'en-vocab':   {kind:'en', name:'Topic page · Vocabulary'},
+  'en-grammar': {kind:'en', name:'Topic page · Grammar'},
+  'en-reading': {kind:'en', name:'Topic page · Reading'},
+  'en-games':   {kind:'en', name:'Topic page · Games row'},
+  'en-words':   {kind:'en', name:'Topic page · Words'},
+  'zh-vocab':   {kind:'zh', name:'Chinese page · Vocab'},
+  'zh-sent':    {kind:'zh', name:'Chinese page · Sentences'},
+  'zh-games':   {kind:'zh', name:'Chinese page · Games'},
+  'zh-circuit': {kind:'zh', name:'Chinese Daily Circuit only'},
+  'circuit':    {kind:'go', name:'Daily Circuit', href:'en/circuit/index.html'},
+  'board':      {kind:'t',  name:'Board games', href:'teacher/index.html#/board'},
+  'board-q':    {kind:'t',  name:'Board games (questions)', href:'teacher/index.html#/board'},
+  'starters':   {kind:'t',  name:'Starters', href:'teacher/index.html#/starters'},
+  'handouts':   {kind:'t',  name:'Handouts', href:'teacher/index.html#/handouts'},
+  'homework':   {kind:'t',  name:'Homework (handouts)', href:'teacher/index.html#/handouts/homework'},
+  'close':      {kind:'go', name:'Reading Comprehension · Close reading', href:'en/reading-comprehension/close-reading/index.html'},
+  'bigidea':    {kind:'go', name:'Reading Comprehension · Big idea', href:'en/reading-comprehension/big-idea/index.html'},
+  'notes':      {kind:'go', name:'Reading Comprehension · Note taking', href:'en/reading-comprehension/note-taking/index.html'},
+  'recall':     {kind:'go', name:'Reading Comprehension · Recall', href:'en/reading-comprehension/recall/index.html'},
+  'totalrecall':{kind:'go', name:'Reading Comprehension · Total Recall', href:'en/reading-comprehension/total-recall/index.html'},
+  'listening':  {kind:'go', name:'Listening', href:'en/listening/index.html'},
+  'chem':       {kind:'go', name:'Chemistry page · Chemistry column', href:'en/chemistry/index.html'},
+  'phys':       {kind:'go', name:'Physics page · Physics column', href:'en/physics/index.html'}
+};
+const CIRC = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
+
+// The files, in the order of the topic page. one: what one row is. cols: the columns that matter. path: where it lives
+// when it is not content/<topic>/. tpl: its template in content/templates/.
+// Each game: n name, zh its Chinese name, w where (one or more PLACE keys), how, c the Daily Circuit, p the key in a
+// topic page link (#play-<p>; 'words' = the word list, '' = the page itself).
+const FILES = [
+  {f:'words', one:'a word: its meaning, an example, its Chinese and its synonyms.', cols:'word, pos, meaning, example, synonyms, zh · also group, similar, accept, note, list', games:[
+    {n:'Match the meaning', w:['en-vocab', 'homework'], how:'Pair each word with its meaning, or with a group of words close in meaning (from the synonyms column). In the Daily Circuit it has a one-minute round of its own.', c:'match', p:'match'},
+    {n:'Word or meaning', w:['en-vocab'], how:'See a word and choose its meaning, or see a meaning and choose the word.', c:'short', p:'meaning'},
+    {n:'Words (the word list)', w:['en-words'], how:'Every word at the student\'s level with its meaning, to look through before playing.', p:'words'},
+    {n:'Save the mouse', w:['en-games'], how:'Guess the word one letter at a time before the mouse disappears.', p:'mouse'},
+    {n:'Word search', w:['en-games', 'homework'], how:'Find the words hidden in a square of letters (words of 4 or more letters), from the words or from their meanings.', p:'wordsearch'},
+    {n:'Crossword', w:['en-games', 'homework'], how:'Fill in a crossword of the topic\'s words. Each clue is a word\'s meaning, with the letters in each word: (4,2,6). A word whose meaning contains the word itself is left out.', p:'crossword'},
+    {n:'Whack-a-word', w:['en-games'], how:'Words pop up from holes. Tap the one that matches the meaning.', c:'arcade', p:'whack'},
+    {n:'Word Invaders', w:['en-games'], how:'Words march down the screen. Shoot the one that fits the meaning.', c:'arcade', p:'invaders'},
+    {n:'Cheese Run', zh:'奶酪快跑', w:['en-games', 'zh-games'], how:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it. (Was Word Snake.)', p:'snake'},
+    {n:'中文 → English', zh:'看中文，选英文', w:['zh-vocab'], how:'See the Chinese meaning (the zh column) and choose the English word.', p:'zh'},
+    {n:'Match the meaning', zh:'单词配释义', w:['zh-vocab'], how:'Match each word to its English meaning. The Chinese is shown under the word.', p:'zhmatch'},
+    {n:'Type it', zh:'拼写单词', w:['zh-vocab'], how:'Read the meaning and the Chinese, then type the English word.', p:'zhtype'},
+    {n:'Choose the meaning', zh:'选出释义', w:['zh-circuit'], how:'See the word and its Chinese, then choose the English meaning.', p:'zhmean'},
+    {n:'True or false', zh:'判断对错', w:['zh-circuit'], how:'See the word and its Chinese. Does the English meaning match? Decide quickly.', p:'zhtf'},
+    {n:'Save the mouse', zh:'拯救小老鼠', w:['zh-games'], how:'See the Chinese and the meaning, then guess the English word one letter at a time.', p:'zhmouse'},
+    {n:'Word search', zh:'单词搜索', w:['zh-games'], how:'Find the English words in a square of letters. The clues are the words or their Chinese.', p:'zhwordsearch'},
+    {n:'Crossword', zh:'填字游戏', w:['zh-games'], how:'Fill in a crossword with your English words. The clues are their Chinese or their meanings.', p:'zhcrossword'},
+    {n:'What does it mean?', w:['board-q', 'starters'], how:'A word: teams choose its meaning (board games); students write it in their books (Starters).'},
+    {n:'Which word?', w:['board-q', 'starters'], how:'A meaning: teams choose the word (board games); students write it (Starters).'},
+    {n:'中文 → English', w:['board-q', 'starters', 'homework'], how:'A word in Chinese: give the English word.'},
+    {n:'Anagram', w:['starters'], how:'One square: a topic word with its letters mixed up.'},
+    {n:'Missing vowels', w:['starters'], how:'One square: a topic word with its vowels taken out.'},
+    {n:'Match-up', w:['starters'], how:'The whole board: words and meanings to pair up, at random or the words you choose.'},
+    {n:'Word search', w:['starters'], how:'The whole board: words hidden in a square of letters. The list shows the words or their meanings.'},
+    {n:'Crossword', w:['board', 'starters'], how:'Board games: teams take turns to choose a clue; a word scores a point for each of its squares still empty. Starters: the class solves it together while you type in what they say; Check shows the wrong letters. Clues: the meanings, the Chinese or both.'},
+    {n:'Chinese → English', zh:'看中文，写英文', w:['handouts'], how:'The Chinese of every word on the sheet: students write the English.'},
+    {n:'Look, cover, write, check', zh:'看、盖、写、查', w:['handouts'], how:'Spelling practice: look at the word, cover it, write it, check it. Twice.'},
+    {n:'Word search', zh:'单词搜索', w:['handouts'], how:'Find the English words for the Chinese clues.'},
+    {n:'Crossword', zh:'填字游戏', w:['handouts'], how:'Up to 10 of the words in a crossword, with Chinese clues and the letters in each word.'},
+    {n:'Unscramble', zh:'字母重组', w:['handouts'], how:'The letters of a word mixed up, with the Chinese as a clue.'},
+    {n:'Use it in a sentence', zh:'造句', w:['handouts'], how:'Three of the words, with lines to write a sentence of their own.'}
+  ]},
+  {f:'gaps', one:'a sentence with a gap, its answer and three wrong answers.', cols:'sentence, answer, wrong1–wrong3, explanation, word', games:[
+    {n:'Fill the gap', w:['en-grammar', 'homework'], how:'Choose the word or form that fits the gap in each sentence.', c:'short', p:'gap'},
+    {n:'Fill the gap', w:['board-q', 'starters', 'handouts'], how:'A sentence with a word missing: choose it (board games) or write it (Starters, and handouts with a word bank).'}
+  ]},
+  {f:'right-wrong', one:'one sentence that is either right or has one mistake.', cols:'statement, answer (RIGHT or WRONG), explanation, correction', games:[
+    {n:'Grammar Check', w:['en-grammar', 'homework'], how:'Read a sentence and choose Good Grammar or Bad Grammar. It is about how the sentence is written, not whether it is true. (Was SPAG: Right or Wrong.)', c:'short', p:'rw'},
+    {n:'Grammar Check', w:['board-q', 'starters'], how:'Good Grammar or Bad Grammar? In Starters, if it\'s bad they write it correctly.'}
+  ]},
+  {f:'errors', one:'a short paragraph with its mistakes marked [wrong|right|why].', cols:'title, text', games:[
+    {n:'Spot the error', w:['en-grammar', 'homework'], how:'Read a paragraph and tap every word with a mistake.', c:'long', p:'error'},
+    {n:'Spot the error', w:['starters'], how:'Half the board: a short paragraph. Students find and correct the mistakes in their books.'}
+  ]},
+  {f:'tf', one:'a statement and whether it is true or false.', cols:'statement, answer (TRUE or FALSE), explanation', games:[
+    {n:'True or false', w:['en-vocab', 'homework'], how:'Read each statement and decide quickly: true or false? It also mixes in statements made from words.csv.', c:'short', p:'tf'},
+    {n:'True or false', w:['board-q', 'starters'], how:'A statement: true or false?'}
+  ]},
+  {f:'builds', one:'a sentence cut into pieces, with trap pieces that don\'t belong.', cols:'goal, zh, pieces, decoys, also_right, explanation', games:[
+    {n:'Build the sentence', w:['en-reading', 'homework'], how:'Put the coloured pieces in order, and watch out for the trap pieces.', c:'short', p:'build'},
+    {n:'Build the sentence', zh:'连词成句', w:['zh-sent'], how:'See the sentence in Chinese, then build it in English. Only rows with the zh column filled in play here.', p:'zhbuild'}
+  ]},
+  {f:'evidence', one:'a statement, the details that show it and details that don\'t.', cols:'statement, right1–right3, wrong1–wrong3, side (en, zh or blank for both), word, explanation', games:[
+    {n:'Find the evidence', w:['en-reading', 'homework'], how:'Read what the task says, then choose the details that show it.', c:'long', p:'evidence'},
+    {n:'All-in English', zh:'全英文练习', w:['zh-sent'], how:'The same game on the Chinese page: read a sentence in English, then choose the English details that match it.', p:'zhevidence'}
+  ]},
+  {f:'reads', one:'a short text with its key words in [[double brackets]], which become the gaps.', cols:'title, text, extra1–extra3 (extra words for the word bank)', games:[
+    {n:'Complete the text', w:['en-reading', 'homework'], how:'Read a short text and put the key words into the gaps from a word bank.', c:'long', p:'read'},
+    {n:'Gap Fill', w:['starters'], how:'The whole board: a paragraph with gaps and a word bank, from reads.csv or one you type in.'}
+  ]},
+  {f:'word-choice', one:'a short text with gaps; each gap has the right word first, then two or three wrong ones: [[right|wrong|wrong|wrong]].', cols:'title, text, explanation, source (not shown)', games:[
+    {n:'Word choice', w:['en-vocab', 'homework'], how:'Use of English Part 1 (C1 Advanced): read a short text and choose the word (A–D) that fits each gap.', c:'long', p:'wchoice'}
+  ]},
+  {f:'open-cloze', one:'a short text with one-word gaps: [[answer]], or [[answer/other]] when more than one word is right.', cols:'title, text, explanation, source (not shown)', games:[
+    {n:'Open cloze', w:['en-grammar', 'homework'], how:'Use of English Part 2 (C1 Advanced): type the one word that fits each gap. The spelling must be right.', c:'long', p:'ocloze'}
+  ]},
+  {f:'word-formation', one:'a short text with gaps and the word each answer is made from: [[answer|STEM]].', cols:'title, text, explanation, source (not shown)', games:[
+    {n:'Word formation', w:['en-grammar', 'homework'], how:'Use of English Part 3 (C1 Advanced): change the word in capitals so that it fits the gap. The spelling must be right.', c:'long', p:'wform'}
+  ]},
+  {f:'extracts', one:'a sentence or two with up to three [bracketed] words to explain.', cols:'extract, word, correct, wrong1–wrong3 · then word2, correct2… and word3, correct3…', games:[
+    {n:'In your own words', w:['en-reading', 'homework'], how:'Paper 1 style: what does each underlined word mean here?', c:'long', p:'own'}
+  ]},
+  {f:'questions', one:'an exam question with its command word, and four answers.', cols:'command, question, correct, wrong1–wrong3, explanation', games:[
+    {n:'Answer the question', w:['en-reading', 'homework'], how:'Read an exam question and choose the answer that does what the command word asks.', c:'long', p:'question'},
+    {n:'Answer the question', w:['board-q', 'starters'], how:'An exam question and four answers to choose from.'}
+  ]},
+  {f:'knowledge', one:'a quiz question and four answers. The level can be left blank.', cols:'question, correct, wrong1–wrong3, explanation', games:[
+    {n:'General knowledge', w:['en-games', 'homework'], how:'Questions about the wider world of the topic. One answer is right. A question with no level plays at every level.', p:'gk'},
+    {n:'General knowledge', w:['board-q', 'starters'], how:'A pub-quiz question. Plays at any level.'},
+    {n:'Must-know general knowledge', w:['circuit', 'board'], how:'From content/general/knowledge.csv (not a topic\'s): three questions in every Daily Circuit quick-fire station, and a topic of its own in the board games.'}
+  ]},
+  {f:'taboo', one:'a word, the four red words the team can\'t say, and four hints.', cols:'word, taboo1–taboo4, hint1–hint4', games:[
+    {n:'Don\'t Say It!', w:['board'], how:'One player guesses while their team describes the word without saying any of the red words.'},
+    {n:'Hints', w:['board'], how:'Teams guess the word from its hints, shown one at a time: 4 points on the first hint, then 3, 2 and 1.'}
+  ]},
+  {f:'wall', one:'a group\'s name and four or more words that belong to it.', cols:'group, word1–word6', games:[
+    {n:'Connecting Wall', w:['starters'], how:'The whole board: sixteen words to sort into four groups of four. Click the words; a right group turns a colour.'}
+  ]},
+  {f:'several', label:'More than one file', one:'the question types you tick: What does it mean?, Fill the gap, Grammar Check and the rest above.', cols:'words, gaps, tf, right-wrong, questions, knowledge', noFile:true, games:[
+    {n:'Squaring Up', w:['board'], how:'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
+    {n:'Categories', w:['board'], how:'A board of categories, like Jeopardy: questions worth 100 to 500, Daily Doubles, and a final question every team bets on.'}
+  ]},
+  {f:'close-reading', path:'content/reading-comprehension/close-reading.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'title, passage, question, correct, wrong1–wrong3, explanation · question2… for more', games:[
+    {n:'Close reading', w:['close'], how:'Read a passage, then choose the best answer to each question.'}
+  ]},
+  {f:'big-idea', path:'content/reading-comprehension/big-idea.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'the same columns as close-reading.csv', games:[
+    {n:'Big idea', w:['bigidea'], how:'Read a passage, then choose the idea that sums up the whole passage.'}
+  ]},
+  {f:'notes', path:'content/reading-comprehension/notes.csv', tpl:'notes', one:'a passage, a heading and six notes to choose from.', cols:'title, passage, topic, select_count, option1–option6, correct_options, explanation', games:[
+    {n:'Note taking', w:['notes'], how:'Read a passage and choose the notes that belong under the heading.'}
+  ]},
+  {f:'recall', path:'content/reading-comprehension/recall.csv', tpl:'recall', one:'a passage and statements about it, some true and some not.', cols:'title, passage, question (optional), select_count, option1–option8, correct_options, explanation', games:[
+    {n:'Recall', w:['recall'], how:'Read the passage for as long as you like (a speed bonus runs down meanwhile), then I’m ready hides it: choose the statements that are true of it, from memory.'}
+  ]},
+  {f:'total-recall', path:'content/reading-comprehension/total-recall.csv', tpl:'total-recall', one:'a list to remember and questions on it, each answered by typing.', cols:'title, passage, question, answer (more than one: separated by ;) · question2, answer2… up to 15, explanation', games:[
+    {n:'Total Recall', w:['totalrecall'], how:'Read the list for as long as you like (a speed bonus runs down meanwhile), then I’m ready hides it: type the answers from memory.'}
+  ]},
+  {f:'listening', path:'content/listening/listening.csv', tpl:'listening', one:'a script the browser reads aloud, and questions on it.', cols:'title, passage (the script), question, correct, wrong1–wrong3, explanation, quote · question2… for more', games:[
+    {n:'Listening', w:['listening'], how:'Press Play to hear the script, then answer the questions. The script is shown after Check.'}
+  ]},
+  {f:'science', label:'Science data tables', noFile:true, one:'not written question by question: the page makes every question from its tables.', cols:'Chemistry: ions.csv, elements.csv, reactions.csv · Physics: quantities.csv, waves.csv, em-uses.csv, nuclides.csv', games:[
+    {n:'Inside the atom · Ion charge · Name it · Formula it · What\'s made?', w:['chem'], how:'The Chemistry column. One quick choice each; every wrong answer is a real mistake with its reason.'},
+    {n:'Units · Equations · Calculate it · EM spectrum · Inside the nucleus', w:['phys'], how:'The Physics column, made the same way (the equations are in en/engine/phys.js).'}
+  ]}
+];
+const TEMPLATES = new Set(['words','gaps','right-wrong','errors','tf','builds','evidence','reads','extracts','questions','knowledge','taboo','wall','reading','notes','listening','word-choice','open-cloze','word-formation']);
+const fileName = F => F.noFile ? F.label : (F.path ? F.path.split('/').pop() : F.f+'.csv');
+
+// Every game once, with its file
+const ROWS = [];
+FILES.forEach(F=>F.games.forEach(g=>{ ROWS.push({...g, F,
+  s:[g.n, g.zh, g.how, fileName(F), F.label, F.f, ...g.w.map(k=>PLACE[k].name), g.c ? CIRC[g.c] : ''].join(' ').toLowerCase()}); }));
+
+// Topic pages, for the links (read from the English and Chinese topic lists)
+let TOPICS=[], topic=null, mode='file';
+const saved=(()=>{ try{ return JSON.parse(localStorage.getItem(SAVE)||'{}')||{}; }catch(e){ return {}; } })();
+const save=()=>{ try{ localStorage.setItem(SAVE, JSON.stringify({topic: topic && topic.href, mode})); }catch(e){} };
+
+function link(k, g){
+  const P=PLACE[k];
+  if(P.kind==='t' || P.kind==='go') return {href:ROOT+P.href};
+  if(!topic) return null;
+  if(P.kind==='zh' && !topic.zh) return {none:'No Chinese page for '+topic.name};
+  const page=ROOT+(P.kind==='zh' ? 'zh/' : 'en/')+topic.href;
+  return {href: g.p==null || g.p==='' ? page : page+'#'+(g.p==='words' ? 'words' : 'play-'+g.p)};
+}
+function places(g){
+  return g.w.map(k=>{ const P=PLACE[k], L=link(k, g), cls='pl '+(P.kind==='zh' ? 'zhp' : P.kind==='t' ? 't' : 'en');
+    if(L && L.href) return `<a class="${cls}" href="${esc(L.href)}" target="_blank" rel="noopener" title="Open it">${esc(P.name)}</a>`;
+    return `<span class="${cls}" title="${esc(L && L.none || '')}">${esc(P.name)}</span>`; }).join('');
+}
+function row(r, showFile){
+  return `<tr><td class="nm"><b>${esc(r.n)}</b>${r.zh?`<span class="zh" lang="zh">${esc(r.zh)}</span>`:''}</td>
+    <td class="how">${esc(r.how)}${r.c?` <span class="dc">${CIRC[r.c]}</span>`:''}</td>
+    <td class="wh">${places(r)}</td>
+    <td class="fl">${showFile ? `<a class="file" href="#f-${esc(r.F.f)}" data-file="${esc(r.F.f)}">${esc(fileName(r.F))}</a>` : ''}</td></tr>`;
+}
+function head(F, n){
+  const tpl=F.tpl || F.f, where=F.noFile ? '' : (F.path || 'content/<topic>/'+F.f+'.csv');
+  return `<tr class="grp" id="f-${esc(F.f)}"><td colspan="4"><span class="file">${esc(fileName(F))}</span><span class="one">One row = ${esc(F.one)}</span>
+    <span class="cols">${F.noFile?'':'Columns: '}${esc(F.cols)}${where?` · ${esc(where)}`:''}${!F.noFile && TEMPLATES.has(tpl)?` · <a href="${esc(ROOT+'content/templates/'+tpl+'.csv')}" download>template</a>`:''} · ${n} ${n===1?'game':'games'}</span></td></tr>`;
+}
+function draw(){
+  const q=document.getElementById('find').value.trim().toLowerCase(), words=q.split(/\s+/).filter(Boolean);
+  const hit=r=>words.every(w=>r.s.includes(w));
+  const out=document.getElementById('out');
+  let body='';
+  if(mode==='file'){
+    FILES.forEach(F=>{ const rs=ROWS.filter(r=>r.F===F && hit(r)); if(rs.length) body+=head(F, rs.length)+rs.map(r=>row(r, false)).join(''); });
+  } else {
+    body=ROWS.filter(hit).slice().sort((a,b)=>a.n.replace(/^[^a-z0-9]+/i,'').localeCompare(b.n.replace(/^[^a-z0-9]+/i,''), 'en', {sensitivity:'base'}) || fileName(a.F).localeCompare(fileName(b.F))).map(r=>row(r, true)).join('');
+  }
+  out.innerHTML = body ? `<table class="${mode==='file'?'by-file':'by-name'}"><thead><tr><th>Name</th><th>How it's played</th><th>Where (click to open)</th><th class="fl">File</th></tr></thead><tbody>${body}</tbody></table>`
+    : `<p class="none">Nothing called “${esc(q)}”. Try part of a name (<i>spag</i>, <i>gap</i>) or a file (<i>reads</i>, <i>errors</i>).</p>`;
+}
+function setMode(m){ mode=m; document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.mode===m))); save(); draw(); }
+function goFile(f){
+  if(mode!=='file' || document.getElementById('find').value){ document.getElementById('find').value=''; mode='file'; setMode('file'); }
+  const el=document.getElementById('f-'+f); if(!el) return;
+  el.style.scrollMarginTop=(document.querySelector('.tools').offsetHeight+8)+'px';   // below the sticky search bar
+  el.scrollIntoView({behavior:'smooth', block:'start'});
+  el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+}
+
+document.getElementById('find').addEventListener('input', draw);
+document.querySelector('.seg').onclick=e=>{ const b=e.target.closest('[data-mode]'); if(b) setMode(b.dataset.mode); };
+document.getElementById('topic').onchange=e=>{ topic=TOPICS.find(t=>t.href===e.target.value)||null; save(); draw(); };
+document.addEventListener('click', e=>{ const a=e.target.closest('a[href^="#f-"]'); if(!a) return; e.preventDefault(); history.replaceState(null, '', a.getAttribute('href')); goFile(a.getAttribute('href').slice(3)); });
+
+mode = saved.mode==='az' ? 'az' : 'file';
+document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed', String(b.dataset.mode===mode)));
+if(/^#f-/.test(location.hash)) mode='file';
+draw();
+// Opened at a file (from the Site content page): go to it once the fonts and the topic list have settled the layout
+const atFile=()=>{ if(/^#f-/.test(location.hash)) (document.fonts ? document.fonts.ready : Promise.resolve()).then(()=>setTimeout(()=>goFile(location.hash.slice(3)), 30)); };
+
+// The topic list: the links point at the chosen topic's page (English) and its Chinese page when there is one
+const doc=url=>fetch(url, {cache:'no-cache'}).then(r=>{ if(!r.ok) throw new Error(r.status); return r.text(); }).then(t=>new DOMParser().parseFromString(t, 'text/html'));
+const SEL='a.topic-link, .ess-card a.cc-btn:not(.alt)';
+// The English subjects come from en/engine/subjects.js (8 Nov 2026), written out as the old topic-list markup
+const enDoc=()=>new DOMParser().parseFromString(window.AEA_SUBJECTS ? AEA_SUBJECTS.legacyHtml() : '', 'text/html');
+Promise.all([enDoc(), doc(ROOT+'zh/index.html').catch(()=>null)]).then(([en, zh])=>{
+  const zhSet=new Set(zh ? [...zh.querySelectorAll(SEL)].map(a=>a.getAttribute('href').split('#')[0]) : []);
+  const seen=new Set();
+  TOPICS=[...en.querySelectorAll(SEL)].map(a=>{ const href=a.getAttribute('href').split('#')[0]; const nm=a.querySelector('.topic-name');
+    return {href, name: a.matches('.cc-btn') ? 'Academic English Essentials' : (nm ? nm.textContent : a.textContent).trim(), zh: zhSet.has(href)}; })
+    .filter(t=>!seen.has(t.href) && seen.add(t.href));
+  const sel=document.getElementById('topic');
+  sel.innerHTML=TOPICS.map(t=>`<option value="${esc(t.href)}">${esc(t.name)}${t.zh?'':' (no Chinese page)'}</option>`).join('');
+  topic=TOPICS.find(t=>t.href===saved.topic) || TOPICS.find(t=>/advertising/.test(t.href)) || TOPICS[0] || null;
+  if(topic) sel.value=topic.href;
+  draw(); atFile();
+}).catch(()=>{ document.getElementById('topic').innerHTML='<option value="">(topic list not read)</option>'; atFile(); });
+})();
+</script>
+</body>
+</html>

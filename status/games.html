@@ -123,6 +123,7 @@ const PLACE = {
   'board-q':    {kind:'t',  name:'Board games (questions)', href:'teacher/index.html#/board'},
   'starters':   {kind:'t',  name:'Starters', href:'teacher/index.html#/starters'},
   'handouts':   {kind:'t',  name:'Handouts', href:'teacher/index.html#/handouts'},
+  'homework':   {kind:'t',  name:'Homework (handouts)', href:'teacher/index.html#/handouts/homework'},
   'close':      {kind:'go', name:'Reading Comprehension · Close reading', href:'en/reading-comprehension/close-reading/index.html'},
   'bigidea':    {kind:'go', name:'Reading Comprehension · Big idea', href:'en/reading-comprehension/big-idea/index.html'},
   'notes':      {kind:'go', name:'Reading Comprehension · Note taking', href:'en/reading-comprehension/note-taking/index.html'},
@@ -140,12 +141,12 @@ const CIRC = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit
 // topic page link (#play-<p>; 'words' = the word list, '' = the page itself).
 const FILES = [
   {f:'words', one:'a word: its meaning, an example, its Chinese and its synonyms.', cols:'word, pos, meaning, example, synonyms, zh · also group, similar, accept, note, list', games:[
-    {n:'Match the meaning', w:['en-vocab'], how:'Pair each word with its meaning, or with a group of words close in meaning (from the synonyms column). In the Daily Circuit it has a one-minute round of its own.', c:'match', p:'match'},
+    {n:'Match the meaning', w:['en-vocab', 'homework'], how:'Pair each word with its meaning, or with a group of words close in meaning (from the synonyms column). In the Daily Circuit it has a one-minute round of its own.', c:'match', p:'match'},
     {n:'Word or meaning', w:['en-vocab'], how:'See a word and choose its meaning, or see a meaning and choose the word.', c:'short', p:'meaning'},
     {n:'Words (the word list)', w:['en-words'], how:'Every word at the student\'s level with its meaning, to look through before playing.', p:'words'},
     {n:'Save the mouse', w:['en-games'], how:'Guess the word one letter at a time before the mouse disappears.', p:'mouse'},
-    {n:'Word search', w:['en-games'], how:'Find the words hidden in a square of letters (words of 4 or more letters), from the words or from their meanings.', p:'wordsearch'},
-    {n:'Crossword', w:['en-games'], how:'Fill in a crossword of the topic\'s words. Each clue is a word\'s meaning, with the letters in each word: (4,2,6). A word whose meaning contains the word itself is left out.', p:'crossword'},
+    {n:'Word search', w:['en-games', 'homework'], how:'Find the words hidden in a square of letters (words of 4 or more letters), from the words or from their meanings.', p:'wordsearch'},
+    {n:'Crossword', w:['en-games', 'homework'], how:'Fill in a crossword of the topic\'s words. Each clue is a word\'s meaning, with the letters in each word: (4,2,6). A word whose meaning contains the word itself is left out.', p:'crossword'},
     {n:'Whack-a-word', w:['en-games'], how:'Words pop up from holes. Tap the one that matches the meaning.', c:'arcade', p:'whack'},
     {n:'Word Invaders', w:['en-games'], how:'Words march down the screen. Shoot the one that fits the meaning.', c:'arcade', p:'invaders'},
     {n:'Word Snake', w:['en-games', 'zh-games'], how:'Eat the word that matches the meaning. One wrong bite ends it.', p:'snake'},
@@ -159,7 +160,7 @@ const FILES = [
     {n:'Crossword', zh:'填字游戏', w:['zh-games'], how:'Fill in a crossword with your English words. The clues are their Chinese or their meanings.', p:'zhcrossword'},
     {n:'What does it mean?', w:['board-q', 'starters'], how:'A word: teams choose its meaning (board games); students write it in their books (Starters).'},
     {n:'Which word?', w:['board-q', 'starters'], how:'A meaning: teams choose the word (board games); students write it (Starters).'},
-    {n:'中文 → English', w:['board-q', 'starters'], how:'A word in Chinese: give the English word.'},
+    {n:'中文 → English', w:['board-q', 'starters', 'homework'], how:'A word in Chinese: give the English word.'},
     {n:'Anagram', w:['starters'], how:'One square: a topic word with its letters mixed up.'},
     {n:'Missing vowels', w:['starters'], how:'One square: a topic word with its vowels taken out.'},
     {n:'Match-up', w:['starters'], how:'The whole board: words and meanings to pair up, at random or the words you choose.'},
@@ -173,51 +174,51 @@ const FILES = [
     {n:'Use it in a sentence', zh:'造句', w:['handouts'], how:'Three of the words, with lines to write a sentence of their own.'}
   ]},
   {f:'gaps', one:'a sentence with a gap, its answer and three wrong answers.', cols:'sentence, answer, wrong1–wrong3, explanation, word', games:[
-    {n:'Fill the gap', w:['en-grammar'], how:'Choose the word or form that fits the gap in each sentence.', c:'short', p:'gap'},
+    {n:'Fill the gap', w:['en-grammar', 'homework'], how:'Choose the word or form that fits the gap in each sentence.', c:'short', p:'gap'},
     {n:'Fill the gap', w:['board-q', 'starters', 'handouts'], how:'A sentence with a word missing: choose it (board games) or write it (Starters, and handouts with a word bank).'}
   ]},
   {f:'right-wrong', one:'one sentence that is either right or has one mistake.', cols:'statement, answer (RIGHT or WRONG), explanation, correction', games:[
-    {n:'Grammar Check', w:['en-grammar'], how:'Read a sentence and choose Good Grammar or Bad Grammar. It is about how the sentence is written, not whether it is true. (Was SPAG: Right or Wrong.)', c:'short', p:'rw'},
+    {n:'Grammar Check', w:['en-grammar', 'homework'], how:'Read a sentence and choose Good Grammar or Bad Grammar. It is about how the sentence is written, not whether it is true. (Was SPAG: Right or Wrong.)', c:'short', p:'rw'},
     {n:'Grammar Check', w:['board-q', 'starters'], how:'Good Grammar or Bad Grammar? In Starters, if it\'s bad they write it correctly.'}
   ]},
   {f:'errors', one:'a short paragraph with its mistakes marked [wrong|right|why].', cols:'title, text', games:[
-    {n:'Spot the error', w:['en-grammar'], how:'Read a paragraph and tap every word with a mistake.', c:'long', p:'error'},
+    {n:'Spot the error', w:['en-grammar', 'homework'], how:'Read a paragraph and tap every word with a mistake.', c:'long', p:'error'},
     {n:'Spot the error', w:['starters'], how:'Half the board: a short paragraph. Students find and correct the mistakes in their books.'}
   ]},
   {f:'tf', one:'a statement and whether it is true or false.', cols:'statement, answer (TRUE or FALSE), explanation', games:[
-    {n:'True or false', w:['en-vocab'], how:'Read each statement and decide quickly: true or false? It also mixes in statements made from words.csv.', c:'short', p:'tf'},
+    {n:'True or false', w:['en-vocab', 'homework'], how:'Read each statement and decide quickly: true or false? It also mixes in statements made from words.csv.', c:'short', p:'tf'},
     {n:'True or false', w:['board-q', 'starters'], how:'A statement: true or false?'}
   ]},
   {f:'builds', one:'a sentence cut into pieces, with trap pieces that don\'t belong.', cols:'goal, zh, pieces, decoys, also_right, explanation', games:[
-    {n:'Build the sentence', w:['en-reading'], how:'Put the coloured pieces in order, and watch out for the trap pieces.', c:'short', p:'build'},
+    {n:'Build the sentence', w:['en-reading', 'homework'], how:'Put the coloured pieces in order, and watch out for the trap pieces.', c:'short', p:'build'},
     {n:'Build the sentence', zh:'连词成句', w:['zh-sent'], how:'See the sentence in Chinese, then build it in English. Only rows with the zh column filled in play here.', p:'zhbuild'}
   ]},
   {f:'evidence', one:'a statement, the details that show it and details that don\'t.', cols:'statement, right1–right3, wrong1–wrong3, side (en, zh or blank for both), word, explanation', games:[
-    {n:'Find the evidence', w:['en-reading'], how:'Read what the task says, then choose the details that show it.', c:'long', p:'evidence'},
+    {n:'Find the evidence', w:['en-reading', 'homework'], how:'Read what the task says, then choose the details that show it.', c:'long', p:'evidence'},
     {n:'All-in English', zh:'全英文练习', w:['zh-sent'], how:'The same game on the Chinese page: read a sentence in English, then choose the English details that match it.', p:'zhevidence'}
   ]},
   {f:'reads', one:'a short text with its key words in [[double brackets]], which become the gaps.', cols:'title, text, extra1–extra3 (extra words for the word bank)', games:[
-    {n:'Complete the text', w:['en-reading'], how:'Read a short text and put the key words into the gaps from a word bank.', c:'long', p:'read'},
+    {n:'Complete the text', w:['en-reading', 'homework'], how:'Read a short text and put the key words into the gaps from a word bank.', c:'long', p:'read'},
     {n:'Gap Fill', w:['starters'], how:'The whole board: a paragraph with gaps and a word bank, from reads.csv or one you type in.'}
   ]},
   {f:'word-choice', one:'a short text with gaps; each gap has the right word first, then two or three wrong ones: [[right|wrong|wrong|wrong]].', cols:'title, text, explanation, source (not shown)', games:[
-    {n:'Word choice', w:['en-vocab'], how:'Use of English Part 1 (C1 Advanced): read a short text and choose the word (A–D) that fits each gap.', c:'long', p:'wchoice'}
+    {n:'Word choice', w:['en-vocab', 'homework'], how:'Use of English Part 1 (C1 Advanced): read a short text and choose the word (A–D) that fits each gap.', c:'long', p:'wchoice'}
   ]},
   {f:'open-cloze', one:'a short text with one-word gaps: [[answer]], or [[answer/other]] when more than one word is right.', cols:'title, text, explanation, source (not shown)', games:[
-    {n:'Open cloze', w:['en-grammar'], how:'Use of English Part 2 (C1 Advanced): type the one word that fits each gap. The spelling must be right.', c:'long', p:'ocloze'}
+    {n:'Open cloze', w:['en-grammar', 'homework'], how:'Use of English Part 2 (C1 Advanced): type the one word that fits each gap. The spelling must be right.', c:'long', p:'ocloze'}
   ]},
   {f:'word-formation', one:'a short text with gaps and the word each answer is made from: [[answer|STEM]].', cols:'title, text, explanation, source (not shown)', games:[
-    {n:'Word formation', w:['en-grammar'], how:'Use of English Part 3 (C1 Advanced): change the word in capitals so that it fits the gap. The spelling must be right.', c:'long', p:'wform'}
+    {n:'Word formation', w:['en-grammar', 'homework'], how:'Use of English Part 3 (C1 Advanced): change the word in capitals so that it fits the gap. The spelling must be right.', c:'long', p:'wform'}
   ]},
   {f:'extracts', one:'a sentence or two with up to three [bracketed] words to explain.', cols:'extract, word, correct, wrong1–wrong3 · then word2, correct2… and word3, correct3…', games:[
-    {n:'In your own words', w:['en-reading'], how:'Paper 1 style: what does each underlined word mean here?', c:'long', p:'own'}
+    {n:'In your own words', w:['en-reading', 'homework'], how:'Paper 1 style: what does each underlined word mean here?', c:'long', p:'own'}
   ]},
   {f:'questions', one:'an exam question with its command word, and four answers.', cols:'command, question, correct, wrong1–wrong3, explanation', games:[
-    {n:'Answer the question', w:['en-reading'], how:'Read an exam question and choose the answer that does what the command word asks.', c:'long', p:'question'},
+    {n:'Answer the question', w:['en-reading', 'homework'], how:'Read an exam question and choose the answer that does what the command word asks.', c:'long', p:'question'},
     {n:'Answer the question', w:['board-q', 'starters'], how:'An exam question and four answers to choose from.'}
   ]},
   {f:'knowledge', one:'a quiz question and four answers. The level can be left blank.', cols:'question, correct, wrong1–wrong3, explanation', games:[
-    {n:'General knowledge', w:['en-games'], how:'Questions about the wider world of the topic. One answer is right. A question with no level plays at every level.', p:'gk'},
+    {n:'General knowledge', w:['en-games', 'homework'], how:'Questions about the wider world of the topic. One answer is right. A question with no level plays at every level.', p:'gk'},
     {n:'General knowledge', w:['board-q', 'starters'], how:'A pub-quiz question. Plays at any level.'},
     {n:'Must-know general knowledge', w:['circuit', 'board'], how:'From content/general/knowledge.csv (not a topic\'s): three questions in every Daily Circuit quick-fire station, and a topic of its own in the board games.'}
   ]},

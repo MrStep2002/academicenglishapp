@@ -532,6 +532,7 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
 // A question is: this page's content folder (TOPIC) + the game + the row's id (or the word's id, for cards made from words).
 const TOPIC = (()=>{ const m=String(CFG.content||CFG.reading||'').match(/content\/(.+?)\/*$/); return m ? m[1].replace(/\.csv$/,'') : ''; })();
 const REPORT_MAX = 5, HID_KEY = 'aeaHidden', REP_KEY = 'aeaReports', DEV_KEY = 'aeaDevice';
+const REPORT_THANKS = ["Thanks for the feedback. We'll look into it.", '谢谢你的反馈，我们会查看的。'];   // after a report is sent (10 Nov 2026)
 const apiBase = () => { try{ if(window.AEA_ACCOUNT && AEA_ACCOUNT.api) return AEA_ACCOUNT.api(); }catch(e){}
   let a=''; try{ a=localStorage.getItem('aea:api')||''; }catch(e){} return (a||'https://api.academicenglishapp.com').replace(/\/+$/,''); };
 let HIDDEN = new Set(), CUR_GAME = '', lastMiss = null;
@@ -599,7 +600,11 @@ function reportButton(card, row, miss){
           shown:seen.shown, chosen:seen.chosen, feedback:seen.feedback, side:SIDE, page:PAGE, pageName:CFG.name||'', gameName:gameNameOf(miss.game), level:lv||'', device:device()})})
         .then(r=>r.json().catch(()=>({})).then(d=>{ if(!r.ok){ const err=new Error(d.error||''); err.server=true; err.full=r.status===429; throw err; }
           const l=repLog(); if(!teacher && !d.already) l.n++; l.sent.push(key); repSave(l); done();
-          panel.innerHTML=`<p class="report-msg ok">${teacher ? T("Reported. It's on your Reports page.",'已报告。') : T('Thanks! Your teacher will check this question.','谢谢！老师会检查这道题。')}</p>`; }))
+          // 10 Nov 2026 (teacher): "Sending a report needs a validation once it has been sent. 'Thanks for the feedback. We'll
+          // look into it.'" Said in the panel (brought into view if it's off the screen) and in a note at the bottom of the screen.
+          panel.classList.add('sent'); panel.innerHTML=`<p class="report-msg ok" role="status">${T(REPORT_THANKS[0], REPORT_THANKS[1])}</p>`;
+          if(panel.scrollIntoView) panel.scrollIntoView({block:'nearest', behavior:matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'});
+          toastLevel(TX(REPORT_THANKS[0], REPORT_THANKS[1])); }))
         .catch(e=>{ if(e.full){ const l=repLog(); l.n=Math.max(l.n, REPORT_MAX); repSave(l); } else send.disabled=false;
           msg.textContent=e.full ? TX(`You've sent ${REPORT_MAX} reports today. Thank you for checking! You can send more tomorrow.`, `你今天已经报告了${REPORT_MAX}次，谢谢你的检查！明天可以再报告。`) : (e.server && e.message) || TX("Couldn't send the report. Check your internet connection and try again.",'无法发送，请检查网络后再试。'); });
     };
@@ -965,21 +970,41 @@ function wireCards(){
   const fc=document.getElementById('fc'); if(!fc) return;
   let i=0; try{ i=+sessionStorage.getItem(fcKey())||0; }catch(e){}
   let back=false;
-  const draw=(focusSel)=>{
-    const ws=cardWords(), n=ws.length; if(!n) return; i=((i%n)+n)%n; const w=ws[i], st=stageOf(w), stage=STAGES.find(x=>x[0]===st)||[], stName=T(stage[1], stage[2]), zh=SIDE==='zh' && ZH[w.id];
-    try{ sessionStorage.setItem(fcKey(), i); }catch(e){}
+  // A card's two faces (also used to measure every card in the deck: sizeCards below)
+  const faces=(w, back)=>{
+    const st=stageOf(w), stage=STAGES.find(x=>x[0]===st)||[], stName=T(stage[1], stage[2]), zh=SIDE==='zh' && ZH[w.id];
     const say=(what, label, cls)=>TTS_OK ? `<button type="button" class="fc-say${cls?' '+cls:''}" data-say="${what}" aria-label="${label}" title="${label}">${SPEAK_SVG}</button>` : '';
     const hearW=TX('Hear the word','听这个单词'), hearEx=TX('Hear the example','听例句');
     const top=`<div class="fc-top"><span class="fc-pos">${esc(w.pos||'')}</span><span class="fc-stage st-${st}">${stName}</span></div>`;
-    fc.innerHTML=`<div class="fc-inner">
-      <div class="fc-face fc-front"${back?' inert aria-hidden="true"':''}>${top}
+    return `<div class="fc-face fc-front"${back?' inert aria-hidden="true"':''}>${top}
         <div class="fc-word-row"><h3 class="fc-word">${esc(w.w)}</h3>${say('word', hearW)}</div>
         <p class="fc-tip">${T('What does it mean? Turn the card over to check.','这个词是什么意思？把卡片翻过来看看。')}</p></div>
       <div class="fc-face fc-back"${back?'':' inert aria-hidden="true"'}>${top}
         <div class="fc-word-row"><p class="fc-word sm">${esc(w.w)}</p>${say('word', hearW)}</div>
         ${zh ? `<p class="fc-zh" lang="zh-CN">${esc(zh)}</p>` : ''}<p class="fc-def">${esc(w.def)}</p>
         ${w.ex ? `<p class="fc-ex"><i>${esc(w.ex)}</i>${say('ex', hearEx, 'sm')}</p>` : ''}
-        ${w.syn && w.syn.length ? `<p class="fc-syn">${T('Similar','近义词')}: ${esc(w.syn.join(', '))}</p>` : ''}</div>
+        ${w.syn && w.syn.length ? `<p class="fc-syn">${T('Similar','近义词')}: ${esc(w.syn.join(', '))}</p>` : ''}</div>`;
+  };
+  // 10 Nov 2026 (teacher): "The vocabulary cards change size which makes scrolling on them annoying. Can they always stay the
+  // same size." Every card in the deck takes the height of the tallest one (front or back) at this width, so Previous / Next
+  // stay in the same place. Measured off screen with all the faces in one grid cell (the cell is as tall as the tallest);
+  // again when the width changes and when the fonts have loaded. --fc-h on the card (site.css: .fc-face min-height).
+  let sizedW=0;
+  const sizeCards=()=>{
+    if(!fc.isConnected) return;
+    const ws=fcWords(), wd=fc.clientWidth; if(!ws.length || !wd) return;
+    const m=document.createElement('div'); m.className='fc fc-measure'; m.setAttribute('aria-hidden','true'); m.setAttribute('inert','');
+    m.style.cssText='position:absolute;left:0;top:0;width:'+wd+'px;visibility:hidden;pointer-events:none;z-index:-1';
+    m.innerHTML=`<div class="fc-inner">${ws.map(w=>faces(w, false)).join('')}</div>`;
+    fc.parentNode.appendChild(m);
+    const h=Math.ceil(m.firstElementChild.getBoundingClientRect().height); m.remove();
+    if(h>0){ fc.style.setProperty('--fc-h', h+'px'); sizedW=wd; }
+  };
+  const draw=(focusSel)=>{
+    const ws=cardWords(), n=ws.length; if(!n) return; i=((i%n)+n)%n; const w=ws[i];
+    try{ sessionStorage.setItem(fcKey(), i); }catch(e){}
+    fc.innerHTML=`<div class="fc-inner">
+      ${faces(w, back)}
     </div>
     <button type="button" class="fc-flip" aria-pressed="${back}">${back ? T('Show the word','看单词') : T('Turn over','翻过来')}</button>`;
     fc.classList.toggle('flipped', back);
@@ -1001,7 +1026,10 @@ function wireCards(){
   document.querySelector('.fc-area').addEventListener('keydown', e=>{ if(e.target.closest('input, textarea, select')) return;
     if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); document.getElementById('fcPrev').focus({preventScroll:true}); }
     else if(e.key==='ArrowRight'){ e.preventDefault(); go(1); document.getElementById('fcNext').focus({preventScroll:true}); } });
-  draw();
+  draw(); sizeCards();
+  if(window.ResizeObserver){ const ro=new ResizeObserver(()=>{ if(!fc.isConnected){ ro.disconnect(); return; } if(fc.clientWidth!==sizedW) sizeCards(); }); ro.observe(fc); }
+  else addEventListener('resize', ()=>{ if(fc.isConnected && fc.clientWidth!==sizedW) sizeCards(); });
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(sizeCards);
 }
 
 // Science pages: the columns the page's module names (GEN.columns: e.g. Chemistry, Vocabulary, Explaining)

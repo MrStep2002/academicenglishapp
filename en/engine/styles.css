@@ -802,6 +802,8 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .report-msg{color:var(--ink-2);font-size:15px}
 .report-msg:empty{display:none}
 .report-msg.ok{color:var(--good);font-weight:700}
+.report.sent{border-style:solid;border-color:var(--good);background:var(--good-soft)}   /* the thank-you after sending (10 Nov 2026) */
+.report.sent .report-msg.ok::before{content:"✓ "}
 
 /* Chinese topic pages, 3 Nov 2026 (teacher: "a 3x3 grid so it should be neat and tidy"): three columns of three games,
    Vocab, Sentences and Games (ZH_COLS in app.js). A grid, not three separate columns, so each row of cards lines up.
