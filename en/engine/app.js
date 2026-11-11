@@ -333,11 +333,11 @@ const POINTS = {
 };
 const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word', crossword:'type', zhcrossword:'type',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', wchoice:'short', ocloze:'short', wform:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage', recall:'passage', totalrecall:'passage'};
-const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Word Snake, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
+const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Cheese Run, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error (shared between its errors), In your own words, Find the evidence, All-in English'],
   ['short','Complete the text, Word choice, Open cloze and Word formation (shared between the gaps), Answer the question'], ['passage','A reading passage or listening test: Close reading, Big idea, Note taking, Recall, Total Recall, Listening (Recall and Total Recall add a speed bonus)']];
 // The same, in Chinese (My progress opened from the Chinese side, stage 4)
-const POINT_KINDS_ZH = {word:'单词游戏：学习单词、单词配释义、看中文选英文、选出释义、判断对错、单词贪吃蛇、单词打地鼠、单词入侵者、单词搜索、限时挑战、生存挑战',
+const POINT_KINDS_ZH = {word:'单词游戏：学习单词、单词配释义、看中文选英文、选出释义、判断对错、奶酪快跑、单词打地鼠、单词入侵者、单词搜索、限时挑战、生存挑战',
   type:'拼写单词、拯救小老鼠', grammar:'填空、判断对错、语法检查、常识题、翻译', build:'连词成句、找错（分摊到每个错误）、用自己的话说、找证据、全英文练习',
   short:'完成短文、选词填空、开放式填空、构词填空（分摊到每个空）、回答问题', passage:'阅读文章或听力测试：精读、主旨、笔记、听力'};
 // The name students see for a level code. B1+ (the upper half of B1) has B1's name.
@@ -2293,7 +2293,7 @@ function passageBoth(st, deck){
         <h3 id="crQ${qi}">${esc(q.q)}</h3>
         <div class="opts long" role="group" aria-labelledby="crQ${qi}">${orders[qi].map((oi,j)=>`<button class="opt" type="button" data-q="${qi}" data-o="${oi}" aria-pressed="false">${keyOf[qi][j]<=9?`<kbd>${keyOf[qi][j]}</kbd>`:''}<span>${esc(q.opts[oi])}</span></button>`).join('')}</div>
         <div class="cr-why" hidden></div></section>`).join('')}
-        <div class="cr-actions"><p class="cr-end" aria-live="polite"></p><button class="btn cr-go" type="button" disabled>Confirm</button></div></div></div>`);
+        <div class="cr-actions"><p class="chr-end" aria-live="polite"></p><button class="btn cr-go" type="button" disabled>Confirm</button></div></div></div>`);
     card.classList.add('cr-card');
     const go=card.querySelector('.cr-go'), btns=[...card.querySelectorAll('.cr-q .opt')], secs=[...card.querySelectorAll('.cr-q')];
     const choose=b=>{ if(checked) return; const qi=+b.dataset.q; picks[qi]=+b.dataset.o;
@@ -2883,7 +2883,8 @@ function partialCredit(game, item, right, wrong, parts){
 // early: a mistake costs length or points, not the game. Played from the Games row, Word Snake has no clock instead: it
 // goes on until a wrong word ends it (1 Nov 2026, teacher; see playSnake). On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
 const ARCADE = [
-  {key:'snake', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
+  // Cheese Run (11 Nov 2026, teacher): Word Snake redone with the site's mouse and words on cheese; the key stays 'snake'
+  {key:'snake', name:'Cheese Run', zh:'奶酪快跑', blurb:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
   {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up from holes. Tap the one that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
   {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'Words march down the screen. Shoot the one that fits the meaning.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];
@@ -2902,65 +2903,125 @@ function arcadeDef(el, w){ if(!el) return; el.textContent=w.def;
 function fitLabel(box, span){ span.style.fontSize=''; let px=parseFloat(getComputedStyle(span).fontSize)||16;
   while(px>11 && (span.scrollWidth>box.clientWidth-10 || span.scrollHeight>box.clientHeight-6)){ px--; span.style.fontSize=px+'px'; } }
 // Time's up (outside the circuit): score, best score and the words to practise
-// o (optional): {title, unit(score), note}: Word Snake's game over (1 Nov) says what ended it and counts points
+// o (optional): {title, unit(score), note}: Word Snake's game over (1 Nov) says what ended it and counts points;
+// pic(isBest): a picture beside the score (Cheese Run's mice, 11 Nov 2026)
 function arcadeEnd(game, score, missed, again, o){
   o=o||{};
   clearTimers(); keyHandler=null; document.querySelector('.timer')?.remove();
   const prev=store.get('best:'+game.key,0), isBest=score>prev; if(isBest) store.set('best:'+game.key,score);
   const list=[...new Map(missed.map(w=>[w.id,w])).values()];
   const zh=SIDE==='zh';
-  const card=showCard(`<div class="end"><p class="instr">${zh ? gameNameT(game) : esc(game.name)} · ${o.title||T("time's up",'时间到')}</p>
+  const pic=o.pic ? o.pic(isBest) : '';
+  const card=showCard(`<div class="end${pic?' end-with-pic':''}">${pic?`<div class="end-pic">${pic}</div>`:''}<p class="instr">${zh ? gameNameT(game) : esc(game.name)} · ${o.title||T("time's up",'时间到')}</p>
     <div class="big">${score}</div><p class="end-sub">${o.unit ? o.unit(score) : T((score===1?'word':'words')+' found', '个单词')}</p>${o.note||''}
-    <h2>${isBest ? T('New best score!','新纪录！') : T('Best score: ','最高分：')+Math.max(prev,score)}</h2>
+    <h2>${isBest ? T('New best score!','新纪录！') : T('Best score: ','最高分：')+Math.max(prev,score)}</h2>${pic?'<div class="end-clear"></div>':''}
     ${list.length?`<p class="instr" style="margin-top:22px">${T('Words to practise','要练习的单词')}</p><ul class="review">${list.map(w=>`<li><b>${esc(w.w)}</b>${zh && ZH[w.id] ? ` <span lang="zh-CN">${esc(ZH[w.id])}</span>` : ''} – ${esc(w.def)}</li>`).join('')}</ul>`:''}
     <div class="end-actions"><button class="btn" id="again">${T('Play again','再玩一次')}</button><a class="btn alt" href="#">${T('All games','所有游戏')}</a></div></div>`);
   card.querySelector('#again').onclick=again;
   keyHandler=e=>{ if(e.key==='Enter'){ e.preventDefault(); again(); } };
 }
 
-// ----- Word Snake -----
-// The board is a grid (24 x 14 on computers, 14 x 14 on phones). The words sit on it as labels; steer the snake's head
-// into the one that matches the meaning. Right: the snake grows and speeds up a little, and a new meaning appears.
-// The walls let the snake through.
+// ----- Cheese Run (was Word Snake) -----
+// 11 Nov 2026 (teacher): Word Snake redone with the site's mouse: "Shouldn't this game be the user in control of the mouse
+// while the food is in cheese? And the mouse gets weirdly longer as it runs...? Same mechanic but has more character."
+// The same game as before: the words sit on slabs of cheese on the floorboards of a house; steer the mouse into the one
+// that matches the meaning. Right: the mouse grows (its white body stretches between its front and back ends, like Slinky
+// Dog) and speeds up a little, and a new meaning appears. The walls let it through.
+// "Words come first" (teacher: "The key is not making the games seem gamey… The game has to remain learning the
+// language"): the words are the biggest, clearest thing on the board; the effects are short and calm; no game extras.
+// The art (images/arcade/cheese-run/, the teacher's AI pictures, cleaned up): five faces (calm; hungry, eyeing up a word
+// just ahead; yum after a right word; ouch after biting its tail or a wrong word; dizzy at game over), the back end, the
+// floorboards, and the happy and game-over mice for the start and the end. The body, the paws, the cheese and the crumbs
+// are drawn here. One plank of the floor is one square of the grid. Without the pictures it draws the old snake.
+// Sound (arcadeSound): a crunch on a right word, only when the student has switched sound on.
+// The key stays 'snake' (best scores, word progress, the Daily Circuit and class games keep working).
+// The board is a grid (24 x 14 on computers, 14 x 14 on phones).
 // From the Games row (1 Nov 2026, teacher): no clock; it goes on for as long as you survive. Each right word scores 3
 // points; a wrong word ends the game (its meaning and the word you needed are shown); biting your own tail cuts it off
 // and costs a point for each piece lost.
 // In the Daily Circuit and class games: one minute; a wrong word costs two pieces, and biting your tail just cuts it off.
 // Controls: arrow keys or WASD, or tap (or click) the screen on the side you want to go: above or below the head when
-// the snake is going sideways, left or right of it when it is going up or down. Never diagonal, never straight back.
+// the mouse is going sideways, left or right of it when it is going up or down. Never diagonal, never straight back.
+const CR_ART = ROOT+'images/arcade/cheese-run/', CR_V = '2026-11-11a';
+// The sprites' sizes in pixels, where the body joins them (jx, jy), the body's width there and its outline (export.py)
+const CR_FACE = {w:186, h:198, jx:12.5, jy:99.25, body:45, line:8.5};
+const CR_BACK = {w:177, h:99, jx:167.5, jy:49.35, body:45, line:9.6};
+const CR_FACES = ['calm','hungry','yum','ouch','dizzy'];
+let crImgs=null;
+function crArt(){
+  if(crImgs) return crImgs;
+  crImgs={};
+  [...CR_FACES, 'back'].forEach(k=>{ const i=new Image(); i.src=CR_ART+'mouse-'+k+'.webp?v='+CR_V; crImgs[k]=i; });
+  const f=new Image(); f.src=CR_ART+'floor.webp?v='+CR_V; crImgs.floor=f;
+  return crImgs;
+}
+const crReady = i => !!(i && i.complete && i.naturalWidth>0);
+// The happy mouse holding up its cheese as a sign (the start, a pause, a new best score). h: its height in px.
+const crSign = (text, h, cls) => `<span class="chr-pic${cls?' '+cls:''}" style="--h:${h}px"><img src="${CR_ART}mouse-happy.webp?v=${CR_V}" alt="" width="269" height="420"><b class="chr-sign">${text}</b></span>`;
+
+// ---------- Sound in the arcade games (11 Nov 2026): off unless the student switches it on ----------
+// One switch (in the side panel) for every arcade game, kept in this browser (and the student's account: aea:sound).
+// Files in audio/arcade/ (MP3, mono, short). Cheese Run: crunch (a right word). More to come.
+const SOUND_KEY='aea:sound', SOUNDS={};
+const soundOn = () => { try{ return localStorage.getItem(SOUND_KEY)==='on'; }catch(e){ return false; } };
+function arcadeSound(name){
+  if(!soundOn()) return;
+  try{ let a=SOUNDS[name]; if(!a){ a=SOUNDS[name]=new Audio(ROOT+'audio/arcade/'+name+'.mp3?v='+CR_V); a.preload='auto'; }
+    const s=a.paused || a.ended ? a : a.cloneNode(); s.volume=0.8; s.currentTime=0; const p=s.play(); if(p && p.catch) p.catch(()=>{}); }catch(e){}
+}
+function soundSwitch(sample){
+  const box=gameTools(); if(!box) return;
+  const lab=document.createElement('label'); lab.className='toggle';
+  lab.innerHTML=`<input type="checkbox" id="arcSound" ${soundOn()?'checked':''}> ${T('Sound','声音')}`;
+  box.appendChild(lab);
+  lab.querySelector('input').onchange=e=>{ try{ localStorage.setItem(SOUND_KEY, e.target.checked?'on':'off'); }catch(x){} if(e.target.checked && sample) arcadeSound(sample); };
+}
+
 function playSnake(){
   const game=ARCADE.find(g=>g.key==='snake'), SECS=60;
   const touch=PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+  const calm=!!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const COLS=PHONE?14:24, ROWS=14, N=PHONE?3:4;
   const ENDLESS=!inCircuit && !classRun, timed=!inCircuit && !ENDLESS;   // ENDLESS: played from the Games row
   const nextQ=arcadeQuestions(N), best=store.get('best:snake',0);
   let score=0; const missed=[];
-  const snHint=T(`${touch?'Tap the screen on the side you want the snake to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the snake shorter. You can go through the walls.'}`,
-    `${touch?'点击屏幕上你想让蛇转向的那一边。':'用方向键或 WASD 转向（也可以点击想转向的那一边）。'}${ENDLESS?'每吃对一个单词得 3 分。吃错一个，游戏就结束。咬到尾巴会扣分。蛇可以穿过墙。':'吃错单词，蛇会变短。蛇可以穿过墙。'}`);
+  const snHint=T(`${touch?'Tap the screen on the side you want the mouse to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the mouse shorter. You can go through the walls.'}`,
+    `${touch?'点击屏幕上你想让小老鼠转向的那一边。':'用方向键或 WASD 转向（也可以点击想转向的那一边）。'}${ENDLESS?'每吃对一个单词得 3 分。吃错一个，游戏就结束。咬到尾巴会扣分。小老鼠可以穿过墙。':'吃错单词，小老鼠会变短。小老鼠可以穿过墙。'}`);
   if(NEW_UI) gameLayout(game, snHint, {top:timed?timerBar():''});
-  else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${game.name}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
+  else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
     <p class="hint">${snHint}</p>
     ${timed?timerBar():''}<div class="feed" id="feed"></div>`);
+  soundSwitch('crunch');
   const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
     el.innerHTML=NEW_UI ? gStats([[ENDLESS?T('Score','得分'):T('Found','找到'), score], ...(timed?[[T('Time','时间'), SECS, T('s','秒'), 'snSecs']]:[]), [T('Best','最佳'), Math.max(best,score)]])
       : `<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="snSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
+  const startCap=touch?T('Tap to start','点击开始'):T('Press an arrow key to start','按方向键开始');
   const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="snDef"></p>
-    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="${TX('Word Snake board','单词贪吃蛇的游戏区')}"></canvas><p class="snake-msg" id="snMsg">${touch?T('Tap to start','点击开始'):T('Press an arrow key to start','按方向键开始')}</p></div>
+    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="${TX('Cheese Run board','奶酪快跑的游戏区')}"></canvas>
+      <div class="chr-msg" id="snMsg">${crSign(T('Ready?','准备好了吗？'), 200)}<span class="chr-cap" id="snCap">${startCap}</span></div></div>
     <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
   card.classList.add('arcade-card'); card.style.touchAction='manipulation';   // quick taps never zoom the page
   const box=card.querySelector('#snBoard'), cv=card.querySelector('#snCanvas'), cx=cv.getContext('2d'), msg=card.querySelector('#snMsg');
   const alive=()=>document.body.contains(cv);   // false once the student has moved on to another page or game
+  const art=crArt();
+  // the message over the board: the happy mouse's sign and a line under it
+  const showMsg=(sign, cap)=>{ msg.querySelector('.chr-sign').innerHTML=sign; msg.querySelector('#snCap').innerHTML=cap; msg.hidden=false; };
 
-  // Colours come from the page's own palette, so the board follows light and dark mode
-  let col={}, cell=20, fontPx=14;
+  // Colours: the page's own (the board's fallback, dark mode); the mouse and the cheese keep the art's colours
+  const NAVY='#151935', CHEESE='#FFE14D', HOLE='#E9C43A', MOULD='#8FA77F';
+  let col={}, cell=20, fontPx=14, dark=false;
   const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-  const colours=()=>{ col={paper:css('--paper'), sheet:css('--sheet'), ink:css('--ink'), rule:css('--rule'), mark:css('--mark'), good:css('--good'), goodSoft:css('--good-soft'), bad:css('--bad'), badSoft:css('--bad-soft'), font:css('--f-body')||'sans-serif'}; };
+  const lum=c=>{ const m=String(c).match(/^#([0-9a-f]{6})$/i), r=m ? [0,2,4].map(i=>parseInt(m[1].slice(i,i+2),16)) : (String(c).match(/\d+/g)||[255,255,255]).slice(0,3).map(Number);
+    return (0.2126*r[0]+0.7152*r[1]+0.0722*r[2])/255; };
+  const colours=()=>{ col={paper:css('--paper'), sheet:css('--sheet'), ink:css('--ink'), rule:css('--rule'), mark:css('--mark'), good:css('--good'), goodSoft:css('--good-soft'), bad:css('--bad'), badSoft:css('--bad-soft'), font:css('--f-body')||'sans-serif'};
+    dark=lum(col.paper||'#fff')<0.4; };
   const font=px=>`700 ${px}px ${col.font}`;
   // The board fills the card's width, but stays short enough for the meaning, the board (and the arrows) to fit on the screen together
   const size=()=>{ const dpr=window.devicePixelRatio||1, fitH=Math.floor((window.innerHeight-(touch?280:240))/ROWS);
     cell=Math.max(12, Math.min(Math.floor(box.clientWidth/COLS), fitH));
     cv.style.width=cell*COLS+'px'; cv.style.height=cell*ROWS+'px'; cv.width=Math.round(cell*COLS*dpr); cv.height=Math.round(cell*ROWS*dpr);
-    cx.setTransform(dpr,0,0,dpr,0,0); fontPx=Math.max(11, Math.min(16, Math.round(cell*(PHONE?0.58:0.5)))); };
+    cx.setTransform(dpr,0,0,dpr,0,0); fontPx=Math.max(11, Math.min(16, Math.round(cell*(PHONE?0.58:0.5))));
+    const h=Math.round(Math.min(220, cell*ROWS*0.6)); msg.querySelector('.chr-pic').style.setProperty('--h', h+'px'); };
 
   // A word's label: how many cells wide it is. A long phrase goes on two lines (split at the space nearest the middle).
   const layout=w=>{ cx.font=font(fontPx); const pad=cell*0.9, widest=Math.floor(COLS*(PHONE?0.65:0.42));
@@ -2976,9 +3037,11 @@ function playSnake(){
   let snake=[0,1,2,3].map(i=>({x:5-i, y:midY})), dir=DIRS.right, queue=[], grow=0, step=PHONE?190:170;
   let prevHead=null, prevTail=null, lastTick=0, pills=[], flash=null, q=null, firstTry=true;
   let started=false, paused=false, over=false, end=0, left=SECS*1000, loop=0;
+  let yumTill=0, ouchTill=0, dizzy=false, faceAng=0, pawPhase=0, lastFrame=0;
+  const fx=[];   // crumbs and "+3": {kind, x, y, t0, …}
 
   const say=(m, bad)=>{ const t=card.querySelector('#toast'); if(t){ t.textContent=m; t.className='toast arcade-toast'+(bad?' no':''); } };
-  // Free cells for a label: not on the snake, not right beside or straight ahead of its head, and one cell clear of other labels
+  // Free cells for a label: not on the mouse, not right beside or straight ahead of its head, and one cell clear of other labels
   function spot(L, block, near){
     for(let t=0;t<500;t++){ const x=Math.floor(Math.random()*(COLS-L.len+1)), y=Math.floor(Math.random()*(ROWS-L.h+1)); let ok=true;
       for(let i=0;i<L.len && ok;i++) for(let j=0;j<L.h && ok;j++){ const k=key(x+i,y+j); if(block.has(k)||near.has(k)) ok=false; }
@@ -3000,31 +3063,42 @@ function playSnake(){
   const pillAt=(x,y)=>pills.find(p=>p.state==='' && x>=p.x && x<p.x+p.len && y>=p.y && y<p.y+p.h);
 
   function right(p){
-    score+=ENDLESS?3:1; stats(); if(firstTry) P.record('snake', q.w, true);
+    const gain=ENDLESS?3:1;
+    score+=gain; stats(); if(firstTry) P.record('snake', q.w, true);
     grow+=2; step=Math.max(115, step-4);
     say('✓ '+q.w.w);
-    flash=Object.assign({}, p, {until:performance.now()+500});
+    const now=performance.now();
+    flash=Object.assign({}, p, {until:now+500});
+    yumTill=now+450; arcadeSound('crunch');
+    const cxp=(p.x+p.len/2)*cell, cyp=(p.y+p.h/2)*cell;
+    if(!calm) fx.push({kind:'crumbs', x:cxp, y:cyp, t0:now, bits:Array.from({length:9},(_,i)=>({a:i/9*Math.PI*2+Math.random()*0.5, d:cell*(0.8+Math.random()*0.7), r:cell*(0.06+Math.random()*0.05)}))});
+    fx.push({kind:'pts', x:cxp, y:(p.y)*cell, t0:now, text:'+'+gain});
     newQuestion();
   }
   function wrong(p){
-    p.state='bad'; p.until=performance.now()+700;   // shown in red for a moment, then gone
+    const now=performance.now();
+    p.state='bad'; p.until=now+700;   // the cheese has gone off: shown for a moment, then gone
     if(firstTry){ firstTry=false; P.record('snake', q.w, false); missed.push(q.w); q.retry(); }
     if(ENDLESS){   // the wrong word ends the game: a moment to see it, then the score
-      over=true; p.until=performance.now()+1400; say(`✗ ${p.w.w}: ${p.w.def}`, true);
+      over=true; dizzy=true; p.until=now+1400; say(`✗ ${p.w.w}: ${p.w.def}`, true);
       const want=q.w, ate=p.w;
-      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playSnake, {title:T('game over','游戏结束'), unit:n=>T(n===1?'point':'points','分'),
+      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playSnake, {title:T('game over','游戏结束'), unit:n=>T(n===1?'point':'points','分'), pic:endPic,
         note:`<p class="end-sub" style="margin:14px 0 20px">${T(`You ate <b>${esc(ate.w)}</b>: ${esc(ate.def)}<br>The word you needed was <b>${esc(want.w)}</b>.`, `你吃了 <b>${esc(ate.w)}</b>：${esc(ate.def)}<br>你要找的单词是 <b>${esc(want.w)}</b>。`)}</p>`}); }, 1400);
       return; }
+    ouchTill=now+600;
     const cut=Math.min(2, snake.length-3); if(cut>0){ snake.splice(snake.length-cut, cut); prevTail=null; }
     say(`✗ ${p.w.w}: ${p.w.def}`, true);
   }
+  // The end screen's picture: the happy mouse with "New best!" on its cheese, else the game-over mouse (time up: happy)
+  const endPic=isBest=>isBest ? crSign(T('New best!','新纪录！'), PHONE?140:190, 'chr-end')
+    : dizzy ? `<img class="chr-end" src="${CR_ART}mouse-gameover.webp?v=${CR_V}" alt="" width="653" height="420">` : crSign(T("Time's up!",'时间到！'), PHONE?140:190, 'chr-end');
   function advance(){
     if(queue.length) dir=queue.shift();
     const h=snake[0], nh={x:wx(h.x+dir.x), y:wy(h.y+dir.y)};
     const bite=snake.findIndex((p,i)=>i>0 && i<snake.length-(grow?0:1) && p.x===nh.x && p.y===nh.y);
     prevHead=h; snake.unshift(nh);
     if(grow>0){ grow--; prevTail=null; } else prevTail=snake.pop();
-    if(bite>0){ const lost=snake.length-(bite+1); snake=snake.slice(0, bite+1); prevTail=null;
+    if(bite>0){ const lost=snake.length-(bite+1); snake=snake.slice(0, bite+1); prevTail=null; ouchTill=performance.now()+700;
       if(ENDLESS){ const was=score; score=Math.max(0, score-lost); stats(); say(TX(`Ouch! You bit your tail: −${was-score} point${was-score===1?'':'s'}.`, `哎哟！咬到尾巴了：−${was-score} 分。`), true); }
       else say(TX('Ouch! You bit your tail.', '哎哟！咬到尾巴了。'), true); }
     const now=performance.now(); pills=pills.filter(p=>p.state!=='bad' || now<p.until); lastTick=now;
@@ -3043,67 +3117,153 @@ function playSnake(){
     // if the game does not fit on the screen, scroll so the timer and the whole card are in view
     if(card.getBoundingClientRect().bottom>window.innerHeight){ const top=document.querySelector('#app .timer') || card; window.scrollTo({top:top.getBoundingClientRect().top+window.scrollY-8-stickyTop(), behavior:'smooth'}); } }
   function pause(){ if(!started || paused || over) return; paused=true; if(timed) left=Math.max(0, end-Date.now());
-    msg.textContent=touch?TX('Paused. Tap to carry on','已暂停。点击继续'):TX('Paused. Press an arrow key to carry on','已暂停。按方向键继续'); msg.hidden=false; }
+    showMsg(T('Paused','暂停'), touch?T('Tap to carry on','点击继续'):T('Press an arrow key to carry on','按方向键继续')); }
   function resume(){ if(!paused || over) return; paused=false; if(timed) end=Date.now()+left; msg.hidden=true; run(); }
   // The game's own minute (in the Daily Circuit, the circuit's clock ends the station instead)
   function clock(){ if(over || !timed || !alive()) return;
     const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('snSecs');
     if(f) f.style.width=(100*l/(SECS*1000))+'%'; if(s) s.textContent=Math.ceil(l/1000);
-    if(l<=0){ over=true; return arcadeEnd(game, score, missed, playSnake); }
+    if(l<=0){ over=true; return arcadeEnd(game, score, missed, playSnake, {pic:endPic}); }
     later(clock, 200); }
 
-  // Drawing: about 60 times a second, sliding the head and tail between cells so the snake moves smoothly
+  // ---------- Drawing: about 60 times a second, sliding the head and tail between cells so the mouse moves smoothly ----------
   const near1=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y)===1;
   const mid=p=>({x:(p.x+.5)*cell, y:(p.y+.5)*cell}), lerp=(a,b,t)=>({x:a.x+(b.x-a.x)*t, y:a.y+(b.y-a.y)*t});
-  function label(p, fill, stroke, ink, alpha){
-    const x=p.x*cell+2, y=p.y*cell+3, w=p.len*cell-4, h=p.h*cell-6;
-    cx.globalAlpha=alpha; cx.beginPath(); if(cx.roundRect) cx.roundRect(x,y,w,h,Math.min(h/2, cell*0.5)); else cx.rect(x,y,w,h);
-    cx.fillStyle=fill; cx.fill(); cx.lineWidth=1.5; cx.strokeStyle=stroke; cx.stroke();
+  const rrect=(x,y,w,h,r)=>{ cx.beginPath(); if(cx.roundRect) cx.roundRect(x,y,w,h,r); else cx.rect(x,y,w,h); };
+  // The floor: the floorboards picture, one plank to a row of the grid (darker in dark mode); without it, the old dotted paper
+  function drawFloor(W, H){
+    const f=art.floor;
+    if(crReady(f)){ const t=cell*8; for(let x=0;x<W;x+=t) for(let y=0;y<H;y+=t) cx.drawImage(f, x, y, t, t);
+      if(dark){ cx.fillStyle='rgba(14,16,36,.6)'; cx.fillRect(0,0,W,H); } return; }
+    cx.fillStyle=col.paper; cx.fillRect(0,0,W,H);
+    cx.fillStyle=col.rule; for(let x=1;x<COLS;x++) for(let y=1;y<ROWS;y++) cx.fillRect(x*cell-1, y*cell-1, 2, 2);
+  }
+  // A word on its slab of cheese: holes near the ends (kept clear of the word), a bite out of the top corner.
+  // Gone off (a wrong word): mould at the edges and stink lines rising.
+  function cheese(p, alpha, now){
+    const x=p.x*cell+2, y=p.y*cell+3, w=p.len*cell-4, h=p.h*cell-6, r=Math.min(h/2, cell*0.34), lw=Math.max(1.5, cell*0.075);
     let px=fontPx; cx.font=font(px); const widest=()=>Math.max(...p.lines.map(l=>cx.measureText(l).width));
     while(px>9 && widest()>w-cell*0.4){ px--; cx.font=font(px); }
-    cx.fillStyle=ink; cx.textAlign='center'; cx.textBaseline='middle';
+    const tw=widest(), margin=(w-tw)/2, br=Math.min(cell*0.2, h*0.32), bx=x+w-Math.max(r*0.9, br*1.4), by=y;
+    cx.save(); cx.globalAlpha=alpha;
+    cx.beginPath(); cx.rect(-1e4,-1e4,2e4,2e4); cx.arc(bx,by,br,0,Math.PI*2); cx.clip('evenodd');   // the bite
+    rrect(x,y,w,h,r); cx.fillStyle=CHEESE; cx.fill();
+    cx.save(); rrect(x,y,w,h,r); cx.clip();
+    if(margin>cell*0.42){ const hr=Math.min(cell*0.12, margin*0.2); cx.fillStyle=HOLE;
+      [[x+margin*0.42, y+h*0.34, hr], [x+margin*0.3, y+h*0.74, hr*0.7], [x+w-margin*0.4, y+h*0.66, hr], [x+w-margin*0.7, y+h*0.3, hr*0.6]]
+        .forEach(([hx,hy,rr])=>{ cx.beginPath(); cx.arc(hx,hy,rr,0,Math.PI*2); cx.fill(); }); }
+    if(p.state==='bad'){ cx.fillStyle=MOULD; const m=cell*0.16;
+      [[x+m*0.6, y+h], [x+m*1.7, y+h-m*0.2], [x+w*0.45, y], [x+w*0.45+m*1.1, y+m*0.2], [x+w-m*1.2, y+h], [x+w-m*0.2, y+h*0.55]]
+        .forEach(([mx,my])=>{ cx.beginPath(); cx.arc(mx,my,m,0,Math.PI*2); cx.fill(); }); }
+    cx.restore();
+    rrect(x,y,w,h,r); cx.lineWidth=lw; cx.strokeStyle=NAVY; cx.lineJoin='round'; cx.stroke();
+    cx.restore();
+    cx.save(); cx.globalAlpha=alpha; rrect(x,y,w,h,r); cx.clip(); cx.beginPath(); cx.arc(bx,by,br,0,Math.PI*2); cx.lineWidth=lw*2; cx.strokeStyle=NAVY; cx.stroke(); cx.restore();
+    cx.save(); cx.globalAlpha=alpha; cx.font=font(px); cx.fillStyle=NAVY; cx.textAlign='center'; cx.textBaseline='middle';
     const lh=px*1.15, top=y+h/2-(p.lines.length-1)*lh/2;
     p.lines.forEach((l,i)=>cx.fillText(l, x+w/2, top+i*lh+1));
-    cx.globalAlpha=1;
+    if(p.state==='bad' && !calm){   // stink lines, rising and fading
+      const k=Math.min(1, Math.max(0, 1-(p.until-now)/700)); cx.strokeStyle=NAVY; cx.lineWidth=lw*0.8; cx.lineCap='round'; cx.globalAlpha=alpha*(1-k*0.5);
+      [0.36,0.5,0.64].forEach((f,i)=>{ const sx=x+w*f, sy=y-cell*0.12-k*cell*0.3, a=cell*0.09; cx.beginPath(); cx.moveTo(sx,sy);
+        cx.bezierCurveTo(sx+a,sy-cell*0.15, sx-a,sy-cell*0.3, sx,sy-cell*0.45-(i===1?cell*0.1:0)); cx.stroke(); }); }
+    cx.restore();
+  }
+  // The mouse: a white body with a navy outline through the middle of its cells (broken where it goes through a wall),
+  // its back end at the tail and its face at the head (each turned the way it is going), and four paws that patter
+  function drawMouse(now, pts){
+    const bw=cell*0.44, lw=bw*CR_FACE.line/CR_FACE.body, face=art[faceName(now)]||art.calm;
+    if(!crReady(face) || !crReady(art.back)) return drawSnake(pts);
+    const segs=[]; let cur=[pts[0]];
+    for(let i=1;i<pts.length;i++){ if(Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y)<cell*1.5) cur.push(pts[i]); else { segs.push(cur); cur=[pts[i]]; } }
+    segs.push(cur);
+    // which way the head and the tail point
+    const target=Math.atan2(dir.y, dir.x);
+    let d=target-faceAng; while(d>Math.PI) d-=Math.PI*2; while(d<-Math.PI) d+=Math.PI*2;
+    faceAng = calm ? target : faceAng+d*Math.min(1, (now-lastFrame)/60);
+    const u={x:Math.cos(faceAng), y:Math.sin(faceAng)}, n={x:-u.y, y:u.x};
+    const E=pts[pts.length-1], B=pts.length>1 && Math.hypot(pts[pts.length-2].x-E.x, pts[pts.length-2].y-E.y)<cell*1.5 ? pts[pts.length-2] : {x:E.x+u.x, y:E.y+u.y};
+    const v0=Math.hypot(B.x-E.x, B.y-E.y)||1, v={x:(B.x-E.x)/v0, y:(B.y-E.y)/v0}, vn={x:-v.y, y:v.x};
+    const H=pts[0], J={x:H.x-u.x*cell*0.75, y:H.y-u.y*cell*0.75};
+    // paws (under the body): front pair behind the neck, back pair by the rump, stepping when it runs
+    const pr=cell*0.15, sw=calm ? 0 : Math.sin(pawPhase)*cell*0.1;
+    const paw=(px,py,ang)=>{ cx.save(); cx.translate(px,py); cx.rotate(ang); cx.beginPath(); cx.ellipse(0,0,pr,pr*0.72,0,0,Math.PI*2); cx.fillStyle='#fff'; cx.fill(); cx.lineWidth=lw*0.8; cx.strokeStyle=NAVY; cx.stroke(); cx.restore(); };
+    [1,-1].forEach(s=>{ const o=bw/2+lw*0.6, fwd=s*sw;
+      paw(J.x-u.x*cell*0.3+n.x*o*s+u.x*fwd, J.y-u.y*cell*0.3+n.y*o*s+u.y*fwd, faceAng);
+      paw(E.x+v.x*cell*0.15+vn.x*o*s-v.x*fwd, E.y+v.y*cell*0.15+vn.y*o*s-v.y*fwd, Math.atan2(v.y,v.x)); });
+    // the body: navy, then white on top
+    [[bw+2*lw, NAVY], [bw, '#fff']].forEach(([w,c])=>{ cx.strokeStyle=c; cx.lineWidth=w; cx.lineCap='round'; cx.lineJoin='round';
+      segs.forEach(s=>{ cx.beginPath(); cx.moveTo(s[0].x, s[0].y); if(s.length===1) cx.lineTo(s[0].x+.01, s[0].y); s.forEach(p=>cx.lineTo(p.x, p.y)); cx.stroke(); }); });
+    // the back end, its open side joined to the tail end of the body
+    const sb=bw/CR_BACK.body; cx.save(); cx.translate(E.x, E.y); cx.rotate(Math.atan2(v.y, v.x));
+    cx.drawImage(art.back, -CR_BACK.jx*sb, -CR_BACK.jy*sb, CR_BACK.w*sb, CR_BACK.h*sb); cx.restore();
+    return {J, u, bw, face};
+  }
+  function drawHead(m, now){
+    if(!m) return;
+    const sf=m.bw/CR_FACE.body, hungry=m.face===art.hungry && !calm;
+    cx.save(); cx.translate(m.J.x, m.J.y); cx.rotate(faceAng+(hungry ? Math.sin(now/40)*0.05 : 0));   // eyeing up a word: a little twitch
+    cx.drawImage(m.face, -CR_FACE.jx*sf, -CR_FACE.jy*sf, CR_FACE.w*sf, CR_FACE.h*sf); cx.restore();
+  }
+  function faceName(now){
+    if(dizzy) return 'dizzy'; if(now<ouchTill) return 'ouch'; if(now<yumTill) return 'yum';
+    const h=snake[0], d=queue.length ? queue[0] : dir;
+    for(let k=1;k<=2;k++) if(pillAt(wx(h.x+d.x*k), wy(h.y+d.y*k))) return 'hungry';   // a word just ahead
+    return 'calm';
+  }
+  // Without the pictures (they haven't loaded): the old snake, a thick ink line with a head and two yellow eyes
+  function drawSnake(pts){
+    cx.strokeStyle=col.ink; cx.lineWidth=cell*0.62; cx.lineCap='round'; cx.lineJoin='round'; cx.beginPath();
+    pts.forEach((p,i)=>{ if(i && Math.hypot(p.x-pts[i-1].x, p.y-pts[i-1].y)<cell*1.5) cx.lineTo(p.x,p.y); else { cx.moveTo(p.x,p.y); cx.lineTo(p.x+.01,p.y); } });
+    cx.stroke();
+    const hd=pts[0], fx0=dir.x, fy0=dir.y;
+    cx.fillStyle=col.ink; cx.beginPath(); cx.arc(hd.x, hd.y, cell*0.42, 0, Math.PI*2); cx.fill();
+    cx.fillStyle=col.mark; [-1,1].forEach(s=>{ cx.beginPath(); cx.arc(hd.x+fx0*cell*0.14-fy0*s*cell*0.19, hd.y+fy0*cell*0.14+fx0*s*cell*0.19, cell*0.1, 0, Math.PI*2); cx.fill(); });
+    return null;
+  }
+  // Crumbs flying from the cheese just eaten, and the points floating up (under half a second; "+3" a little longer)
+  function drawFx(now){
+    for(let i=fx.length-1;i>=0;i--){ const e=fx[i], k=(now-e.t0)/(e.kind==='pts'?700:450); if(k>=1){ fx.splice(i,1); continue; }
+      cx.save();
+      if(e.kind==='crumbs'){ const ease=1-(1-k)*(1-k); cx.globalAlpha=1-k;
+        e.bits.forEach(b=>{ cx.beginPath(); cx.arc(e.x+Math.cos(b.a)*b.d*ease, e.y+Math.sin(b.a)*b.d*ease, b.r, 0, Math.PI*2); cx.fillStyle=CHEESE; cx.fill(); cx.lineWidth=1; cx.strokeStyle=NAVY; cx.stroke(); }); }
+      else { cx.globalAlpha=k<0.6 ? 1 : 1-(k-0.6)/0.4; cx.font=font(Math.round(fontPx*1.25)); cx.textAlign='center'; cx.textBaseline='middle';
+        const yy=e.y-cell*0.2-(calm?0:k*cell*0.8); cx.lineWidth=4; cx.strokeStyle='#fff'; cx.lineJoin='round'; cx.strokeText(e.text, e.x, yy); cx.fillStyle=NAVY; cx.fillText(e.text, e.x, yy); }
+      cx.restore(); }
   }
   function draw(now){
     if(!alive()) return;
     const W=cell*COLS, H=cell*ROWS, t=started && !paused && !over ? Math.min(1, (now-lastTick)/step) : 1;
-    cx.fillStyle=col.paper; cx.fillRect(0,0,W,H);
-    cx.fillStyle=col.rule; for(let x=1;x<COLS;x++) for(let y=1;y<ROWS;y++) cx.fillRect(x*cell-1, y*cell-1, 2, 2);
-    if(flash && now<flash.until) label(flash, col.goodSoft, col.good, col.good, (flash.until-now)/500);
-    pills.forEach(p=>{ if(p.state==='bad') label(p, col.badSoft, col.bad, col.bad, Math.max(0,(p.until-now)/700)); else label(p, col.sheet, col.rule, col.ink, 1); });
-    // the snake: one thick ink line through the middle of its cells (broken where it goes through a wall)
+    if(started && !paused && !over && !calm) pawPhase+=(now-(lastFrame||now))/step*Math.PI;
+    drawFloor(W, H);
     const pts=snake.map(mid);
     if(prevHead && near1(prevHead, snake[0])) pts[0]=lerp(mid(prevHead), pts[0], t);
     if(prevTail && near1(prevTail, snake[snake.length-1])) pts.push(lerp(mid(prevTail), pts[pts.length-1], t));
-    cx.strokeStyle=col.ink; cx.lineWidth=cell*0.62; cx.lineCap='round'; cx.lineJoin='round'; cx.beginPath();
-    pts.forEach((p,i)=>{ if(i && Math.hypot(p.x-pts[i-1].x, p.y-pts[i-1].y)<cell*1.5) cx.lineTo(p.x,p.y); else { cx.moveTo(p.x,p.y); cx.lineTo(p.x+.01,p.y); } });
-    cx.stroke();
-    const hd=pts[0], fx=dir.x, fy=dir.y;   // the head, with two highlighter-yellow eyes looking the way it is going
-    cx.fillStyle=col.ink; cx.beginPath(); cx.arc(hd.x, hd.y, cell*0.42, 0, Math.PI*2); cx.fill();
-    cx.fillStyle=col.mark; [-1,1].forEach(s=>{ cx.beginPath(); cx.arc(hd.x+fx*cell*0.14-fy*s*cell*0.19, hd.y+fy*cell*0.14+fx*s*cell*0.19, cell*0.1, 0, Math.PI*2); cx.fill(); });
+    const m=drawMouse(now, pts);
+    pills.forEach(p=>{ if(p.state==='bad') cheese(p, Math.max(0, Math.min(1, (p.until-now)/700+0.3)), now); else cheese(p, 1, now); });
+    drawHead(m, now);
+    drawFx(now);
+    lastFrame=now;
     requestAnimationFrame(draw);
   }
 
-  // Controls: keys, and taps (or clicks) anywhere on the game card: the snake turns towards the side tapped
+  // Controls: keys, and taps (or clicks) anywhere on the game card: the mouse turns towards the side tapped
   const KEYS={ArrowUp:'up', ArrowDown:'down', ArrowLeft:'left', ArrowRight:'right', w:'up', s:'down', a:'left', d:'right', W:'up', S:'down', A:'left', D:'right'};
   keyHandler=e=>{ const n=KEYS[e.key]; if(n){ e.preventDefault(); turn(n); }
     else if((e.key===' ' || e.key==='Enter') && (!started || paused)){ e.preventDefault(); started ? resume() : start(); } };
   // Going sideways: a tap above the head turns up, below turns down. Going up or down: left or right of the head.
-  // Taps are judged against the direction the snake will be going after any turns already waiting, so quick taps chain.
+  // Taps are judged against the direction the mouse will be going after any turns already waiting, so quick taps chain.
   card.addEventListener('pointerdown', e=>{
-    if(over || (e.target.closest && e.target.closest('button, a, input'))) return;
+    if(over || (e.target.closest && e.target.closest('button, a, input, label'))) return;
     if(e.pointerType!=='mouse') e.preventDefault();
     const r=cv.getBoundingClientRect(), h=snake[0], hx=r.left+(h.x+.5)*cell, hy=r.top+(h.y+.5)*cell;
     const dx=e.clientX-hx, dy=e.clientY-hy, last=queue.length ? queue[queue.length-1] : dir;
     const name = last.x ? (Math.abs(dy)<cell*.5 ? null : dy<0 ? 'up' : 'down') : (Math.abs(dx)<cell*.5 ? null : dx<0 ? 'left' : 'right');
     if(name) turn(name); else if(!started) start(); else if(paused) resume(); });
-  // Away from the tab: the snake waits (and so does the game's minute)
+  // Away from the tab: the mouse waits (and so does the game's minute)
   const onVis=()=>{ if(!alive()){ document.removeEventListener('visibilitychange', onVis); return; } if(document.hidden) pause(); };
   document.addEventListener('visibilitychange', onVis);
-  const dark=window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
-  if(dark && dark.addEventListener) dark.addEventListener('change', colours);
+  const darkQ=window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  if(darkQ && darkQ.addEventListener) darkQ.addEventListener('change', colours);
   if(window.ResizeObserver){ const ro=new ResizeObserver(()=>{ if(!alive()){ ro.disconnect(); return; } size(); }); ro.observe(box); }
 
   circuitStop=()=>{ over=true; };
@@ -3436,8 +3596,8 @@ const ZH_COLS = [
   {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'zhwordsearch', 'zhcrossword']}
 ];
 const ZH_SOON = {translate:['Translation','翻译'], wordsearch:['Wordsearch','单词搜索']};
-const ZH_SNAKE = {key:'snake', type:'arcade', name:'Word Snake', zh:'单词贪吃蛇', blurb:'Eat the word that matches the meaning. One wrong bite ends it.',
-  zhBlurb:'吃掉和释义相符的单词，咬错一口就结束。', min:6, run:()=>playSnake()};
+const ZH_SNAKE = {key:'snake', type:'arcade', name:'Cheese Run', zh:'奶酪快跑', blurb:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it.',
+  zhBlurb:'带小老鼠去吃写着正确单词的奶酪，咬错一口就结束。', min:6, run:()=>playSnake()};   // Cheese Run (was Word Snake, 11 Nov 2026)
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
 // or every word when the level has fewer). Build the sentence needs sentences with their Chinese at the level instead.
 const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
