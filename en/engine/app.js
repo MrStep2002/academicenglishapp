@@ -331,7 +331,7 @@ const POINTS = {
   short:   [3, 4, 5, 6, 8],      // a short text and its question
   passage: [8, 10, 15, 18, 22]   // a whole reading passage
 };
-const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', snake:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word', crossword:'type', zhcrossword:'type',
+const POINT_KIND = {zhtranslate:'grammar', mouse:'type', zhmouse:'type', zhbuild:'build', learn:'word', match:'word', syn:'word', meaning:'word', zh:'word', zhmatch:'word', zhmean:'word', zhtf:'word', zhodd:'word', zhspeed:'word', zhsurvive:'word', cheeserun:'word', whack:'word', invaders:'word', wordsearch:'word', zhwordsearch:'word', crossword:'type', zhcrossword:'type',
   zhtype:'type', gap:'grammar', tf:'grammar', rw:'grammar', must:'grammar', build:'build', error:'build', own:'build', evidence:'build', zhevidence:'build', read:'short', wchoice:'short', ocloze:'short', wform:'short', question:'short', gk:'grammar', passage:'passage', notes:'passage', listen:'passage', recall:'passage', totalrecall:'passage'};
 const POINT_KINDS = [['word','Word games: Learn the words, Match the meaning, Word or meaning, Cheese Run, Whack-a-word, Word Invaders, Word search, 中文 → English, Choose the meaning, True or false (中文版), Odd one out, Speed round, Survival'],
   ['type','Type it, Save the mouse'], ['grammar','Fill the gap, True or false, Grammar Check, General knowledge, Translation (中文版)'], ['build','Build the sentence, Spot the error (shared between its errors), In your own words, Find the evidence, All-in English'],
@@ -881,7 +881,7 @@ function gameColumnsHtml(){
       return `<section class="col col-${k}${off?' off':''}" aria-labelledby="col-${k}"><h2 id="col-${k}">${c.name}</h2>
         ${note?`<p class="col-note">${note}</p>`:''}${off?'':games.map(gameCard).join('')}${rest}</section>`; }).join('')}
   </div>
-  ${(()=>{ const ROW=['gk','mouse','wordsearch','crossword','whack','invaders','snake'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
+  ${(()=>{ const ROW=['gk','mouse','wordsearch','crossword','whack','invaders','cheeserun'], all=[...gamesIn('games'), ...ARCADE.filter(a=>!HIDE.has(a.key)).map(a=>({...a, arcade:true}))].sort((x,y)=>ROW.indexOf(x.key)-ROW.indexOf(y.key));
     return `<section class="col col-games games-row" aria-labelledby="col-games"><h2 id="col-games">${GAME_ROW.games.name}</h2>
       ${all.length ? `<div class="games-grid">${all.map(gameCard).join('')}</div>` : '<p class="col-note">Coming soon</p>'}</section>`; })()}`;
 }
@@ -1087,7 +1087,7 @@ function shell(game, note){
 // Comprehension page there is no side panel: the level and the round's score sit beside the heading, and the passage gets
 // the width. On phones the score comes first as one line and the keys and More are left out (css/site.css).
 // o (optional): {top: HTML above the game card, e.g. an arcade game's timer}
-const ARCADE_KEYS = ['snake','whack','invaders'];
+const ARCADE_KEYS = ['cheeserun','whack','invaders'];
 const isArcade = g => !!g && ARCADE_KEYS.includes(g.key) && ARCADE.some(a=>a.key===g.key);
 // The keys each game listens for (only shown on computers). Keep in step with the game's keyHandler.
 const KEY_HELP = {
@@ -1102,7 +1102,7 @@ const KEY_HELP = {
   wordsearch:[['Arrow keys','move on the board'],['Enter','first and last letter of a word'],['Esc','start again']],
   crossword:[['A–Z','type a letter'],['Arrow keys','move on the grid'],['Space','across or down'],['Tab','next clue'],['Backspace','take a letter out']],
   passage:[['1–9','choose an answer'],['Enter','confirm']], notes:[['1–9','choose a note'],['Enter','check']],
-  snake:[['Arrow keys','steer (or W A S D)'],['Space','start']], whack:[['1–9','whack that hole'],['Space','start']],
+  cheeserun:[['Arrow keys','steer (or W A S D)'],['Space','start']], whack:[['1–9','whack that hole'],['Space','start']],
   invaders:[['1–9','fire at that word'],['Space','start']], listen:[['P','play or pause'],['Enter','check']]
 };
 // The Chinese side (stage 4): its games' keys (the same games underneath), and the Chinese for each key and what it does
@@ -1199,7 +1199,7 @@ function moreBox(game){
 // The Chinese side: two more from the game's own column (or the science page's own games), then the first open game of
 // each other column (four in all)
 function zhMoreBox(game){
-  const get=k=>k==='snake' ? ZH_SNAKE : ZH_GAMES.find(g=>g.key===k), open=k=>{ const g=get(k); return g && g.key!==game.key && zhReady(g) ? g : null; };
+  const get=k=>k==='cheeserun' ? ZH_CHEESERUN : ZH_GAMES.find(g=>g.key===k), open=k=>{ const g=get(k); return g && g.key!==game.key && zhReady(g) ? g : null; };
   const col=ZH_COLS.find(c=>c.games.includes(game.key)), gen=GEN_ZH.filter(g=>g.key!==game.key && g.ready());
   const same=col ? col.games.map(open).filter(Boolean).slice(0, 2) : game.gen ? gen.slice(0, 2) : [];   // a science page's own game: two more of those first
   const others=ZH_COLS.filter(c=>c!==col).map(c=>c.games.map(open).find(Boolean)).filter(Boolean);
@@ -2876,15 +2876,15 @@ function partialCredit(game, item, right, wrong, parts){
   for(let k=0;k<wrong;k++) tally(false, 0);
 }
 
-// ---------- ARCADE GAMES: the "proper game" in the middle of the Daily Circuit (Word Snake first, 25 Oct) ----------
+// ---------- ARCADE GAMES: the "proper game" in the middle of the Daily Circuit (Cheese Run, first made as Word Snake on 25 Oct) ----------
 // Every arcade game asks the same question: a meaning at the top, and the student goes for its word among a few on the
 // board. The words are this topic's, at the student's level. The first go at each meaning is recorded like any other
 // answer (word points, word stages, level). In the Daily Circuit (and class games) a game lasts one minute and never ends
-// early: a mistake costs length or points, not the game. Played from the Games row, Word Snake has no clock instead: it
-// goes on until a wrong word ends it (1 Nov 2026, teacher; see playSnake). On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
+// early: a mistake costs length or points, not the game. Played from the Games row, Cheese Run has no clock instead: it
+// goes on until a wrong word ends it (1 Nov 2026, teacher; see playCheeseRun). On the English topic menus in the Games row since 31 Oct (teacher), after General knowledge and Save the mouse.
 const ARCADE = [
-  // Cheese Run (11 Nov 2026, teacher): Word Snake redone with the site's mouse and words on cheese; the key stays 'snake'
-  {key:'snake', name:'Cheese Run', zh:'奶酪快跑', blurb:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playSnake()},
+  // Cheese Run (11 Nov 2026, teacher): Word Snake redone with the site's mouse and words on cheese (key 'snake' until 11 Nov)
+  {key:'cheeserun', name:'Cheese Run', zh:'奶酪快跑', blurb:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it.', items:()=>pick(S.words), min:6, run:()=>playCheeseRun()},
   {key:'whack', name:'Whack-a-word', zh:'单词打地鼠', blurb:'Words pop up from holes. Tap the one that matches the meaning.', items:()=>pick(S.words), min:6, run:()=>playWhack()},
   {key:'invaders', name:'Word Invaders', zh:'单词入侵者', blurb:'Words march down the screen. Shoot the one that fits the meaning.', items:()=>pick(S.words), min:6, run:()=>playInvaders()}
 ];
@@ -2903,7 +2903,7 @@ function arcadeDef(el, w){ if(!el) return; el.textContent=w.def;
 function fitLabel(box, span){ span.style.fontSize=''; let px=parseFloat(getComputedStyle(span).fontSize)||16;
   while(px>11 && (span.scrollWidth>box.clientWidth-10 || span.scrollHeight>box.clientHeight-6)){ px--; span.style.fontSize=px+'px'; } }
 // Time's up (outside the circuit): score, best score and the words to practise
-// o (optional): {title, unit(score), note}: Word Snake's game over (1 Nov) says what ended it and counts points;
+// o (optional): {title, unit(score), note}: Cheese Run's game over (1 Nov) says what ended it and counts points;
 // pic(isBest): a picture beside the score (Cheese Run's mice, 11 Nov 2026)
 function arcadeEnd(game, score, missed, again, o){
   o=o||{};
@@ -2932,9 +2932,11 @@ function arcadeEnd(game, score, missed, again, o){
 // The art (images/arcade/cheese-run/, the teacher's AI pictures, cleaned up): five faces (calm; hungry, eyeing up a word
 // just ahead; yum after a right word; ouch after biting its tail or a wrong word; dizzy at game over), the back end, the
 // floorboards, and the happy and game-over mice for the start and the end. The body, the paws, the cheese and the crumbs
-// are drawn here. One plank of the floor is one square of the grid. Without the pictures it draws the old snake.
+// are drawn here. One plank of the floor is one square of the grid. Until the pictures load it draws a plain mouse.
+// 11 Nov 2026 (teacher): "Drop snake off the site and replace it with Cheese Run": the old snake drawing is gone, and the
+// game is cheeserun everywhere (key, address #play-cheeserun, best score best:cheeserun). Old #play-snake links still work.
 // Sound (arcadeSound): a crunch on a right word, only when the student has switched sound on.
-// The key stays 'snake' (best scores, word progress, the Daily Circuit and class games keep working).
+// The key has no hyphen: the server only takes letters and numbers in a game's name (GAME_RE, reports).
 // The board is a grid (24 x 14 on computers, 14 x 14 on phones).
 // From the Games row (1 Nov 2026, teacher): no clock; it goes on for as long as you survive. Each right word scores 3
 // points; a wrong word ends the game (its meaning and the word you needed are shown); biting your own tail cuts it off
@@ -2977,35 +2979,35 @@ function soundSwitch(sample){
   lab.querySelector('input').onchange=e=>{ try{ localStorage.setItem(SOUND_KEY, e.target.checked?'on':'off'); }catch(x){} if(e.target.checked && sample) arcadeSound(sample); };
 }
 
-function playSnake(){
-  const game=ARCADE.find(g=>g.key==='snake'), SECS=60;
+function playCheeseRun(){
+  const game=ARCADE.find(g=>g.key==='cheeserun'), SECS=60;
   const touch=PHONE || !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
   const calm=!!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
   const COLS=PHONE?14:24, ROWS=14, N=PHONE?3:4;
   const ENDLESS=!inCircuit && !classRun, timed=!inCircuit && !ENDLESS;   // ENDLESS: played from the Games row
-  const nextQ=arcadeQuestions(N), best=store.get('best:snake',0);
+  const nextQ=arcadeQuestions(N), best=store.get('best:cheeserun',0);
   let score=0; const missed=[];
-  const snHint=T(`${touch?'Tap the screen on the side you want the mouse to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the mouse shorter. You can go through the walls.'}`,
+  const chrHint=T(`${touch?'Tap the screen on the side you want the mouse to turn.':'Use the arrow keys or WASD (or click on the side you want to turn).'} ${ENDLESS?'Each right word scores 3 points. Eat a wrong word and the game is over. Biting your tail costs points. You can go through the walls.':'A wrong word makes the mouse shorter. You can go through the walls.'}`,
     `${touch?'点击屏幕上你想让小老鼠转向的那一边。':'用方向键或 WASD 转向（也可以点击想转向的那一边）。'}${ENDLESS?'每吃对一个单词得 3 分。吃错一个，游戏就结束。咬到尾巴会扣分。小老鼠可以穿过墙。':'吃错单词，小老鼠会变短。小老鼠可以穿过墙。'}`);
-  if(NEW_UI) gameLayout(game, snHint, {top:timed?timerBar():''});
+  if(NEW_UI) gameLayout(game, chrHint, {top:timed?timerBar():''});
   else frame({href:'#', label:CFG.name||'Back'}, `<div class="bar"><span class="title">${arcadeName(game)}</span><span class="spacer"></span><div class="stats" id="stats"></div></div>
-    <p class="hint">${snHint}</p>
+    <p class="hint">${chrHint}</p>
     ${timed?timerBar():''}<div class="feed" id="feed"></div>`);
   soundSwitch('crunch');
   const stats=()=>{ const el=document.getElementById('stats'); if(!el) return;
-    el.innerHTML=NEW_UI ? gStats([[ENDLESS?T('Score','得分'):T('Found','找到'), score], ...(timed?[[T('Time','时间'), SECS, T('s','秒'), 'snSecs']]:[]), [T('Best','最佳'), Math.max(best,score)]])
-      : `<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="snSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
+    el.innerHTML=NEW_UI ? gStats([[ENDLESS?T('Score','得分'):T('Found','找到'), score], ...(timed?[[T('Time','时间'), SECS, T('s','秒'), 'chrSecs']]:[]), [T('Best','最佳'), Math.max(best,score)]])
+      : `<span>${ENDLESS?'Score':'Found'} <b>${score}</b></span>${timed?`<span><b id="chrSecs">${SECS}</b>s</span>`:''}<span>Best <b>${Math.max(best,score)}</b></span>`; };
   const startCap=touch?T('Tap to start','点击开始'):T('Press an arrow key to start','按方向键开始');
-  const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="snDef"></p>
-    <div class="snake-board" id="snBoard"><canvas id="snCanvas" role="img" aria-label="${TX('Cheese Run board','奶酪快跑的游戏区')}"></canvas>
-      <div class="chr-msg" id="snMsg">${crSign(T('Ready?','准备好了吗？'), 200)}<span class="chr-cap" id="snCap">${startCap}</span></div></div>
+  const card=showCard(`<p class="instr">${T('Find the word that means','找出这个意思的单词')}</p><p class="arcade-def" id="chrDef"></p>
+    <div class="chr-board" id="chrBoard"><canvas id="chrCanvas" role="img" aria-label="${TX('Cheese Run board','奶酪快跑的游戏区')}"></canvas>
+      <div class="chr-msg" id="chrMsg">${crSign(T('Ready?','准备好了吗？'), 200)}<span class="chr-cap" id="chrCap">${startCap}</span></div></div>
     <p class="toast arcade-toast" id="toast" aria-live="polite"></p>`);
   card.classList.add('arcade-card'); card.style.touchAction='manipulation';   // quick taps never zoom the page
-  const box=card.querySelector('#snBoard'), cv=card.querySelector('#snCanvas'), cx=cv.getContext('2d'), msg=card.querySelector('#snMsg');
+  const box=card.querySelector('#chrBoard'), cv=card.querySelector('#chrCanvas'), cx=cv.getContext('2d'), msg=card.querySelector('#chrMsg');
   const alive=()=>document.body.contains(cv);   // false once the student has moved on to another page or game
   const art=crArt();
   // the message over the board: the happy mouse's sign and a line under it
-  const showMsg=(sign, cap)=>{ msg.querySelector('.chr-sign').innerHTML=sign; msg.querySelector('#snCap').innerHTML=cap; msg.hidden=false; };
+  const showMsg=(sign, cap)=>{ msg.querySelector('.chr-sign').innerHTML=sign; msg.querySelector('#chrCap').innerHTML=cap; msg.hidden=false; };
 
   // Colours: the page's own (the board's fallback, dark mode); the mouse and the cheese keep the art's colours
   const NAVY='#151935', CHEESE='#FFE14D', HOLE='#E9C43A', MOULD='#8FA77F';
@@ -3034,7 +3036,7 @@ function playSnake(){
   const DIRS={up:{x:0,y:-1}, down:{x:0,y:1}, left:{x:-1,y:0}, right:{x:1,y:0}};
   const key=(x,y)=>x+','+y, wx=x=>(x+COLS)%COLS, wy=y=>(y+ROWS)%ROWS;
   const midY=Math.floor(ROWS/2);
-  let snake=[0,1,2,3].map(i=>({x:5-i, y:midY})), dir=DIRS.right, queue=[], grow=0, step=PHONE?190:170;
+  let mouse=[0,1,2,3].map(i=>({x:5-i, y:midY})), dir=DIRS.right, queue=[], grow=0, step=PHONE?190:170;
   let prevHead=null, prevTail=null, lastTick=0, pills=[], flash=null, q=null, firstTry=true;
   let started=false, paused=false, over=false, end=0, left=SECS*1000, loop=0;
   let yumTill=0, ouchTill=0, dizzy=false, faceAng=0, pawPhase=0, lastFrame=0;
@@ -3049,8 +3051,8 @@ function playSnake(){
     return null; }
   function newQuestion(){
     q=nextQ(); firstTry=true;
-    const def=card.querySelector('#snDef'); if(def) def.textContent=q.w.def;
-    const body=new Set(snake.map(p=>key(p.x,p.y))), block=new Set(body), h=snake[0], near=new Set();
+    const def=card.querySelector('#chrDef'); if(def) def.textContent=q.w.def;
+    const body=new Set(mouse.map(p=>key(p.x,p.y))), block=new Set(body), h=mouse[0], near=new Set();
     for(let dx=-2;dx<=2;dx++) for(let dy=-2;dy<=2;dy++) block.add(key(wx(h.x+dx), wy(h.y+dy)));
     for(let k=1;k<=7;k++) block.add(key(wx(h.x+dir.x*k), wy(h.y+dir.y*k)));
     if(flash) for(let i=0;i<flash.len;i++) for(let j=0;j<flash.h;j++) near.add(key(flash.x+i, flash.y+j));
@@ -3064,7 +3066,7 @@ function playSnake(){
 
   function right(p){
     const gain=ENDLESS?3:1;
-    score+=gain; stats(); if(firstTry) P.record('snake', q.w, true);
+    score+=gain; stats(); if(firstTry) P.record('cheeserun', q.w, true);
     grow+=2; step=Math.max(115, step-4);
     say('✓ '+q.w.w);
     const now=performance.now();
@@ -3078,15 +3080,15 @@ function playSnake(){
   function wrong(p){
     const now=performance.now();
     p.state='bad'; p.until=now+700;   // the cheese has gone off: shown for a moment, then gone
-    if(firstTry){ firstTry=false; P.record('snake', q.w, false); missed.push(q.w); q.retry(); }
+    if(firstTry){ firstTry=false; P.record('cheeserun', q.w, false); missed.push(q.w); q.retry(); }
     if(ENDLESS){   // the wrong word ends the game: a moment to see it, then the score
       over=true; dizzy=true; p.until=now+1400; say(`✗ ${p.w.w}: ${p.w.def}`, true);
       const want=q.w, ate=p.w;
-      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playSnake, {title:T('game over','游戏结束'), unit:n=>T(n===1?'point':'points','分'), pic:endPic,
+      later(()=>{ if(alive()) arcadeEnd(game, score, missed, playCheeseRun, {title:T('game over','游戏结束'), unit:n=>T(n===1?'point':'points','分'), pic:endPic,
         note:`<p class="end-sub" style="margin:14px 0 20px">${T(`You ate <b>${esc(ate.w)}</b>: ${esc(ate.def)}<br>The word you needed was <b>${esc(want.w)}</b>.`, `你吃了 <b>${esc(ate.w)}</b>：${esc(ate.def)}<br>你要找的单词是 <b>${esc(want.w)}</b>。`)}</p>`}); }, 1400);
       return; }
     ouchTill=now+600;
-    const cut=Math.min(2, snake.length-3); if(cut>0){ snake.splice(snake.length-cut, cut); prevTail=null; }
+    const cut=Math.min(2, mouse.length-3); if(cut>0){ mouse.splice(mouse.length-cut, cut); prevTail=null; }
     say(`✗ ${p.w.w}: ${p.w.def}`, true);
   }
   // The end screen's picture: the happy mouse with "New best!" on its cheese, else the game-over mouse (time up: happy)
@@ -3094,11 +3096,11 @@ function playSnake(){
     : dizzy ? `<img class="chr-end" src="${CR_ART}mouse-gameover.webp?v=${CR_V}" alt="" width="653" height="420">` : crSign(T("Time's up!",'时间到！'), PHONE?140:190, 'chr-end');
   function advance(){
     if(queue.length) dir=queue.shift();
-    const h=snake[0], nh={x:wx(h.x+dir.x), y:wy(h.y+dir.y)};
-    const bite=snake.findIndex((p,i)=>i>0 && i<snake.length-(grow?0:1) && p.x===nh.x && p.y===nh.y);
-    prevHead=h; snake.unshift(nh);
-    if(grow>0){ grow--; prevTail=null; } else prevTail=snake.pop();
-    if(bite>0){ const lost=snake.length-(bite+1); snake=snake.slice(0, bite+1); prevTail=null; ouchTill=performance.now()+700;
+    const h=mouse[0], nh={x:wx(h.x+dir.x), y:wy(h.y+dir.y)};
+    const bite=mouse.findIndex((p,i)=>i>0 && i<mouse.length-(grow?0:1) && p.x===nh.x && p.y===nh.y);
+    prevHead=h; mouse.unshift(nh);
+    if(grow>0){ grow--; prevTail=null; } else prevTail=mouse.pop();
+    if(bite>0){ const lost=mouse.length-(bite+1); mouse=mouse.slice(0, bite+1); prevTail=null; ouchTill=performance.now()+700;
       if(ENDLESS){ const was=score; score=Math.max(0, score-lost); stats(); say(TX(`Ouch! You bit your tail: −${was-score} point${was-score===1?'':'s'}.`, `哎哟！咬到尾巴了：−${was-score} 分。`), true); }
       else say(TX('Ouch! You bit your tail.', '哎哟！咬到尾巴了。'), true); }
     const now=performance.now(); pills=pills.filter(p=>p.state!=='bad' || now<p.until); lastTick=now;
@@ -3121,9 +3123,9 @@ function playSnake(){
   function resume(){ if(!paused || over) return; paused=false; if(timed) end=Date.now()+left; msg.hidden=true; run(); }
   // The game's own minute (in the Daily Circuit, the circuit's clock ends the station instead)
   function clock(){ if(over || !timed || !alive()) return;
-    const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('snSecs');
+    const l=paused ? left : Math.max(0, end-Date.now()), f=document.getElementById('timeFill'), s=document.getElementById('chrSecs');
     if(f) f.style.width=(100*l/(SECS*1000))+'%'; if(s) s.textContent=Math.ceil(l/1000);
-    if(l<=0){ over=true; return arcadeEnd(game, score, missed, playSnake, {pic:endPic}); }
+    if(l<=0){ over=true; return arcadeEnd(game, score, missed, playCheeseRun, {pic:endPic}); }
     later(clock, 200); }
 
   // ---------- Drawing: about 60 times a second, sliding the head and tail between cells so the mouse moves smoothly ----------
@@ -3172,7 +3174,6 @@ function playSnake(){
   // its back end at the tail and its face at the head (each turned the way it is going), and four paws that patter
   function drawMouse(now, pts){
     const bw=cell*0.44, lw=bw*CR_FACE.line/CR_FACE.body, face=art[faceName(now)]||art.calm;
-    if(!crReady(face) || !crReady(art.back)) return drawSnake(pts);
     const segs=[]; let cur=[pts[0]];
     for(let i=1;i<pts.length;i++){ if(Math.hypot(pts[i].x-pts[i-1].x, pts[i].y-pts[i-1].y)<cell*1.5) cur.push(pts[i]); else { segs.push(cur); cur=[pts[i]]; } }
     segs.push(cur);
@@ -3194,31 +3195,34 @@ function playSnake(){
     [[bw+2*lw, NAVY], [bw, '#fff']].forEach(([w,c])=>{ cx.strokeStyle=c; cx.lineWidth=w; cx.lineCap='round'; cx.lineJoin='round';
       segs.forEach(s=>{ cx.beginPath(); cx.moveTo(s[0].x, s[0].y); if(s.length===1) cx.lineTo(s[0].x+.01, s[0].y); s.forEach(p=>cx.lineTo(p.x, p.y)); cx.stroke(); }); });
     // the back end, its open side joined to the tail end of the body
-    const sb=bw/CR_BACK.body; cx.save(); cx.translate(E.x, E.y); cx.rotate(Math.atan2(v.y, v.x));
-    cx.drawImage(art.back, -CR_BACK.jx*sb, -CR_BACK.jy*sb, CR_BACK.w*sb, CR_BACK.h*sb); cx.restore();
+    if(crReady(art.back)){ const sb=bw/CR_BACK.body; cx.save(); cx.translate(E.x, E.y); cx.rotate(Math.atan2(v.y, v.x));
+      cx.drawImage(art.back, -CR_BACK.jx*sb, -CR_BACK.jy*sb, CR_BACK.w*sb, CR_BACK.h*sb); cx.restore(); }
+    else { // its picture hasn't loaded yet: the body's round end and a curly tail drawn here
+      cx.save(); cx.translate(E.x, E.y); cx.rotate(Math.atan2(v.y, v.x)+Math.PI);   // +x points away from the body
+      cx.strokeStyle=NAVY; cx.lineWidth=lw*0.9; cx.lineCap='round'; cx.beginPath(); cx.moveTo(bw/2+lw*0.5, 0);
+      cx.bezierCurveTo(cell*0.6, -cell*0.35, cell*0.75, cell*0.3, cell*1.05, -cell*0.05); cx.stroke(); cx.restore(); }
     return {J, u, bw, face};
   }
   function drawHead(m, now){
     if(!m) return;
+    if(!crReady(m.face)){ // its picture hasn't loaded yet: the logo's mouse drawn here (ring ears, a round head, dot eyes, navy nose)
+      const r=m.bw, lw=r*CR_FACE.line/CR_FACE.body;
+      cx.save(); cx.translate(m.J.x, m.J.y); cx.rotate(faceAng); cx.lineWidth=lw; cx.strokeStyle=NAVY; cx.fillStyle=NAVY;
+      [1,-1].forEach(s=>{ cx.fillStyle=NAVY; cx.beginPath(); cx.arc(r*0.5, s*r, r*0.6, 0, Math.PI*2); cx.fill();
+        cx.fillStyle='#fff'; cx.beginPath(); cx.arc(r*0.5, s*r, r*0.33, 0, Math.PI*2); cx.fill(); });
+      cx.fillStyle='#fff'; cx.beginPath(); cx.ellipse(r*1.3, 0, r*1.15, r*0.85, 0, 0, Math.PI*2); cx.fill(); cx.stroke();
+      cx.fillStyle=NAVY; cx.beginPath(); cx.arc(r*2.45, 0, r*0.22, 0, Math.PI*2); cx.fill();
+      [1,-1].forEach(s=>{ cx.beginPath(); cx.arc(r*1.55, s*r*0.38, r*0.12, 0, Math.PI*2); cx.fill(); });
+      cx.restore(); return; }
     const sf=m.bw/CR_FACE.body, hungry=m.face===art.hungry && !calm;
     cx.save(); cx.translate(m.J.x, m.J.y); cx.rotate(faceAng+(hungry ? Math.sin(now/40)*0.05 : 0));   // eyeing up a word: a little twitch
     cx.drawImage(m.face, -CR_FACE.jx*sf, -CR_FACE.jy*sf, CR_FACE.w*sf, CR_FACE.h*sf); cx.restore();
   }
   function faceName(now){
     if(dizzy) return 'dizzy'; if(now<ouchTill) return 'ouch'; if(now<yumTill) return 'yum';
-    const h=snake[0], d=queue.length ? queue[0] : dir;
+    const h=mouse[0], d=queue.length ? queue[0] : dir;
     for(let k=1;k<=2;k++) if(pillAt(wx(h.x+d.x*k), wy(h.y+d.y*k))) return 'hungry';   // a word just ahead
     return 'calm';
-  }
-  // Without the pictures (they haven't loaded): the old snake, a thick ink line with a head and two yellow eyes
-  function drawSnake(pts){
-    cx.strokeStyle=col.ink; cx.lineWidth=cell*0.62; cx.lineCap='round'; cx.lineJoin='round'; cx.beginPath();
-    pts.forEach((p,i)=>{ if(i && Math.hypot(p.x-pts[i-1].x, p.y-pts[i-1].y)<cell*1.5) cx.lineTo(p.x,p.y); else { cx.moveTo(p.x,p.y); cx.lineTo(p.x+.01,p.y); } });
-    cx.stroke();
-    const hd=pts[0], fx0=dir.x, fy0=dir.y;
-    cx.fillStyle=col.ink; cx.beginPath(); cx.arc(hd.x, hd.y, cell*0.42, 0, Math.PI*2); cx.fill();
-    cx.fillStyle=col.mark; [-1,1].forEach(s=>{ cx.beginPath(); cx.arc(hd.x+fx0*cell*0.14-fy0*s*cell*0.19, hd.y+fy0*cell*0.14+fx0*s*cell*0.19, cell*0.1, 0, Math.PI*2); cx.fill(); });
-    return null;
   }
   // Crumbs flying from the cheese just eaten, and the points floating up (under half a second; "+3" a little longer)
   function drawFx(now){
@@ -3235,9 +3239,9 @@ function playSnake(){
     const W=cell*COLS, H=cell*ROWS, t=started && !paused && !over ? Math.min(1, (now-lastTick)/step) : 1;
     if(started && !paused && !over && !calm) pawPhase+=(now-(lastFrame||now))/step*Math.PI;
     drawFloor(W, H);
-    const pts=snake.map(mid);
-    if(prevHead && near1(prevHead, snake[0])) pts[0]=lerp(mid(prevHead), pts[0], t);
-    if(prevTail && near1(prevTail, snake[snake.length-1])) pts.push(lerp(mid(prevTail), pts[pts.length-1], t));
+    const pts=mouse.map(mid);
+    if(prevHead && near1(prevHead, mouse[0])) pts[0]=lerp(mid(prevHead), pts[0], t);
+    if(prevTail && near1(prevTail, mouse[mouse.length-1])) pts.push(lerp(mid(prevTail), pts[pts.length-1], t));
     const m=drawMouse(now, pts);
     pills.forEach(p=>{ if(p.state==='bad') cheese(p, Math.max(0, Math.min(1, (p.until-now)/700+0.3)), now); else cheese(p, 1, now); });
     drawHead(m, now);
@@ -3255,7 +3259,7 @@ function playSnake(){
   card.addEventListener('pointerdown', e=>{
     if(over || (e.target.closest && e.target.closest('button, a, input, label'))) return;
     if(e.pointerType!=='mouse') e.preventDefault();
-    const r=cv.getBoundingClientRect(), h=snake[0], hx=r.left+(h.x+.5)*cell, hy=r.top+(h.y+.5)*cell;
+    const r=cv.getBoundingClientRect(), h=mouse[0], hx=r.left+(h.x+.5)*cell, hy=r.top+(h.y+.5)*cell;
     const dx=e.clientX-hx, dy=e.clientY-hy, last=queue.length ? queue[queue.length-1] : dir;
     const name = last.x ? (Math.abs(dy)<cell*.5 ? null : dy<0 ? 'up' : 'down') : (Math.abs(dx)<cell*.5 ? null : dx<0 ? 'left' : 'right');
     if(name) turn(name); else if(!started) start(); else if(paused) resume(); });
@@ -3588,16 +3592,16 @@ ZH_GAMES.forEach(g=>{ const run=g.run; g.run=()=>{ ZH_NOW=g; return run(); }; })
 // The Chinese topic page (3 Nov 2026, teacher): three columns of three games, Vocab, Sentences and Games, "a 3x3 grid so
 // it should be neat and tidy". Choose the meaning and True or false left the page ("too similar to the other stuff and there's
 // too much stuff on the page") but stay in the Daily Circuit; Speed round and Survival are not on the grid either (their
-// code is still here). Word Snake (an arcade game) is on the grid, and All-in English (evidence.csv, 3 Nov 2026).
+// code is still here). Cheese Run (an arcade game) is on the grid, and All-in English (evidence.csv, 3 Nov 2026).
 // soon: = a card that says "Coming soon".
 const ZH_COLS = [
   {key:'vocab',     name:'Vocab',     zh:'词汇', games:['zh', 'zhmatch', 'zhtype']},
   {key:'sentences', name:'Sentences', zh:'句子', games:['zhbuild', 'zhtranslate', 'zhevidence']},
-  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'snake', 'zhwordsearch', 'zhcrossword']}
+  {key:'games',     name:'Games',     zh:'游戏', games:['zhmouse', 'cheeserun', 'zhwordsearch', 'zhcrossword']}
 ];
 const ZH_SOON = {translate:['Translation','翻译'], wordsearch:['Wordsearch','单词搜索']};
-const ZH_SNAKE = {key:'snake', type:'arcade', name:'Cheese Run', zh:'奶酪快跑', blurb:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it.',
-  zhBlurb:'带小老鼠去吃写着正确单词的奶酪，咬错一口就结束。', min:6, run:()=>playSnake()};   // Cheese Run (was Word Snake, 11 Nov 2026)
+const ZH_CHEESERUN = {key:'cheeserun', type:'arcade', name:'Cheese Run', zh:'奶酪快跑', blurb:'Steer the mouse to the cheese with the word that matches the meaning. One wrong bite ends it.',
+  zhBlurb:'带小老鼠去吃写着正确单词的奶酪，咬错一口就结束。', min:6, run:()=>playCheeseRun()};   // Cheese Run (was Word Snake, 11 Nov 2026)
 // A Chinese-version game needs at least 4 words in the word bank at the chosen level (Match the meaning 6, the challenges 8,
 // or every word when the level has fewer). Build the sentence needs sentences with their Chinese at the level instead.
 const zhNeed = g => Math.max(4, Math.min(g.min||4, zhLevelWords().length));
@@ -3628,7 +3632,7 @@ function zhMenu(){
   const offCard=(name, zh, why)=>`<div class="game off" aria-disabled="true"><h3>${T(name, zh)}</h3><span class="best">${why}</span></div>`;
   const cell=k=>{
     if(k.startsWith('soon:')){ const s=ZH_SOON[k.slice(5)]||[k.slice(5), k.slice(5)]; return offCard(esc(s[0]), esc(s[1]), T('Coming soon','即将推出')); }
-    const g=k==='snake' ? ZH_SNAKE : ZH_GAMES.find(x=>x.key===k); if(!g) return '';
+    const g=k==='cheeserun' ? ZH_CHEESERUN : ZH_GAMES.find(x=>x.key===k); if(!g) return '';
     if(zhReady(g)) return card(g);
     return offCard(g.name, g.zh, g.lock && n>=4 && !sylNone() ? T(...g.lock.split(/ (?=[\u3400-\u9fff])/)) : lockText(g));
   };
@@ -4201,17 +4205,17 @@ function wordList(){
 // arcade games, with the Chinese under each meaning and every word at the chosen level. Only these games (27 Oct:
 // Learn the words is no longer a station). A subject with no game ready for a station: another subject is tried for it;
 // none has one: the subject is dropped from the circuit; nothing anywhere: the circuit says so.
-// Left out of the circuit: Read and answer (whole passages), Word Snake, Speed round and Survival; on the Chinese side
+// Left out of the circuit: Read and answer (whole passages), Cheese Run (then Word Snake), Speed round and Survival; on the Chinese side
 // also 中文 → English.
 // Since 1 Nov 2026 the Daily Circuit is quick-fire (kind 'short': QF_GAMES, a new game every three answers, see QF_…) and
-// arcade (DC_ARCADE: Word Snake, Whack-a-word, Word Invaders, Save the mouse; two different ones per circuit). The rules
+// arcade (DC_ARCADE: Cheese Run, Whack-a-word, Word Invaders, Save the mouse; two different ones per circuit). The rules
 // above for short/long stations are still how class games choose their games.
 // 8 Nov 2026 (teacher: "Match the Meaning… can get a full round… it needs longer to be really enjoyed"): the middle
 // station is a whole minute of Match the meaning (kind 'match'). No subject has it ready: the station is quick-fire.
 // Leaving the page or the game pauses the station; coming back with #circuit carries on with the time that was left.
-const CIRCUIT_ARCADE = ['invaders', 'whack'];   // class games' arcade stations (Word Snake left out, teacher, 25 Oct)
+const CIRCUIT_ARCADE = ['invaders', 'whack'];   // class games' arcade stations (Cheese Run, then Word Snake, left out, teacher, 25 Oct)
 // Daily Circuit arcade stations (1 Nov 2026, teacher): two different ones per circuit, taking turns from circuit to circuit
-const DC_ARCADE = {en:['snake','whack','invaders','mouse'], zh:['snake','whack','invaders','zhmouse']};
+const DC_ARCADE = {en:['cheeserun','whack','invaders','mouse'], zh:['cheeserun','whack','invaders','zhmouse']};
 const ZH_CIRCUIT = {short:['zhtf'], long:['zhtype','zhbuild','zhmatch','zhmean','zhevidence']};
 let ccTick = null;
 function circuitGames(kind){
@@ -4523,7 +4527,10 @@ function lastGame(key, name, zh){
   try{ const k='aea:lastgame:v1', m=JSON.parse(localStorage.getItem(k))||{}; m[pg]=zh ? {key, name, zh, t:Date.now()} : {key, name, t:Date.now()}; localStorage.setItem(k, JSON.stringify(m)); }catch(e){}
 }
 function route(){
-  const h=location.hash.replace(/^#/,''), cg=/^class-(\d+)$/.exec(h);
+  // Cheese Run's old addresses (#play-snake until 11 Nov 2026, briefly #play-cheese-run): the address bar shows the new one
+  if((location.hash==='#play-snake' || location.hash==='#play-cheese-run') && history.replaceState){ try{ history.replaceState(history.state, '', location.pathname+location.search+'#play-cheeserun'); }catch(e){} }
+  let h=location.hash.replace(/^#/,''); if(h==='play-snake' || h==='play-cheese-run') h='play-cheeserun';
+  const cg=/^class-(\d+)$/.exec(h);
   if(cg && (!CFG.only || CFG.only==='zh')){ if(!classRun || classRun.id!==+cg[1]) classOpen(+cg[1]); return; }
   if(classRun) leaveClass();
   if(h==='circuit' && !CFG.only || h==='circuit' && CFG.only==='zh') return circuitStation();
@@ -4548,7 +4555,7 @@ function route(){
   if(CFG.only==='zh'){
     if(h==='words') return wordList();
     if(h==='learn') return zhLevelWords().length>=4 ? playLearn() : zhMenu();
-    const g=h==='play-snake' ? ZH_SNAKE : ZH_GAMES.find(x=>'play-'+x.key===h);
+    const g=h==='play-cheeserun' ? ZH_CHEESERUN : ZH_GAMES.find(x=>'play-'+x.key===h);
     if(g && zhReady(g)){ lastGame(g.key, g.name, g.zh); return g.run(); }
     return zhMenu();
   }

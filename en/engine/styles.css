@@ -567,9 +567,9 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 .arcade-msg{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;border-radius:12px;background:color-mix(in srgb, var(--paper) 70%, transparent)}
 .arcade-msg[hidden]{display:none}
 
-/* Cheese Run (was Word Snake): the board, then the arrows on touch screens */
-.snake-board{position:relative;display:flex;justify-content:center}
-.snake-board canvas{display:block;border-radius:10px;box-shadow:0 0 0 1px var(--rule);touch-action:none;-webkit-user-select:none;user-select:none}
+/* Cheese Run (was Word Snake): the board, the message over it (start, pause) and the end screen's picture */
+.chr-board{position:relative;display:flex;justify-content:center}
+.chr-board canvas{display:block;border-radius:10px;box-shadow:0 0 0 1px var(--rule);touch-action:none;-webkit-user-select:none;user-select:none}
 .chr-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;pointer-events:none;border-radius:10px;background:color-mix(in srgb, var(--paper) 55%, transparent)}   /* Cheese Run (11 Nov 2026): the happy mouse holding its cheese up as a sign */
 .chr-msg[hidden]{display:none}
 .chr-pic{position:relative;display:inline-block;flex:none;height:var(--h,200px);width:calc(var(--h,200px)*.6405)}
@@ -581,10 +581,6 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 img.chr-end{display:block;height:190px;width:auto}
 .phone .end-with-pic .end-pic{float:none;margin:0 0 12px;display:flex;justify-content:center}
 .phone img.chr-end{height:140px}
-.snake-pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,50px);grid-template-areas:". up ." "left down right";gap:8px;justify-content:center;margin-top:6px}
-.snake-pad button{border:1px solid var(--rule);background:var(--paper);border-radius:12px;font-size:20px;color:var(--ink);touch-action:manipulation;-webkit-user-select:none;user-select:none}
-.snake-pad button:active{background:var(--blue-soft)}
-.pad-up{grid-area:up}.pad-left{grid-area:left}.pad-right{grid-area:right}.pad-down{grid-area:down}
 
 /* Whack-a-word: nine holes; each word is a card that pops up out of a hole (behind its rim) and drops back */
 .whack{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px;padding:16px 14px 10px;background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--rule);-webkit-user-select:none;user-select:none;touch-action:manipulation}

@@ -148,7 +148,7 @@ const SECTIONS = [
     {key:'crossword', name:'Crossword', note:'words of 3+ letters; a meaning that contains its word is left out', file:'words', src:'words', min:6},
     {key:'whack', name:'Whack-a-word', file:'words', src:'words', min:6, circuit:'arcade', link:'whack'},
     {key:'invaders', name:'Word Invaders', file:'words', src:'words', min:6, circuit:'arcade', link:'invaders'},
-    {key:'snake', name:'Cheese Run', file:'words', src:'words', min:6, circuit:'', link:'snake'}]],
+    {key:'cheeserun', name:'Cheese Run', file:'words', src:'words', min:6, circuit:'', link:'cheeserun'}]],
   ['Chinese side', [
     {key:'zhwords', name:'Word games (9)', note:'need the zh column', file:'words', play:'', src:'zhwords', min:4, circuit:'', zh:true},
     {key:'zhbuild', name:'Build the sentence', note:'rows with the zh column', file:'builds', src:'zhbuilds', min:1, circuit:'', zh:true},
@@ -259,7 +259,7 @@ function subjectTable(s, k){
     if(r.sect) return `<tr class="sect"><td colspan="9">${esc(r.sect)}</td></tr>`;
     const what=r.c.total ? `${fmt(r.c.total)} ${NOUN[r.g.src]}${r.c.extra?` · ${esc(r.c.extra)}`:''}` : '';
     const noLevel=r.c.lv[5] ? ` · ${r.c.lv[5]} with no level` : '';
-    const circ=r.g.circuit ? CIRCUIT[r.g.circuit] : r.g.link==='snake' ? 'not in circuit' : '';
+    const circ=r.g.circuit ? CIRCUIT[r.g.circuit] : r.g.link==='cheeserun' ? 'not in circuit' : '';
     const page=r.g.zh ? s.zhPage : s.page, play=r.g.play!=null ? r.g.play : r.g.key;
     const go=page && r.cls!=='off' && r.cls!=='none' && !s.planned ? ` · <a href="${esc(page+(play?'#play-'+play:''))}" target="_blank" rel="noopener" title="Open it on the ${r.g.zh?'Chinese':'English'} page">play ↗</a>` : '';
     return `<tr class="${r.cls==='off'?'off':''}"><td><b>${esc(r.g.name)}</b>${r.g.note?` <span class="nt">(${esc(r.g.note)})</span>`:''}
