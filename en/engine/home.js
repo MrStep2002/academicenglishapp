@@ -3,8 +3,11 @@
      Daily Circuit and every subject. Students who are logged in (or have chosen to play without logging in) are sent
      straight to their home by a few lines in index.html's <head>.
    en/index.html [data-home]: the student's home: greeting and overall level, class games, the Daily Circuit with this
-     week's circuits, this week's points, Your subjects (switched on: level, words known, last played, Continue) and
-     More subjects (the rest, with their "I study this" switches), then the suggestions box.
+     week's circuits, this week's points, Your subjects, then the suggestions box.
+     Your subjects (11 Nov 2026, teacher): only the subjects the student has ticked (in Subjects, the panel at the top of
+     the sidebar: shell.js), in their areas, four boxes across. Each box: the name (half the old size, two lines at most,
+     then …), the level and an Open (or Continue) button, all the boxes the same size with the button at the same height.
+     More subjects (the rest, with switches) and the words known / last played lines are gone.
    Everything comes from the subject list (subjects.js) and what the games save in this browser (or the account):
      aea:progress:v1 (levels, words, days), aea:points:v1, aea:circuit:v1, aea:studying:v1 (the switches, the same format as
      circuit.js), aea:lastgame:v1 (the last game played on each topic page: app.js).
@@ -30,7 +33,6 @@ const nameOf = x => ZH && x.zh ? L(esc(x.name), esc(x.zh)) : esc(x.name);
 
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const read = k => { try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } };
-const write = (k, v) => { try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
 const dayKey = x => x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0');
 const norm = p => String(p||'').split('#')[0].split('?')[0].replace(/^\/+/, '').replace(/index\.html$/, '');
 const fmt = n => Number(n||0).toLocaleString('en-GB');
@@ -54,22 +56,10 @@ function topicFor(d, path){
     if(h === want && (!best || (t.n||0) > (best.n||0))) best = t; });
   return best;
 }
-const ago = t => { if(!t) return ''; const a = new Date(t), now = new Date(); const days = Math.round((new Date(now.toDateString()) - new Date(a.toDateString())) / 864e5);
-  if(ZH) return days <= 0 ? L('today', '今天') : days === 1 ? L('yesterday', '昨天') : days < 7 ? L(days + ' days ago', days + ' 天前') : days < 14 ? L('last week', '上周')
-    : L(esc(a.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})), esc(a.toLocaleDateString('zh-CN', {month: 'long', day: 'numeric'})));
-  return days <= 0 ? 'today' : days === 1 ? 'yesterday' : days < 7 ? days + ' days ago' : days < 14 ? 'last week' : a.toLocaleDateString('en-GB', {day: 'numeric', month: 'short'}); };
 
-// ----- the subjects switched on (the same storage as the Daily Circuit: circuit.js) -----
-// (On the Chinese side a subject is saved with both its names, "Web design 网页设计", as the Daily Circuit has always saved them)
+// ----- the subjects ticked (in Subjects: shell.js; the same storage as the Daily Circuit: circuit.js) -----
 const studyingMap = () => ((read('aea:studying:v1') || {})[SIDE]) || {};
 const isOn = s => s.always || !!studyingMap()[s.path];
-function setStudying(s, on){
-  const all = read('aea:studying:v1') || {}; all[SIDE] = all[SIDE] || {};
-  if(on) all[SIDE][s.path] = ZH && s.zh ? s.name + ' ' + s.zh : s.name; else delete all[SIDE][s.path];
-  write('aea:studying:v1', all);
-  try{ window.dispatchEvent(new CustomEvent('aea:studying')); }catch(e){}
-}
-const sw = s => `<button type="button" class="aea-sw" role="switch" aria-checked="${isOn(s)}" data-sw="${esc(s.path)}" title="${A('I study this', '我在学')}"><span class="aea-sr">${ZH ? L(`I study ${esc(s.name)}`, `我在学${esc(s.zh || s.name)}`) : `I study ${esc(s.name)}`}</span><span class="t" aria-hidden="true"></span></button>`;
 
 // ---------- HOME ----------
 function hello(d){
@@ -129,44 +119,36 @@ function today(){
 }
 function mine(d){
   const list = LIST.ordered().filter(s=>!s.soon && isOn(s)), last = read('aea:lastgame:v1') || {};
-  return list.map(s=>{
-    const area = SUBJ.areaOf(s.area), t = topicFor(d, s.path), found = t && t.n >= CAL, lv = found ? label(t.r) : null;
-    const lg = last[s.path], w = t && t.words;
+  const box = s=>{
+    const t = topicFor(d, s.path), found = t && t.n >= CAL, lv = found ? label(t.r) : null, lg = last[s.path];
     const cta = lg && lg.key ? {href: ROOT + s.path + '#play-' + encodeURIComponent(lg.key), html: ZH ? L('Continue: ' + esc(lg.name), '继续：' + esc(lg.zh || lg.name)) : esc('Continue: ' + lg.name)}
       : {href: ROOT + s.path, html: t ? L('Open', '打开') : L('Start', '开始')};
     const left = t ? CAL - t.n : 0;
-    const lvl = found ? `<p class="aea-mono" style="margin:0">${L('Your level', '你的水平')}: <b>${lvName(lv)}</b></p><div class="aea-bar" role="img" aria-label="${ZH ? esc(lvTip(lv)) : lv.next ? `${lv.pct}% of the way to ${esc(lv.next)}` : 'Top level'}"><i style="width:${lv.pct}%"></i></div>`
-      : t && t.n ? `<p class="aea-mono" style="margin:0">${L(`Your level: <b>finding it</b> <span style="text-transform:none;letter-spacing:0">(${left} more answer${left === 1 ? '' : 's'})</span>`, `你的水平：<b>正在评估</b>（还需 ${left} 题）`)}</p><div class="aea-bar" aria-hidden="true"><i style="width:${t.n * 100 / CAL}%"></i></div>`
-      : `<p class="aea-mono" style="margin:0">${L('Not played yet', '还没玩过')}</p>`;
+    const lvl = found ? `<p class="aea-mono">${L('Your level', '你的水平')}: <b>${lvName(lv)}</b></p><div class="aea-bar" role="img" aria-label="${ZH ? esc(lvTip(lv)) : lv.next ? `${lv.pct}% of the way to ${esc(lv.next)}` : 'Top level'}"><i style="width:${lv.pct}%"></i></div>`
+      : t && t.n ? `<p class="aea-mono">${L(`Your level: <b>finding it</b> (${left} more)`, `你的水平：<b>正在评估</b>（还需 ${left} 题）`)}</p><div class="aea-bar" aria-hidden="true"><i style="width:${t.n * 100 / CAL}%"></i></div>`
+      : `<p class="aea-mono">${L('Not played yet', '还没玩过')}</p>`;
     return `<article class="aea-box">
-      <div class="aea-box-top"><p class="aea-area-l" style="color:${area.color}">${nameOf(area)}</p>${s.always ? `<span class="aea-always">${L('ALWAYS ON', '一直包含')}</span>` : sw(s)}</div>
-      <h3><a href="${esc(ROOT + s.path)}">${nameOf(s)}</a></h3>
-      <div>${lvl}</div>
-      ${t ? `<p class="aea-meta">${w && w.total ? L(`Words known: ${fmt(w.known)} of ${fmt(w.total)} · `, `已掌握 ${fmt(w.known)} / ${fmt(w.total)} 个单词 · `) : ''}${L('Last played', '上次玩')}: ${ZH ? ago(t.last) : esc(ago(t.last))}</p>` : ''}
-      <a class="aea-btn aea-btn-line" href="${esc(cta.href)}">${cta.html} ${svg(ARROW, 16, 2.6)}</a>
-    </article>`; }).join('');
-}
-function more(){
-  const list = LIST.ordered().filter(s=>s.soon || !isOn(s));
-  return list.map(s=>{
-    const area = SUBJ.areaOf(s.area), dot = `<span class="aea-dot" aria-hidden="true"><i style="background:${area.color}"></i></span>`;
-    if(s.soon) return `<li class="aea-rowi soon">${dot}<span class="nm">${nameOf(s)}</span><span class="note">${L('Coming soon', '即将推出')}</span></li>`;
-    return `<li class="aea-rowi">${dot}<a class="nm" href="${esc(ROOT + s.path)}">${nameOf(s)}</a>${SUBJ.switchable(s) ? sw(s) : `<span class="go">${svg(RIGHT, 18, 2.2)}</span>`}</li>`; }).join('');
+      <h4 class="aea-box-t"><a href="${esc(ROOT + s.path)}" title="${esc(A(s.name, s.zh || s.name))}">${nameOf(s)}</a></h4>
+      <div class="aea-box-lv">${lvl}</div>
+      <a class="aea-btn aea-btn-line" href="${esc(cta.href)}"><span class="lbl">${cta.html}</span> ${svg(ARROW, 16, 2.6)}</a>
+    </article>`; };
+  // One group per area, in the areas' order (Every subject, English, Media, Maths, Science)
+  const groups = SUBJ.AREAS.map(a=>({a, list: list.filter(s=>s.area === a.key)})).filter(g=>g.list.length).map(g=>`<section class="aea-group" aria-label="${esc(A(g.a.name, g.a.zh || g.a.name))}">
+      <h3 class="aea-group-h" style="color:${g.a.color}">${nameOf(g.a)}</h3>
+      <div class="aea-grid4">${g.list.map(box).join('')}</div></section>`).join('');
+  // Only Essentials so far: how to add the others
+  const few = list.filter(s=>!s.always).length ? '' : `<div class="aea-add"><p>${L('Add the subjects you study: they appear here and in your Daily Circuit.', '添加你在学的科目：它们会出现在这里和你的每日挑战中。')}</p>
+      <button type="button" class="aea-btn aea-btn-dark" data-open-subjects>${L('Choose your subjects', '选择你的科目')}</button></div>`;
+  return groups + few;
 }
 function drawHome(){
   const d = progress();
   const put = (k, html) => { const el = HOME.querySelector(`[data-h="${k}"]`); if(el) el.innerHTML = html; };
-  put('hello', hello(d)); put('today', today()); put('mine', mine(d)); put('more', more());
-  const moreSec = HOME.querySelector('[data-h="more"]'); if(moreSec) moreSec.closest('section').hidden = !moreSec.children.length;
+  put('hello', hello(d)); put('today', today()); put('mine', mine(d));
 }
 function wireHome(){
-  HOME.addEventListener('click', e=>{
-    const b = e.target.closest('[data-sw]'); if(!b) return;
-    const s = LIST.SUBJECTS.find(x=>x.path === b.dataset.sw); if(!s) return;
-    setStudying(s, b.getAttribute('aria-checked') !== 'true');
-    const y = window.scrollY; drawHome(); window.scrollTo(0, y);
-    const again = HOME.querySelector(`[data-sw="${CSS.escape(s.path)}"]`); if(again) again.focus({preventScroll: true});
-  });
+  // Ticking a subject in Subjects (shell.js) redraws Your subjects straight away
+  window.addEventListener('aea:studying', ()=>{ const y = window.scrollY; drawHome(); window.scrollTo(0, y); });
   // Visiting the English home means this browser plays: the landing page sends it straight to a home next time (the side
   // chosen in the language menu, or the side played last: index.html)
   try{ localStorage.setItem('aeaGuestPlay', '1'); }catch(e){}

@@ -35,7 +35,15 @@ const load = () => { const d=read(KEY, {}); d.days=d.days||{}; return d; };
 const ALWAYS = {en: {'en/essentials/index.html': 'Academic English Essentials'},
                 zh: {'zh/essentials/index.html': 'Academic English Essentials 学术英语基础'}};
 const switchedOn = side => (read(STUDY, {})[side]) || {};
-const studying = side => Object.assign({}, ALWAYS[side] || {}, switchedOn(side));
+// Reading Comprehension and Maths can be ticked in Subjects (shell.js, 11 Nov 2026) so they are on the student's home page,
+// but they have no quick-fire games: the circuit leaves them out (circuit: false in en/engine/subjects.js)
+function inCircuit(path){
+  const S = window.AEA_SUBJECTS, s = S ? [...S.SUBJECTS, ...(S.ZH_SUBJECTS || [])].find(x=>x.path === path) : null;
+  if(s) return s.circuit !== false && !s.soon;
+  return !/reading-comprehension\/|^maths\//.test(path);
+}
+const studying = side => { const all = Object.assign({}, ALWAYS[side] || {}, switchedOn(side)), out = {};
+  Object.keys(all).forEach(p=>{ if(inCircuit(p)) out[p] = all[p]; }); return out; };
 const setStudying = (side, path, name, on) => { const s=read(STUDY, {}); s[side]=s[side]||{}; if(on) s[side][path]=name; else delete s[side][path]; write(STUDY, s); };
 
 // ----- The circuit in progress -----
@@ -146,7 +154,7 @@ function circuitPage(box){
     const t=today(side), st=streak(side);
     const streakLine = st ? `<p class="cc-streak">${T(zh, `${st} day${st===1?'':'s'} in a row`, `连续 ${st} 天`)}</p>` : '';
     const subjects = subs.length ? `<p class="cc-k">${T(zh, 'Your subjects', '你的科目')}</p><p class="cc-chips">${subs.map(n=>`<span class="cc-chip">${NT(zh, n)}</span>`).join('')}</p>
-      <p class="cc-small"><a href="${esc(back)}">${T(zh, 'Change your subjects', '修改科目')}</a></p>` : '';
+      <p class="cc-small"><a href="${esc(back)}" data-open-subjects>${T(zh, 'Change your subjects', '修改科目')}</a></p>` : '';
     let main;
     if(location.hash==='#done' && last){
       const R=last.results, right=R.reduce((s,x)=>s+x.right,0), ans=R.reduce((s,x)=>s+x.answered,0), pts=R.reduce((s,x)=>s+x.pts,0);

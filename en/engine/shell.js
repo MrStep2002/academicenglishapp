@@ -1,20 +1,26 @@
 /* THE SITE SHELL (redesign stage 1, 8 Nov 2026): the sidebar and the top bar around every English page.
    It wraps whatever the page already has (the games, My progress, the Daily Circuit page…) and adds:
-   - the sidebar: the logo, the language menu (English / 中文版), Home, Daily Circuit, My progress, Big Ideas (greyed until
-     it exists), Staff Room (the teacher page), then My classes (greyed for now), My subjects (Essentials + the subjects
-     switched on), About (Who are we?: greyed; Got an idea?). (9 Nov 2026, teacher: Big Ideas and Staff Room moved up; the
-     Explore heading and The Future gone; For teachers renamed Staff Room.)
-   - the top bar: the Subjects menu (areas on the left, their subjects on the right), then the days in a row, the points
-     (points.js draws them) and the Log in button or the student's name (account.js puts it next to the points)
+   - the sidebar: the logo, the language menu (English / 中文版), Subjects, Daily Circuit, My progress, Big Ideas (greyed
+     until it exists), Staff Room (the teacher page), then My subjects (Essentials + the subjects ticked), About (Who are we?:
+     greyed; Got an idea?). (9 Nov 2026, teacher: Big Ideas and Staff Room moved up; the Explore heading and The Future gone;
+     For teachers renamed Staff Room.)
+   - Subjects (11 Nov 2026, teacher: in place of Home, "people know to click on the mouse to go home"): a panel that pops out
+     beside the sidebar with every subject there is, in its area, each with a tick box: the subjects ticked are the student's
+     subjects (My subjects, the home page) and the ones the Daily Circuit uses (aea:studying:v1, as before). Reading
+     Comprehension and Maths can be ticked but are not in the Daily Circuit (circuit.js leaves them out). Any element with
+     data-open-subjects opens it (the home page, the Daily Circuit page). My classes and the Subjects menu that was in the
+     top bar are gone (11 Nov 2026), and the sidebar is tighter.
+   - the top bar: the path on game pages (crumbs), then the days in a row, the points (points.js draws them) and the Log in
+     button or the student's name (account.js puts it next to the points)
    - on phones (under 860px) the sidebar becomes a menu that slides in from the left (the ☰ button)
    The page's own points bar, Log in button and mouse logo are hidden (the shell shows them instead); its back link stays.
    Game pages (stage 2, 8 Nov 2026): the game engine (app.js) calls AEA_SHELL.crumbs([{label, href}, …]) and the top bar
-   shows that path (Home / Descriptive language / Fill the gap) in place of the Subjects menu; crumbs(null) brings the menu back.
+   shows that path (Home / Descriptive language / Fill the gap); crumbs(null) takes it away.
    Load it on every English page after points.js, account.js and subjects.js, with css/site.css in the <head>:
      <script src="…/en/engine/subjects.js?v=…"></script><script src="…/en/engine/shell.js?v=…"></script>
    THE CHINESE VERSION (stage 4, 8 Nov 2026): with data-side="zh" the same shell is in Chinese (the English / 中文 switch from
    account.js still works: every label has both languages, class t-en / t-zh, and <html data-ui> shows one). Home, the
-   Daily Circuit, My subjects and the Subjects menu are the Chinese version's (zh/; the list is ZH_SUBJECTS in subjects.js).
+   Daily Circuit, My subjects and the Subjects panel are the Chinese version's (zh/; the list is ZH_SUBJECTS in subjects.js).
    Options on the script tag:
      data-side="zh|maths"  the side: zh = the Chinese version; maths = the maths points (default en)
      data-auto-side        a page both sides share (My progress, Maths, Log in): the Chinese shell when the student came from
@@ -69,7 +75,6 @@ const loggedIn = () => { const a = account(); return !!(a && a.token); };
 const guest = () => raw('aeaGuestPlay') === '1';
 const enHome = () => ROOT + (account() || guest() ? 'en/index.html' : 'index.html');
 const homeHref = () => ZH ? ROOT + 'zh/index.html' : enHome();
-const ESS = LIST.SUBJECTS.find(s=>s.always);
 function studying(){
   const on = ((read('aea:studying:v1') || {})[LANG]) || {};
   return LIST.ordered().filter(s=>!s.soon && (s.always || on[s.path] || on[norm(s.path)+'index.html']));
@@ -96,7 +101,6 @@ function levelIn(path){
 }
 // The subject this page belongs to (a topic page, or a page inside it such as Close reading)
 const here = LIST.SUBJECTS.find(s=>s.path && PAGE.indexOf(norm(s.path)) === 0 && norm(s.path) !== '');
-const LANDING = PAGE === '' || PAGE === 'index.html';   // the landing page: its own list of every subject is #all
 const activeNav = ['en/index.html', 'en/', '', 'index.html', 'zh/index.html', 'zh/'].indexOf(PAGE) >= 0 ? 'home'
   : PAGE.indexOf('en/circuit/') === 0 || PAGE.indexOf('zh/circuit/') === 0 ? 'circuit' : PAGE.indexOf('progress/') === 0 ? 'progress'
   : PAGE.indexOf('teacher/') === 0 ? 'staff' : '';
@@ -117,7 +121,6 @@ function setCrumbs(list){
   document.documentElement.classList.toggle('aea-crumbed', !!CRUMBS);
   const slot = document.querySelector('.aea-crumbs-slot'); if(!slot) return;   // not built yet: build() draws them
   slot.innerHTML = crumbsHtml();
-  if(CRUMBS) setSubjects(false);
 }
 
 // ----- icons -----
@@ -130,6 +133,7 @@ const I = {
   who: '<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M16 4a4 4 0 0 1 0 8"/><path d="M22 21a7 7 0 0 0-5-6.7"/>',
   teach: '<path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/>',
   idea: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  subjects: '<rect x="3.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.6"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.6"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.6"/>',
   globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18z"/>',
   down: '<path d="m6 9 6 6 6-6"/>', right: '<path d="m9 6 6 6-6 6"/>', check: '<path d="m5 12 5 5 9-10"/>',
   menu: '<path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/>', close: '<path d="M6 6l12 12"/><path d="M18 6 6 18"/>',
@@ -142,9 +146,7 @@ const logo = cls => `<img class="${cls} aea-logo-light" src="${ROOT}images/logo/
 const link = (href, label, ico, on) => `<li><a class="aea-nav${on?' on':''}" href="${esc(href)}"${on?' aria-current="page"':''}>${icon(ico)}<span>${label}</span></a></li>`;
 const soon = (label, ico) => `<li><span class="aea-nav off" aria-disabled="true" title="${A('Coming soon', '即将推出')}">${ico ? icon(ico) : ''}<span>${label}</span><span class="aea-sr"> ${L('(coming soon)', '（即将推出）')}</span></span></li>`;
 function sideHtml(){
-  const a = account(), mine = studying();
-  const cls = a && a.className ? esc(a.className) : L('Your class', '我的班级');
-  const badge = (a && a.className ? String(a.className) : '?').replace(/\s+/g, '').slice(0, 3);
+  const mine = studying();
   const home = ROOT + (ZH ? 'zh' : 'en') + '/index.html';
   const en = `<a href="${esc(enHome())}"${ZH ? '' : ' aria-current="true"'} data-lang="en">English${ZH ? '' : ' ' + icon('check', 16)}</a>`;
   const zh = `<a href="${ROOT}zh/index.html"${ZH ? ' aria-current="true"' : ''} data-lang="zh"><span lang="zh-CN">中文版</span>${ZH ? icon('check', 16) : '<small>Chinese</small>'}</a>`;
@@ -162,39 +164,61 @@ function sideHtml(){
   </div>
   <nav class="aea-navs" aria-label="${A('Main', '主菜单')}">
     <ul class="aea-list aea-first">
-      ${link(homeHref(), L('Home', '首页'), 'home', activeNav === 'home')}
+      <li><button type="button" class="aea-nav aea-subjects-btn" data-open-subjects aria-haspopup="dialog" aria-expanded="${pickOpen}" aria-controls="aea-pick">${icon('subjects')}<span>${L('Subjects', '科目')}</span>${icon('right', 16)}</button></li>
       ${link(ROOT + (ZH ? 'zh' : 'en') + '/circuit/index.html', L('Daily Circuit', '每日挑战'), 'circuit', activeNav === 'circuit')}
       ${link(ROOT + 'progress/index.html?from=' + LANG, L('My progress', '我的进步'), 'progress', activeNav === 'progress')}
       ${soon(L('Big Ideas', '大概念'), 'ideas')}
       ${link(ROOT + 'teacher/index.html', L('Staff Room', '教师办公室'), 'teach', activeNav === 'staff')}
     </ul>
-    <div class="aea-sec"><p class="aea-sec-h">${L('My classes', '我的班级')}</p>
-      <ul class="aea-list"><li><span class="aea-nav off" aria-disabled="true" title="${A('Coming soon', '即将推出')}"><span class="aea-badge" aria-hidden="true">${esc(badge)}</span><span>${cls}</span><span class="aea-sr"> ${L('(coming soon)', '（即将推出）')}</span></span></li></ul></div>
     <div class="aea-sec"><p class="aea-sec-h">${L('My subjects', '我的科目')}</p>
-      <ul class="aea-list">${mine.map(s=>{ const on = here && here.path === s.path;
+      <ul class="aea-list aea-mine">${mine.map(s=>{ const on = here && here.path === s.path;
         return `<li><a class="aea-nav aea-subject${on?' on':''}" href="${esc(ROOT + s.path)}"${on?' aria-current="true"':''}><span class="aea-dot" aria-hidden="true"><i style="background:${SUBJ.areaOf(s.area).color}"></i></span><span>${nameOf(s)}</span></a></li>`; }).join('')}</ul>
-      ${mine.length < 2 ? `<p class="aea-hint"><a href="${home}#more">${L('Choose your subjects', '选择你的科目')}</a></p>` : ''}</div>
+      ${mine.length < 2 ? `<p class="aea-hint"><button type="button" class="aea-linkbtn" data-open-subjects>${L('Choose your subjects', '选择你的科目')}</button></p>` : ''}</div>
     <div class="aea-sec"><p class="aea-sec-h">${L('About', '关于')}</p>
       <ul class="aea-list">${soon(L('Who are we?', '我们是谁？'), 'who')}${link(home + '#suggest', L('Got an idea?', '有想法吗？'), 'idea', false)}</ul></div>
   </nav>`;
 }
 
-// ----- the Subjects menu -----
-let menuArea = (here && here.area !== 'every' && here.area) || (SUBJ.AREAS.find(a=>a.key!=='every') || {}).key;
-function menuHtml(){
-  const areas = SUBJ.AREAS.filter(a=>a.key !== 'every' && LIST.SUBJECTS.some(s=>s.area === a.key));
-  const list = LIST.SUBJECTS.filter(s=>s.area === menuArea), area = SUBJ.areaOf(menuArea);
-  const lvl = ESS ? levelIn(ESS.path) : '';
-  return `<div class="aea-menu-areas">
-      ${ESS ? `<a class="aea-mi aea-mi-ess" href="${esc(ROOT + ESS.path)}"><span>${nameOf(ESS)}</span>${lvl ? `<span class="aea-lvl">${lvl}</span>` : ''}</a><div class="aea-menu-rule"></div>` : ''}
-      <ul>${areas.map(a=>`<li><button type="button" class="aea-mi aea-area${a.key === menuArea ? ' on' : ''}" data-area="${esc(a.key)}" aria-pressed="${a.key === menuArea}"><span class="aea-dot" aria-hidden="true"><i style="background:${a.color}"></i></span><span>${nameOf(a)}</span>${icon('right', 16)}</button></li>`).join('')}</ul>
-    </div>
-    <div class="aea-menu-list">
-      <p class="aea-menu-h" style="color:${area.color}">${nameOf(area)}</p>
-      <ul>${list.map(s=>{ if(s.soon) return `<li><span class="aea-mi off">${nameOf(s)}<span class="aea-soon">${L('Coming soon', '即将推出')}</span></span></li>`;
-        const l = levelIn(s.path); return `<li><a class="aea-mi" href="${esc(ROOT + s.path)}"><span>${nameOf(s)}</span>${l ? `<span class="aea-lvl">${l}</span>` : ''}</a></li>`; }).join('')}</ul>
-      <a class="aea-menu-all" href="${LANDING ? '#all' : ROOT + (ZH ? 'zh' : 'en') + '/index.html#subjects'}">${L('All subjects', '所有科目')}</a>
-    </div>`;
+// ----- the Subjects panel (11 Nov 2026): every subject, in its area, with a tick box -----
+let pickOpen = false;
+const isTicked = s => !!(((read('aea:studying:v1') || {})[LANG]) || {})[s.path];
+function setTicked(s, on){
+  let all = read('aea:studying:v1'); if(!all || typeof all !== 'object') all = {}; all[LANG] = all[LANG] || {};
+  // (the Chinese side saves a subject with both its names, "Web design 网页设计", as the Daily Circuit always has)
+  if(on) all[LANG][s.path] = ZH && s.zh ? s.name + ' ' + s.zh : s.name; else delete all[LANG][s.path];
+  try{ localStorage.setItem('aea:studying:v1', JSON.stringify(all)); }catch(e){}
+  try{ window.dispatchEvent(new CustomEvent('aea:studying')); }catch(e){}   // the sidebar, the home page
+}
+function pickHtml(){
+  const areas = SUBJ.AREAS.filter(a=>LIST.SUBJECTS.some(s=>s.area === a.key && !s.soon));
+  const row = s => { const off = s.circuit === false, id = 'aea-pk-' + norm(s.path).replace(/[^a-z0-9]+/gi, '-');
+    return `<li class="aea-pick-row${s.always ? ' always' : ''}">
+      <input type="checkbox" id="${id}" data-pick="${esc(s.path)}"${s.always || isTicked(s) ? ' checked' : ''}${s.always ? ' disabled' : ''}>
+      <label for="${id}"><span class="nm">${nameOf(s)}</span>${s.always ? `<span class="note">${L('Always in the Daily Circuit', '一直包含在每日挑战中')}</span>`
+        : off ? `<span class="note">${L('Not in the Daily Circuit', '不在每日挑战中')}</span>` : ''}</label>
+      <a class="aea-pick-go" href="${esc(ROOT + s.path)}" title="${esc(A('Open ' + s.name, '打开' + (s.zh || s.name)))}"><span class="aea-sr">${ZH ? L('Open ' + esc(s.name), '打开' + esc(s.zh || s.name)) : 'Open ' + esc(s.name)}</span>${icon('right', 18)}</a></li>`; };
+  return `<div class="aea-pick-head"><h2 id="aea-pick-h">${L('Subjects', '科目')}</h2>
+      <button type="button" class="aea-pick-x" data-pick-close aria-label="${A('Close', '关闭')}">${icon('close', 22)}</button></div>
+    <p class="aea-pick-lead">${L('Tick the subjects you study. They go on your home page and into your Daily Circuit.', '勾选你在学的科目。它们会出现在你的首页和每日挑战中。')}</p>
+    <div class="aea-pick-groups">${areas.map(a=>`<section class="aea-pick-g" aria-label="${esc(A(a.name, a.zh || a.name))}">
+      <h3 style="color:${a.color}">${nameOf(a)}</h3>
+      <ul>${LIST.SUBJECTS.filter(s=>s.area === a.key && !s.soon).map(row).join('')}</ul></section>`).join('')}</div>
+    <div class="aea-pick-foot"><button type="button" class="aea-pick-done" data-pick-close>${L('Done', '完成')}</button></div>`;
+}
+// Beside the sidebar on a computer, level with the Subjects button; the whole screen on a phone (css/site.css)
+function placePick(){
+  const pk = document.getElementById('aea-pick'), b = document.querySelector('.aea-subjects-btn'); if(!pk || !b) return;
+  const top = Math.max(8, Math.min(b.getBoundingClientRect().top - 10, window.innerHeight - 320));
+  pk.style.setProperty('--pick-top', top + 'px');
+}
+function setPick(open, focusBack){
+  const pk = document.getElementById('aea-pick'); if(!pk) return;
+  pickOpen = open;
+  if(open){ pk.innerHTML = pickHtml(); pk.hidden = false; placePick(); const f = pk.querySelector('input:not([disabled])') || pk.querySelector('.aea-pick-x'); if(f) f.focus({preventScroll: true}); }
+  else pk.hidden = true;
+  document.documentElement.classList.toggle('aea-pick-open', open);
+  document.querySelectorAll('.aea-subjects-btn').forEach(b=>{ b.setAttribute('aria-expanded', String(open)); b.classList.toggle('on', open); });
+  if(!open && focusBack){ const b = document.querySelector('.aea-subjects-btn'); if(b && b.offsetParent) b.focus({preventScroll: true}); }
 }
 
 // ----- build it around the page -----
@@ -205,15 +229,12 @@ function build(){
   const shell = document.createElement('div'); shell.className = 'aea-shell'; shell.id = 'aea-shell';
   shell.innerHTML = `<a class="aea-skip" href="#aea-content">${L('Skip to content', '跳到正文')}</a>
     <aside class="aea-side" id="aea-side" aria-label="${A('Site menu', '网站菜单')}">${sideHtml()}</aside>
+    <div class="aea-pick" id="aea-pick" role="dialog" aria-labelledby="aea-pick-h" hidden></div>
     <div class="aea-scrim" data-close></div>
     <div class="aea-main">
       <header class="aea-top">
         <button type="button" class="aea-menu-btn" aria-label="${A('Open menu', '打开菜单')}" aria-expanded="false" aria-controls="aea-side">${icon('menu', 24)}</button>
         <a class="aea-top-logo" href="${esc(homeHref())}">${logo('aea-logo-sm')}</a>
-        <div class="aea-subj">
-          <button type="button" class="aea-subj-btn" aria-expanded="false" aria-controls="aea-subj-menu">${L('Subjects', '科目')} ${icon('down', 16)}</button>
-          <div class="aea-subj-menu" id="aea-subj-menu" hidden>${menuHtml()}</div>
-        </div>
         <div class="aea-crumbs-slot">${crumbsHtml()}</div>
         <div class="aea-top-end">${STAFF ? '<div class="aea-staff-slot"></div>' : `
           <span class="aea-streak" hidden>${icon('flame', 18)}${ZH ? '<i class="t-zh" lang="zh-CN">连续</i>' : ''}<b></b><i>days in a row</i></span>
@@ -259,12 +280,6 @@ function setMenu(open, focusBack){
   if(open){ const c = side && side.querySelector('.aea-close'); if(c) c.focus({preventScroll: true}); }
   else if(focusBack && btn) btn.focus({preventScroll: true});
 }
-function setSubjects(open, focusBack){
-  const btn = document.querySelector('.aea-subj-btn'), menu = document.getElementById('aea-subj-menu'); if(!btn || !menu) return;
-  menu.hidden = !open; btn.setAttribute('aria-expanded', String(open));
-  if(open){ menu.innerHTML = menuHtml(); }
-  else if(focusBack) btn.focus({preventScroll: true});
-}
 function setLang(open){
   const btn = document.querySelector('.aea-lang-btn'), list = document.getElementById('aea-lang-list'); if(!btn || !list) return;
   list.hidden = !open; btn.setAttribute('aria-expanded', String(open));
@@ -278,21 +293,25 @@ function wire(shell){
   wireSide(shell.querySelector('#aea-side'));
   shell.querySelector('.aea-menu-btn').onclick = () => setMenu(!document.documentElement.classList.contains('aea-menu-open'));
   shell.querySelector('.aea-scrim').onclick = () => setMenu(false, true);
-  const sb = shell.querySelector('.aea-subj-btn'), sm = shell.querySelector('#aea-subj-menu');
-  sb.onclick = e => { e.stopPropagation(); setSubjects(sm.hidden); };
-  sm.addEventListener('click', e=>{ if(e.target.closest('a[href]')){ setTimeout(()=>setSubjects(false), 0); return; }
-    const b = e.target.closest('[data-area]'); if(b){ e.stopPropagation(); menuArea = b.dataset.area; sm.innerHTML = menuHtml(); const again = sm.querySelector(`[data-area="${menuArea}"]`); if(again) again.focus({preventScroll: true}); } });
-  sm.addEventListener('mouseover', e=>{ const b = e.target.closest('[data-area]'); if(b && b.dataset.area !== menuArea && window.matchMedia('(hover: hover)').matches){ menuArea = b.dataset.area;
-    sm.querySelectorAll('[data-area]').forEach(x=>{ const on = x.dataset.area === menuArea; x.classList.toggle('on', on); x.setAttribute('aria-pressed', String(on)); });
-    const tmp = document.createElement('div'); tmp.innerHTML = menuHtml(); sm.querySelector('.aea-menu-list').replaceWith(tmp.querySelector('.aea-menu-list')); } });
+  const pk = shell.querySelector('#aea-pick');
+  // Subjects: the sidebar's button, or any element with data-open-subjects on the page (it toggles from the sidebar's button)
+  document.addEventListener('click', e=>{
+    const o = e.target.closest('[data-open-subjects]'); if(!o) return;
+    e.preventDefault(); e.stopPropagation();
+    setPick(o.classList.contains('aea-subjects-btn') ? !pickOpen : true);
+  }, true);
+  pk.addEventListener('change', e=>{ const c = e.target.closest('[data-pick]'); if(!c) return;
+    const s = LIST.SUBJECTS.find(x=>x.path === c.dataset.pick); if(s && !s.always) setTicked(s, c.checked); });
+  pk.addEventListener('click', e=>{ if(e.target.closest('[data-pick-close]')) setPick(false, true); });
+  window.addEventListener('resize', ()=>{ if(pickOpen) placePick(); });
   // Click outside a menu or press Escape: it closes
   document.addEventListener('click', e=>{
-    if(!sm.hidden && !e.target.closest('.aea-subj')) setSubjects(false);
+    if(pickOpen && !e.target.closest('#aea-pick') && !e.target.closest('[data-open-subjects]')) setPick(false);
     const ll = document.getElementById('aea-lang-list'); if(ll && !ll.hidden && !e.target.closest('.aea-lang')) setLang(false);
   });
   document.addEventListener('keydown', e=>{
     if(e.key !== 'Escape') return;
-    if(!sm.hidden){ setSubjects(false, true); return; }
+    if(pickOpen){ setPick(false, true); return; }
     const ll = document.getElementById('aea-lang-list'); if(ll && !ll.hidden){ setLang(false); document.querySelector('.aea-lang-btn').focus(); return; }
     if(document.documentElement.classList.contains('aea-menu-open')) setMenu(false, true);
   });
@@ -306,6 +325,7 @@ function wire(shell){
   setInterval(drawStreak, 30000);
 }
 
-window.AEA_SHELL = {ROOT, redraw: redrawSide, streak, levelIn, studying, crumbs: setCrumbs, home: homeHref, side: LANG};
+window.AEA_SHELL = {ROOT, redraw: redrawSide, streak, levelIn, studying, crumbs: setCrumbs, home: homeHref, side: LANG,
+  openSubjects: () => setPick(true)};
 if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', build); else build();
 })();

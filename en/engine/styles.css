@@ -581,6 +581,17 @@ body.in-circuit .lvl-toast{bottom:calc(96px + env(safe-area-inset-bottom, 0px))}
 img.chr-end{display:block;height:190px;width:auto}
 .phone .end-with-pic .end-pic{float:none;margin:0 0 12px;display:flex;justify-content:center}
 .phone img.chr-end{height:140px}
+/* Mouse Dash (11 Nov 2026): the board, the message over it (start, pause) and the end screen's pictures */
+.md-board{position:relative;display:flex;justify-content:center}
+.md-board canvas{display:block;border-radius:10px;box-shadow:0 0 0 1px var(--rule);touch-action:none;-webkit-user-select:none;user-select:none}
+.md-msg{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;pointer-events:none;border-radius:10px;background:color-mix(in srgb, var(--paper) 40%, transparent)}
+.md-msg[hidden]{display:none}
+.md-big{font-family:var(--f-display);font-size:clamp(28px,5vw,42px);font-weight:800;line-height:1.1;color:#151935;text-shadow:0 0 12px #fff,0 0 4px #fff}
+.md-cap{margin:0;padding:9px 16px;border-radius:999px;background:var(--ink);color:var(--paper);font-weight:700;font-size:15px;text-align:center;max-width:92%}
+img.md-end{display:block;height:170px;width:auto}
+img.md-end-wide{height:130px}
+.phone img.md-end{height:120px}
+.phone img.md-end-wide{height:96px}
 
 /* Whack-a-word: nine holes; each word is a card that pops up out of a hole (behind its rim) and drops back */
 .whack{position:relative;display:grid;grid-template-columns:repeat(3,1fr);gap:8px 14px;padding:16px 14px 10px;background:var(--paper);border-radius:12px;box-shadow:0 0 0 1px var(--rule);-webkit-user-select:none;user-select:none;touch-action:manipulation}

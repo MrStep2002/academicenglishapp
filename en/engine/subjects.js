@@ -1,11 +1,12 @@
 /* THE ENGLISH SUBJECT LIST (stage 1 of the redesign, 8 Nov 2026). One list for the whole English side:
-   the sidebar's "My subjects", the Subjects menu in the top bar, the home page (Your subjects / More subjects),
-   the landing page and the Site content pages (status/) all read it. To add a topic: copy a topic page (see README),
+   the sidebar's "My subjects", the Subjects panel at the top of the sidebar (tick boxes: the Daily Circuit's subjects),
+   the home page (Your subjects), the landing page and the Site content pages (status/) all read it. To add a topic: copy a topic page (see README),
    then add one line below in its area. Nothing else needs changing.
    - path: the page, from the site's top folder (the same address the Daily Circuit switches use)
    - area: one of AREAS (the order of AREAS is the order on the pages)
    - always: always in the Daily Circuit (Academic English Essentials); no switch
-   - circuit: false = not in the Daily Circuit (no "I study this" switch): Reading Comprehension, Maths
+   - circuit: false = not in the Daily Circuit: Reading Comprehension, Maths (they can be ticked in Subjects, so they are on
+     the student's home page, but circuit.js leaves them out of the circuit)
    - soon: shown greyed as "Coming soon", no page yet
    Load it before shell.js:  <script src="…/en/engine/subjects.js?v=…"></script>
    THE CHINESE VERSION'S LIST (stage 4, 8 Nov 2026): ZH_SUBJECTS below, the same areas and conventions with fewer subjects;
@@ -15,7 +16,7 @@
 'use strict';
 const AREAS = [
   {key: 'every', name: 'Every subject', zh: '所有学科', color: 'var(--sh-ink, #151935)'},   // navy (white in dark mode)
-  {key: 'eng',   name: 'English Language', zh: '英语语言', color: '#b4286a'},
+  {key: 'eng',   name: 'English', zh: '英语', color: '#b4286a'},   // "English Language" until 11 Nov 2026 (teacher: English, with all the reading in it)
   {key: 'media', name: 'Media', zh: '媒体', color: '#1a5cb0'},
   {key: 'maths', name: 'Maths', zh: '数学', color: '#9a4a00'},
   {key: 'sci',   name: 'Science', zh: '科学', color: '#11694a'}
