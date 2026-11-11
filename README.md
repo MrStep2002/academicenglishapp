@@ -33,18 +33,18 @@ sidebar: English / 中文版) switches side. The landing page still shows when a
 | `en/engine/home.js` | Draws the landing page and the English home from the subject list and the student's progress |
 | `css/home.css` | The older look: the Chinese pages, the Reading Comprehension and Daily Circuit pages, Maths |
 | `progress/index.html` | My progress: overall level, answers, days in a row, a 14-day chart and every topic played. Uses the engine with `data-only="progress"` |
-| `content/` | **All the content**: one folder per topic, one CSV file per kind of task, a level on every row. See `content/README.md` |
+| `content/` | **All the content**: one folder per topic, grouped by subject since 11 Nov 2026 (`english/`, `media/`, `science/`, `business/`, `history/`, `geography/`; `essentials/`, `general/` and `templates/` stay at the top), one CSV file per kind of task, a level on every row. See `content/README.md` |
 | `en/essentials/`, `en/web-design/`, `en/representation/`, `en/descriptive/` | The English topics (each page loads the engine; `data-content` says which folder in `content/` it uses) |
 | `en/language/`, `en/media/` | Old addresses: forward to Descriptive language and the topic list |
-| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`), Big idea (`big-idea/`), Note taking (`note-taking/`, `data-format="notes"`), Recall (`recall/`, `data-format="recall"`: read, I'm ready hides the passage, choose the true statements; a speed bonus) and Total Recall (`total-recall/`, `data-format="totalrecall"`: a list to remember, then typed answers), with passages from `close-reading.csv`, `big-idea.csv`, `notes.csv`, `recall.csv` and `total-recall.csv` in `content/reading-comprehension/` |
+| `en/reading-comprehension/` | English Language → Reading Comprehension: Close reading (`close-reading/`), Big idea (`big-idea/`), Note taking (`note-taking/`, `data-format="notes"`), Recall (`recall/`, `data-format="recall"`: read, I'm ready hides the passage, choose the true statements; a speed bonus) and Total Recall (`total-recall/`, `data-format="totalrecall"`: a list to remember, then typed answers), with passages from `close-reading.csv`, `big-idea.csv`, `notes.csv`, `recall.csv` and `total-recall.csv` in `content/english/reading-comprehension/` |
 | `tools/check_content.py` | Checks every content file before you push (`tools/check_reading.py` does the reading passages on their own) |
 | `en/engine/` | The shared English games: `app.js`, `styles.css`, `fonts.css`; `crossword.js`, the crossword maker (9 Nov 2026), also loaded by the teacher page (Crossword board game, starter and handout) |
 | `en/data/`, `zh/data/`, `en/reading/` | The old content files. Nothing uses them now: everything is in `content/` |
 | `zh/index.html` | Chinese version home (8 Nov 2026): the English home in Chinese (greeting and level, class games, the Daily Circuit, this week's points, Your subjects, More subjects, Got an idea?), drawn by `en/engine/home.js` from the Chinese subject list (`ZH_SUBJECTS` in `en/engine/subjects.js`) |
 | `zh/essentials/` | Academic English Essentials on the Chinese side. It shares `content/essentials/` with the English page, like every other topic (95 words, all with Chinese). `zh/keywords/` is its old address and forwards here |
 | `zh/web-design/`, `zh/representation/`, `zh/descriptive/` | The Chinese version of these topics. They share their folder in `content/` with the English pages and use the `zh` column of `words.csv` |
-| `representation/` | Old Year 9 Representation app. Nothing links to it now: its words are in `content/representation/` |
-| `y8media/` | Old Year 8 Website Words app. Nothing links to it now: its words are in `content/web-design/` |
+| `representation/` | Old Year 9 Representation app. Nothing links to it now: its words are in `content/media/representation/` |
+| `y8media/` | Old Year 8 Website Words app. Nothing links to it now: its words are in `content/media/web-design/` |
 | `english-games/` | Old address: now forwards to `en/descriptive/` |
 | `website-portfolio/` | Placeholder |
 
@@ -116,7 +116,7 @@ what the page already has, so the games and pages underneath are unchanged.
 
 Chinese-side topic pages use the same engine with `data-only="zh"`: eight games (see above); `data-odd="pos"` makes Odd one out use parts of speech instead of word groups. To add one, copy `zh/essentials/index.html` (change its `data-name`, `data-store` and `data-content`) and add one line for it to `ZH_SUBJECTS` in `en/engine/subjects.js` (since 8 Nov 2026 the Chinese home is drawn from that list).
 
-To add a topic: make a folder in `content/` from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add one line for it to `en/engine/subjects.js` (its address, name and area). Nothing else needs changing: the sidebar, the Subjects menu, the home page, the landing page and the Site content pages all read that list. New topic pages need the shell too (copy the `site.css`, `subjects.js` and `shell.js` lines from another topic page). Details in `content/README.md`.
+To add a topic: make a folder in its subject's folder in `content/` (e.g. `content/history/the-tudors/`) from `content/templates/`, copy a topic page (e.g. `en/web-design/`) and change its `data-name`, `data-blurb`, `data-store` and `data-content`, then add one line for it to `en/engine/subjects.js` (its address, name and area), and, for the Staff Room tools, one line to `TOPICS` in `teacher/board.js` (with its folder as `dir`). Nothing else needs changing: the sidebar, the Subjects menu, the home page, the landing page and the Site content pages all read that list. New topic pages need the shell too (copy the `site.css`, `subjects.js` and `shell.js` lines from another topic page). Details in `content/README.md`.
 
 Topic page layout: `data-layout="compact"` on a topic page (all four English topics since 24 Oct) gives the newer menu: the title, the
 level buttons, "Your level: …" with the level bar as the divider, then every game listed in three columns (Vocabulary, Grammar,

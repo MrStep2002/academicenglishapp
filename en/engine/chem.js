@@ -2,7 +2,7 @@
 // Loaded before app.js on the chemistry pages only (en/chemistry/, zh/chemistry/). It sets window.AEA_GEN, which app.js
 // reads ("GENERATED GAMES" there). Other pages don't load this file, so nothing changes for them.
 //
-// Every question comes from three tables in content/chemistry/ that a science teacher can check in a spreadsheet:
+// Every question comes from three tables in content/science/chemistry/ that a science teacher can check in a spreadsheet:
 //   ions.csv       the ions: charge, English and Chinese names, the names students mix them up with, and the
 //                  compounds that don't exist (not_with / only_with)
 //   elements.csv   elements 1-20 and a few more: symbol, names, mass numbers, group, usual ion

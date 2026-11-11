@@ -97,7 +97,7 @@ const loaded = {};
 function loadTopic(key){
   if (loaded[key]) return loaded[key];
   const t = TOPICS.find(x => x.key === key);
-  const get = f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null);
+  const get = f => fetch(B.csvURL(key, f), {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null);
   const p = Promise.all(FILES.map(get)).then(all => {
     if (all.every(x => x === null)) throw new Error("Couldn't load " + topicName(key) + '.');
     const T = Object.fromEntries(FILES.map((f, i) => [f, all[i] || []])), I = {}, L = r => levelNum(r.level);

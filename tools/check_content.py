@@ -3,7 +3,7 @@
 
 Run from the repository folder:
     python3 tools/check_content.py                      # every topic folder in content/
-    python3 tools/check_content.py content/web-design   # one folder
+    python3 tools/check_content.py content/media/web-design   # one folder
 
 For each folder it lists the rows the games would skip (and why), unknown levels, repeated ids, words that are not
 in words.csv, and a table of how many items each level has (a level needs 6 items for its own button).
@@ -22,12 +22,12 @@ OPTIONAL = {'correction', 'extra1', 'extra2', 'extra3', 'list'}   # columns a fi
 TABOO_PARTS = {'of', 'the', 'a', 'an', 'with', 'to', 'and', 'in', 'on', 'for', 'up', 'out', 'down', 'en'}   # never forbidden on their own
 # Science pages (3 Nov 2026): any file may also have "syllabus" (codes such as 2.4, separated by ;) and "extended"
 # (yes = Extended only), used by the topic choice. A science folder's data tables (ions.csv, elements.csv, reactions.csv in
-# content/chemistry/; quantities.csv, waves.csv, em-uses.csv, nuclides.csv in content/physics/) are read by its module
+# content/science/chemistry/; quantities.csv, waves.csv, em-uses.csv, nuclides.csv in content/science/physics/) are read by its module
 # (en/engine/chem.js, en/engine/phys.js), not by this checker. Physics has its own: node tools/check_physics.js
 SCIENCE = {'syllabus', 'extended'}
-# chapter: the latest chapter of a set text a row depends on (content/mockingbird/, 8 Nov 2026). The games ignore it for
+# chapter: the latest chapter of a set text a row depends on (content/english/mockingbird/, 8 Nov 2026). The games ignore it for
 # now; it is there so a "read up to chapter X" setting can hide spoilers later.
-# focus: Context / Characters / Craft on content/mockingbird/tf.csv (9 Nov 2026), for the teacher's use; the games ignore it.
+# focus: Context / Characters / Craft on content/english/mockingbird/tf.csv (9 Nov 2026), for the teacher's use; the games ignore it.
 NOTES = {'chapter', 'focus'}
 
 HEADS = {
@@ -385,13 +385,24 @@ def check_folder(folder, all_word_ids):
     return n
 
 
+def topic_folders(root='content'):
+    """The topic folders: content/<topic>/ (essentials, general) and content/<subject>/<topic>/ (since 11 Nov 2026),
+    any folder with CSV files in it, but not templates/ or a Master Lists folder (the spreadsheets the files are made from)."""
+    out = []
+    for d in sorted(glob.glob(os.path.join(root, '*')) + glob.glob(os.path.join(root, '*', '*'))):
+        name = os.path.basename(d).lower()
+        if not os.path.isdir(d) or name == 'templates' or 'master list' in name: continue
+        if glob.glob(os.path.join(d, '*.csv')): out.append(d)
+    return out
+
+
 def main():
-    folders = sys.argv[1:] or sorted(d for d in glob.glob(os.path.join('content', '*')) if os.path.isdir(d) and os.path.basename(d) != 'templates')
+    folders = sys.argv[1:] or topic_folders()
     # word ids across the whole site (they must be unique: progress is saved against them)
     all_ids = {}
-    for d in sorted(glob.glob(os.path.join('content', '*'))):
+    for d in topic_folders():
         p = os.path.join(d, 'words.csv')
-        if os.path.basename(d) == 'templates' or not os.path.exists(p): continue
+        if not os.path.exists(p): continue
         for r in read(p)[1]:
             if r.get('id'): all_ids.setdefault(r['id'], os.path.basename(d))
     total = sum(check_folder(f, all_ids) for f in folders)

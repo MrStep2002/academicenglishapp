@@ -59,7 +59,7 @@ const levelNum = code => { if(code==null || code==='') return null; if(typeof co
   const m=s.toUpperCase().match(/^([ABC])([12])(\+)?$/); if(!m) return null;
   return ({A:0,B:2,C:4})[m[1]] + (+m[2]) + (m[3]?0.5:0); };
 
-// ---------- CONTENT: one folder of CSV files per topic (content/<topic>/), described in content/README.md ----------
+// ---------- CONTENT: one folder of CSV files per topic (content/<subject>/<topic>/, or content/<topic>/ for the shared ones), described in content/README.md ----------
 function parseCSV(text){
   const rows=[]; let row=[], cell='', q=false;
   text=text.replace(/^﻿/,'');
@@ -530,7 +530,12 @@ const clearTimers = () => { timers.forEach(clearTimeout); timers=[]; };
 // every game (Deck skips them): the list comes from GET /api/hidden when a page opens and is kept in this browser
 // ("aeaHidden", not "aea:", so it isn't saved to accounts) for when the server can't be reached.
 // A question is: this page's content folder (TOPIC) + the game + the row's id (or the word's id, for cards made from words).
-const TOPIC = (()=>{ const m=String(CFG.content||CFG.reading||'').match(/content\/(.+?)\/*$/); return m ? m[1].replace(/\.csv$/,'') : ''; })();
+// Since content/ was split into subject folders (11 Nov 2026: content/media/advertising/, content/english/reading-comprehension/…)
+// the subject folder is not part of it, so reports and removed questions from before still match: a topic page's TOPIC
+// is its folder's name ("advertising"), a passage page's is the folder and file ("reading-comprehension/big-idea").
+const TOPIC = (()=>{ const parts=String(CFG.content||CFG.reading||'').replace(/\/+$/,'').split('/').filter(Boolean), i=parts.indexOf('content');
+  if(i<0 || i===parts.length-1) return '';
+  return CFG.content ? parts[parts.length-1] : parts.slice(-2).join('/').replace(/\.csv$/,''); })();
 const REPORT_MAX = 5, HID_KEY = 'aeaHidden', REP_KEY = 'aeaReports', DEV_KEY = 'aeaDevice';
 const REPORT_THANKS = ["Thanks for the feedback. We'll look into it.", '谢谢你的反馈，我们会查看的。'];   // after a report is sent (10 Nov 2026)
 const apiBase = () => { try{ if(window.AEA_ACCOUNT && AEA_ACCOUNT.api) return AEA_ACCOUNT.api(); }catch(e){}

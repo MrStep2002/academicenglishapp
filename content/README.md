@@ -1,7 +1,8 @@
 # Content
 
 Every game on the site takes its content from the CSV files in this folder: **one folder per topic, one file
-per kind of task**. Add rows, save, commit and push. No code changes are needed.
+per kind of task**. The topic folders are grouped by subject (since 11 Nov 2026): `english/`, `media/`, `science/`,
+`business/`, `history/`, `geography/`. `essentials/`, `general/` and `templates/` serve every subject, so they stay here. Add rows, save, commit and push. No code changes are needed.
 
 Every row has an **id** and a **level**. The games use the level to give each student work at their level.
 
@@ -9,18 +10,20 @@ Every row has an **id** and a **level**. The games use the level to give each st
 
 | Folder | Used by |
 |---|---|
-| `descriptive/` | English → Descriptive language, and Chinese version → Descriptive language |
+| `english/descriptive/` | English → Descriptive language, and Chinese version → Descriptive language |
 | `essentials/` | English → Academic English Essentials, and Chinese version → Academic English Essentials |
-| `representation/` | English → Representation, and Chinese version → Representation |
-| `web-design/` | English → Web design, and Chinese version → Web design |
-| `media-descriptors/` | English → Media Descriptors, and Chinese version → Media Descriptors (pages `en/describing-people/`, `zh/describing-people/`). Its own folder since 3 Nov 2026: the 32 describing words and their 81 Fill the gap rows moved here from `representation/` (same ids). All the descriptors are in `words.csv` (239 words since 7 Nov 2026; `new-words.csv` and `words-2.csv` are gone) |
-| `advertising/` | English → Advertising, and Chinese version → Advertising (pages `en/advertising/`, `zh/advertising/`, since 5 Nov 2026). Words written level by level: `words.csv` has the written ones, `new-words.csv` the rest (the games don't read it). Ids `adv:<word>`. Words also in Representation (advert, slogan, target audience, direct address, emotive language…) are separate entries here with advertising meanings and examples, on purpose |
-| `chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/chemistry/" below |
-| `physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/physics/" below |
-| `mockingbird/` | English → To Kill a Mockingbird (`en/mockingbird/`, English version only, since 8 Nov 2026). Ids `tkam:<word>` for words, `tkam-tf-…`, `tkam-gk-…`, `tkam-char-…`. tf.csv has a `focus` column (see True or false). Also `characters.csv` (below). The teacher's original word bank, `Mockingbird_empathic_word_bank_100.csv`, is not read by the games |
-| `keywords/` | Not used any more: its words were merged into `essentials/` on 24 Oct 2026 |
-| `reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv`, `recall.csv`, `total-recall.csv` |
-| `listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
+| `media/representation/` | English → Representation, and Chinese version → Representation |
+| `media/web-design/` | English → Web design, and Chinese version → Web design |
+| `media/media-descriptors/` | English → Media Descriptors, and Chinese version → Media Descriptors (pages `en/describing-people/`, `zh/describing-people/`). Its own folder since 3 Nov 2026: the 32 describing words and their 81 Fill the gap rows moved here from `representation/` (same ids). All the descriptors are in `words.csv` (239 words since 7 Nov 2026; `new-words.csv` and `words-2.csv` are gone) |
+| `media/advertising/` | English → Advertising, and Chinese version → Advertising (pages `en/advertising/`, `zh/advertising/`, since 5 Nov 2026). Words written level by level: `words.csv` has the written ones, `new-words.csv` the rest (the games don't read it). Ids `adv:<word>`. Words also in Representation (advert, slogan, target audience, direct address, emotive language…) are separate entries here with advertising meanings and examples, on purpose |
+| `science/chemistry/` | Science → Chemistry (Cambridge IGCSE 0620), English and Chinese versions (`en/chemistry/`, `zh/chemistry/`). See "content/science/chemistry/" below |
+| `science/physics/` | Science → Physics (Cambridge IGCSE 0625), English and Chinese versions (`en/physics/`, `zh/physics/`). See "content/science/physics/" below |
+| `english/mockingbird/` | English → To Kill a Mockingbird (`en/mockingbird/`, English version only, since 8 Nov 2026). Ids `tkam:<word>` for words, `tkam-tf-…`, `tkam-gk-…`, `tkam-char-…`. tf.csv has a `focus` column (see True or false). Also `characters.csv` (below). The teacher's original word bank, `Mockingbird_empathic_word_bank_100.csv`, is not read by the games |
+| `english/reading-comprehension/` | English → Reading Comprehension: `close-reading.csv`, `big-idea.csv`, `notes.csv`, `recall.csv`, `total-recall.csv` |
+| `english/listening/` | English → Listening: `listening.csv` (the scripts are read aloud by the browser) |
+| `media/film/`, `media/documentary/`, `science/biology/` | Empty for now (11 Nov 2026): a README in each until there are files |
+| `business/`, `history/`, `geography/` | New subjects, empty for now (11 Nov 2026): a README in each until there are topic folders |
+| `general/` | Must-know general knowledge for every topic (see below) |
 | `templates/` | The headings and one example row for every kind of file |
 
 Every topic folder has the same files (the table below). A file with only its heading row is simply empty for now.
@@ -82,7 +85,7 @@ their own.
   every Must-know answer; they get the questions at that level (a level with fewer than 6 questions is played with the
   nearest level). A row with no level plays at every level. Must-know answers don't change a topic's level.
 
-## content/chemistry/ (Science, 3 Nov 2026)
+## content/science/chemistry/ (Science, 3 Nov 2026)
 
 The first science page. It has the usual files (words, gaps, builds, tf, right-wrong…) plus three **data tables**. The games
 in its Chemistry column (Inside the atom, Ion charge, Name it, Formula it, What's made?) are not written row by row: the
@@ -111,7 +114,7 @@ The topic list itself (the 12 topics of 0620 and their Chinese) is in `en/engine
 Physics ticks subtopics instead (1.2 Motion, 1.4 Density…, in six groups; a group's own tick box ticks all of it): a row
 coded `1.2` or `1.2.3` plays when 1.2 is ticked, and a row coded just `1` plays when any of 1.1–1.8 is ticked.
 
-## content/physics/ (Science, 4 Nov 2026)
+## content/science/physics/ (Science, 4 Nov 2026)
 
 Built the same way as Chemistry: the usual files (words 134, gaps 62, tf 48, right-wrong 28, builds 21 with Chinese,
 evidence 6; the others heading only) with `syllabus` / `extended` columns, plus four **data tables** read by the page's
@@ -491,7 +494,7 @@ From the repository folder:
 
 ```
 python3 tools/check_content.py                      # every file in content/
-python3 tools/check_content.py content/web-design   # one folder
+python3 tools/check_content.py content/media/web-design   # one folder
 ```
 
 It lists rows the games would skip, unknown levels, repeated ids, words that aren't in `words.csv`, and a table
@@ -499,10 +502,13 @@ of how much each level has, so you can see where a level is thin.
 
 ## Adding a topic
 
-1. Make a folder here (e.g. `content/history/`) and copy the files from `templates/` into it.
+1. Make a folder for it in its subject's folder (e.g. `content/history/the-tudors/`) and copy the files from `templates/` into it.
 2. Copy a topic page, e.g. `en/web-design/index.html` to `en/history/index.html`, and change `data-name`,
-   `data-blurb`, `data-store` (a new name, e.g. `en-history`) and `data-content="../../content/history/"`.
+   `data-blurb`, `data-store` (a new name, e.g. `en-the-tudors`) and `data-content="../../content/history/the-tudors/"`.
+   The folder's own name is what the site saves progress and reports under, so give each topic a name no other topic has.
 3. English: add one line for it to `en/engine/subjects.js` (its address, name and area: copy a line there). The sidebar,
    the Subjects menu, the home page and the landing page then all show it. Chinese: add a link to `zh/index.html`.
+4. For the Staff Room (boards, starters, handouts, homework): add a line for it to `TOPICS` in `teacher/board.js`, with its
+   folder as `dir` (e.g. `dir:'history/the-tudors'`).
 
 The files load when the site is online (GitHub Pages), not from a page opened straight from your computer.

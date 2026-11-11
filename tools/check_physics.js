@@ -1,4 +1,4 @@
-// Physics (4 Nov 2026): checks every question en/engine/phys.js makes from content/physics/. Run from the repository folder:
+// Physics (4 Nov 2026): checks every question en/engine/phys.js makes from content/science/physics/. Run from the repository folder:
 //   node tools/check_physics.js              (problems, and how many questions each game has at each level)
 //   node tools/check_physics.js . --sample   (a few questions from each game)
 //   node tools/check_physics.js . --dump questions.md   (every question, for checking)
@@ -15,7 +15,7 @@ function parseCSV(text){ const rows=[]; let row=[], cell='', q=false; text=text.
   if(cell!==''||row.length){ row.push(cell); rows.push(row); }
   const head=rows.shift().map(h=>h.trim().toLowerCase());
   return rows.filter(r=>r.some(x=>x.trim())).map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()]))); }
-const T={}; ['quantities','waves','em-uses','nuclides'].forEach(f=>{ T[f]=parseCSV(fs.readFileSync(path.join(ROOT,'content/physics',f+'.csv'),'utf8')); });
+const T={}; ['quantities','waves','em-uses','nuclides'].forEach(f=>{ T[f]=parseCSV(fs.readFileSync(path.join(ROOT,'content/science/physics',f+'.csv'),'utf8')); });
 const ctx={window:{}, document:{getElementById:()=>({dataset:{}})}, console};
 vm.runInNewContext(fs.readFileSync(path.join(ROOT,'en/engine/phys.js'),'utf8'), ctx);
 const G=ctx.window.AEA_GEN, games=G.build(T);

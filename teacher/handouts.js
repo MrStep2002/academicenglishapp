@@ -5,7 +5,7 @@
    Side 1: the words, their Chinese and their meaning. Side 2: activities to learn them, chosen by the teacher; a meter shows
    how full side 2 is, and an activity that won't fit is greyed out. A separate answer sheet can be downloaded too.
    Lives on the teacher page (teacher/index.html calls AEA_HANDOUT.route for #/handouts).
-   Words from content/<topic>/words.csv (word, pos, meaning, zh, example, group, level); Fill the gap uses gaps.csv sentences
+   Words from the topic's words.csv (content/<subject>/<topic>/) (word, pos, meaning, zh, example, group, level); Fill the gap uses gaps.csv sentences
    whose answer is the word (or a form of it), else the word's example sentence. The word search comes from the Starters'
    maker (AEA_START.ws in teacher/starters.js); the crossword from the site's crossword maker (en/engine/crossword.js, AEA_XW).
    The Word file is made here, in the browser: a .docx is a zip of XML files (docx() and zip() below), so nothing is loaded from
@@ -36,7 +36,7 @@ const DEFAULTS = {topic: '', picks: {}, title: '', acts: ['zh', 'ws', 'anagram']
 const loaded = {};
 function loadTopic(key){
   if (loaded[key]) return loaded[key];
-  const get = f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => []);
+  const get = f => fetch(B.csvURL(key, f), {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => []);
   const p = Promise.all([get('words'), get('gaps')]).then(([w, g]) => {
     const ids = new Set(), words = [];
     w.forEach(r => { if (!r.id || !r.word || !r.meaning || ids.has(r.id)) return; ids.add(r.id);

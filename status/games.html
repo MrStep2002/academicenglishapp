@@ -136,7 +136,7 @@ const PLACE = {
 const CIRC = {short:'circuit: quick-fire', long:'circuit: long', arcade:'circuit: arcade', match:'circuit: own round'};
 
 // The files, in the order of the topic page. one: what one row is. cols: the columns that matter. path: where it lives
-// when it is not content/<topic>/. tpl: its template in content/templates/.
+// when it is not the topic's own folder (content/<subject>/<topic>/). tpl: its template in content/templates/.
 // Each game: n name, zh its Chinese name, w where (one or more PLACE keys), how, c the Daily Circuit, p the key in a
 // topic page link (#play-<p>; 'words' = the word list, '' = the page itself).
 const FILES = [
@@ -233,22 +233,22 @@ const FILES = [
     {n:'Squaring Up', w:['board'], how:'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
     {n:'Categories', w:['board'], how:'A board of categories, like Jeopardy: questions worth 100 to 500, Daily Doubles, and a final question every team bets on.'}
   ]},
-  {f:'close-reading', path:'content/reading-comprehension/close-reading.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'title, passage, question, correct, wrong1–wrong3, explanation · question2… for more', games:[
+  {f:'close-reading', path:'content/english/reading-comprehension/close-reading.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'title, passage, question, correct, wrong1–wrong3, explanation · question2… for more', games:[
     {n:'Close reading', w:['close'], how:'Read a passage, then choose the best answer to each question.'}
   ]},
-  {f:'big-idea', path:'content/reading-comprehension/big-idea.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'the same columns as close-reading.csv', games:[
+  {f:'big-idea', path:'content/english/reading-comprehension/big-idea.csv', tpl:'reading', one:'a passage and one to three questions on it.', cols:'the same columns as close-reading.csv', games:[
     {n:'Big idea', w:['bigidea'], how:'Read a passage, then choose the idea that sums up the whole passage.'}
   ]},
-  {f:'notes', path:'content/reading-comprehension/notes.csv', tpl:'notes', one:'a passage, a heading and six notes to choose from.', cols:'title, passage, topic, select_count, option1–option6, correct_options, explanation', games:[
+  {f:'notes', path:'content/english/reading-comprehension/notes.csv', tpl:'notes', one:'a passage, a heading and six notes to choose from.', cols:'title, passage, topic, select_count, option1–option6, correct_options, explanation', games:[
     {n:'Note taking', w:['notes'], how:'Read a passage and choose the notes that belong under the heading.'}
   ]},
-  {f:'recall', path:'content/reading-comprehension/recall.csv', tpl:'recall', one:'a passage and statements about it, some true and some not.', cols:'title, passage, question (optional), select_count, option1–option8, correct_options, explanation', games:[
+  {f:'recall', path:'content/english/reading-comprehension/recall.csv', tpl:'recall', one:'a passage and statements about it, some true and some not.', cols:'title, passage, question (optional), select_count, option1–option8, correct_options, explanation', games:[
     {n:'Recall', w:['recall'], how:'Read the passage for as long as you like (a speed bonus runs down meanwhile), then I’m ready hides it: choose the statements that are true of it, from memory.'}
   ]},
-  {f:'total-recall', path:'content/reading-comprehension/total-recall.csv', tpl:'total-recall', one:'a list to remember and questions on it, each answered by typing.', cols:'title, passage, question, answer (more than one: separated by ;) · question2, answer2… up to 15, explanation', games:[
+  {f:'total-recall', path:'content/english/reading-comprehension/total-recall.csv', tpl:'total-recall', one:'a list to remember and questions on it, each answered by typing.', cols:'title, passage, question, answer (more than one: separated by ;) · question2, answer2… up to 15, explanation', games:[
     {n:'Total Recall', w:['totalrecall'], how:'Read the list for as long as you like (a speed bonus runs down meanwhile), then I’m ready hides it: type the answers from memory.'}
   ]},
-  {f:'listening', path:'content/listening/listening.csv', tpl:'listening', one:'a script the browser reads aloud, and questions on it.', cols:'title, passage (the script), question, correct, wrong1–wrong3, explanation, quote · question2… for more', games:[
+  {f:'listening', path:'content/english/listening/listening.csv', tpl:'listening', one:'a script the browser reads aloud, and questions on it.', cols:'title, passage (the script), question, correct, wrong1–wrong3, explanation, quote · question2… for more', games:[
     {n:'Listening', w:['listening'], how:'Press Play to hear the script, then answer the questions. The script is shown after Check.'}
   ]},
   {f:'science', label:'Science data tables', noFile:true, one:'not written question by question: the page makes every question from its tables.', cols:'Chemistry: ions.csv, elements.csv, reactions.csv · Physics: quantities.csv, waves.csv, em-uses.csv, nuclides.csv', games:[
@@ -289,7 +289,7 @@ function row(r, showFile){
     <td class="fl">${showFile ? `<a class="file" href="#f-${esc(r.F.f)}" data-file="${esc(r.F.f)}">${esc(fileName(r.F))}</a>` : ''}</td></tr>`;
 }
 function head(F, n){
-  const tpl=F.tpl || F.f, where=F.noFile ? '' : (F.path || 'content/<topic>/'+F.f+'.csv');
+  const tpl=F.tpl || F.f, where=F.noFile ? '' : (F.path || 'content/<subject>/<topic>/'+F.f+'.csv');
   return `<tr class="grp" id="f-${esc(F.f)}"><td colspan="4"><span class="file">${esc(fileName(F))}</span><span class="one">One row = ${esc(F.one)}</span>
     <span class="cols">${F.noFile?'':'Columns: '}${esc(F.cols)}${where?` · ${esc(where)}`:''}${!F.noFile && TEMPLATES.has(tpl)?` · <a href="${esc(ROOT+'content/templates/'+tpl+'.csv')}" download>template</a>`:''} · ${n} ${n===1?'game':'games'}</span></td></tr>`;
 }

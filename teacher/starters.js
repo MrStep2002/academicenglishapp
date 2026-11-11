@@ -4,7 +4,7 @@
      #/starters                  choose the topics, the levels and what goes on the board (six squares of room)
      #/starters/play             the starter on the board (the last one dealt; carried on after a reload)
      #/starters/gapfill          the teacher's own Gap Fill paragraphs
-     #/starters/gapfill/new      make one: a paragraph from the bank (content/<topic>/reads.csv) or typed in, click words to make gaps
+     #/starters/gapfill/new      make one: a paragraph from the bank (the topic's reads.csv) or typed in, click words to make gaps
      #/starters/gapfill/<id>     change one
      #/starters/match-up, #/starters/gap-fill, #/starters/connecting-wall, #/starters/word-search, #/starters/crossword,
      #/starters/recall, #/starters/total-recall (10 Nov 2026): one activity on its own,
@@ -49,7 +49,7 @@ const ACTS = [
   // Crossword (9 Nov 2026): the class solves it together; you type in what they say (see "Crossword" below)
   {k: 'crossword', size: 'full', words: true,      name: 'Crossword',             blurb: 'Topic words in a crossword. You type in what the class says; Check shows what\'s wrong.'},
   // Recall and Total Recall (10 Nov 2026, teacher): starters of their own (Staff Room → Starters), never on Build the Board.
-  // The passages are the students' files (content/reading-comprehension/recall.csv, total-recall.csv), chosen by level only.
+  // The passages are the students' files (content/english/reading-comprehension/recall.csv, total-recall.csv), chosen by level only.
   {k: 'recall', size: 'full', mem: true,           name: 'Recall',                blurb: 'A passage to read and remember; then it is hidden and the class decides which statements are true.'},
   {k: 'totalrecall', size: 'full', mem: true,      name: 'Total Recall',          blurb: 'A list to read and remember; then it is hidden and the class writes the answers to questions on it.'}
 ];
@@ -92,7 +92,7 @@ function loadExtra(key){
   if (loadedX[key]) return loadedX[key];
   const t = TOPICS.find(x => x.key === key);
   if (!t || t.only) return Promise.resolve({key, errors: [], reads: [], wall: []});
-  const get = f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => []);
+  const get = f => fetch(B.csvURL(key, f), {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => []);
   const p = Promise.all(['errors', 'reads', 'wall'].map(get)).then(([e, r, w]) => ({key,
     errors: e.map(row => { if (!row.id || !row.text) return null; const parts = errParts(row.text), n = parts.filter(x => x.t === 'e').length;
       return n ? {id: row.id, lv: levelNum(row.level), title: row.title || '', parts, n} : null; }).filter(Boolean),
@@ -115,7 +115,7 @@ const ready = topics => topics.every(t => ALL.D[t] && ALL.X[t]);
 const MEM_FILE = {recall: 'recall', totalrecall: 'total-recall'}, memWait = {};
 ALL.M = {};
 function memLoad(k){
-  if (!memWait[k]) memWait[k] = fetch(ROOT + 'content/reading-comprehension/' + MEM_FILE[k] + '.csv', {cache: 'no-cache'})
+  if (!memWait[k]) memWait[k] = fetch(ROOT + 'content/' + B.READING_DIR + '/' + MEM_FILE[k] + '.csv', {cache: 'no-cache'})
     .then(r => { if (!r.ok) throw new Error("Couldn't load the " + ACT[k].name + ' passages.'); return r.text(); }).then(parseCSV)
     .then(rows => (ALL.M[k] = rows.map(r => k === 'recall' ? memRecallRow(r) : memTotalRow(r)).filter(Boolean)))
     .catch(e => { delete memWait[k]; throw e; });

@@ -2,7 +2,7 @@
 // Loaded before app.js on the physics pages only (en/physics/, zh/physics/). It sets window.AEA_GEN, which app.js reads
 // ("GENERATED GAMES" there). Other pages don't load this file, so nothing changes for them.
 //
-// Tables in content/physics/ that a science teacher can check in a spreadsheet:
+// Tables in content/science/physics/ that a science teacher can check in a spreadsheet:
 //   quantities.csv  each quantity: English and Chinese names, symbol, unit, the quantities students mix it up with
 //   waves.csv       the electromagnetic spectrum, in order (longest wavelength first)
 //   em-uses.csv     uses and harmful effects of each part of the spectrum (0625 3.3), and the parts never offered as a

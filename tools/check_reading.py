@@ -18,7 +18,7 @@ A passage can have more than one question. Question 1 uses the plain columns; qu
 question2,correct2,wrong1_2,wrong2_2,wrong3_2,explanation2 after `source`; question 3 adds
 question3,correct3,wrong1_3,wrong2_3,wrong3_3,explanation3; and so on.
 
-Listening tests (content/listening/listening.csv, 26 Oct) use the same columns: `passage` is the script that is read
+Listening tests (content/english/listening/listening.csv, 26 Oct) use the same columns: `passage` is the script that is read
 aloud. They may also have quote, quote2, quote3…: the words in the script that give each answer (marked when the
 script is shown after Check). The checker makes sure each quote really is in the script.
 """

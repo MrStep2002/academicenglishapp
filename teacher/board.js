@@ -4,7 +4,7 @@
      #/board/new          make a board: topics, question types, levels, squares, time, teams, points, surprises
      #/board/<id>         change a board
      #/board/play/<id>    play it: the board fills the window; a square flips, then its question zooms out to fill the board
-   Questions come straight from the content CSV files (content/<topic>/…), so new rows are on the boards as soon as they are pushed.
+   Questions come straight from the content CSV files (content/<subject>/<topic>/…: TOPICS has each folder), so new rows are on the boards as soon as they are pushed.
    Only the files that make one-screen questions are used (BANKS); the reading games and Spot the error are left out.
    Saved under "aeaBoard:…", not "aea:…": "aea:" keys are copied to a student's account when a student logs in on the same
    computer, and cleared when they log out. */
@@ -15,19 +15,25 @@ const K_SETS = 'aeaBoard:sets', K_GAMES = 'aeaBoard:games', K_SOUND = 'aeaBoard:
 
 // ---------- what can be tested ----------
 // list: the words a topic page uses (Representation's page plays only its "key" list; data-list in en/representation/index.html)
+// dir: the topic's folder in content/ (11 Nov 2026: subject folders, content/<subject>/<topic>/). This is the one list the
+// Staff Room tools (boards, starters, handouts, homework) use: a new topic needs a line here with its folder.
 const TOPICS = [
-  {key:'essentials', name:'Academic English Essentials'},
-  {key:'descriptive', name:'Descriptive language'},
+  {key:'essentials', dir:'essentials', name:'Academic English Essentials'},
+  {key:'descriptive', dir:'english/descriptive', name:'Descriptive language'},
   // characters: Don't Say It! and Hints also play the topic's characters.csv (name, taboo1-4, hint1-4), 8 Nov 2026
-  {key:'mockingbird', name:'To Kill a Mockingbird', characters:true},
-  {key:'representation', name:'Representation', list:'key'},
-  {key:'media-descriptors', name:'Media Descriptors'},
-  {key:'web-design', name:'Web design'},
-  {key:'advertising', name:'Advertising'},
-  {key:'chemistry', name:'Chemistry'},
-  {key:'physics', name:'Physics'},
-  {key:'general', name:'Must-know general knowledge', only:['gk']}
+  {key:'mockingbird', dir:'english/mockingbird', name:'To Kill a Mockingbird', characters:true},
+  {key:'representation', dir:'media/representation', name:'Representation', list:'key'},
+  {key:'media-descriptors', dir:'media/media-descriptors', name:'Media Descriptors'},
+  {key:'web-design', dir:'media/web-design', name:'Web design'},
+  {key:'advertising', dir:'media/advertising', name:'Advertising'},
+  {key:'chemistry', dir:'science/chemistry', name:'Chemistry'},
+  {key:'physics', dir:'science/physics', name:'Physics'},
+  {key:'general', dir:'general', name:'Must-know general knowledge', only:['gk']}
 ];
+const dirOf = key => ((TOPICS.find(t => t.key === key) || {}).dir || key);
+const csvURL = (key, f) => ROOT + 'content/' + dirOf(key) + '/' + f + '.csv';   // one of a topic's files
+// The Reading Comprehension passages (Recall and Total Recall starters)
+const READING_DIR = 'english/reading-comprehension';
 // hid: the game keys a reported question can be hidden under (Reports on the teacher page; /api/hidden)
 const BANKS = [
   {key:'word',     name:'What does it mean?',   blurb:'A word: choose its meaning.',                 file:'words', hid:['meaning','match']},
@@ -53,7 +59,7 @@ const SURPRISES = {
   oops:   {icon:'💥', name:'Oops!',   blurb:'The team loses points. No question.'}
 };
 const needsQ = k => !!(SURPRISES[k] && SURPRISES[k].q);
-// The games (6 Nov 2026): Squaring Up (the tile board, named by the teacher), Don't Say It! (Taboo-style) and Hints, both from content/<topic>/taboo.csv
+// The games (6 Nov 2026): Squaring Up (the tile board, named by the teacher), Don't Say It! (Taboo-style) and Hints, both from the topic's taboo.csv
 const GAME_TYPES = {
   squares: {name: 'Squaring Up', blurb: 'Teams take turns to open a numbered square and answer the question under it, with surprises along the way.'},
   taboo: {name: "Don't Say It!", blurb: 'One player guesses while their team describes the word without saying any of the red words. Each team plays once a round: 60, then 30, then 15 seconds.'},
@@ -142,7 +148,7 @@ function loadTopic(key){
   const t = TOPICS.find(x => x.key === key);
   if (!t) return Promise.resolve(null);
   const files = [...new Set(BANKS.filter(b => !t.only || t.only.includes(b.key)).map(b => b.file))];
-  const p = Promise.all(files.map(f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'})
+  const p = Promise.all(files.map(f => fetch(csvURL(key, f), {cache: 'no-cache'})
       .then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null)))
     .then(all => { if (all.every(x => x === null)) throw new Error("Couldn't load the questions for " + t.name + '.');
       const T = {}; files.forEach((f, i) => { T[f] = all[i] || []; }); return buildTopic(t, T); });
@@ -334,7 +340,7 @@ const AEA_BOARD = window.AEA_BOARD = {
   stop
 };
 // Starters (teacher/starters.js, 7 Nov 2026) use the same topics, levels and content loading as the board games
-AEA_BOARD.lib = {TOPICS, BANKS, LEVELS, LEVEL_NAME, parseCSV, levelNum, band, listOf, dataFor, eligible, makeQ, distractors, topicName,
+AEA_BOARD.lib = {TOPICS, dirOf, csvURL, READING_DIR, BANKS, LEVELS, LEVEL_NAME, parseCSV, levelNum, band, listOf, dataFor, eligible, makeQ, distractors, topicName,
   hidden: (topic, game, id) => !!(HIDDEN.size && (HIDDEN.has(topic + '|' + game + '|' + id) || HIDDEN.has('*|' + game + '|' + id))),
   loadHidden, esc, rich, shuffle, pick, uid, getJ, setJ, K_SOUND};
 
@@ -1303,7 +1309,7 @@ function finalScores(){
 // the board without saying it or the four red words beside it. The teacher clicks Got it!, Skip or Said it! and the next word
 // comes up. Every team plays once a round, and the rounds get shorter (60, 30, 15 seconds). "Replay Same Words in Next Round"
 // (on by default): every word sent in round 1 comes back in the later rounds, for recall; off: new words each round.
-// Words: content/<topic>/taboo.csv (word, taboo1-4, hint1-4; a word plays once it has a forbidden word). Hints show one at a time.
+// Words: the topic's taboo.csv (word, taboo1-4, hint1-4; a word plays once it has a forbidden word). Hints show one at a time.
 // Hints (the third game) uses the same file: a word plays there once it has at least two hints.
 const T_DEFAULTS = {game: 'taboo', title: '', topics: [], levels: [1, 2, 3, 4, 5], times: [60, 30, 15], replay: true, said: 'skip', teams: null};
 const H_DEFAULTS = {game: 'hints', title: '', topics: [], levels: [1, 2, 3, 4, 5], times: [60, 60, 60], teams: null};
@@ -1314,7 +1320,7 @@ function loadTaboo(key){
   if (loadedT[key]) return loadedT[key];
   const t = TOPICS.find(x => x.key === key);
   if (!t || t.only) return Promise.resolve({key, items: []});
-  const get = f => fetch(ROOT + 'content/' + key + '/' + f + '.csv', {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null);
+  const get = f => fetch(csvURL(key, f), {cache: 'no-cache'}).then(r => r.ok ? r.text() : '').then(parseCSV).catch(() => null);
   const p = Promise.all([get('words'), get('taboo'), t.characters ? get('characters') : null]).then(([W, T, C]) => {
     if (W === null && T === null) throw new Error("Couldn't load the words for " + t.name + '.');
     const on = {};   // Representation plays only its key words, like its page
