@@ -279,10 +279,11 @@ const FILES = ['words','gaps','builds','errors','tf','right-wrong','reads','ques
 let readingState = 'none';
 function boot(){
   const dir=CFG.content ? CFG.content.replace(/\/*$/,'/') : '';
-  const jobs=(dir ? (SIDE==='zh' ? ['words','builds','evidence','translation'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
+  // data-only="quiz" (General knowledge, 11 Nov 2026): the folder's knowledge.csv only, played on its own (route())
+  const jobs=(dir ? (SIDE==='zh' ? ['words','builds','evidence','translation'] : CFG.only==='quiz' ? ['knowledge'] : FILES) : []).map(f=>[f, dir+f+'.csv']);
   if(dir && GEN && GEN.files) GEN.files.forEach(f=>jobs.push([f, dir+f+'.csv']));   // a science page's data tables (both sides)
   // Must-know general knowledge for everyone (content/general/, 1 Nov 2026): one round in every Daily Circuit quick-fire station
-  if(dir) jobs.push(['general', ROOT+'content/general/knowledge.csv']);
+  if(dir && CFG.only!=='quiz') jobs.push(['general', ROOT+'content/general/knowledge.csv']);
   if(CFG.reading) jobs.push(['reading', CFG.reading]);
   if(jobs.some(j=>j[0]==='reading')) readingState='loading';
   if(jobs.length) $app.innerHTML='<p class="notice loading">Loading…</p>';
@@ -291,7 +292,7 @@ function boot(){
   .then(res=>{
     const T={}; res.forEach(([f,rows])=>{ T[f]=rows; });
     if('reading' in T) readingState = T.reading ? 'ok' : 'failed';
-    if(dir && !T.words){ $app.innerHTML=`<p class="notice">The games could not be loaded. They load when the site is online. <a href="${esc(CFG.back||'../index.html')}">Back</a></p>`; return; }
+    if(dir && !T.words && !(CFG.only==='quiz' && T.knowledge)){ $app.innerHTML=`<p class="notice">The games could not be loaded. They load when the site is online. <a href="${esc(CFG.back||'../index.html')}">Back</a></p>`; return; }
     const S=buildSubject(T); window.AEA_SUBJECT=S;
     if(GEN) genPrepare(S, T);
     main(S);
@@ -4874,6 +4875,11 @@ function route(){
     if(listen) return playListening();
     GAMES.find(g=>g.key==='passage').name = CFG.name || 'Read and answer';
     return playPassage();
+  }
+  // A quiz page (data-only="quiz": General knowledge in Every subject, 11 Nov 2026): the quiz and nothing else; Back goes home
+  if(CFG.only==='quiz'){
+    if(!S.gk.length) return frame({href:CFG.back||'../index.html', label:CFG.backLabel||'Back'}, `<section class="hero"><h1>${esc(CFG.name||'')}</h1><p class="notice">The questions could not be loaded. They load when the site is online.</p></section>`, CFG.name);
+    const g=GAMES.find(x=>x.key==='gk'); if(CFG.name) g.name=CFG.name; lastGame(g.key, g.name); return g.run();
   }
   // #play-must: the must-know questions on their own (not on any menu; a link to try them, 1 Nov 2026)
   if(h==='play-must' && S.must.length) return MUST_GAME.run();

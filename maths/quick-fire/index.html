@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" data-ui-default="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>/* The student's language (aea:ui-lang); until they choose: Chinese if they came from the Chinese side (?from=zh, kept for this tab), else English */
+try{var h=document.documentElement,f=new URLSearchParams(location.search).get('from');if(f==='en'||f==='zh')sessionStorage.setItem('aea:maths:from',f);f=sessionStorage.getItem('aea:maths:from');var l=localStorage.getItem('aea:ui-lang');if(f==='zh')h.setAttribute('data-ui-default','zh');h.setAttribute('data-ui',l==='zh'||l==='en'?l:(f==='zh'?'zh':'en'))}catch(e){document.documentElement.setAttribute('data-ui','en')}</script>
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" href="/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="theme-color" content="#151935">
+<title>Quick Fire Maths · Maths</title>
+<link rel="stylesheet" href="../../css/fonts.css">
+<link rel="stylesheet" href="../../en/engine/fonts.css">
+<link rel="stylesheet" href="../../en/engine/styles.css?v=2026-11-11d">
+<link rel="stylesheet" href="../engine/maths.css?v=2026-10-29b">
+<link rel="stylesheet" href="../../css/site.css?v=2026-11-11a">
+</head>
+<body>
+<!-- Quick Fire Maths (11 Nov 2026): mental maths, no calculator. ../engine/mental.js picks the quick skills of Number (number.js); the games are in ../engine/maths.js. In Every subject (en/engine/subjects.js). -->
+<div class="wrap" id="app" data-topic="mental" data-back="../index.html"></div>
+<noscript>These games need JavaScript switched on.</noscript>
+<script src="../../en/engine/points.js?v=2026-10-29b"></script>
+<script src="../../en/engine/account.js?v=2026-11-08v"></script>
+<script src="../../en/engine/subjects.js?v=2026-11-11c"></script>
+<script src="../../en/engine/shell.js?v=2026-11-11b" data-side="maths" data-auto-side></script>
+<script src="../engine/boards.js?v=2026-10-29b"></script>
+<script src="../engine/number.js?v=2026-10-29b"></script>
+<script src="../engine/mental.js?v=2026-11-11a"></script>
+<script src="../engine/maths.js?v=2026-11-11a"></script>
+</body>
+</html>

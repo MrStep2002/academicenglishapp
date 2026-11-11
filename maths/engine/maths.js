@@ -211,7 +211,10 @@ const GAMES = [
   {key:'whack', col:'arcade', name:'Whack-a-number', zh:'数字打地鼠', blurb:'Numbers pop up and drop again. Tap the answer before it goes.', zhBlurb:'数字会冒出来又落下。在它消失前点中答案。', run:()=>playWhack(), challenge:true},
   {key:'speed', col:'arcade', name:'Speed round', zh:'限时挑战', blurb:'60 seconds. How many can you get right?', zhBlurb:'60 秒内你能答对多少题？', run:()=>playSpeed(), challenge:true}
 ];
-const COLS = [['quick','Quick','快速练习','m-col-quick'], ['work','Work it out','动手算','m-col-work'], ['check','Check the working','检查过程','m-col-check']];
+// A topic can name its games (TOPIC.games: Quick Fire Maths, 11 Nov 2026, has no word problems or workings to check).
+// SHOWN: the games on its menu and that its addresses open (GAMES stays whole: the games find themselves in it by position)
+const SHOWN = TOPIC.games ? GAMES.filter(g=>TOPIC.games.includes(g.key)) : GAMES;
+const COLS = [['quick','Quick','快速练习','m-col-quick'], ['work','Work it out','动手算','m-col-work'], ['check','Check the working','检查过程','m-col-check']].filter(c=>SHOWN.some(g=>g.col===c[0]));
 const gameT = g => T(esc(g.name), g.zh);
 
 // ----- Choose the answer -----
@@ -462,7 +465,7 @@ function skillsHtml(){
   const soon=SUBS.filter(s=>!s.skills.length && !s.calc);
   return `<section class="m-skills" aria-labelledby="mSkillsH"><p class="set-head" id="mSkillsH">${BTOPIC ? T('Syllabus topics at this level','本级别的考纲内容') : T('Skills at this level','本级别的技能')}</p>
     <div class="sets m-skill-chips"><button class="chip chip-all" data-skill="*" aria-pressed="${all}">${T('All','全部')}</button>${at.map(s=>`<button class="chip" data-skill="${esc(subKey(s))}" aria-pressed="${!all && mine.has(subKey(s))}">${subT(s)}</button>`).join('')}</div>
-    <p class="setnote">${T('Choose one or more to practise just those. Which calculation? and Spot the mistake use the whole level.','可以只选一个或几个内容来练习。“哪个算式？”和“找出错误”使用整个级别的题目。')}</p>
+    <p class="setnote">${SHOWN.some(g=>g.key==='which' || g.key==='spot') ? T('Choose one or more to practise just those. Which calculation? and Spot the mistake use the whole level.','可以只选一个或几个内容来练习。“哪个算式？”和“找出错误”使用整个级别的题目。') : T('Choose one or more to practise just those.','可以只选一个或几个内容来练习。')}</p>
     ${soon.length ? `<p class="setnote m-soon">${T('Still to come','即将推出')}: ${soon.map(s=>`${PREFIX}${s.n} ${T(esc(s.name), esc(s.zh))}`).join(', ')}</p>` : ''}</section>`;
 }
 function gameCard(g){
@@ -474,14 +477,14 @@ function menu(){
   tidyChoice();
   frame({href:CFG.back||'../index.html', html:T('Maths','数学')}, `
   <section class="hero hero-compact m-hero">
-    <p class="eyebrow">${BOARD ? `${T(esc(BOARD.short), esc(BOARD.zh))} · ${tierT()} · <a href="${esc(CFG.back||'../index.html')}">${T('change','更改')}</a>` : T('Maths · tester','数学 · 测试版')}</p>
+    <p class="eyebrow">${TOPIC.eyebrow ? T(esc(TOPIC.eyebrow[0]), esc(TOPIC.eyebrow[1])) : BOARD ? `${T(esc(BOARD.short), esc(BOARD.zh))} · ${tierT()} · <a href="${esc(CFG.back||'../index.html')}">${T('change','更改')}</a>` : T('Maths · tester','数学 · 测试版')}</p>
     <h1>${BTOPIC ? `<span class="m-topic-n">${esc(BTOPIC.n)}</span> ` : ''}${T(esc(BTOPIC ? BTOPIC.name : TOPIC.name), esc(BTOPIC ? BTOPIC.zh : TOPIC.zh))}</h1>
     ${levelsHtml()}
     ${levelLine()}
   </section>
   ${skillsHtml()}
-  <div class="cols m-cols">${COLS.map(([k,en,zh,cls])=>`<section class="col ${cls}" aria-labelledby="mc-${k}"><h2 id="mc-${k}">${T(en,zh)}</h2>${GAMES.filter(g=>g.col===k).map(gameCard).join('')}</section>`).join('')}</div>
-  <section class="m-arcade" aria-labelledby="mc-arcade"><h2 id="mc-arcade">${T('Arcade','街机游戏')}</h2><div class="m-arcade-games">${GAMES.filter(g=>g.col==='arcade').map(gameCard).join('')}</div></section>`);
+  <div class="cols m-cols">${COLS.map(([k,en,zh,cls])=>`<section class="col ${cls}" aria-labelledby="mc-${k}"><h2 id="mc-${k}">${T(en,zh)}</h2>${SHOWN.filter(g=>g.col===k).map(gameCard).join('')}</section>`).join('')}</div>
+  <section class="m-arcade" aria-labelledby="mc-arcade"><h2 id="mc-arcade">${T('Arcade','街机游戏')}</h2><div class="m-arcade-games">${SHOWN.filter(g=>g.col==='arcade').map(gameCard).join('')}</div></section>`);
   $app.querySelectorAll('.levels .chip').forEach(c=>c.onclick=()=>{ const y=window.scrollY; chooseBand(+c.dataset.band); menu(); window.scrollTo(0,y); });
   $app.querySelectorAll('.m-skill-chips .chip').forEach(c=>c.onclick=()=>{
     const y=window.scrollY, k=c.dataset.skill, L=chosenBand(), at=subsAt(L).map(subKey);
@@ -493,7 +496,7 @@ function menu(){
 // ---------- router ----------
 function route(){
   const h=location.hash.replace(/^#/,'');
-  if(h.startsWith('play-')){ const g=GAMES.find(x=>x.key===h.slice(5)); if(g) return g.run(); }
+  if(h.startsWith('play-')){ const g=SHOWN.find(x=>x.key===h.slice(5)); if(g) return g.run(); }
   menu();
 }
 window.addEventListener('hashchange', route);
