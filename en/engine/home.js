@@ -57,6 +57,13 @@ function topicFor(d, path){
   return best;
 }
 
+// A subject whose progress the maths pages keep (progress: 'maths:<topic>', e.g. Quick Fire Maths): aea:maths:v1 {r, n, last}
+function progressOf(d, s){
+  const m = /^maths:(.+)$/.exec(s.progress || '');
+  if(!m) return topicFor(d, s.path);
+  const t = (((read('aea:maths:v1') || {}).topics) || {})[m[1]];
+  return t && t.n ? {n: t.n, r: t.r, last: t.last} : null;
+}
 // ----- the subjects ticked (in Subjects: shell.js; the same storage as the Daily Circuit: circuit.js) -----
 const studyingMap = () => ((read('aea:studying:v1') || {})[SIDE]) || {};
 const isOn = s => s.always || !!studyingMap()[s.path];
@@ -120,7 +127,7 @@ function today(){
 function mine(d){
   const list = LIST.ordered().filter(s=>!s.soon && isOn(s)), last = read('aea:lastgame:v1') || {};
   const box = s=>{
-    const t = topicFor(d, s.path), found = t && t.n >= CAL, lv = found ? label(t.r) : null, lg = last[s.path];
+    const t = progressOf(d, s), found = t && t.n >= CAL, lv = found ? label(t.r) : null, lg = last[s.path];
     const cta = lg && lg.key ? {href: ROOT + s.path + '#play-' + encodeURIComponent(lg.key), html: ZH ? L('Continue: ' + esc(lg.name), '继续：' + esc(lg.zh || lg.name)) : esc('Continue: ' + lg.name)}
       : {href: ROOT + s.path, html: t ? L('Open', '打开') : L('Start', '开始')};
     const left = t ? CAL - t.n : 0;

@@ -2299,7 +2299,7 @@ function passageBoth(st, deck){
         <h3 id="crQ${qi}">${esc(q.q)}</h3>
         <div class="opts long" role="group" aria-labelledby="crQ${qi}">${orders[qi].map((oi,j)=>`<button class="opt" type="button" data-q="${qi}" data-o="${oi}" aria-pressed="false">${keyOf[qi][j]<=9?`<kbd>${keyOf[qi][j]}</kbd>`:''}<span>${esc(q.opts[oi])}</span></button>`).join('')}</div>
         <div class="cr-why" hidden></div></section>`).join('')}
-        <div class="cr-actions"><p class="chr-end" aria-live="polite"></p><button class="btn cr-go" type="button" disabled>Confirm</button></div></div></div>`);
+        <div class="cr-actions"><p class="cr-end" aria-live="polite"></p><button class="btn cr-go" type="button" disabled>Confirm</button></div></div></div>`);
     card.classList.add('cr-card');
     const go=card.querySelector('.cr-go'), btns=[...card.querySelectorAll('.cr-q .opt')], secs=[...card.querySelectorAll('.cr-q')];
     const choose=b=>{ if(checked) return; const qi=+b.dataset.q; picks[qi]=+b.dataset.o;
@@ -2314,6 +2314,7 @@ function passageBoth(st, deck){
         btns.filter(x=>+x.dataset.q===qi).forEach(x=>{ const o=+x.dataset.o; x.disabled=true; x.removeAttribute('aria-pressed'); x.classList.add(o===0 ? 'ok' : o===picks[qi] ? 'no' : 'dim'); });
         const tag=sec.querySelector('.cr-tag'); tag.textContent=ok ? '✓ Right' : '✗ Not quite'; tag.hidden=false;
         const why=sec.querySelector('.cr-why'); why.innerHTML=(ok ? '' : `<span class="cr-ans">The answer is: <b>${esc(q.opts[0])}</b></span>`)+(q.why ? `<span>${rich(q.why)}</span>` : ''); why.hidden=!why.innerHTML; });
+      // (.cr-end: Close reading's line; it was renamed chr-end with Cheese Run's styles on 11 Nov 2026 by mistake, so Confirm stopped here)
       const end=card.querySelector('.cr-end');
       end.className='cr-end '+(all ? 'ok' : 'no');
       end.innerHTML=all ? `<b>Well done!</b> ${qs.length===2 ? 'You got both questions right.' : qs.length>2 ? `You got all ${qs.length} questions right.` : 'You got it right.'}`

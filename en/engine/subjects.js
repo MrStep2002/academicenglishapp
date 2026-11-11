@@ -30,7 +30,8 @@ const SUBJECTS = [
   {path: 'en/reading-comprehension/index.html', name: 'Reading',               area: 'every', always: true, circuit: false},
   // Quick Fire Maths and General knowledge (11 Nov 2026, teacher): KS3 mental maths (maths/engine/mental.js) and the
   // must-know quiz (content/general/). Not Daily Circuit stations yet (general knowledge already has a round in each one).
-  {path: 'maths/quick-fire/index.html?from=en', name: 'Quick Fire Maths',    area: 'every', always: true, circuit: false},
+  // progress: where a subject's level is kept when it isn't the English progress (Quick Fire Maths: the maths progress)
+  {path: 'maths/quick-fire/index.html?from=en', name: 'Quick Fire Maths',    area: 'every', always: true, circuit: false, progress: 'maths:mental'},
   {path: 'en/general/index.html',               name: 'General knowledge',   area: 'every', always: true, circuit: false},
   {path: 'en/descriptive/index.html',           name: 'Descriptive language',  area: 'eng'},
   {path: 'en/mockingbird/index.html',           name: 'To Kill a Mockingbird', area: 'eng'},   // English version only (8 Nov 2026)
@@ -49,7 +50,7 @@ const SUBJECTS = [
 // Mockingbird and Reading are English only.
 const ZH_SUBJECTS = [
   {path: 'zh/essentials/index.html',        name: 'Academic Essentials', zh: '学术基础', area: 'every', always: true},
-  {path: 'maths/quick-fire/index.html?from=zh', name: 'Quick Fire Maths', zh: '快速心算', area: 'every', always: true, circuit: false},
+  {path: 'maths/quick-fire/index.html?from=zh', name: 'Quick Fire Maths', zh: '快速心算', area: 'every', always: true, circuit: false, progress: 'maths:mental'},
   {path: 'zh/descriptive/index.html',       name: 'Descriptive language', zh: '描写性语言', area: 'eng'},
   {path: 'zh/web-design/index.html',        name: 'Web design',           zh: '网页设计',   area: 'media'},
   {path: 'zh/representation/index.html',    name: 'Representation',       zh: '再现',       area: 'media'},
